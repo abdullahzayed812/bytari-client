@@ -1,0 +1,10 @@
+{
+  "android": {
+    "package": "com.anonymous.expoapp"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "8a476979-04a9-4aae-a277-0a451db3066e"
+    }
+  }
+}
