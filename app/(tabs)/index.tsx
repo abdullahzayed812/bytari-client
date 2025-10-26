@@ -59,9 +59,14 @@ export default function HomeScreen() {
   const vetStores = useMemo(() => (rawVetStores as any)?.stores, [rawVetStores]);
 
   const { data: inquiriesData, isLoading: inquiriesLoading } = useQuery(
-    trpc.inquiries.listForUser.queryOptions({ vetId: user?.id, userId: user?.id })
+    trpc.inquiries.listForUser.queryOptions({ userId: user?.id })
   );
   const inquiries = useMemo(() => (inquiriesData as any)?.inquiries, [inquiriesData]);
+
+  const { data: consultationsData, isLoading: consultationsLoading } = useQuery({
+    ...trpc.consultations.listForUser.queryOptions({ userId: user?.id }),
+  });
+  const consultations = useMemo(() => (consultationsData as any)?.consultations, [consultationsData]);
 
   const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions());
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
@@ -402,7 +407,9 @@ export default function HomeScreen() {
             title={userMode === "veterinarian" ? "استفساراتك السابقة" : "استشاراتك السابقة"}
             isRTL={isRTL}
             showSeeAll={true}
-            onSeeAll={() => (userMode === "veterinarian" ? router.navigate("/") : router.navigate("/"))}
+            onSeeAll={() =>
+              userMode === "veterinarian" ? router.navigate("/") : router.navigate("/consultations-list")
+            }
           />
           <ScrollView
             horizontal
@@ -475,8 +482,96 @@ export default function HomeScreen() {
                   </View>
                 </TouchableOpacity>
               ))
+            ) : consultations?.length > 0 ? (
+              consultations.slice(0, 3).map((con) => (
+                <TouchableOpacity
+                  key={con.id}
+                  style={[styles.consultationHistoryCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/consultation-details",
+                      params: { id: con.id },
+                    });
+                  }}
+                >
+                  <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    {/* 🔵 Status Badge */}
+                    <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
+                      <View
+                        style={[
+                          styles.statusIndicator,
+                          con.status === "pending"
+                            ? styles.statusPending
+                            : con.status === "answered"
+                            ? styles.statusAnswered
+                            : styles.statusClosed,
+                        ]}
+                      />
+                      <Text style={styles.statusText}>
+                        {con.status === "pending" ? "قيد المراجعة" : con.status === "answered" ? "تم الرد" : "مغلق"}
+                      </Text>
+                    </View>
+
+                    {/* 🐾 Consultation Info */}
+                    <View style={styles.consultationHistoryDetails}>
+                      {/* Title */}
+                      <Text
+                        style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
+                        numberOfLines={2}
+                      >
+                        {con.title}
+                      </Text>
+
+                      {/* Category / Pet Type */}
+                      {con.category && (
+                        <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
+                          النوع: {con.category}
+                        </Text>
+                      )}
+
+                      {/* Description */}
+                      <Text
+                        style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
+                        numberOfLines={3}
+                      >
+                        {con.description}
+                      </Text>
+
+                      {/* Urgency */}
+                      <Text
+                        style={[
+                          styles.consultationUrgency,
+                          {
+                            color:
+                              con.urgencyLevel === "emergency"
+                                ? COLORS.error
+                                : con.urgencyLevel === "high"
+                                ? COLORS.warning
+                                : COLORS.darkGray,
+                            textAlign: isRTL ? "left" : "right",
+                          },
+                        ]}
+                      >
+                        مستوى الأهمية:{" "}
+                        {con.urgencyLevel === "emergency"
+                          ? "طارئ"
+                          : con.urgencyLevel === "high"
+                          ? "عالي"
+                          : con.urgencyLevel === "medium"
+                          ? "متوسط"
+                          : "منخفض"}
+                      </Text>
+
+                      {/* Date */}
+                      <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
+                        {new Date(con.createdAt).toLocaleDateString("ar-SA")}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
             ) : (
-              <Text>لا يوجد استفسارات</Text>
+              <Text>{userMode === "veterinarian" ? "لا توجد استفسارات" : "لا توجد استفسارات"}</Text>
             )}
           </ScrollView>
         </View>
@@ -1280,6 +1375,11 @@ const styles = StyleSheet.create({
   },
   consultationButton: {
     width: "100%",
+  },
+  consultationUrgency: {
+    fontSize: 12,
+    fontWeight: "600",
+    marginBottom: 6,
   },
   section: {
     marginBottom: 24,

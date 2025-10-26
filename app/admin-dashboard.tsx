@@ -46,6 +46,7 @@ import {
   FileText,
   Book,
   ShoppingCart,
+  MessageCircle,
 } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
 
@@ -550,6 +551,40 @@ export default function AdminDashboard() {
                 {(approvalCounts?.pendingApprovals || 0) > 0 && (
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{approvalCounts?.pendingApprovals}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {hasPermission("manage_inquiries") && (
+            <TouchableOpacity
+              style={[styles.actionCard, styles.actionCardWithBadge]}
+              onPress={() => router.push("/admin-inquiries-list")}
+            >
+              <View style={styles.actionCardContent}>
+                <HelpCircle size={24} color="#3B82F6" />
+                <Text style={styles.actionText}>الاستفسارات</Text>
+                {(approvalCounts?.pendingInquiries || 0) > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{approvalCounts?.pendingInquiries}</Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {hasPermission("manage_consultations") && (
+            <TouchableOpacity
+              style={[styles.actionCard, styles.actionCardWithBadge]}
+              onPress={() => router.push("/admin-consultations-list")}
+            >
+              <View style={styles.actionCardContent}>
+                <MessageCircle size={24} color="#FF9500" />
+                <Text style={styles.actionText}>الاستشارات</Text>
+                {(approvalCounts?.pendingConsultations || 0) > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{approvalCounts?.pendingConsultations}</Text>
                   </View>
                 )}
               </View>

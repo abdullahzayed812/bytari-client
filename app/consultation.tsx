@@ -62,6 +62,7 @@ export default function ConsultationScreen() {
           setFileType(null);
           // Optionally, navigate away or refetch previous consultations
           router.replace("/(tabs)");
+          trpc.consultations.listForUser.invalidate();
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الاستشارة");
@@ -102,23 +103,21 @@ export default function ConsultationScreen() {
 
   return (
     <ScrollView ref={scrollViewRef} style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <Text style={styles.title}>{t("consultation.title")}</Text>
+      {/* <Text style={styles.title}>{t("consultation.title")}</Text> */}
       <Text style={styles.subtitle}>
         ارسل استشارتك وتفاصيل الحالة وارفع صورة او فيديو إن وجدت لنشخص الحالة بشكل دقيق
       </Text>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>{t("consultation.petType")}</Text>
+        <Text style={styles.label}>{t("نوع الحيوان")}</Text>
         <View style={styles.petTypesContainer}>
           {petTypes.map((type) => (
             <TouchableOpacity
               key={type}
               style={[styles.petTypeButton, selectedPetType === type && styles.selectedPetTypeButton]}
-              onPress={() => handleSelectPetType(type)}
+              onPress={() => setSelectedPetType(type)}
             >
-              <Text style={[styles.petTypeText, selectedPetType === type && styles.selectedPetTypeText]}>
-                {t(`pets.types.${type}`)}
-              </Text>
+              <Text style={[styles.petTypeText, selectedPetType === type && styles.selectedPetTypeText]}>{type}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -180,7 +179,7 @@ function PreviousConsultations() {
   const { user } = useApp();
   const { t } = useI18n();
   // NOTE: This assumes a `listForUser` procedure exists on the `consultations` router
-  const { data, isLoading, error } = useQuery(trpc.consultations.listForUser.queryOptions());
+  const { data, isLoading, error } = useQuery(trpc.consultations.listForUser.queryOptions({ userId: user?.id }));
 
   const consultations = useMemo(() => (data as any)?.consultations, [data]);
 
@@ -394,6 +393,7 @@ const styles = StyleSheet.create({
   },
   previousConsultationsSection: {
     marginTop: 20,
+    marginBottom: 320,
     maxHeight: 300,
   },
   previousConsultationsTitle: {

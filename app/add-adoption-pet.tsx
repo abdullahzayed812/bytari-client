@@ -39,7 +39,7 @@ export default function AddAdoptionPetScreen() {
   });
 
   // Create pet approval request mutation
-  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions());
+  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -366,7 +366,7 @@ export default function AddAdoptionPetScreen() {
           type="primary"
           size="large"
           style={styles.submitButton}
-          disabled={isLoading || createApprovalMutation.isPending}
+          disabled={createApprovalMutation.isPending}
         />
       </ScrollView>
     </>

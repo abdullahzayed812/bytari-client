@@ -19,6 +19,7 @@ export default function NewInquiryScreen() {
   const [selectedCategory, setSelectedCategory] = useState("عام");
   const [prescriptionFile, setPrescriptionFile] = useState<string | null>(null);
   const [fileType, setFileType] = useState<"image" | "video" | null>(null);
+
   const createInquiryMutation = useMutation(trpc.inquiries.create.mutationOptions());
 
   const pickFile = async () => {
@@ -78,6 +79,7 @@ export default function NewInquiryScreen() {
                 setPrescriptionFile(null);
                 setFileType(null);
                 router.push("/vet-inquiries");
+                trpc.inquiries.listForUser.invalidate();
               },
             },
           ]);
@@ -174,8 +176,8 @@ export default function NewInquiryScreen() {
 }
 
 function PreviousInquiries() {
-  // NOTE: This assumes a `listForUser` procedure exists on the `inquiries` router
-  const { data: inquiries, isLoading, error } = useQuery(trpc.inquiries.listForUser.queryOptions());
+  const { user } = useApp();
+  const { data: inquiries, isLoading, error } = useQuery(trpc.inquiries.listForUser.queryOptions({ userId: user?.id }));
 
   if (isLoading) {
     return <Text style={styles.sectionTitle}>جاري تحميل الاستفسارات السابقة...</Text>;

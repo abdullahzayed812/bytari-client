@@ -121,7 +121,7 @@ export default function TabLayout() {
   return (
     <View style={styles.container}>
       {/* القائمة العلوية للإدارة - تظهر فقط للمستخدمين الذين لديهم صلاحيات إدارية */}
-      {/* <View style={styles.greenBar} /> */}
+      <View style={styles.greenBar} />
       {hasAdminAccess ? <AdminTopBar /> : null}
 
       <Tabs
