@@ -34,7 +34,7 @@ export default function CreateAdScreen() {
     content: "",
     image: "",
     link: "",
-    type: "banner" as "banner" | "popup" | "inline",
+    type: "banner" as "banner" | "popup" | "inline" | "image_only" | "image_with_link",
     position: "home",
     startDate: new Date(),
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -173,6 +173,8 @@ export default function CreateAdScreen() {
                 { value: "banner", label: "بانر" },
                 { value: "popup", label: "نافذة منبثقة" },
                 { value: "inline", label: "مدمج" },
+                { value: "image_only", label: "صورة فقط" },
+                { value: "image_with_link", label: "صورة مع رابط" },
               ].map((type) => (
                 <TouchableOpacity
                   key={type.value}
@@ -180,7 +182,7 @@ export default function CreateAdScreen() {
                   onPress={() =>
                     setFormData((prev) => ({
                       ...prev,
-                      type: type.value as "banner" | "popup" | "inline",
+                      type: type.value as "banner" | "popup" | "inline" | "image_only" | "image_with_link",
                     }))
                   }
                 >

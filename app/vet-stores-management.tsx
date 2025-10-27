@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,16 +9,16 @@ import {
   TextInput,
   Modal,
   Alert,
-} from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { 
-  ArrowLeft, 
-  Search, 
-  Plus, 
-  Store, 
-  Stethoscope, 
-  MapPin, 
-  Phone, 
+} from "react-native";
+import { Stack, useRouter } from "expo-router";
+import {
+  ArrowLeft,
+  Search,
+  Plus,
+  Store,
+  Stethoscope,
+  MapPin,
+  Phone,
   Mail,
   Edit3,
   Trash2,
@@ -27,8 +27,8 @@ import {
   XCircle,
   Clock,
   Package,
-  DollarSign
-} from 'lucide-react-native';
+  DollarSign,
+} from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 
 interface VetStore {
@@ -39,7 +39,7 @@ interface VetStore {
   phone: string;
   address: string;
   city: string;
-  status: 'active' | 'pending' | 'suspended';
+  status: "active" | "pending" | "suspended";
   productsCount: number;
   totalSales: number;
   rating: number;
@@ -51,8 +51,8 @@ interface VetStore {
 
 export default function VetStoresManagementScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [selectedStore, setSelectedStore] = useState<VetStore | null>(null);
 
@@ -60,87 +60,87 @@ export default function VetStoresManagementScreen() {
   const mockVetStores: VetStore[] = [
     {
       id: 1,
-      name: 'عيادة الرحمة البيطرية - متجر الأدوية',
-      ownerName: 'د. أحمد محمد الكاظمي',
-      ownerEmail: 'dr.ahmed@rahma-vet.com',
-      phone: '+964 770 123 4567',
-      address: 'شارع الكندي، حي الجادرية',
-      city: 'بغداد',
-      status: 'active',
+      name: "عيادة الرحمة البيطرية - متجر الأدوية",
+      ownerName: "د. أحمد محمد الكاظمي",
+      ownerEmail: "dr.ahmed@rahma-vet.com",
+      phone: "+964 770 123 4567",
+      address: "شارع الكندي، حي الجادرية",
+      city: "بغداد",
+      status: "active",
       productsCount: 245,
       totalSales: 15750000,
       rating: 4.8,
-      joinDate: '2023-01-15',
-      lastActive: '2024-01-20',
-      specialties: ['أدوية بيطرية', 'معدات جراحية', 'مستلزمات العيادات'],
+      joinDate: "2023-01-15",
+      lastActive: "2024-01-20",
+      specialties: ["أدوية بيطرية", "معدات جراحية", "مستلزمات العيادات"],
       verified: true,
     },
     {
       id: 2,
-      name: 'مركز النجاح البيطري - المتجر الطبي',
-      ownerName: 'د. فاطمة علي النجفي',
-      ownerEmail: 'dr.fatima@najah-vet.com',
-      phone: '+964 771 234 5678',
-      address: 'شارع الرشيد، المنصور',
-      city: 'بغداد',
-      status: 'pending',
+      name: "مركز النجاح البيطري - المتجر الطبي",
+      ownerName: "د. فاطمة علي النجفي",
+      ownerEmail: "dr.fatima@najah-vet.com",
+      phone: "+964 771 234 5678",
+      address: "شارع الرشيد، المنصور",
+      city: "بغداد",
+      status: "pending",
       productsCount: 189,
       totalSales: 8950000,
       rating: 4.6,
-      joinDate: '2023-11-20',
-      lastActive: '2024-01-19',
-      specialties: ['أدوية القطط والكلاب', 'مكملات غذائية', 'أدوات التشخيص'],
+      joinDate: "2023-11-20",
+      lastActive: "2024-01-19",
+      specialties: ["أدوية القطط والكلاب", "مكملات غذائية", "أدوات التشخيص"],
       verified: false,
     },
     {
       id: 3,
-      name: 'عيادة الشفاء البيطرية - متجر المعدات',
-      ownerName: 'د. محمد حسن البصري',
-      ownerEmail: 'dr.mohammed@shifa-vet.com',
-      phone: '+964 772 345 6789',
-      address: 'شارع الجمهورية، حي العامل',
-      city: 'البصرة',
-      status: 'active',
+      name: "عيادة الشفاء البيطرية - متجر المعدات",
+      ownerName: "د. محمد حسن البصري",
+      ownerEmail: "dr.mohammed@shifa-vet.com",
+      phone: "+964 772 345 6789",
+      address: "شارع الجمهورية، حي العامل",
+      city: "البصرة",
+      status: "active",
       productsCount: 312,
       totalSales: 22100000,
       rating: 4.9,
-      joinDate: '2022-08-10',
-      lastActive: '2024-01-20',
-      specialties: ['معدات جراحية', 'أجهزة تشخيص', 'مستلزمات العمليات'],
+      joinDate: "2022-08-10",
+      lastActive: "2024-01-20",
+      specialties: ["معدات جراحية", "أجهزة تشخيص", "مستلزمات العمليات"],
       verified: true,
     },
     {
       id: 4,
-      name: 'مستوصف الحيوان - متجر الأدوية المتخصص',
-      ownerName: 'د. سارة أحمد الكوفي',
-      ownerEmail: 'dr.sara@animal-clinic.com',
-      phone: '+964 773 456 7890',
-      address: 'شارع الإمام علي، النجف الأشرف',
-      city: 'النجف',
-      status: 'suspended',
+      name: "مستوصف الحيوان - متجر الأدوية المتخصص",
+      ownerName: "د. سارة أحمد الكوفي",
+      ownerEmail: "dr.sara@animal-clinic.com",
+      phone: "+964 773 456 7890",
+      address: "شارع الإمام علي، النجف الأشرف",
+      city: "النجف",
+      status: "suspended",
       productsCount: 156,
       totalSales: 5200000,
       rating: 4.2,
-      joinDate: '2023-06-05',
-      lastActive: '2024-01-10',
-      specialties: ['أدوية الطوارئ', 'مضادات حيوية', 'مسكنات بيطرية'],
+      joinDate: "2023-06-05",
+      lastActive: "2024-01-10",
+      specialties: ["أدوية الطوارئ", "مضادات حيوية", "مسكنات بيطرية"],
       verified: true,
     },
     {
       id: 5,
-      name: 'مركز الخليج البيطري - متجر شامل',
-      ownerName: 'د. عمر يوسف الموصلي',
-      ownerEmail: 'dr.omar@gulf-vet.com',
-      phone: '+964 774 567 8901',
-      address: 'شارع نينوى، حي الشفاء',
-      city: 'الموصل',
-      status: 'active',
+      name: "مركز الخليج البيطري - متجر شامل",
+      ownerName: "د. عمر يوسف الموصلي",
+      ownerEmail: "dr.omar@gulf-vet.com",
+      phone: "+964 774 567 8901",
+      address: "شارع نينوى، حي الشفاء",
+      city: "الموصل",
+      status: "active",
       productsCount: 428,
       totalSales: 31200000,
       rating: 4.7,
-      joinDate: '2022-03-20',
-      lastActive: '2024-01-20',
-      specialties: ['جميع المنتجات البيطرية', 'معدات متقدمة', 'أدوية مستوردة'],
+      joinDate: "2022-03-20",
+      lastActive: "2024-01-20",
+      specialties: ["جميع المنتجات البيطرية", "معدات متقدمة", "أدوية مستوردة"],
       verified: true,
     },
   ];
@@ -151,89 +151,90 @@ export default function VetStoresManagementScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return '#4CAF50';
-      case 'pending': return '#FF9800';
-      case 'suspended': return '#F44336';
-      default: return '#666';
+      case "active":
+        return "#4CAF50";
+      case "pending":
+        return "#FF9800";
+      case "suspended":
+        return "#F44336";
+      default:
+        return "#666";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active': return 'نشط';
-      case 'pending': return 'في الانتظار';
-      case 'suspended': return 'معلق';
-      default: return 'غير محدد';
+      case "active":
+        return "نشط";
+      case "pending":
+        return "في الانتظار";
+      case "suspended":
+        return "معلق";
+      default:
+        return "غير محدد";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <CheckCircle size={16} color="#4CAF50" />;
-      case 'pending': return <Clock size={16} color="#FF9800" />;
-      case 'suspended': return <XCircle size={16} color="#F44336" />;
-      default: return null;
+      case "active":
+        return <CheckCircle size={16} color="#4CAF50" />;
+      case "pending":
+        return <Clock size={16} color="#FF9800" />;
+      case "suspended":
+        return <XCircle size={16} color="#F44336" />;
+      default:
+        return null;
     }
   };
 
-  const filteredStores = mockVetStores.filter(store => {
-    const matchesSearch = store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         store.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         store.city.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesFilter = selectedFilter === 'all' || store.status === selectedFilter;
-    
+  const filteredStores = mockVetStores.filter((store) => {
+    const matchesSearch =
+      store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      store.ownerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      store.city.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesFilter = selectedFilter === "all" || store.status === selectedFilter;
+
     return matchesSearch && matchesFilter;
   });
 
   const handleStoreAction = (action: string, store: VetStore) => {
     console.log(`${action} store:`, store.name);
-    
+
     switch (action) {
-      case 'view':
+      case "view":
         setSelectedStore(store);
         setShowStoreModal(true);
         break;
-      case 'edit':
+      case "edit":
         router.push(`/edit-vet-store?id=${store.id}`);
         break;
-      case 'activate':
-        Alert.alert(
-          'تفعيل المتجر',
-          `هل تريد تفعيل متجر "${store.name}"؟`,
-          [
-            { text: 'إلغاء', style: 'cancel' },
-            { text: 'تفعيل', onPress: () => console.log('Store activated') }
-          ]
-        );
+      case "activate":
+        Alert.alert("تفعيل المتجر", `هل تريد تفعيل متجر "${store.name}"؟`, [
+          { text: "إلغاء", style: "cancel" },
+          { text: "تفعيل", onPress: () => console.log("Store activated") },
+        ]);
         break;
-      case 'suspend':
-        Alert.alert(
-          'تعليق المتجر',
-          `هل تريد تعليق متجر "${store.name}"؟`,
-          [
-            { text: 'إلغاء', style: 'cancel' },
-            { text: 'تعليق', style: 'destructive', onPress: () => console.log('Store suspended') }
-          ]
-        );
+      case "suspend":
+        Alert.alert("تعليق المتجر", `هل تريد تعليق متجر "${store.name}"؟`, [
+          { text: "إلغاء", style: "cancel" },
+          { text: "تعليق", style: "destructive", onPress: () => console.log("Store suspended") },
+        ]);
         break;
-      case 'delete':
-        Alert.alert(
-          'حذف المتجر',
-          `هل تريد حذف متجر "${store.name}" نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.`,
-          [
-            { text: 'إلغاء', style: 'cancel' },
-            { text: 'حذف', style: 'destructive', onPress: () => console.log('Store deleted') }
-          ]
-        );
+      case "delete":
+        Alert.alert("حذف المتجر", `هل تريد حذف متجر "${store.name}" نهائياً؟ هذا الإجراء لا يمكن التراجع عنه.`, [
+          { text: "إلغاء", style: "cancel" },
+          { text: "حذف", style: "destructive", onPress: () => console.log("Store deleted") },
+        ]);
         break;
     }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('ar-IQ', {
-      style: 'currency',
-      currency: 'IQD',
+    return new Intl.NumberFormat("ar-IQ", {
+      style: "currency",
+      currency: "IQD",
       minimumFractionDigits: 0,
     }).format(amount);
   };
@@ -253,7 +254,9 @@ export default function VetStoresManagementScreen() {
           <Text style={styles.storeOwner}>المالك: {store.ownerName}</Text>
           <View style={styles.storeLocation}>
             <MapPin size={14} color={COLORS.darkGray} />
-            <Text style={styles.locationText}>{store.address}, {store.city}</Text>
+            <Text style={styles.locationText}>
+              {store.address}, {store.city}
+            </Text>
           </View>
         </View>
         <View style={styles.storeStatus}>
@@ -295,34 +298,34 @@ export default function VetStoresManagementScreen() {
       <View style={styles.storeActions}>
         <TouchableOpacity
           style={[styles.actionButton, styles.viewButton]}
-          onPress={() => handleStoreAction('view', store)}
+          onPress={() => handleStoreAction("view", store)}
         >
           <Eye size={16} color={COLORS.white} />
           <Text style={styles.actionButtonText}>عرض</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.actionButton, styles.editButton]}
-          onPress={() => handleStoreAction('edit', store)}
+          onPress={() => handleStoreAction("edit", store)}
         >
           <Edit3 size={16} color={COLORS.white} />
           <Text style={styles.actionButtonText}>تعديل</Text>
         </TouchableOpacity>
 
-        {store.status === 'pending' && (
+        {store.status === "pending" && (
           <TouchableOpacity
             style={[styles.actionButton, styles.activateButton]}
-            onPress={() => handleStoreAction('activate', store)}
+            onPress={() => handleStoreAction("activate", store)}
           >
             <CheckCircle size={16} color={COLORS.white} />
             <Text style={styles.actionButtonText}>تفعيل</Text>
           </TouchableOpacity>
         )}
 
-        {store.status === 'active' && (
+        {store.status === "active" && (
           <TouchableOpacity
             style={[styles.actionButton, styles.suspendButton]}
-            onPress={() => handleStoreAction('suspend', store)}
+            onPress={() => handleStoreAction("suspend", store)}
           >
             <XCircle size={16} color={COLORS.white} />
             <Text style={styles.actionButtonText}>تعليق</Text>
@@ -331,7 +334,7 @@ export default function VetStoresManagementScreen() {
 
         <TouchableOpacity
           style={[styles.actionButton, styles.deleteButton]}
-          onPress={() => handleStoreAction('delete', store)}
+          onPress={() => handleStoreAction("delete", store)}
         >
           <Trash2 size={16} color={COLORS.white} />
           <Text style={styles.actionButtonText}>حذف</Text>
@@ -348,10 +351,7 @@ export default function VetStoresManagementScreen() {
             <>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>تفاصيل المتجر</Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={() => setShowStoreModal(false)}
-                >
+                <TouchableOpacity style={styles.closeButton} onPress={() => setShowStoreModal(false)}>
                   <Text style={styles.closeButtonText}>×</Text>
                 </TouchableOpacity>
               </View>
@@ -379,7 +379,9 @@ export default function VetStoresManagementScreen() {
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>التخصصات</Text>
                   {selectedStore.specialties.map((specialty, index) => (
-                    <Text key={index} style={styles.modalText}>• {specialty}</Text>
+                    <Text key={index} style={styles.modalText}>
+                      • {specialty}
+                    </Text>
                   ))}
                 </View>
               </ScrollView>
@@ -392,13 +394,13 @@ export default function VetStoresManagementScreen() {
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
-          title: 'إدارة متاجر الأطباء البيطريين',
+      <Stack.Screen
+        options={{
+          title: "إدارة متاجر الأطباء البيطريين",
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold' as const }
-        }} 
+          headerTitleStyle: { fontWeight: "bold" as const },
+        }}
       />
       <SafeAreaView style={styles.container}>
         {/* Header */}
@@ -427,23 +429,17 @@ export default function VetStoresManagementScreen() {
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {[
-              { key: 'all', label: 'الكل' },
-              { key: 'active', label: 'نشط' },
-              { key: 'pending', label: 'في الانتظار' },
-              { key: 'suspended', label: 'معلق' },
+              { key: "all", label: "الكل" },
+              { key: "active", label: "نشط" },
+              { key: "pending", label: "في الانتظار" },
+              { key: "suspended", label: "معلق" },
             ].map((filter) => (
               <TouchableOpacity
                 key={filter.key}
-                style={[
-                  styles.filterButton,
-                  selectedFilter === filter.key && styles.activeFilterButton
-                ]}
+                style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilterButton]}
                 onPress={() => setSelectedFilter(filter.key)}
               >
-                <Text style={[
-                  styles.filterButtonText,
-                  selectedFilter === filter.key && styles.activeFilterButtonText
-                ]}>
+                <Text style={[styles.filterButtonText, selectedFilter === filter.key && styles.activeFilterButtonText]}>
                   {filter.label}
                 </Text>
               </TouchableOpacity>
@@ -460,12 +456,12 @@ export default function VetStoresManagementScreen() {
           </View>
           <View style={styles.statCard}>
             <CheckCircle size={24} color="#4CAF50" />
-            <Text style={styles.statNumber}>{mockVetStores.filter(s => s.status === 'active').length}</Text>
+            <Text style={styles.statNumber}>{mockVetStores.filter((s) => s.status === "active").length}</Text>
             <Text style={styles.statLabel}>متاجر نشطة</Text>
           </View>
           <View style={styles.statCard}>
             <Clock size={24} color="#FF9800" />
-            <Text style={styles.statNumber}>{mockVetStores.filter(s => s.status === 'pending').length}</Text>
+            <Text style={styles.statNumber}>{mockVetStores.filter((s) => s.status === "pending").length}</Text>
             <Text style={styles.statLabel}>في الانتظار</Text>
           </View>
         </View>
@@ -483,10 +479,7 @@ export default function VetStoresManagementScreen() {
         </ScrollView>
 
         {/* Add Store Button */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push('/add-vet-store')}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={() => router.push("/add-vet-store")}>
           <Plus size={24} color={COLORS.white} />
           <Text style={styles.addButtonText}>إضافة متجر جديد</Text>
         </TouchableOpacity>
@@ -500,17 +493,17 @@ export default function VetStoresManagementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   header: {
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -520,9 +513,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -531,15 +524,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -548,7 +541,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   filtersContainer: {
     paddingHorizontal: 16,
@@ -573,10 +566,10 @@ const styles = StyleSheet.create({
   },
   activeFilterButtonText: {
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     gap: 12,
     marginBottom: 16,
@@ -586,23 +579,23 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   statNumber: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
   },
   storesList: {
@@ -615,29 +608,29 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   storeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   storeInfo: {
     flex: 1,
   },
   storeTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 4,
   },
   storeName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
   },
@@ -650,8 +643,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   storeLocation: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   locationText: {
@@ -659,11 +652,11 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   storeStatus: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -672,11 +665,11 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   storeStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: 12,
     borderTopWidth: 1,
     borderBottomWidth: 1,
@@ -684,17 +677,17 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   statValue: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   ratingValue: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   storeSpecialties: {
@@ -702,17 +695,17 @@ const styles = StyleSheet.create({
   },
   specialtiesTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
   },
   specialtiesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   specialtyTag: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -722,13 +715,13 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   storeActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -738,25 +731,25 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   editButton: {
-    backgroundColor: '#FF9800',
+    backgroundColor: "#FF9800",
   },
   activateButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
   },
   suspendButton: {
-    backgroundColor: '#FF5722',
+    backgroundColor: "#FF5722",
   },
   deleteButton: {
-    backgroundColor: '#F44336',
+    backgroundColor: "#F44336",
   },
   actionButtonText: {
     fontSize: 12,
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 60,
   },
   emptyStateText: {
@@ -765,48 +758,48 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.primary,
     margin: 16,
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   addButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
     backgroundColor: COLORS.white,
     borderRadius: 16,
-    width: '90%',
-    maxHeight: '80%',
+    width: "90%",
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   closeButton: {
@@ -814,12 +807,12 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     backgroundColor: COLORS.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   closeButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.darkGray,
   },
   modalScroll: {
@@ -830,7 +823,7 @@ const styles = StyleSheet.create({
   },
   modalSectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -838,6 +831,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
 });

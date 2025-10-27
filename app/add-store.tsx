@@ -4,10 +4,10 @@ import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import Button from "../components/Button";
-import { ArrowRight, Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit } from "lucide-react-native";
+import { ArrowRight, Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "lucide-react-native";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
-import { trpc } from "../lib/trpc";
+import { queryClient, trpc } from "../lib/trpc";
 import * as ImagePicker from "expo-image-picker";
 import { useMutation } from "@tanstack/react-query";
 
@@ -17,6 +17,7 @@ interface StoreFormData {
   address: string;
   phone: string;
   email: string;
+  category: string;
   licenseNumber: string;
   licenseImage: string;
   workingHours: string;
@@ -24,7 +25,7 @@ interface StoreFormData {
 
 export default function AddStoreScreen() {
   const { t, isRTL } = useI18n();
-  const { hasAdminAccess } = useApp();
+  const { user, hasAdminAccess } = useApp();
   const [showSubscription, setShowSubscription] = useState(false);
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
@@ -32,26 +33,13 @@ export default function AddStoreScreen() {
     address: "",
     phone: "",
     email: "",
+    category: "",
     licenseNumber: "",
     licenseImage: "",
     workingHours: "",
   });
 
-  const createStoreMutation = useMutation(
-    trpc.stores.create.mutationOptions({
-      onSuccess: (data) => {
-        Alert.alert("نجح", data.message, [
-          {
-            text: "موافق",
-            onPress: () => router.back(),
-          },
-        ]);
-      },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message);
-      },
-    })
-  );
+  const createStoreMutation = useMutation(trpc.stores.create.mutationOptions({}));
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -73,16 +61,36 @@ export default function AddStoreScreen() {
 
     // setIsSubmitting(true);
     try {
-      await createStoreMutation.mutateAsync({
-        name: formData.name,
-        description: formData.description,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email,
-        licenseNumber: formData.licenseNumber,
-        licenseImage: formData.licenseImage,
-        workingHours: formData.workingHours,
-      });
+      createStoreMutation.mutate(
+        {
+          userId: user?.id,
+          name: formData.name,
+          description: formData.description,
+          address: formData.address,
+          phone: formData.phone,
+          email: formData.email,
+          category: formData.category,
+          licenseNumber: formData.licenseNumber,
+          licenseImage: formData.licenseImage,
+          workingHours: formData.workingHours,
+        },
+        {
+          onSuccess: (data) => {
+            Alert.alert("نجح", data.message, [
+              {
+                text: "موافق",
+                onPress: () => {
+                  queryClient.invalidateQueries(trpc.content.stores.list.queryKey);
+                  router.back();
+                },
+              },
+            ]);
+          },
+          onError: (error) => {
+            Alert.alert("خطأ", error.message);
+          },
+        }
+      );
     } catch (error) {
       console.error("Error creating store:", error);
     } finally {
@@ -197,6 +205,20 @@ export default function AddStoreScreen() {
                   onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
                   placeholder="البريد الإلكتروني"
                   keyboardType="email-address"
+                  textAlign={isRTL ? "right" : "left"}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>الفئة</Text>
+              <View style={styles.inputWithIcon}>
+                <School size={20} color={COLORS.darkGray} />
+                <TextInput
+                  style={[styles.input, styles.inputWithIconText]}
+                  value={formData.category}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, category: text }))}
+                  placeholder="الفئة المتعلق بها المتجر"
                   textAlign={isRTL ? "right" : "left"}
                 />
               </View>

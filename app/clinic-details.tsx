@@ -351,10 +351,11 @@ export default function ClinicDetailsScreen() {
                 createAppointmentMutation.mutate(
                   {
                     clinicId: clinic.id,
-                    // userId should be inferred from context on the backend
-                    appointmentTime: `${appointmentDetails.date}T${appointmentDetails.time}:00.000Z`, // Combine date and time
-                    reason: appointmentDetails.reason,
-                    petId: "1", // TODO: Allow selecting a pet
+                    userId: 1, // TODO: Get from auth context
+                    vetId: 1, // TODO: Get from clinic data
+                    petId: 1, // TODO: Allow selecting a pet
+                    appointmentDate: new Date(`${appointmentDetails.date}T${appointmentDetails.time}:00.000Z`), // Combine date and time
+                    type: appointmentDetails.reason,
                   },
                   {
                     onSuccess: () => {

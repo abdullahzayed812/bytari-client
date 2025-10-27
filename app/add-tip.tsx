@@ -1,52 +1,58 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { ArrowLeft, Plus, Upload } from 'lucide-react-native';
-import { useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Plus, Upload } from "lucide-react-native";
+import { useMutation } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
+import { useApp } from "@/providers/AppProvider";
 
 export default function AddTipScreen() {
+  const { user } = useApp();
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    category: ''
+    title: "",
+    content: "",
+    category: "",
   });
 
   const createTipMutation = useMutation(trpc.admin.content.createTip.mutationOptions());
 
   const handleSave = () => {
     if (!formData.title || !formData.content) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
-    
-    createTipMutation.mutate({
+
+    createTipMutation.mutate(
+      {
+        admindId: +user?.id,
         title: formData.title,
         content: formData.content,
         category: formData.category,
-    }, {
+      },
+      {
         onSuccess: () => {
-            Alert.alert('نجح', 'تم إضافة النصيحة بنجاح');
-            router.back();
+          Alert.alert("نجح", "تم إضافة النصيحة بنجاح");
+          router.back();
         },
         onError: (error) => {
-            Alert.alert('خطأ', error.message || 'فشل في إضافة النصيحة');
-        }
-    });
+          Alert.alert("خطأ", error.message || "فشل في إضافة النصيحة");
+        },
+      }
+    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'إضافة نصيحة جديدة',
+          title: "إضافة نصيحة جديدة",
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -54,7 +60,7 @@ export default function AddTipScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
           <View style={styles.imageSection}>
@@ -73,7 +79,7 @@ export default function AddTipScreen() {
             <TextInput
               style={styles.input}
               value={formData.title}
-              onChangeText={(text) => setFormData({...formData, title: text})}
+              onChangeText={(text) => setFormData({ ...formData, title: text })}
               placeholder="أدخل عنوان النصيحة"
               textAlign="right"
             />
@@ -84,7 +90,7 @@ export default function AddTipScreen() {
             <TextInput
               style={styles.input}
               value={formData.category}
-              onChangeText={(text) => setFormData({...formData, category: text})}
+              onChangeText={(text) => setFormData({ ...formData, category: text })}
               placeholder="أدخل تصنيف النصيحة"
               textAlign="right"
             />
@@ -95,7 +101,7 @@ export default function AddTipScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
-              onChangeText={(text) => setFormData({...formData, content: text})}
+              onChangeText={(text) => setFormData({ ...formData, content: text })}
               placeholder="أدخل محتوى النصيحة"
               textAlign="right"
               multiline
@@ -107,7 +113,7 @@ export default function AddTipScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={createTipMutation.isPending ? 'جاري الإضافة...' : 'إضافة النصيحة'}
+          title={createTipMutation.isPending ? "جاري الإضافة..." : "إضافة النصيحة"}
           onPress={handleSave}
           type="primary"
           size="large"
@@ -137,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   imageSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   imagePlaceholder: {
@@ -146,21 +152,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: COLORS.lightGray,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
     backgroundColor: COLORS.background,
   },
   imagePlaceholderText: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 8,
   },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -170,16 +176,16 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
   },
   input: {
@@ -194,7 +200,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 120,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   footer: {
     padding: 20,

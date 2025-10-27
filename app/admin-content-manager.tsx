@@ -943,7 +943,7 @@ export default function AdminContentManagerScreen() {
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>
-              {editingItem ? "تعديل" : "إضافة"} {getContentTypeTitle(contentType).slice(0, -1)}
+              {editingItem ? "تعديل" : "إضافة"} {getContentTypeTitle(contentType)}
             </Text>
             <TouchableOpacity
               onPress={handleSave}

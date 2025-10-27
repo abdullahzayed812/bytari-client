@@ -98,10 +98,15 @@ export default function EditBookScreen() {
   const handleSave = () => {
     updateBookMutation.mutate(
       {
-        id: bookId,
-        ...formData,
-        image: selectedImage,
-        file: selectedFile,
+        bookId: bookId,
+        adminId: 1, // TODO: Get from auth context
+        title: formData.title,
+        author: formData.author,
+        description: formData.description,
+        pages: formData.pages ? parseInt(formData.pages) : undefined,
+        category: formData.category as any,
+        coverImage: selectedImage,
+        pdfUrl: selectedFile ? selectedFile.uri : undefined,
       },
       {
         onSuccess: () => {

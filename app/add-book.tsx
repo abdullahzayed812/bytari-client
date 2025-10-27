@@ -76,13 +76,14 @@ export default function AddBookScreen() {
     }
     
     createBookMutation.mutate({
+        adminId: 1, // TODO: Get from auth context
         title: formData.title,
         author: formData.author,
         description: formData.description,
-        pages: formData.pages,
-        category: formData.category,
-        image: selectedImage,
-        file: selectedFile,
+        pages: formData.pages ? parseInt(formData.pages) : undefined,
+        category: formData.category as any,
+        coverImage: selectedImage,
+        pdfUrl: selectedFile ? selectedFile.uri : undefined,
     }, {
         onSuccess: () => {
             Alert.alert('نجح', 'تم إضافة الكتاب بنجاح');

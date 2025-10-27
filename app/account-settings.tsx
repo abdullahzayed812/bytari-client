@@ -55,7 +55,7 @@ export default function AccountSettingsScreen() {
     }
 
     updateProfileMutation.mutate(
-      { name, email, phone },
+      { name, phone },
       {
         onSuccess: () => {
           Alert.alert("تم الحفظ", "تم تحديث معلوماتك بنجاح");

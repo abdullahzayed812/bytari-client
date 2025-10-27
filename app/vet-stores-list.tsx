@@ -19,11 +19,10 @@ export default function VetStoresListScreen() {
   const [selectedStore, setSelectedStore] = useState<VetStore | null>(null);
 
   // Real backend data for vet stores (when userMode is veterinarian)
-  const { data: rawVetStores, isLoading: vetStoresLoading } = useQuery(
-    trpc.stores.list.queryOptions(undefined, {
-      enabled: userMode === "veterinarian",
-    })
-  );
+  const { data: rawVetStores, isLoading: vetStoresLoading } = useQuery({
+    ...trpc.stores.list.queryOptions(),
+    enabled: userMode === "veterinarian",
+  });
 
   const vetStores = useMemo(() => (rawVetStores as any)?.stores, [rawVetStores]);
   const vetStoresData = vetStores?.filter((store) => store.isActive) || [];

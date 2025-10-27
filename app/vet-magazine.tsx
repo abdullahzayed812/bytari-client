@@ -112,7 +112,7 @@ export default function VetMagazineScreen() {
                   onPress={() => {
                     router.push("/admin-content-manager?type=articles");
                   }}
-                  style={[styles.headerButton, styles.editButton]}
+                  style={[styles.headerButton, styles.addButton]}
                 >
                   <Edit3 size={20} color={COLORS.white} />
                 </TouchableOpacity>

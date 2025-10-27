@@ -35,7 +35,8 @@ export default function EditTipScreen() {
 
   const handleSave = () => {
     updateTipMutation.mutate({
-        id: tipId,
+        tipId: tipId,
+        adminId: 1, // TODO: Get from auth context
         ...formData,
     }, {
         onSuccess: () => {

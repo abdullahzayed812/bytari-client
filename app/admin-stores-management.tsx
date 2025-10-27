@@ -97,7 +97,6 @@ export default function AdminStoresManagement() {
     error: storesError,
   } = useQuery(trpc.stores.list.queryOptions({}));
   const stores: StoreData[] = useMemo(() => (storesData as any)?.stores, [storesData]);
-  console.log(stores);
 
   const storeTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = [
     {
@@ -612,7 +611,6 @@ export default function AdminStoresManagement() {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
     backgroundColor: "#f8f9fa",
   },
   searchContainer: {
@@ -650,6 +648,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   listContainer: {
+    paddingBottom: 200,
     padding: 15,
   },
   storeCard: {

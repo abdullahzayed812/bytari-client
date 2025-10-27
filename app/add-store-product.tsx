@@ -16,7 +16,6 @@ interface StoreProductFormData {
   category: string;
   price: string;
   stock: string;
-  petType: string[];
   images: string[];
 }
 
@@ -33,7 +32,6 @@ export default function AddStoreProductScreen() {
     category: "food",
     price: "",
     stock: "",
-    petType: [],
     images: [],
   });
 
@@ -64,29 +62,7 @@ export default function AddStoreProductScreen() {
 
   const categories = getCategories();
 
-  // Pet types based on store type
-  const getPetTypes = () => {
-    if (currentStoreType === "veterinarian") {
-      return [
-        { id: "small_animals", name: "حيوانات صغيرة" },
-        { id: "large_animals", name: "حيوانات كبيرة" },
-        { id: "poultry", name: "دواجن" },
-        { id: "exotic", name: "حيوانات غريبة" },
-        { id: "farm_animals", name: "حيوانات المزرعة" },
-        { id: "wildlife", name: "حيوانات برية" },
-      ];
-    }
-    return [
-      { id: "cat", name: "قطط" },
-      { id: "dog", name: "كلاب" },
-      { id: "bird", name: "طيور" },
-      { id: "fish", name: "أسماك" },
-      { id: "rabbit", name: "أرانب" },
-      { id: "hamster", name: "هامستر" },
-    ];
-  };
 
-  const petTypes = getPetTypes();
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -99,10 +75,6 @@ export default function AddStoreProductScreen() {
     }
     if (!formData.stock.trim()) {
       Alert.alert("خطأ", "الكمية مطلوبة");
-      return;
-    }
-    if (formData.petType.length === 0) {
-      Alert.alert("خطأ", "يجب اختيار نوع حيوان واحد على الأقل");
       return;
     }
 
@@ -137,14 +109,7 @@ export default function AddStoreProductScreen() {
     );
   };
 
-  const handlePetTypeToggle = (petTypeId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      petType: prev.petType.includes(petTypeId)
-        ? prev.petType.filter((id) => id !== petTypeId)
-        : [...prev.petType, petTypeId],
-    }));
-  };
+
 
   const handleAddImage = async () => {
     try {
@@ -300,24 +265,7 @@ export default function AddStoreProductScreen() {
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>نوع الحيوان *</Text>
-            <View style={styles.petTypeGrid}>
-              {petTypes.map((petType) => (
-                <TouchableOpacity
-                  key={petType.id}
-                  style={[styles.petTypeChip, formData.petType.includes(petType.id) && styles.selectedPetTypeChip]}
-                  onPress={() => handlePetTypeToggle(petType.id)}
-                >
-                  <Text
-                    style={[styles.petTypeText, formData.petType.includes(petType.id) && styles.selectedPetTypeText]}
-                  >
-                    {petType.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>

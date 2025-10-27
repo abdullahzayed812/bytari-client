@@ -47,7 +47,7 @@ export default function VeterinarianApprovalsScreen() {
         style: "default",
         onPress: () => {
           approveMutation.mutate(
-            { id: applicationId },
+            { applicationId: applicationId, adminId: user?.id },
             {
               onSuccess: () => {
                 Alert.alert("تم بنجاح", "تم الموافقة على الطلب وإرسال إشعار للمستخدم.");
@@ -75,7 +75,7 @@ export default function VeterinarianApprovalsScreen() {
           style: "destructive",
           onPress: (reason) => {
             rejectMutation.mutate(
-              { id: applicationId, reason: reason || "" },
+              { applicationId: applicationId, reason: reason || "", adminId: user?.id },
               {
                 onSuccess: () => {
                   Alert.alert("تم بنجاح", "تم رفض الطلب وإرسال إشعار للمستخدم.");

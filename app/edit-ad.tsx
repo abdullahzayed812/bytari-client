@@ -38,7 +38,7 @@ export default function EditAdScreen() {
     content: "",
     image: "",
     link: "",
-    type: "banner" as "banner" | "popup" | "inline",
+    type: "banner" as "banner" | "popup" | "inline" | "image_only" | "image_with_link",
     position: "",
     startDate: new Date(),
     endDate: new Date(),
@@ -238,6 +238,8 @@ export default function EditAdScreen() {
                 { value: "banner", label: "بانر" },
                 { value: "popup", label: "نافذة منبثقة" },
                 { value: "inline", label: "مدمج" },
+                { value: "image_only", label: "صورة فقط" },
+                { value: "image_with_link", label: "صورة مع رابط" },
               ].map((type) => (
                 <TouchableOpacity
                   key={type.value}
@@ -245,7 +247,7 @@ export default function EditAdScreen() {
                   onPress={() =>
                     setFormData((prev) => ({
                       ...prev,
-                      type: type.value as "banner" | "popup" | "inline",
+                      type: type.value as "banner" | "popup" | "inline" | "image_only" | "image_with_link",
                     }))
                   }
                 >

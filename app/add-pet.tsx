@@ -117,7 +117,6 @@ export default function AddPetScreen() {
           gender: formData.gender,
           weight: formData.weight ? parseFloat(formData.weight) : undefined,
           color: formData.color.trim() || undefined,
-          birthDate: formData.birthDate || undefined,
           image: formData.image,
           ownerId: user.id,
         },
