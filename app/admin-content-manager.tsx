@@ -160,7 +160,7 @@ export default function AdminContentManagerScreen() {
   });
 
   const adsQuery = useQuery({
-    ...trpc.admin.ads.getAll.queryOptions({ adminId: user?.id }),
+    ...trpc.admin.ads.getAll.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
     enabled: contentType === "ads" && !!user?.id,
   });
 
@@ -190,7 +190,7 @@ export default function AdminContentManagerScreen() {
   });
 
   const petsQuery = useQuery({
-    ...trpc.pets.getAllForAdmin.queryOptions({ adminId: user?.id }),
+    ...trpc.pets.getAllForAdmin.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
     enabled: contentType === "pets",
   });
 

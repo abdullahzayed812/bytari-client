@@ -5,6 +5,8 @@ import { useRouter, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, MapPin, Phone, Mail, Clock, Camera, Upload, Building, Stethoscope } from "lucide-react-native";
 import { useMutation } from "@tanstack/react-query";
+import { trpc } from "../lib/trpc";
+import Button from "../components/Button";
 
 export default function ClinicRegistration() {
   const router = useRouter();
@@ -51,8 +53,8 @@ export default function ClinicRegistration() {
         description: formData.description || "",
 
         licenseNumber: formData.licenseNumber,
-        licenseImages: ["https://example.com/license.png"], // Mock image
-        identityImages: ["https://example.com/identity.png"], // Mock image
+        licenseImages: formData.licenseImage ? [formData.licenseImage] : [],
+        identityImages: [], // TODO: Add identity images upload field
 
         latitude: 0,
         longitude: 0,

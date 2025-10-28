@@ -98,7 +98,7 @@ export default function AdminDashboard() {
 
   // Fetch data using tRPC
   const { data: rawSystemStats, isLoading: statsLoading } = useQuery(
-    trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id })
+    trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
   );
 
   const systemStats: any = useMemo(() => rawSystemStats, [rawSystemStats]);
@@ -110,20 +110,20 @@ export default function AdminDashboard() {
   const userPermissions: any = useMemo(() => rawUserPermissions, [rawUserPermissions]);
 
   const { data: rawApprovalCounts, isLoading: approvalCountsLoading } = useQuery(
-    trpc.admin.stats.getPendingApprovalCounts.queryOptions({ adminId: user?.id })
+    trpc.admin.stats.getPendingApprovalCounts.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
   );
 
   const approvalCounts: any = useMemo(() => rawApprovalCounts, [rawApprovalCounts]);
 
   const { data: rawAllUsersData, isLoading: allUsersLoading } = useQuery(
-    trpc.admin.users.listAll.queryOptions({ adminId: user?.id, limit: 50 })
+    trpc.admin.users.listAll.queryOptions({ adminId: user?.id ? Number(user.id) : 0, limit: 50 })
   );
 
   const allUsersData: any = useMemo(() => rawAllUsersData, [rawAllUsersData]);
 
   const { data: rawDetailedStats, isLoading: detailedStatsLoading } = useQuery({
     ...trpc.admin.stats.getDetailedStats.queryOptions({
-      adminId: user?.id,
+        adminId: user?.id ? Number(user.id) : 0,
       category: selectedCategory as "users" | "pets" | "inquiries" | "consultations" | "stores",
     }),
     enabled: !!selectedCategory,

@@ -15,7 +15,15 @@ import { Stack } from "expo-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import { trpc } from "@/lib/trpc";
-import { BarChart3, Edit3, Eye, Plus, Trash2, Upload, X } from "lucide-react-native";
+import {
+  BarChart3,
+  Edit3,
+  Eye,
+  Plus,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 
 interface Advertisement {
@@ -42,7 +50,9 @@ export default function AdminAdsManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAd, setSelectedAd] = useState<Advertisement | null>(null);
-  const [filterInterface, setFilterInterface] = useState<"all" | "pet_owner" | "vet">("all");
+  const [filterInterface, setFilterInterface] = useState<
+    "all" | "pet_owner" | "vet"
+  >("all");
 
   // Form state
   const [formData, setFormData] = useState<{
@@ -66,10 +76,20 @@ export default function AdminAdsManagement() {
     interface: "both",
     clickAction: "none",
     startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
   });
 
-  const { data: adsData, isLoading, refetch } = useQuery(trpc.admin.ads.getAll.queryOptions({ adminId: user?.id }));
+  const {
+    data: adsData,
+    isLoading,
+    refetch,
+  } = useQuery(
+    trpc.admin.ads.getAll.queryOptions({
+      adminId: user?.id ? Number(user.id) : 1,
+    })
+  );
   const ads = useMemo(() => (adsData as any)?.ads, [adsData]);
 
   const createAdMutation = useMutation(trpc.admin.ads.create.mutationOptions());
@@ -106,22 +126,32 @@ export default function AdminAdsManagement() {
       interface: "both",
       clickAction: "none",
       startDate: new Date().toISOString().split("T")[0],
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
     });
   };
 
   const handleCreateAd = () => {
-    createAdMutation.mutate(formData, {
-      onSuccess: () => {
-        Alert.alert("نجح", "تم إنشاء الإعلان بنجاح");
-        setShowCreateModal(false);
-        resetForm();
-        refetch();
+    createAdMutation.mutate(
+      {
+        ...formData,
+        startDate: new Date(formData.startDate),
+        endDate: new Date(formData.endDate),
+        adminId: user?.id,
       },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message || "فشل في إنشاء الإعلان");
-      },
-    });
+      {
+        onSuccess: () => {
+          Alert.alert("نجح", "تم إنشاء الإعلان بنجاح");
+          setShowCreateModal(false);
+          resetForm();
+          refetch();
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message || "فشل في إنشاء الإعلان");
+        },
+      }
+    );
   };
 
   const handleEditAd = () => {
@@ -236,7 +266,10 @@ export default function AdminAdsManagement() {
       <View style={styles.header}>
         <Text style={styles.title}>إدارة الإعلانات</Text>
         <Text style={styles.subtitle}>
-          الواجهة الحالية: {userMode === "veterinarian" ? "الأطباء البيطريين" : "أصحاب الحيوانات"}
+          الواجهة الحالية:{" "}
+          {userMode === "veterinarian"
+            ? "الأطباء البيطريين"
+            : "أصحاب الحيوانات"}
         </Text>
       </View>
 
@@ -246,33 +279,61 @@ export default function AdminAdsManagement() {
           <Text style={styles.filterLabel}>تصفية حسب الواجهة:</Text>
           <View style={styles.filterButtons}>
             <TouchableOpacity
-              style={[styles.filterButton, filterInterface === "all" && styles.activeFilterButton]}
+              style={[
+                styles.filterButton,
+                filterInterface === "all" && styles.activeFilterButton,
+              ]}
               onPress={() => setFilterInterface("all")}
             >
-              <Text style={[styles.filterButtonText, filterInterface === "all" && styles.activeFilterButtonText]}>
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  filterInterface === "all" && styles.activeFilterButtonText,
+                ]}
+              >
                 الكل
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.filterButton, filterInterface === "pet_owner" && styles.activeFilterButton]}
+              style={[
+                styles.filterButton,
+                filterInterface === "pet_owner" && styles.activeFilterButton,
+              ]}
               onPress={() => setFilterInterface("pet_owner")}
             >
-              <Text style={[styles.filterButtonText, filterInterface === "pet_owner" && styles.activeFilterButtonText]}>
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  filterInterface === "pet_owner" &&
+                    styles.activeFilterButtonText,
+                ]}
+              >
                 أصحاب الحيوانات
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.filterButton, filterInterface === "vet" && styles.activeFilterButton]}
+              style={[
+                styles.filterButton,
+                filterInterface === "vet" && styles.activeFilterButton,
+              ]}
               onPress={() => setFilterInterface("vet")}
             >
-              <Text style={[styles.filterButtonText, filterInterface === "vet" && styles.activeFilterButtonText]}>
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  filterInterface === "vet" && styles.activeFilterButtonText,
+                ]}
+              >
                 الأطباء
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={() => setShowCreateModal(true)}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowCreateModal(true)}
+        >
           <Plus size={20} color="#fff" />
           <Text style={styles.addButtonText}>إضافة إعلان</Text>
         </TouchableOpacity>
@@ -288,30 +349,50 @@ export default function AdminAdsManagement() {
                 <View style={styles.adMeta}>
                   <View style={styles.adMetaItem}>
                     <Text style={styles.adMetaLabel}>النوع:</Text>
-                    <Text style={styles.adMetaValue}>{getTypeLabel(ad.type)}</Text>
+                    <Text style={styles.adMetaValue}>
+                      {getTypeLabel(ad.type)}
+                    </Text>
                   </View>
                   <View style={styles.adMetaItem}>
                     <Text style={styles.adMetaLabel}>الواجهة:</Text>
-                    <Text style={styles.adMetaValue}>{getInterfaceLabel(ad.interface)}</Text>
+                    <Text style={styles.adMetaValue}>
+                      {getInterfaceLabel(ad.interface)}
+                    </Text>
                   </View>
                   <View style={styles.adMetaItem}>
                     <Text style={styles.adMetaLabel}>الإجراء:</Text>
-                    <Text style={styles.adMetaValue}>{getClickActionLabel(ad.clickAction)}</Text>
+                    <Text style={styles.adMetaValue}>
+                      {getClickActionLabel(ad.clickAction)}
+                    </Text>
                   </View>
                 </View>
               </View>
               <View style={styles.adStatus}>
-                <View style={[styles.statusBadge, ad.isActive ? styles.activeBadge : styles.inactiveBadge]}>
-                  <Text style={[styles.statusText, ad.isActive ? styles.activeText : styles.inactiveText]}>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    ad.isActive ? styles.activeBadge : styles.inactiveBadge,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusText,
+                      ad.isActive ? styles.activeText : styles.inactiveText,
+                    ]}
+                  >
                     {ad.isActive ? "نشط" : "معطل"}
                   </Text>
                 </View>
               </View>
             </View>
 
-            {ad.imageUrl && <Image source={{ uri: ad.imageUrl }} style={styles.adImage} />}
+            {ad.imageUrl && (
+              <Image source={{ uri: ad.imageUrl }} style={styles.adImage} />
+            )}
 
-            {ad.description && <Text style={styles.adContent}>{ad.description}</Text>}
+            {ad.description && (
+              <Text style={styles.adContent}>{ad.description}</Text>
+            )}
 
             <View style={styles.adStats}>
               <View style={styles.statItem}>
@@ -324,19 +405,31 @@ export default function AdminAdsManagement() {
               </View>
               <View style={styles.statItem}>
                 <Text style={styles.statText}>
-                  معدل النقر: {ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : 0}%
+                  معدل النقر:{" "}
+                  {ad.impressions > 0
+                    ? ((ad.clicks / ad.impressions) * 100).toFixed(1)
+                    : 0}
+                  %
                 </Text>
               </View>
             </View>
 
             <View style={styles.adActions}>
-              <TouchableOpacity style={styles.actionButton} onPress={() => openEditModal(ad)}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => openEditModal(ad)}
+              >
                 <Edit3 size={16} color="#4ECDC4" />
                 <Text style={styles.actionButtonText}>تعديل</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteAd(ad)}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleDeleteAd(ad)}
+              >
                 <Trash2 size={16} color="#FF6B6B" />
-                <Text style={[styles.actionButtonText, { color: "#FF6B6B" }]}>حذف</Text>
+                <Text style={[styles.actionButtonText, { color: "#FF6B6B" }]}>
+                  حذف
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -368,7 +461,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={styles.formInput}
                 value={formData.title}
-                onChangeText={(text) => setFormData({ ...formData, title: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, title: text })
+                }
                 placeholder="أدخل عنوان الإعلان"
                 placeholderTextColor="#999"
               />
@@ -379,7 +474,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={[styles.formInput, styles.textArea]}
                 value={formData.content}
-                onChangeText={(text) => setFormData({ ...formData, content: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, content: text })
+                }
                 placeholder="أدخل محتوى الإعلان"
                 placeholderTextColor="#999"
                 multiline
@@ -389,13 +486,21 @@ export default function AdminAdsManagement() {
 
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>صورة الإعلان</Text>
-              <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+              <TouchableOpacity
+                style={styles.imagePickerButton}
+                onPress={pickImage}
+              >
                 <Upload size={20} color="#4ECDC4" />
-                <Text style={styles.imagePickerText}>{formData.image ? "تغيير الصورة" : "رفع صورة"}</Text>
+                <Text style={styles.imagePickerText}>
+                  {formData.image ? "تغيير الصورة" : "رفع صورة"}
+                </Text>
               </TouchableOpacity>
               {formData.image && (
                 <View style={styles.imagePreviewContainer}>
-                  <Image source={{ uri: formData.image }} style={styles.imagePreview} />
+                  <Image
+                    source={{ uri: formData.image }}
+                    style={styles.imagePreview}
+                  />
                   <TouchableOpacity
                     style={styles.removeImageButton}
                     onPress={() => setFormData({ ...formData, image: "" })}
@@ -411,7 +516,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={styles.formInput}
                 value={formData.link}
-                onChangeText={(text) => setFormData({ ...formData, link: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, link: text })
+                }
                 placeholder="https://example.com"
                 placeholderTextColor="#999"
               />
@@ -421,14 +528,29 @@ export default function AdminAdsManagement() {
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>نوع الإعلان</Text>
                 <View style={styles.pickerContainer}>
-                  {["banner", "popup", "inline", "image_only", "image_with_link"].map((type) => (
+                  {[
+                    "banner",
+                    "popup",
+                    "inline",
+                    "image_only",
+                    "image_with_link",
+                  ].map((type) => (
                     <TouchableOpacity
                       key={type}
-                      style={[styles.pickerOption, formData.type === type && styles.selectedPickerOption]}
-                      onPress={() => setFormData({ ...formData, type: type as any })}
+                      style={[
+                        styles.pickerOption,
+                        formData.type === type && styles.selectedPickerOption,
+                      ]}
+                      onPress={() =>
+                        setFormData({ ...formData, type: type as any })
+                      }
                     >
                       <Text
-                        style={[styles.pickerOptionText, formData.type === type && styles.selectedPickerOptionText]}
+                        style={[
+                          styles.pickerOptionText,
+                          formData.type === type &&
+                            styles.selectedPickerOptionText,
+                        ]}
                       >
                         {getTypeLabel(type)}
                       </Text>
@@ -445,13 +567,23 @@ export default function AdminAdsManagement() {
                   {["pet_owner", "vet", "both"].map((interfaceType) => (
                     <TouchableOpacity
                       key={interfaceType}
-                      style={[styles.pickerOption, formData.interface === interfaceType && styles.selectedPickerOption]}
-                      onPress={() => setFormData({ ...formData, interface: interfaceType as any })}
+                      style={[
+                        styles.pickerOption,
+                        formData.interface === interfaceType &&
+                          styles.selectedPickerOption,
+                      ]}
+                      onPress={() =>
+                        setFormData({
+                          ...formData,
+                          interface: interfaceType as any,
+                        })
+                      }
                     >
                       <Text
                         style={[
                           styles.pickerOptionText,
-                          formData.interface === interfaceType && styles.selectedPickerOptionText,
+                          formData.interface === interfaceType &&
+                            styles.selectedPickerOptionText,
                         ]}
                       >
                         {getInterfaceLabel(interfaceType)}
@@ -469,13 +601,20 @@ export default function AdminAdsManagement() {
                   {["none", "open_link", "open_file"].map((action) => (
                     <TouchableOpacity
                       key={action}
-                      style={[styles.pickerOption, formData.clickAction === action && styles.selectedPickerOption]}
-                      onPress={() => setFormData({ ...formData, clickAction: action as any })}
+                      style={[
+                        styles.pickerOption,
+                        formData.clickAction === action &&
+                          styles.selectedPickerOption,
+                      ]}
+                      onPress={() =>
+                        setFormData({ ...formData, clickAction: action as any })
+                      }
                     >
                       <Text
                         style={[
                           styles.pickerOptionText,
-                          formData.clickAction === action && styles.selectedPickerOptionText,
+                          formData.clickAction === action &&
+                            styles.selectedPickerOptionText,
                         ]}
                       >
                         {getClickActionLabel(action)}
@@ -491,7 +630,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={styles.formInput}
                 value={formData.position}
-                onChangeText={(text) => setFormData({ ...formData, position: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, position: text })
+                }
                 placeholder="مثل: home_top, sidebar, footer"
                 placeholderTextColor="#999"
               />
@@ -503,7 +644,9 @@ export default function AdminAdsManagement() {
                 <TextInput
                   style={styles.formInput}
                   value={formData.startDate}
-                  onChangeText={(text) => setFormData({ ...formData, startDate: text })}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, startDate: text })
+                  }
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor="#999"
                 />
@@ -513,7 +656,9 @@ export default function AdminAdsManagement() {
                 <TextInput
                   style={styles.formInput}
                   value={formData.endDate}
-                  onChangeText={(text) => setFormData({ ...formData, endDate: text })}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, endDate: text })
+                  }
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor="#999"
                 />
@@ -531,7 +676,10 @@ export default function AdminAdsManagement() {
             >
               <Text style={styles.cancelButtonText}>إلغاء</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleCreateAd}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleCreateAd}
+            >
               <Text style={styles.saveButtonText}>إنشاء الإعلان</Text>
             </TouchableOpacity>
           </View>
@@ -564,7 +712,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={styles.formInput}
                 value={formData.title}
-                onChangeText={(text) => setFormData({ ...formData, title: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, title: text })
+                }
                 placeholder="أدخل عنوان الإعلان"
                 placeholderTextColor="#999"
               />
@@ -575,7 +725,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={[styles.formInput, styles.textArea]}
                 value={formData.content}
-                onChangeText={(text) => setFormData({ ...formData, content: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, content: text })
+                }
                 placeholder="أدخل محتوى الإعلان"
                 placeholderTextColor="#999"
                 multiline
@@ -585,13 +737,21 @@ export default function AdminAdsManagement() {
 
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>صورة الإعلان</Text>
-              <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+              <TouchableOpacity
+                style={styles.imagePickerButton}
+                onPress={pickImage}
+              >
                 <Upload size={20} color="#4ECDC4" />
-                <Text style={styles.imagePickerText}>{formData.image ? "تغيير الصورة" : "رفع صورة"}</Text>
+                <Text style={styles.imagePickerText}>
+                  {formData.image ? "تغيير الصورة" : "رفع صورة"}
+                </Text>
               </TouchableOpacity>
               {formData.image && (
                 <View style={styles.imagePreviewContainer}>
-                  <Image source={{ uri: formData.image }} style={styles.imagePreview} />
+                  <Image
+                    source={{ uri: formData.image }}
+                    style={styles.imagePreview}
+                  />
                   <TouchableOpacity
                     style={styles.removeImageButton}
                     onPress={() => setFormData({ ...formData, image: "" })}
@@ -607,7 +767,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={styles.formInput}
                 value={formData.link}
-                onChangeText={(text) => setFormData({ ...formData, link: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, link: text })
+                }
                 placeholder="https://example.com"
                 placeholderTextColor="#999"
               />
@@ -617,14 +779,29 @@ export default function AdminAdsManagement() {
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>نوع الإعلان</Text>
                 <View style={styles.pickerContainer}>
-                  {["banner", "popup", "inline", "image_only", "image_with_link"].map((type) => (
+                  {[
+                    "banner",
+                    "popup",
+                    "inline",
+                    "image_only",
+                    "image_with_link",
+                  ].map((type) => (
                     <TouchableOpacity
                       key={type}
-                      style={[styles.pickerOption, formData.type === type && styles.selectedPickerOption]}
-                      onPress={() => setFormData({ ...formData, type: type as any })}
+                      style={[
+                        styles.pickerOption,
+                        formData.type === type && styles.selectedPickerOption,
+                      ]}
+                      onPress={() =>
+                        setFormData({ ...formData, type: type as any })
+                      }
                     >
                       <Text
-                        style={[styles.pickerOptionText, formData.type === type && styles.selectedPickerOptionText]}
+                        style={[
+                          styles.pickerOptionText,
+                          formData.type === type &&
+                            styles.selectedPickerOptionText,
+                        ]}
                       >
                         {getTypeLabel(type)}
                       </Text>
@@ -641,13 +818,23 @@ export default function AdminAdsManagement() {
                   {["pet_owner", "vet", "both"].map((interfaceType) => (
                     <TouchableOpacity
                       key={interfaceType}
-                      style={[styles.pickerOption, formData.interface === interfaceType && styles.selectedPickerOption]}
-                      onPress={() => setFormData({ ...formData, interface: interfaceType as any })}
+                      style={[
+                        styles.pickerOption,
+                        formData.interface === interfaceType &&
+                          styles.selectedPickerOption,
+                      ]}
+                      onPress={() =>
+                        setFormData({
+                          ...formData,
+                          interface: interfaceType as any,
+                        })
+                      }
                     >
                       <Text
                         style={[
                           styles.pickerOptionText,
-                          formData.interface === interfaceType && styles.selectedPickerOptionText,
+                          formData.interface === interfaceType &&
+                            styles.selectedPickerOptionText,
                         ]}
                       >
                         {getInterfaceLabel(interfaceType)}
@@ -665,13 +852,20 @@ export default function AdminAdsManagement() {
                   {["none", "open_link", "open_file"].map((action) => (
                     <TouchableOpacity
                       key={action}
-                      style={[styles.pickerOption, formData.clickAction === action && styles.selectedPickerOption]}
-                      onPress={() => setFormData({ ...formData, clickAction: action as any })}
+                      style={[
+                        styles.pickerOption,
+                        formData.clickAction === action &&
+                          styles.selectedPickerOption,
+                      ]}
+                      onPress={() =>
+                        setFormData({ ...formData, clickAction: action as any })
+                      }
                     >
                       <Text
                         style={[
                           styles.pickerOptionText,
-                          formData.clickAction === action && styles.selectedPickerOptionText,
+                          formData.clickAction === action &&
+                            styles.selectedPickerOptionText,
                         ]}
                       >
                         {getClickActionLabel(action)}
@@ -687,7 +881,9 @@ export default function AdminAdsManagement() {
               <TextInput
                 style={styles.formInput}
                 value={formData.position}
-                onChangeText={(text) => setFormData({ ...formData, position: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, position: text })
+                }
                 placeholder="مثل: home_top, sidebar, footer"
                 placeholderTextColor="#999"
               />
@@ -699,7 +895,9 @@ export default function AdminAdsManagement() {
                 <TextInput
                   style={styles.formInput}
                   value={formData.startDate}
-                  onChangeText={(text) => setFormData({ ...formData, startDate: text })}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, startDate: text })
+                  }
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor="#999"
                 />
@@ -709,7 +907,9 @@ export default function AdminAdsManagement() {
                 <TextInput
                   style={styles.formInput}
                   value={formData.endDate}
-                  onChangeText={(text) => setFormData({ ...formData, endDate: text })}
+                  onChangeText={(text) =>
+                    setFormData({ ...formData, endDate: text })
+                  }
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor="#999"
                 />

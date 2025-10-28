@@ -36,9 +36,9 @@ export default function AddClinicScreen() {
         email: formData.email || undefined,
         description: formData.description || "",
 
-        licenseNumber: "TEMP123456", // Replace with actual value from UI later
-        licenseImages: ["https://example.com/license.png"], // Mock image
-        identityImages: ["https://example.com/identity.png"], // Mock image
+        licenseNumber: "TEMP123456", // TODO: Replace with actual value from UI when field is added
+        licenseImages: [], // TODO: Implement image upload for license images
+        identityImages: [], // TODO: Implement image upload for identity images
 
         latitude: 0,
         longitude: 0,

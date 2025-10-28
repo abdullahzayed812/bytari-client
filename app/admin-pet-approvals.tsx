@@ -61,7 +61,7 @@ export default function AdminPetApprovals() {
     data: pendingApprovalsData,
     isLoading,
     refetch,
-  } = useQuery(trpc.admin.pets.getPendingApprovals.queryOptions({ adminId: user?.id }));
+  } = useQuery(trpc.admin.pets.getPendingApprovals.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
   const { data: approvalStatsData } = useQuery(trpc.admin.pets.getApprovalStats.queryOptions());
 
   const pendingApprovals = useMemo(() => (pendingApprovalsData as any)?.requests, [pendingApprovalsData]);

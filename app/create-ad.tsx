@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { COLORS } from "@/constants/colors";
 import { Calendar, ImageIcon, Link, Save, Type } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
+import { useApp } from "@/providers/AppProvider";
 
 const colors = {
   primary: COLORS.primary,
@@ -29,12 +30,18 @@ const colors = {
 };
 
 export default function CreateAdScreen() {
+  const { user } = useApp();
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     image: "",
     link: "",
-    type: "banner" as "banner" | "popup" | "inline" | "image_only" | "image_with_link",
+    type: "banner" as
+      | "banner"
+      | "popup"
+      | "inline"
+      | "image_only"
+      | "image_with_link",
     position: "home",
     startDate: new Date(),
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -42,6 +49,7 @@ export default function CreateAdScreen() {
   });
 
   // Create advertisement mutation
+  // const createAdMutation = trpc.admin.ads.create.useMutation();
   const createAdMutation = useMutation(trpc.admin.ads.create.mutationOptions());
 
   const handleSave = async () => {
@@ -57,19 +65,23 @@ export default function CreateAdScreen() {
 
     createAdMutation.mutate(
       {
-        adminId: 1, // TODO: Get from auth context
+        adminId: user?.id ? Number(user.id) : 1,
         title: formData.title,
         content: formData.content || undefined,
         image: formData.image || undefined,
         link: formData.link || undefined,
         type: formData.type,
         position: formData.position || undefined,
+        interface: "both" as const,
+        clickAction: formData.link ? ("open_link" as const) : ("none" as const),
         startDate: formData.startDate,
         endDate: formData.endDate,
       },
       {
         onSuccess: () => {
-          Alert.alert("نجح", "تم إنشاء الإعلان بنجاح", [{ text: "موافق", onPress: () => router.back() }]);
+          Alert.alert("نجح", "تم إنشاء الإعلان بنجاح", [
+            { text: "موافق", onPress: () => router.back() },
+          ]);
         },
         onError: (error: any) => {
           Alert.alert("خطأ", error.message || "فشل في إنشاء الإعلان");
@@ -98,7 +110,10 @@ export default function CreateAdScreen() {
         }}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.formContainer}>
           {/* Title */}
           <View style={styles.inputGroup}>
@@ -109,7 +124,9 @@ export default function CreateAdScreen() {
             <TextInput
               style={styles.textInput}
               value={formData.title}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, title: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, title: text }))
+              }
               placeholder="أدخل عنوان الإعلان"
               placeholderTextColor={colors.gray}
             />
@@ -121,7 +138,9 @@ export default function CreateAdScreen() {
             <TextInput
               style={[styles.textInput, styles.textArea]}
               value={formData.content}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, content: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, content: text }))
+              }
               placeholder="أدخل محتوى الإعلان"
               placeholderTextColor={colors.gray}
               multiline
@@ -139,13 +158,19 @@ export default function CreateAdScreen() {
             <TextInput
               style={styles.textInput}
               value={formData.image}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, image: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, image: text }))
+              }
               placeholder="أدخل رابط الصورة"
               placeholderTextColor={colors.gray}
             />
             {formData.image && (
               <View style={styles.imagePreview}>
-                <Image source={{ uri: formData.image }} style={styles.previewImage} resizeMode="cover" />
+                <Image
+                  source={{ uri: formData.image }}
+                  style={styles.previewImage}
+                  resizeMode="cover"
+                />
               </View>
             )}
           </View>
@@ -159,7 +184,9 @@ export default function CreateAdScreen() {
             <TextInput
               style={styles.textInput}
               value={formData.link}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, link: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, link: text }))
+              }
               placeholder="أدخل رابط الإعلان"
               placeholderTextColor={colors.gray}
             />
@@ -178,15 +205,29 @@ export default function CreateAdScreen() {
               ].map((type) => (
                 <TouchableOpacity
                   key={type.value}
-                  style={[styles.typeButton, formData.type === type.value && styles.typeButtonActive]}
+                  style={[
+                    styles.typeButton,
+                    formData.type === type.value && styles.typeButtonActive,
+                  ]}
                   onPress={() =>
                     setFormData((prev) => ({
                       ...prev,
-                      type: type.value as "banner" | "popup" | "inline" | "image_only" | "image_with_link",
+                      type: type.value as
+                        | "banner"
+                        | "popup"
+                        | "inline"
+                        | "image_only"
+                        | "image_with_link",
                     }))
                   }
                 >
-                  <Text style={[styles.typeButtonText, formData.type === type.value && styles.typeButtonTextActive]}>
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      formData.type === type.value &&
+                        styles.typeButtonTextActive,
+                    ]}
+                  >
                     {type.label}
                   </Text>
                 </TouchableOpacity>
@@ -205,7 +246,11 @@ export default function CreateAdScreen() {
               ].map((position) => (
                 <TouchableOpacity
                   key={position.value}
-                  style={[styles.typeButton, formData.position === position.value && styles.typeButtonActive]}
+                  style={[
+                    styles.typeButton,
+                    formData.position === position.value &&
+                      styles.typeButtonActive,
+                  ]}
                   onPress={() =>
                     setFormData((prev) => ({
                       ...prev,
@@ -214,7 +259,11 @@ export default function CreateAdScreen() {
                   }
                 >
                   <Text
-                    style={[styles.typeButtonText, formData.position === position.value && styles.typeButtonTextActive]}
+                    style={[
+                      styles.typeButtonText,
+                      formData.position === position.value &&
+                        styles.typeButtonTextActive,
+                    ]}
                   >
                     {position.label}
                   </Text>
@@ -255,7 +304,10 @@ export default function CreateAdScreen() {
 
           {/* Save Button */}
           <TouchableOpacity
-            style={[styles.saveButton, createAdMutation.isPending && styles.saveButtonDisabled]}
+            style={[
+              styles.saveButton,
+              createAdMutation.isPending && styles.saveButtonDisabled,
+            ]}
             onPress={handleSave}
             disabled={createAdMutation.isPending}
           >

@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
@@ -7,6 +15,7 @@ import { ArrowLeft, Plus, Upload } from "lucide-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
+import Button from "../components/Button";
 
 export default function AddTipScreen() {
   const { user } = useApp();
@@ -18,7 +27,10 @@ export default function AddTipScreen() {
     category: "",
   });
 
-  const createTipMutation = useMutation(trpc.admin.content.createTip.mutationOptions());
+  // const createTipMutation = trpc.admin.content.createTip.useMutation();
+  const createTipMutation = useMutation(
+    trpc.admin.content.createTip.mutationOptions()
+  );
 
   const handleSave = () => {
     if (!formData.title || !formData.content) {
@@ -28,7 +40,7 @@ export default function AddTipScreen() {
 
     createTipMutation.mutate(
       {
-        admindId: +user?.id,
+        adminId: user?.id ? Number(user.id) : 1,
         title: formData.title,
         content: formData.content,
         category: formData.category,
@@ -38,7 +50,7 @@ export default function AddTipScreen() {
           Alert.alert("نجح", "تم إضافة النصيحة بنجاح");
           router.back();
         },
-        onError: (error) => {
+        onError: (error: any) => {
           Alert.alert("خطأ", error.message || "فشل في إضافة النصيحة");
         },
       }
@@ -54,7 +66,10 @@ export default function AddTipScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -90,7 +105,9 @@ export default function AddTipScreen() {
             <TextInput
               style={styles.input}
               value={formData.category}
-              onChangeText={(text) => setFormData({ ...formData, category: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, category: text })
+              }
               placeholder="أدخل تصنيف النصيحة"
               textAlign="right"
             />
@@ -101,7 +118,9 @@ export default function AddTipScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
-              onChangeText={(text) => setFormData({ ...formData, content: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, content: text })
+              }
               placeholder="أدخل محتوى النصيحة"
               textAlign="right"
               multiline
@@ -113,11 +132,12 @@ export default function AddTipScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={createTipMutation.isPending ? "جاري الإضافة..." : "إضافة النصيحة"}
+          title={
+            createTipMutation.isPending ? "جاري الإضافة..." : "إضافة النصيحة"
+          }
           onPress={handleSave}
           type="primary"
           size="large"
-          icon={<Plus size={20} color={COLORS.white} />}
           disabled={createTipMutation.isPending}
         />
       </View>

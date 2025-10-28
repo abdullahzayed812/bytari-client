@@ -1,12 +1,29 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+} from "react-native";
 import React, { useState } from "react";
 import { Stack, useRouter } from "expo-router";
-import { ArrowLeft, Briefcase, MapPin, DollarSign, Clock, FileText } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Clock,
+  FileText,
+} from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { useApp } from "../providers/AppProvider";
 
 export default function PostJobVacancyScreen() {
+  const { user } = useApp();
   const router = useRouter();
   const [formData, setFormData] = useState({
     title: "",
@@ -20,31 +37,44 @@ export default function PostJobVacancyScreen() {
     contactPhone: "",
   });
 
-  const createJobMutation = useMutation(trpc.admin.jobs.createJob.mutationOptions());
+  // const createJobMutation = trpc.admin.jobs.createJob.useMutation();
+  const createJobMutation = useMutation(
+    trpc.admin.jobs.createJob.mutationOptions()
+  );
 
   const handleSubmit = () => {
-    if (!formData.title || !formData.company || !formData.location || !formData.description) {
+    if (
+      !formData.title ||
+      !formData.company ||
+      !formData.location ||
+      !formData.description
+    ) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
     createJobMutation.mutate(
       {
+        adminId: user?.id ? Number(user.id) : 1,
         title: formData.title,
         company: formData.company,
+        postedBy: formData.company,
         location: formData.location,
-        type: formData.type,
+        jobType: formData.type as any, // Ensure it matches backend enum
         salary: formData.salary,
         description: formData.description,
         requirements: formData.requirements,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone,
+        contactInfo: `${formData.contactEmail || ""} | ${
+          formData.contactPhone || ""
+        }`.trim(),
       },
       {
         onSuccess: () => {
-          Alert.alert("تم الإرسال", "تم إرسال إعلان الوظيفة للإدارة للمراجعة والموافقة", [
-            { text: "موافق", onPress: () => router.back() },
-          ]);
+          Alert.alert(
+            "تم الإرسال",
+            "تم إرسال إعلان الوظيفة للإدارة للمراجعة والموافقة",
+            [{ text: "موافق", onPress: () => router.back() }]
+          );
         },
         onError: (error) => {
           Alert.alert("فشل الإرسال", error.message);
@@ -62,7 +92,10 @@ export default function PostJobVacancyScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -99,7 +132,9 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={styles.input}
               value={formData.company}
-              onChangeText={(text) => setFormData({ ...formData, company: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, company: text })
+              }
               placeholder="مثال: عيادة الرحمة البيطرية"
               placeholderTextColor={COLORS.lightGray}
             />
@@ -112,7 +147,9 @@ export default function PostJobVacancyScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.location}
-                onChangeText={(text) => setFormData({ ...formData, location: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, location: text })
+                }
                 placeholder="المدينة، المنطقة"
                 placeholderTextColor={COLORS.lightGray}
               />
@@ -126,7 +163,9 @@ export default function PostJobVacancyScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.type}
-                onChangeText={(text) => setFormData({ ...formData, type: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, type: text })
+                }
                 placeholder="دوام كامل / دوام جزئي / مؤقت"
                 placeholderTextColor={COLORS.lightGray}
               />
@@ -140,7 +179,9 @@ export default function PostJobVacancyScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.salary}
-                onChangeText={(text) => setFormData({ ...formData, salary: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, salary: text })
+                }
                 placeholder="مثال: 8000 - 12000 ريال"
                 placeholderTextColor={COLORS.lightGray}
               />
@@ -152,7 +193,9 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) => setFormData({ ...formData, description: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, description: text })
+              }
               placeholder="اكتب وصفاً مفصلاً عن الوظيفة والمهام المطلوبة..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -166,7 +209,9 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.requirements}
-              onChangeText={(text) => setFormData({ ...formData, requirements: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, requirements: text })
+              }
               placeholder="اذكر المؤهلات والخبرات المطلوبة..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -180,7 +225,9 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={styles.input}
               value={formData.contactEmail}
-              onChangeText={(text) => setFormData({ ...formData, contactEmail: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, contactEmail: text })
+              }
               placeholder="example@company.com"
               placeholderTextColor={COLORS.lightGray}
               keyboardType="email-address"
@@ -192,7 +239,9 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={styles.input}
               value={formData.contactPhone}
-              onChangeText={(text) => setFormData({ ...formData, contactPhone: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, contactPhone: text })
+              }
               placeholder="05xxxxxxxx"
               placeholderTextColor={COLORS.lightGray}
               keyboardType="phone-pad"
@@ -205,7 +254,10 @@ export default function PostJobVacancyScreen() {
           <Text style={styles.submitButtonText}>إرسال للمراجعة</Text>
         </TouchableOpacity>
 
-        <Text style={styles.note}>* سيتم مراجعة إعلان الوظيفة من قبل الإدارة قبل نشره في قائمة الوظائف المتاحة</Text>
+        <Text style={styles.note}>
+          * سيتم مراجعة إعلان الوظيفة من قبل الإدارة قبل نشره في قائمة الوظائف
+          المتاحة
+        </Text>
       </ScrollView>
     </View>
   );

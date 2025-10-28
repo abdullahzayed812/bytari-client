@@ -1,4 +1,14 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  Platform,
+} from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -21,11 +31,12 @@ interface StoreProductFormData {
 
 export default function AddStoreProductScreen() {
   useI18n();
-  const { userMode } = useApp();
+  const { userMode, user } = useApp();
   const { storeType } = useLocalSearchParams<{ storeType?: string }>();
 
   // Determine store type from params or userMode
-  const currentStoreType = storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
+  const currentStoreType =
+    storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
   const [formData, setFormData] = useState<StoreProductFormData>({
     name: "",
     description: "",
@@ -35,7 +46,10 @@ export default function AddStoreProductScreen() {
     images: [],
   });
 
-  const createProductMutation = useMutation(trpc.stores.products.create.mutationOptions());
+  // const createProductMutation = trpc.stores.products.create.useMutation();
+  const createProductMutation = useMutation(
+    trpc.stores.products.create.mutationOptions()
+  );
 
   // Categories based on store type
   const getCategories = () => {
@@ -62,8 +76,6 @@ export default function AddStoreProductScreen() {
 
   const categories = getCategories();
 
-
-
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       Alert.alert("خطأ", "اسم المنتج مطلوب");
@@ -78,9 +90,12 @@ export default function AddStoreProductScreen() {
       return;
     }
 
+    // TODO: Get actual storeId from context or route params
+    const storeId = Number(storeType || user?.id || 1);
+
     createProductMutation.mutate(
       {
-        storeId: 1, // TODO: Replace with real store ID from context
+        storeId: storeId, // TODO: Replace with real store ID from context
         name: formData.name,
         description: formData.description || undefined,
         category: formData.category as any, // Ensure it matches backend enum
@@ -94,22 +109,22 @@ export default function AddStoreProductScreen() {
         isFeatured: false,
       },
       {
-        onSuccess: (response) => {
+        onSuccess: (response: any) => {
           if (response.success) {
-            Alert.alert("تم بنجاح", response.message, [{ text: "موافق", onPress: () => router.back() }]);
+            Alert.alert("تم بنجاح", response.message, [
+              { text: "موافق", onPress: () => router.back() },
+            ]);
           } else {
             Alert.alert("خطأ", "حدث خطأ أثناء إضافة المنتج");
           }
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error(error);
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء إضافة المنتج");
         },
       }
     );
   };
-
-
 
   const handleAddImage = async () => {
     try {
@@ -122,7 +137,8 @@ export default function AddStoreProductScreen() {
         }));
       } else {
         // Request permission for camera/gallery access
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        const { status } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") {
           Alert.alert("خطأ", "نحتاج إذن للوصول إلى الصور");
           return;
@@ -218,7 +234,9 @@ export default function AddStoreProductScreen() {
           <Package size={32} color={COLORS.primary} />
           <Text style={styles.headerTitle}>إضافة منتج جديد</Text>
           <Text style={styles.headerSubtitle}>
-            {currentStoreType === "veterinarian" ? "متجر الطبيب البيطري" : "متجر صاحب الحيوان"}
+            {currentStoreType === "veterinarian"
+              ? "متجر الطبيب البيطري"
+              : "متجر صاحب الحيوان"}
           </Text>
         </View>
 
@@ -229,7 +247,9 @@ export default function AddStoreProductScreen() {
               style={styles.input}
               placeholder="أدخل اسم المنتج"
               value={formData.name}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, name: text }))
+              }
               textAlign="right"
             />
           </View>
@@ -240,7 +260,9 @@ export default function AddStoreProductScreen() {
               style={[styles.input, styles.textArea]}
               placeholder="وصف المنتج وفوائده"
               value={formData.description}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, description: text }))
+              }
               multiline
               numberOfLines={4}
               textAlign="right"
@@ -254,18 +276,28 @@ export default function AddStoreProductScreen() {
               {categories.map((category) => (
                 <TouchableOpacity
                   key={category.id}
-                  style={[styles.categoryChip, formData.category === category.id && styles.selectedCategoryChip]}
-                  onPress={() => setFormData((prev) => ({ ...prev, category: category.id }))}
+                  style={[
+                    styles.categoryChip,
+                    formData.category === category.id &&
+                      styles.selectedCategoryChip,
+                  ]}
+                  onPress={() =>
+                    setFormData((prev) => ({ ...prev, category: category.id }))
+                  }
                 >
-                  <Text style={[styles.categoryText, formData.category === category.id && styles.selectedCategoryText]}>
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      formData.category === category.id &&
+                        styles.selectedCategoryText,
+                    ]}
+                  >
                     {category.name}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
-
-
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
@@ -274,7 +306,9 @@ export default function AddStoreProductScreen() {
                 style={styles.input}
                 placeholder="0.00"
                 value={formData.price}
-                onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, price: text }))
+                }
                 keyboardType="decimal-pad"
                 textAlign="right"
               />
@@ -285,7 +319,9 @@ export default function AddStoreProductScreen() {
                 style={styles.input}
                 placeholder="0"
                 value={formData.stock}
-                onChangeText={(text) => setFormData((prev) => ({ ...prev, stock: text }))}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, stock: text }))
+                }
                 keyboardType="number-pad"
                 textAlign="right"
               />
@@ -298,12 +334,18 @@ export default function AddStoreProductScreen() {
               {formData.images.map((image, index) => (
                 <View key={index} style={styles.imageItem}>
                   <Image source={{ uri: image }} style={styles.productImage} />
-                  <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveImage(index)}>
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => handleRemoveImage(index)}
+                  >
                     <Text style={styles.removeImageText}>×</Text>
                   </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
+              <TouchableOpacity
+                style={styles.addImageButton}
+                onPress={handleAddImage}
+              >
                 <ImageIcon size={24} color={COLORS.darkGray} />
                 <Text style={styles.addImageText}>إضافة صورة</Text>
               </TouchableOpacity>
@@ -314,7 +356,9 @@ export default function AddStoreProductScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={createProductMutation.isPending ? "جاري الإضافة..." : "إضافة المنتج"}
+          title={
+            createProductMutation.isPending ? "جاري الإضافة..." : "إضافة المنتج"
+          }
           onPress={handleSubmit}
           type="primary"
           disabled={createProductMutation.isPending}

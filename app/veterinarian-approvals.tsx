@@ -33,7 +33,7 @@ export default function VeterinarianApprovalsScreen() {
     isLoading,
     error,
     refetch,
-  } = useQuery(trpc.admin.veterinarianApprovals.getPendingApplications.queryOptions({ adminId: user?.id }));
+  } = useQuery(trpc.admin.veterinarianApprovals.getPendingApplications.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
   const applications = useMemo(() => (applicationsData as any)?.applications, [applicationsData]);
 
   const approveMutation = useMutation(trpc.admin.veterinarianApprovals.approveApplication.mutationOptions());
@@ -47,7 +47,7 @@ export default function VeterinarianApprovalsScreen() {
         style: "default",
         onPress: () => {
           approveMutation.mutate(
-            { applicationId: applicationId, adminId: user?.id },
+            { applicationId: applicationId, adminId: user?.id ? Number(user.id) : 0 },
             {
               onSuccess: () => {
                 Alert.alert("تم بنجاح", "تم الموافقة على الطلب وإرسال إشعار للمستخدم.");
@@ -75,7 +75,7 @@ export default function VeterinarianApprovalsScreen() {
           style: "destructive",
           onPress: (reason) => {
             rejectMutation.mutate(
-              { applicationId: applicationId, reason: reason || "", adminId: user?.id },
+              { applicationId: applicationId, reason: reason || "", adminId: user?.id ? Number(user.id) : 0 },
               {
                 onSuccess: () => {
                   Alert.alert("تم بنجاح", "تم رفض الطلب وإرسال إشعار للمستخدم.");

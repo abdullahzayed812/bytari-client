@@ -76,12 +76,12 @@ export default function CoursesManagementScreen() {
     data: rawCourses,
     isLoading: coursesLoading,
     refetch: refetchCourses,
-  } = useQuery(trpc.admin.courses.getList.queryOptions({ adminId: user?.id }));
+  } = useQuery(trpc.admin.courses.getList.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
   const {
     data: rawRegistrations,
     isLoading: registrationsLoading,
     refetch: refetchRegistrations,
-  } = useQuery(trpc.admin.courses.getRegistrations.queryOptions({ adminId: user?.id }));
+  } = useQuery(trpc.admin.courses.getRegistrations.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
 
   const courses = useMemo(() => (rawCourses as any)?.courses, [rawCourses]);
   const registrations = useMemo(() => (rawRegistrations as any)?.courses, [rawRegistrations]);

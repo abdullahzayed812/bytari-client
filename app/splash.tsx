@@ -64,9 +64,15 @@ export default function SplashScreen() {
           console.log("User is not authenticated, navigating to onboarding");
           router.replace("/onboarding");
         }
-      }, 1000);
+      }, 2000);
     });
-  }, [backgroundOpacity, logoOpacity, logoScale, setHasSeenSplash, isAuthenticated]);
+  }, [
+    backgroundOpacity,
+    logoOpacity,
+    logoScale,
+    setHasSeenSplash,
+    isAuthenticated,
+  ]);
 
   useEffect(() => {
     animateSequence();
@@ -93,7 +99,9 @@ export default function SplashScreen() {
         ]}
       >
         <Image
-          source={{ uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/64oi11w6c780w68ybqvcc" }}
+          source={{
+            uri: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/64oi11w6c780w68ybqvcc",
+          }}
           style={styles.logo}
           contentFit="contain"
           transition={300}

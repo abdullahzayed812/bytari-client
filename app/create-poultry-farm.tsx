@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,8 +9,8 @@ import {
   Alert,
   Image,
   Dimensions,
-} from 'react-native';
-import { useRouter } from 'expo-router';
+} from "react-native";
+import { useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
@@ -26,14 +26,14 @@ import {
   Egg,
   Beef,
   Layers,
-} from 'lucide-react-native';
+} from "lucide-react-native";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface FarmFormData {
   name: string;
   location: string;
-  farmType: 'broiler' | 'layer' | 'mixed' | '';
+  farmType: "broiler" | "layer" | "mixed" | "";
   capacity: string;
   establishedDate: string;
   description: string;
@@ -46,76 +46,76 @@ export default function CreatePoultryFarmScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FarmFormData>({
-    name: '',
-    location: '',
-    farmType: '',
-    capacity: '',
-    establishedDate: '',
-    description: '',
+    name: "",
+    location: "",
+    farmType: "",
+    capacity: "",
+    establishedDate: "",
+    description: "",
     images: [],
   });
 
   const farmTypes = [
     {
-      id: 'broiler',
-      title: 'دجاج اللحم',
-      description: 'تربية الدجاج لإنتاج اللحم',
+      id: "broiler",
+      title: "دجاج اللحم",
+      description: "تربية الدجاج لإنتاج اللحم",
       icon: <Beef size={24} color={COLORS.primary} />,
       color: COLORS.primary,
     },
     {
-      id: 'layer',
-      title: 'دجاج البيض',
-      description: 'تربية الدجاج لإنتاج البيض',
+      id: "layer",
+      title: "دجاج البيض",
+      description: "تربية الدجاج لإنتاج البيض",
       icon: <Egg size={24} color={COLORS.warning} />,
       color: COLORS.warning,
     },
     {
-      id: 'mixed',
-      title: 'مختلط',
-      description: 'تربية مختلطة للحم والبيض',
+      id: "mixed",
+      title: "مختلط",
+      description: "تربية مختلطة للحم والبيض",
       icon: <Layers size={24} color={COLORS.success} />,
       color: COLORS.success,
     },
   ];
 
   const handleInputChange = (field: keyof FarmFormData, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleFarmTypeSelect = (type: 'broiler' | 'layer' | 'mixed') => {
-    setFormData(prev => ({
+  const handleFarmTypeSelect = (type: "broiler" | "layer" | "mixed") => {
+    setFormData((prev) => ({
       ...prev,
       farmType: type,
     }));
   };
 
   const handleAddImage = () => {
-    Alert.alert('إضافة صورة', 'ميزة إضافة الصور ستكون متاحة قريباً');
+    Alert.alert("إضافة صورة", "ميزة إضافة الصور ستكون متاحة قريباً");
   };
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال اسم المزرعة');
+      Alert.alert("خطأ", "يرجى إدخال اسم المزرعة");
       return false;
     }
     if (!formData.location.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال موقع المزرعة');
+      Alert.alert("خطأ", "يرجى إدخال موقع المزرعة");
       return false;
     }
     if (!formData.farmType) {
-      Alert.alert('خطأ', 'يرجى اختيار نوع المزرعة');
+      Alert.alert("خطأ", "يرجى اختيار نوع المزرعة");
       return false;
     }
     if (!formData.capacity.trim() || isNaN(Number(formData.capacity))) {
-      Alert.alert('خطأ', 'يرجى إدخال سعة المزرعة بشكل صحيح');
+      Alert.alert("خطأ", "يرجى إدخال سعة المزرعة بشكل صحيح");
       return false;
     }
     if (!formData.establishedDate.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال تاريخ التأسيس');
+      Alert.alert("خطأ", "يرجى إدخال تاريخ التأسيس");
       return false;
     }
     return true;
@@ -126,50 +126,81 @@ export default function CreatePoultryFarmScreen() {
 
     setLoading(true);
     try {
-      // في التطبيق الحقيقي، سيتم إرسال البيانات إلى API
-      console.log('Creating farm:', formData);
-      
-      // محاكاة تأخير الشبكة
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      console.log("Creating farm:", formData);
+
+      // TODO: Implement actual tRPC mutation when backend procedure is ready
+      // For now, use mock data
+      const mockFarmData = {
+        name: formData.name,
+        description: formData.description,
+        address: formData.location,
+        farmType: formData.farmType,
+        capacity: parseInt(formData.capacity),
+        ownerId: user?.id || 1,
+      };
+
+      console.log("Sending farm data:", mockFarmData);
+
+      // In real implementation, this would be:
+      // const createFarmMutation = useMutation(trpc.poultryFarms.create.mutationOptions());
+      // createFarmMutation.mutate(mockFarmData, {
+      //   onSuccess: (data) => { ... },
+      //   onError: (error) => { ... }
+      // });
+
+      // Mock delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       Alert.alert(
-        'تم بنجاح',
-        'تم إنشاء المزرعة بنجاح',
+        "تم بنجاح",
+        "تم إنشاء المزرعة بنجاح (نسخة تجريبية - لم يتم الإرسال للخادم بعد)",
         [
           {
-            text: 'موافق',
+            text: "موافق",
             onPress: () => router.back(),
           },
         ]
       );
     } catch (error) {
-      console.error('Error creating farm:', error);
-      Alert.alert('خطأ', 'حدث خطأ في إنشاء المزرعة');
+      console.error("Error creating farm:", error);
+      Alert.alert("خطأ", "حدث خطأ في إنشاء المزرعة");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderFarmTypeCard = (farmType: typeof farmTypes[0]) => (
+  const renderFarmTypeCard = (farmType: (typeof farmTypes)[0]) => (
     <TouchableOpacity
       key={farmType.id}
       style={[
         styles.farmTypeCard,
         formData.farmType === farmType.id && {
           borderColor: farmType.color,
-          backgroundColor: farmType.color + '10',
+          backgroundColor: farmType.color + "10",
         },
       ]}
-      onPress={() => handleFarmTypeSelect(farmType.id as 'broiler' | 'layer' | 'mixed')}
+      onPress={() =>
+        handleFarmTypeSelect(farmType.id as "broiler" | "layer" | "mixed")
+      }
       activeOpacity={0.7}
     >
-      <View style={[styles.farmTypeIcon, { backgroundColor: farmType.color + '20' }]}>
+      <View
+        style={[
+          styles.farmTypeIcon,
+          { backgroundColor: farmType.color + "20" },
+        ]}
+      >
         {farmType.icon}
       </View>
       <Text style={styles.farmTypeTitle}>{farmType.title}</Text>
       <Text style={styles.farmTypeDescription}>{farmType.description}</Text>
       {formData.farmType === farmType.id && (
-        <View style={[styles.selectedIndicator, { backgroundColor: farmType.color }]} />
+        <View
+          style={[
+            styles.selectedIndicator,
+            { backgroundColor: farmType.color },
+          ]}
+        />
       )}
     </TouchableOpacity>
   );
@@ -177,7 +208,10 @@ export default function CreatePoultryFarmScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
           <ArrowRight size={24} color={COLORS.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>إنشاء مزرعة دواجن</Text>
@@ -198,7 +232,7 @@ export default function CreatePoultryFarmScreen() {
               style={styles.textInput}
               placeholder="أدخل اسم المزرعة"
               value={formData.name}
-              onChangeText={(value) => handleInputChange('name', value)}
+              onChangeText={(value) => handleInputChange("name", value)}
               textAlign="right"
               placeholderTextColor={COLORS.lightGray}
             />
@@ -214,7 +248,7 @@ export default function CreatePoultryFarmScreen() {
               style={styles.textInput}
               placeholder="أدخل موقع المزرعة"
               value={formData.location}
-              onChangeText={(value) => handleInputChange('location', value)}
+              onChangeText={(value) => handleInputChange("location", value)}
               textAlign="right"
               placeholderTextColor={COLORS.lightGray}
             />
@@ -238,7 +272,7 @@ export default function CreatePoultryFarmScreen() {
               style={styles.textInput}
               placeholder="عدد الطيور القصوى"
               value={formData.capacity}
-              onChangeText={(value) => handleInputChange('capacity', value)}
+              onChangeText={(value) => handleInputChange("capacity", value)}
               keyboardType="numeric"
               textAlign="right"
               placeholderTextColor={COLORS.lightGray}
@@ -251,14 +285,18 @@ export default function CreatePoultryFarmScreen() {
           <Text style={styles.sectionTitle}>تاريخ التأسيس</Text>
           <TouchableOpacity
             style={styles.inputContainer}
-            onPress={() => Alert.alert('قريباً', 'منتقي التاريخ سيكون متاحاً قريباً')}
+            onPress={() =>
+              Alert.alert("قريباً", "منتقي التاريخ سيكون متاحاً قريباً")
+            }
           >
             <Calendar size={20} color={COLORS.darkGray} />
             <TextInput
               style={styles.textInput}
               placeholder="اختر تاريخ التأسيس"
               value={formData.establishedDate}
-              onChangeText={(value) => handleInputChange('establishedDate', value)}
+              onChangeText={(value) =>
+                handleInputChange("establishedDate", value)
+              }
               textAlign="right"
               placeholderTextColor={COLORS.lightGray}
               editable={false}
@@ -270,12 +308,16 @@ export default function CreatePoultryFarmScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الوصف (اختياري)</Text>
           <View style={[styles.inputContainer, styles.textAreaContainer]}>
-            <FileText size={20} color={COLORS.darkGray} style={styles.textAreaIcon} />
+            <FileText
+              size={20}
+              color={COLORS.darkGray}
+              style={styles.textAreaIcon}
+            />
             <TextInput
               style={[styles.textInput, styles.textArea]}
               placeholder="أدخل وصف المزرعة"
               value={formData.description}
-              onChangeText={(value) => handleInputChange('description', value)}
+              onChangeText={(value) => handleInputChange("description", value)}
               multiline
               numberOfLines={4}
               textAlign="right"
@@ -288,10 +330,15 @@ export default function CreatePoultryFarmScreen() {
         {/* Images */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>صور المزرعة (اختياري)</Text>
-          <TouchableOpacity style={styles.imageUploadCard} onPress={handleAddImage}>
+          <TouchableOpacity
+            style={styles.imageUploadCard}
+            onPress={handleAddImage}
+          >
             <Camera size={32} color={COLORS.primary} />
             <Text style={styles.imageUploadText}>إضافة صور</Text>
-            <Text style={styles.imageUploadSubtext}>اختر صور توضح المزرعة والمرافق</Text>
+            <Text style={styles.imageUploadSubtext}>
+              اختر صور توضح المزرعة والمرافق
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -318,9 +365,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   header: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
@@ -333,9 +380,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -352,14 +399,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   inputContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -372,10 +419,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginRight: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   textAreaContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     paddingVertical: 16,
   },
   textAreaIcon: {
@@ -383,46 +430,46 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   farmTypesGrid: {
-    flexDirection: 'row-reverse',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   farmTypeCard: {
     width: (width - 60) / 3,
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 12,
     borderWidth: 2,
     borderColor: COLORS.lightGray,
-    position: 'relative',
+    position: "relative",
   },
   farmTypeIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
   },
   farmTypeTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 4,
   },
   farmTypeDescription: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   selectedIndicator: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
     width: 12,
@@ -433,29 +480,29 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 24,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
     borderColor: COLORS.lightGray,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
   },
   imageUploadText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   imageUploadSubtext: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   submitSection: {
     marginTop: 32,
     paddingHorizontal: 20,
   },
   submitButton: {
-    width: '100%',
+    width: "100%",
   },
 });
