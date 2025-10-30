@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type Language = "ar" | "en";
@@ -56,7 +62,7 @@ const translations = {
     "auth.uploadIdFront": "رفع صورة وجه الهوية",
     "auth.uploadIdBack": "رفع صورة ظهر الهوية",
     "auth.registrationPending":
-      "تم إرسال طلب التسجيل للمشرفين للمراجعة والموافقة. سيتم إشعارك عبر البريد الإلكتروني عند الموافقة على حسابك. يرجى تسجيل الدخول بعد الموافقة.",
+      "تم إرسال طلب التسجيل للمشرفين للمراجعة والموافقة. سيتم إشعارك عبر البريد الإلكتروني عند الموافقة على حسابك، قم بتسجيل الدخول بعد دقائق سيتم تفعيل حسابك.",
     "auth.loginError": "حدث خطأ أثناء تسجيل الدخول",
     "auth.requestSent": "تم إرسال الطلب بنجاح",
     "common.loading": "جاري التحميل...",
@@ -70,11 +76,14 @@ const translations = {
     "common.search": "بحث",
     "common.ok": "موافق",
     "onboarding.getStarted": "ابدأ الآن",
-    "onboarding.welcome": "مرحباً بك",
-    "onboarding.description": "اكتشف أفضل الخدمات البيطرية",
+    "onboarding.welcome": "أهلاً وسهلاً بكم",
+    "onboarding.description":
+      "منصة خاصة بالطب البيطري يوفر كل ما يحتاجه الأطباء البيطريين وكل ما يحتاجه أصحاب الحيوانات من استشارات مجانية وعناية بحيواناتهم ومتجر خاص يوفر كل ما يحتاجونه",
+
     "home.title": "الرئيسية",
     "home.consultation": "أرسل استشارتك وسنجيبك فوراً\nلدينا طاقم طبي ومتخصص",
-    "home.consultationVet": "اذا كان لديك اي استفسار عن مرض معين او عن علاج او اي شيء يخص الطب البيطري فتفضل بمراسلتنا",
+    "home.consultationVet":
+      "اذا كان لديك اي استفسار عن مرض معين او عن علاج او اي شيء يخص الطب البيطري فتفضل بمراسلتنا",
     "home.sendConsultation": "إرسال استشارة",
     "home.availableClinics": "العيادات المتاحة",
     "home.vetMagazine": "المجلة البيطرية",
@@ -100,7 +109,8 @@ const translations = {
     "store.title": "المتجر",
     "pets.title": "الحيوانات الأليفة",
     "sections.title": "الأقسام",
-    "validation.usernameEmailRequired": "يرجى إدخال اسم المستخدم أو البريد الإلكتروني",
+    "validation.usernameEmailRequired":
+      "يرجى إدخال اسم المستخدم أو البريد الإلكتروني",
     "validation.passwordRequired": "يرجى إدخال كلمة المرور",
     "validation.passwordTooShort": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
     "validation.nameRequired": "يرجى إدخال الاسم",
@@ -127,8 +137,10 @@ const translations = {
     "auth.passwordResetSent": "تم إرسال رابط إعادة تعيين كلمة المرور",
     "auth.passwordResetEmailSent":
       "تم إرسال رابط إعادة تعيين كلمة المرور إلى {email}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.",
-    "auth.passwordResetError": "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
-    "auth.invalidCredentials": "بيانات الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
+    "auth.passwordResetError":
+      "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
+    "auth.invalidCredentials":
+      "بيانات الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
   },
   en: {
     "auth.login": "Login",
@@ -245,8 +257,10 @@ const translations = {
     "auth.passwordResetSent": "Password reset link sent",
     "auth.passwordResetEmailSent":
       "Password reset link has been sent to {email}. Please check your email and follow the instructions.",
-    "auth.passwordResetError": "An error occurred while sending password reset link. Please try again.",
-    "auth.invalidCredentials": "Invalid login credentials. Please check your email and password.",
+    "auth.passwordResetError":
+      "An error occurred while sending password reset link. Please try again.",
+    "auth.invalidCredentials":
+      "Invalid login credentials. Please check your email and password.",
   },
 };
 
@@ -302,7 +316,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   };
 
   const t = (key: string): string => {
-    return translations[language][key as keyof (typeof translations)[typeof language]] || key;
+    return (
+      translations[language][
+        key as keyof (typeof translations)[typeof language]
+      ] || key
+    );
   };
 
   return (

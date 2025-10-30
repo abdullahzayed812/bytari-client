@@ -17,7 +17,8 @@ import { useI18n } from "../providers/I18nProvider";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { MapPin, Phone, Clock, Star, Search, MessageSquare, Eye, Edit3, Plus } from "lucide-react-native";
 import Button from "../components/Button";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 
 const mockCases = [
   {

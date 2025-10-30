@@ -6,10 +6,14 @@ import { RefreshCw } from "lucide-react-native";
 import { useToastContext } from "@/providers/ToastProvider";
 
 export const UserModeToggle = () => {
-  const { user, isSuperAdmin, toggleUserMode, isModerator, userMode } = useApp();
+  const { user, isSuperAdmin, toggleUserMode, isModerator, userMode } =
+    useApp();
   const { showToast } = useToastContext();
 
-  if (!user || (user.accountType !== "veterinarian" && !isSuperAdmin && !isModerator)) {
+  if (
+    !user ||
+    (user.accountType !== "veterinarian" && !isSuperAdmin && !isModerator)
+  ) {
     return null;
   }
 
@@ -18,7 +22,9 @@ export const UserModeToggle = () => {
     toggleUserMode();
 
     const newModeMessage =
-      currentMode === "veterinarian" ? "تم التبديل إلى وضع مالك الحيوان" : "تم التبديل إلى وضع الطبيب البيطري";
+      currentMode === "veterinarian"
+        ? "تم التبديل إلى وضع صاحب الحيوان"
+        : "تم التبديل إلى وضع الطبيب البيطري";
 
     showToast({
       message: newModeMessage,
@@ -27,7 +33,11 @@ export const UserModeToggle = () => {
   };
 
   return (
-    <TouchableOpacity style={styles.iconButton} onPress={handleToggle} testID="user-mode-toggle">
+    <TouchableOpacity
+      style={styles.iconButton}
+      onPress={handleToggle}
+      testID="user-mode-toggle"
+    >
       <RefreshCw size={22} color={COLORS.black} />
     </TouchableOpacity>
   );

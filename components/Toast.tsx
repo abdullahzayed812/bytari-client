@@ -11,7 +11,13 @@ export interface ToastProps {
   onHide: () => void;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type = "info", duration = 3000, visible, onHide }) => {
+export const Toast: React.FC<ToastProps> = ({
+  message,
+  type = "info",
+  duration = 3000,
+  visible,
+  onHide,
+}) => {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(-100)).current;
 
@@ -122,6 +128,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f59e0b",
   },
   info: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#F5F5F5",
   },
 });

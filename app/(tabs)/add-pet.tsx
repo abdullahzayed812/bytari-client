@@ -1,56 +1,127 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
-import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
-import { useRouter } from 'expo-router';
+import { trpc } from "../../lib/trpc";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../../components/Button";
 import { Pet } from "../../types";
-import { ArrowLeft, Camera, Calendar } from 'lucide-react-native';
-import { Stack } from 'expo-router';
+import { Camera, Calendar } from "lucide-react-native";
+import { Stack } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { useToast } from "@/lib/hooks";
 
-const PET_TYPES = ['dog', 'cat', 'rabbit', 'bird', 'other'] as const;
-const GENDERS = ['male', 'female'] as const;
+const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
+const GENDERS = ["male", "female"] as const;
 
 export default function AddPetScreen() {
   const { t } = useI18n();
-  const { addPet, user } = useApp();
+  const { user } = useApp();
+  const { showToast } = useToast();
   const router = useRouter();
-  
+  const params = useLocalSearchParams<{ editMode?: string; petId?: string }>();
+  const isEditMode = params.editMode === "true";
+
   const [formData, setFormData] = useState({
-    name: '',
-    type: 'dog' as Pet['type'],
-    breed: '',
-    age: '',
-    gender: 'male' as Pet['gender'],
-    weight: '',
-    color: '',
-    birthDate: '',
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80'
+    name: "",
+    type: "dog" as Pet["type"],
+    breed: "",
+    age: "",
+    gender: "male" as Pet["gender"],
+    weight: "",
+    color: "",
+    birthDate: "",
+    image:
+      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
+    medicalHistory: "",
+    vaccinations: "",
   });
-  
-  const [isLoading, setIsLoading] = useState(false);
+
+  const createPetMutation = useMutation(trpc.pets.create.mutationOptions({}));
+  const isLoading = createPetMutation.isPending;
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  /** 🖼️ Handle Image Upload **/
+  const handleImageUpload = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        showToast({
+          message: "نحتاج إلى إذن للوصول إلى الصور",
+          type: "error",
+        });
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.length > 0) {
+        setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
+        showToast({
+          message: "تم اختيار الصورة بنجاح",
+          type: "success",
+        });
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      showToast({
+        message: "حدث خطأ أثناء اختيار الصورة",
+        type: "error",
+      });
+    }
+  };
+
+  /** 🐶 Handle Form Submission **/
   const handleSubmit = async () => {
+    // Basic validation
     if (!formData.name.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال اسم الحيوان');
+      showToast({
+        message: "يرجى إدخال اسم الحيوان",
+        type: "error",
+      });
       return;
     }
 
     if (!user) {
-      Alert.alert('خطأ', 'يرجى تسجيل الدخول أولاً');
+      showToast({
+        message: "يرجى تسجيل الدخول أولاً",
+        type: "error",
+      });
       return;
     }
 
-    setIsLoading(true);
-    
-    try {
-      const newPet: Pet = {
-        id: Date.now().toString(),
+    if (isEditMode && params.petId) {
+      showToast({
+        message: "ميزة التعديل قيد التطوير",
+        type: "info",
+      });
+      return;
+    }
+
+    // Add new pet
+    createPetMutation.mutate(
+      {
+        ownerId: user.id,
         name: formData.name.trim(),
         type: formData.type,
         breed: formData.breed.trim() || undefined,
@@ -58,25 +129,27 @@ export default function AddPetScreen() {
         gender: formData.gender,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         color: formData.color.trim() || undefined,
-        birthDate: formData.birthDate || undefined,
         image: formData.image,
-        ownerId: user.id,
-        medicalRecords: [],
-        vaccinations: [],
-        reminders: [],
-        isLost: false
-      };
-
-      await addPet(newPet);
-      Alert.alert('نجح', 'تم إضافة الحيوان بنجاح', [
-        { text: 'موافق', onPress: () => router.back() }
-      ]);
-    } catch (error) {
-      console.error('Error adding pet:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء إضافة الحيوان');
-    } finally {
-      setIsLoading(false);
-    }
+        medicalHistory: formData.medicalHistory.trim() || undefined,
+        vaccinations: formData.vaccinations.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          showToast({
+            message: "تم إضافة الحيوان بنجاح",
+            type: "success",
+          });
+          router.navigate("/(tabs)/pets");
+          trpc.pets.getUserPets.invalidate();
+        },
+        onError: (error) => {
+          showToast({
+            message: error.message || "حدث خطأ أثناء إضافة الحيوان",
+            type: "error",
+          });
+        },
+      }
+    );
   };
 
   const renderTypeSelector = () => (
@@ -86,14 +159,16 @@ export default function AddPetScreen() {
           key={type}
           style={[
             styles.typeButton,
-            formData.type === type && styles.typeButtonActive
+            formData.type === type && styles.typeButtonActive,
           ]}
-          onPress={() => handleInputChange('type', type)}
+          onPress={() => handleInputChange("type", type)}
         >
-          <Text style={[
-            styles.typeButtonText,
-            formData.type === type && styles.typeButtonTextActive
-          ]}>
+          <Text
+            style={[
+              styles.typeButtonText,
+              formData.type === type && styles.typeButtonTextActive,
+            ]}
+          >
             {t(`pets.types.${type}`)}
           </Text>
         </TouchableOpacity>
@@ -108,15 +183,17 @@ export default function AddPetScreen() {
           key={gender}
           style={[
             styles.genderButton,
-            formData.gender === gender && styles.genderButtonActive
+            formData.gender === gender && styles.genderButtonActive,
           ]}
-          onPress={() => handleInputChange('gender', gender)}
+          onPress={() => handleInputChange("gender", gender)}
         >
-          <Text style={[
-            styles.genderButtonText,
-            formData.gender === gender && styles.genderButtonTextActive
-          ]}>
-            {gender === 'male' ? t('pets.male') : t('pets.female')}
+          <Text
+            style={[
+              styles.genderButtonText,
+              formData.gender === gender && styles.genderButtonTextActive,
+            ]}
+          >
+            {gender === "male" ? "ذكر" : "أنثى"}
           </Text>
         </TouchableOpacity>
       ))}
@@ -124,212 +201,202 @@ export default function AddPetScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen 
+    <>
+      <Stack.Screen
         options={{
-          title: t('pets.addPet'),
-          headerShown: true,
+          title: isEditMode ? "تعديل معلومات الحيوان" : "إضافة حيوان جديد",
           headerStyle: { backgroundColor: COLORS.white },
-          headerTitleStyle: { color: COLORS.black, fontWeight: 'bold' },
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              <ArrowLeft size={24} color={COLORS.black} />
-            </TouchableOpacity>
-          )
+          headerTintColor: COLORS.black,
+          headerTitleStyle: { fontWeight: "bold" },
+          presentation: "modal",
         }}
       />
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
         {/* Pet Image */}
-        <View style={styles.imageSection}>
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: formData.image }} style={styles.petImage} />
-            <TouchableOpacity style={styles.cameraButton}>
-              <Camera size={20} color={COLORS.white} />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: formData.image }} style={styles.petImage} />
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleImageUpload}
+          >
+            <Camera size={20} color={COLORS.white} />
+          </TouchableOpacity>
         </View>
 
         {/* Pet Name */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>{t('pets.name')}</Text>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>اسم الحيوان *</Text>
           <TextInput
             style={styles.input}
             value={formData.name}
-            onChangeText={(value) => handleInputChange('name', value)}
-            placeholder={t('pets.enterName')}
+            onChangeText={(value) => handleInputChange("name", value)}
+            placeholder="أدخل اسم الحيوان"
             placeholderTextColor={COLORS.lightGray}
           />
         </View>
 
         {/* Pet Type */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>{t('pets.type')}</Text>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>نوع الحيوان *</Text>
           {renderTypeSelector()}
         </View>
 
-        {/* Pet Breed */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>{t('pets.breed')} (اختياري)</Text>
+        {/* Breed */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>السلالة</Text>
           <TextInput
             style={styles.input}
             value={formData.breed}
-            onChangeText={(value) => handleInputChange('breed', value)}
-            placeholder={t('pets.enterBreed')}
+            onChangeText={(value) => handleInputChange("breed", value)}
+            placeholder="أدخل السلالة (اختياري)"
             placeholderTextColor={COLORS.lightGray}
           />
         </View>
 
         {/* Age and Gender Row */}
         <View style={styles.row}>
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>{t('pets.age')}</Text>
+          <View style={[styles.inputGroup, styles.halfWidth]}>
+            <Text style={styles.label}>العمر (بالسنوات)</Text>
             <TextInput
               style={styles.input}
               value={formData.age}
-              onChangeText={(value) => handleInputChange('age', value)}
-              placeholder="العمر بالسنوات"
+              onChangeText={(value) => handleInputChange("age", value)}
+              placeholder="العمر"
               placeholderTextColor={COLORS.lightGray}
               keyboardType="numeric"
             />
           </View>
-          
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>{t('pets.gender')}</Text>
+
+          <View style={[styles.inputGroup, styles.halfWidth]}>
+            <Text style={styles.label}>الجنس</Text>
             {renderGenderSelector()}
           </View>
         </View>
 
         {/* Weight and Color Row */}
         <View style={styles.row}>
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>{t('pets.weight')} (اختياري)</Text>
+          <View style={[styles.inputGroup, styles.halfWidth]}>
+            <Text style={styles.label}>الوزن (كيلو)</Text>
             <TextInput
               style={styles.input}
               value={formData.weight}
-              onChangeText={(value) => handleInputChange('weight', value)}
-              placeholder="الوزن بالكيلوجرام"
+              onChangeText={(value) => handleInputChange("weight", value)}
+              placeholder="الوزن"
               placeholderTextColor={COLORS.lightGray}
               keyboardType="numeric"
             />
           </View>
-          
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>{t('pets.color')} (اختياري)</Text>
+
+          <View style={[styles.inputGroup, styles.halfWidth]}>
+            <Text style={styles.label}>اللون</Text>
             <TextInput
               style={styles.input}
               value={formData.color}
-              onChangeText={(value) => handleInputChange('color', value)}
-              placeholder="لون الحيوان"
+              onChangeText={(value) => handleInputChange("color", value)}
+              placeholder="اللون"
               placeholderTextColor={COLORS.lightGray}
             />
           </View>
         </View>
 
         {/* Birth Date */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>{t('pets.birthDate')} (اختياري)</Text>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>تاريخ الميلاد</Text>
           <TouchableOpacity style={styles.dateInput}>
-            <TextInput
-              style={styles.dateInputText}
-              value={formData.birthDate}
-              onChangeText={(value) => handleInputChange('birthDate', value)}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={COLORS.lightGray}
-            />
-            <Calendar size={20} color={COLORS.darkGray} />
+            <Text
+              style={[
+                styles.dateText,
+                !formData.birthDate && styles.placeholder,
+              ]}
+            >
+              {formData.birthDate || "اختر تاريخ الميلاد (اختياري)"}
+            </Text>
+            <Calendar size={20} color={COLORS.lightGray} />
           </TouchableOpacity>
         </View>
 
         {/* Submit Button */}
         <Button
-          title={t('pets.addPet')}
+          title={isEditMode ? "حفظ التغييرات" : "إضافة الحيوان"}
           onPress={handleSubmit}
           type="primary"
           size="large"
-          loading={isLoading}
           style={styles.submitButton}
+          disabled={isLoading}
         />
       </ScrollView>
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.gray,
   },
-  backButton: {
-    padding: 8,
-  },
-  scrollView: {
-    flex: 1,
+  content: {
     padding: 16,
-  },
-  imageSection: {
-    alignItems: 'center',
-    marginBottom: 24,
+    paddingBottom: 32,
   },
   imageContainer: {
-    position: 'relative',
+    alignItems: "center",
+    marginBottom: 24,
+    position: "relative",
   },
   petImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
+    backgroundColor: COLORS.lightGray,
   },
   cameraButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
-    right: 0,
+    right: "35%",
     backgroundColor: COLORS.primary,
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 3,
     borderColor: COLORS.white,
   },
-  formGroup: {
-    marginBottom: 20,
+  inputGroup: {
+    marginBottom: 16,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   input: {
-    borderWidth: 1,
-    borderColor: COLORS.lightGray,
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: 'right',
-    backgroundColor: COLORS.white,
-  },
-  row: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-  },
-  halfWidth: {
-    width: '48%',
+    textAlign: "right",
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
   },
   typeContainer: {
-    flexDirection: 'row-reverse',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   typeButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
-    backgroundColor: COLORS.white,
   },
   typeButtonActive: {
     backgroundColor: COLORS.primary,
@@ -341,19 +408,27 @@ const styles = StyleSheet.create({
   },
   typeButtonTextActive: {
     color: COLORS.white,
+    fontWeight: "600",
+  },
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  halfWidth: {
+    flex: 1,
   },
   genderContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row",
     gap: 8,
   },
   genderButton: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
+    backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
-    backgroundColor: COLORS.white,
-    alignItems: 'center',
+    alignItems: "center",
   },
   genderButtonActive: {
     backgroundColor: COLORS.primary,
@@ -365,24 +440,26 @@ const styles = StyleSheet.create({
   },
   genderButtonTextActive: {
     color: COLORS.white,
+    fontWeight: "600",
   },
   dateInput: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: COLORS.white,
   },
-  dateInputText: {
-    flex: 1,
-    padding: 12,
+  dateText: {
     fontSize: 16,
-    textAlign: 'right',
+    color: COLORS.black,
+  },
+  placeholder: {
+    color: COLORS.lightGray,
   },
   submitButton: {
-    marginTop: 20,
-    marginBottom: 40,
+    marginTop: 24,
   },
 });

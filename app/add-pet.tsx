@@ -1,4 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -11,6 +20,7 @@ import { Pet } from "../types";
 import { Camera, Calendar } from "lucide-react-native";
 import { Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
+import { useToast } from "@/lib/hooks";
 
 const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
@@ -18,51 +28,43 @@ const GENDERS = ["male", "female"] as const;
 export default function AddPetScreen() {
   const { t } = useI18n();
   const { user } = useApp();
+  const { showToast } = useToast();
   const router = useRouter();
-  const params = useLocalSearchParams<{
-    editMode?: string;
-    petId?: string;
-    name?: string;
-    type?: string;
-    breed?: string;
-    age?: string;
-    gender?: string;
-    weight?: string;
-    color?: string;
-    birthDate?: string;
-    image?: string;
-  }>();
-
+  const params = useLocalSearchParams<{ editMode?: string; petId?: string }>();
   const isEditMode = params.editMode === "true";
 
   const [formData, setFormData] = useState({
-    name: params.name || "",
-    type: (params.type as Pet["type"]) || "dog",
-    breed: params.breed || "",
-    age: params.age || "",
-    gender: (params.gender as Pet["gender"]) || "male",
-    weight: params.weight || "",
-    color: params.color || "",
-    birthDate: params.birthDate || "",
+    name: "",
+    type: "dog" as Pet["type"],
+    breed: "",
+    age: "",
+    gender: "male" as Pet["gender"],
+    weight: "",
+    color: "",
+    birthDate: "",
     image:
-      params.image ||
-      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
+    medicalHistory: "",
+    vaccinations: "",
   });
 
-  const createPetMutation = useMutation(trpc.pets.create.mutationOptions());
-  // const updatePetMutation = useMutation(trpc.pets.update.mutationOptions()); // Uncomment when backend is ready
-
-  const isLoading = createPetMutation.isPending; // || updatePetMutation.isPending;
+  const createPetMutation = useMutation(trpc.pets.create.mutationOptions({}));
+  const isLoading = createPetMutation.isPending;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  /** 🖼️ Handle Image Upload **/
   const handleImageUpload = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
+        showToast({
+          message: "نحتاج إلى إذن للوصول إلى الصور",
+          type: "error",
+        });
         return;
       }
 
@@ -73,63 +75,80 @@ export default function AddPetScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
+        showToast({
+          message: "تم اختيار الصورة بنجاح",
+          type: "success",
+        });
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
+      showToast({
+        message: "حدث خطأ أثناء اختيار الصورة",
+        type: "error",
+      });
     }
   };
 
+  /** 🐶 Handle Form Submission **/
   const handleSubmit = async () => {
+    // Basic validation
     if (!formData.name.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال اسم الحيوان");
+      showToast({
+        message: "يرجى إدخال اسم الحيوان",
+        type: "error",
+      });
       return;
     }
 
     if (!user) {
-      Alert.alert("خطأ", "يرجى تسجيل الدخول أولاً");
+      showToast({
+        message: "يرجى تسجيل الدخول أولاً",
+        type: "error",
+      });
       return;
     }
 
     if (isEditMode && params.petId) {
-      // TODO: Implement update logic when the backend procedure is ready
-      Alert.alert("قيد التطوير", "تعديل معلومات الحيوان لم يتم تنفيذه بعد.");
-      // updatePetMutation.mutate({ petId: params.petId, ...formData }, {
-      //   onSuccess: () => {
-      //     Alert.alert('نجح', 'تم تحديث معلومات الحيوان بنجاح', [
-      //       { text: 'موافق', onPress: () => router.back() }
-      //     ]);
-      //   },
-      //   onError: (error) => {
-      //     Alert.alert('خطأ', error.message || 'حدث خطأ أثناء تحديث الحيوان');
-      //   }
-      // });
-    } else {
-      // Add new pet
-      createPetMutation.mutate(
-        {
-          name: formData.name.trim(),
-          type: formData.type,
-          breed: formData.breed.trim() || undefined,
-          age: formData.age ? parseInt(formData.age) : undefined,
-          gender: formData.gender,
-          weight: formData.weight ? parseFloat(formData.weight) : undefined,
-          color: formData.color.trim() || undefined,
-          image: formData.image,
-          ownerId: user.id,
-        },
-        {
-          onSuccess: () => {
-            Alert.alert("نجح", "تم إضافة الحيوان بنجاح", [{ text: "موافق", onPress: () => router.back() }]);
-          },
-          onError: (error) => {
-            Alert.alert("خطأ", error.message || "حدث خطأ أثناء إضافة الحيوان");
-          },
-        }
-      );
+      showToast({
+        message: "ميزة التعديل قيد التطوير",
+        type: "info",
+      });
+      return;
     }
+
+    // Add new pet
+    createPetMutation.mutate(
+      {
+        ownerId: user.id,
+        name: formData.name.trim(),
+        type: formData.type,
+        breed: formData.breed.trim() || undefined,
+        age: formData.age ? parseInt(formData.age) : undefined,
+        gender: formData.gender,
+        weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        color: formData.color.trim() || undefined,
+        image: formData.image,
+        medicalHistory: formData.medicalHistory.trim() || undefined,
+        vaccinations: formData.vaccinations.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          showToast({
+            message: "تم إضافة الحيوان بنجاح",
+            type: "success",
+          });
+          router.back();
+        },
+        onError: (error) => {
+          showToast({
+            message: error.message || "حدث خطأ أثناء إضافة الحيوان",
+            type: "error",
+          });
+        },
+      }
+    );
   };
 
   const renderTypeSelector = () => (
@@ -137,10 +156,18 @@ export default function AddPetScreen() {
       {PET_TYPES.map((type) => (
         <TouchableOpacity
           key={type}
-          style={[styles.typeButton, formData.type === type && styles.typeButtonActive]}
+          style={[
+            styles.typeButton,
+            formData.type === type && styles.typeButtonActive,
+          ]}
           onPress={() => handleInputChange("type", type)}
         >
-          <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>
+          <Text
+            style={[
+              styles.typeButtonText,
+              formData.type === type && styles.typeButtonTextActive,
+            ]}
+          >
             {t(`pets.types.${type}`)}
           </Text>
         </TouchableOpacity>
@@ -153,10 +180,18 @@ export default function AddPetScreen() {
       {GENDERS.map((gender) => (
         <TouchableOpacity
           key={gender}
-          style={[styles.genderButton, formData.gender === gender && styles.genderButtonActive]}
+          style={[
+            styles.genderButton,
+            formData.gender === gender && styles.genderButtonActive,
+          ]}
           onPress={() => handleInputChange("gender", gender)}
         >
-          <Text style={[styles.genderButtonText, formData.gender === gender && styles.genderButtonTextActive]}>
+          <Text
+            style={[
+              styles.genderButtonText,
+              formData.gender === gender && styles.genderButtonTextActive,
+            ]}
+          >
             {gender === "male" ? "ذكر" : "أنثى"}
           </Text>
         </TouchableOpacity>
@@ -176,11 +211,17 @@ export default function AddPetScreen() {
         }}
       />
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
         {/* Pet Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: formData.image }} style={styles.petImage} />
-          <TouchableOpacity style={styles.cameraButton} onPress={handleImageUpload}>
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleImageUpload}
+          >
             <Camera size={20} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -265,7 +306,12 @@ export default function AddPetScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>تاريخ الميلاد</Text>
           <TouchableOpacity style={styles.dateInput}>
-            <Text style={[styles.dateText, !formData.birthDate && styles.placeholder]}>
+            <Text
+              style={[
+                styles.dateText,
+                !formData.birthDate && styles.placeholder,
+              ]}
+            >
               {formData.birthDate || "اختر تاريخ الميلاد (اختياري)"}
             </Text>
             <Calendar size={20} color={COLORS.lightGray} />
