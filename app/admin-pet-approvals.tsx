@@ -49,10 +49,13 @@ interface PetApprovalRequest {
 
 export default function AdminPetApprovals() {
   const { user } = useApp();
-  const [selectedRequest, setSelectedRequest] = useState<PetApprovalRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] =
+    useState<PetApprovalRequest | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
+  const [actionType, setActionType] = useState<"approve" | "reject" | null>(
+    null
+  );
   const [rejectionReason, setRejectionReason] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
 
@@ -61,14 +64,28 @@ export default function AdminPetApprovals() {
     data: pendingApprovalsData,
     isLoading,
     refetch,
-  } = useQuery(trpc.admin.pets.getPendingApprovals.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
-  const { data: approvalStatsData } = useQuery(trpc.admin.pets.getApprovalStats.queryOptions());
+  } = useQuery(
+    trpc.admin.pets.getPendingApprovals.queryOptions({
+      adminId: user?.id ? Number(user.id) : 0,
+    })
+  );
+  const { data: approvalStatsData } = useQuery(
+    trpc.admin.pets.getApprovalStats.queryOptions()
+  );
 
-  const pendingApprovals = useMemo(() => (pendingApprovalsData as any)?.requests, [pendingApprovalsData]);
-  const approvalStats = useMemo(() => (approvalStatsData as any)?.pets, [approvalStatsData]);
+  const pendingApprovals = useMemo(
+    () => (pendingApprovalsData as any)?.requests,
+    [pendingApprovalsData]
+  );
+  const approvalStats = useMemo(
+    () => approvalStatsData as any,
+    [approvalStatsData]
+  );
 
   // Review approval mutation
-  const reviewApprovalMutation = useMutation(trpc.admin.pets.reviewApproval.mutationOptions());
+  const reviewApprovalMutation = useMutation(
+    trpc.admin.pets.reviewApproval.mutationOptions()
+  );
 
   const getRequestTypeText = (type: string) => {
     switch (type) {
@@ -143,7 +160,10 @@ export default function AdminPetApprovals() {
     }
   };
 
-  const handleAction = (request: PetApprovalRequest, action: "approve" | "reject") => {
+  const handleAction = (
+    request: PetApprovalRequest,
+    action: "approve" | "reject"
+  ) => {
     setSelectedRequest(request);
     setActionType(action);
     setShowActionModal(true);
@@ -190,7 +210,10 @@ export default function AdminPetApprovals() {
           <View style={styles.detailModalContent}>
             <View style={styles.detailModalHeader}>
               <Text style={styles.modalTitle}>تفاصيل طلب الموافقة</Text>
-              <TouchableOpacity style={styles.closeButton} onPress={() => setShowDetailModal(false)}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowDetailModal(false)}
+              >
                 <Text style={styles.closeButtonText}>×</Text>
               </TouchableOpacity>
             </View>
@@ -203,30 +226,54 @@ export default function AdminPetApprovals() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>نوع الطلب:</Text>
                   <View
-                    style={[styles.typeBadge, { backgroundColor: getRequestTypeColor(selectedRequest.requestType) }]}
+                    style={[
+                      styles.typeBadge,
+                      {
+                        backgroundColor: getRequestTypeColor(
+                          selectedRequest.requestType
+                        ),
+                      },
+                    ]}
                   >
-                    <Text style={styles.typeBadgeText}>{getRequestTypeText(selectedRequest.requestType)}</Text>
+                    <Text style={styles.typeBadgeText}>
+                      {getRequestTypeText(selectedRequest.requestType)}
+                    </Text>
                   </View>
                 </View>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>الأولوية:</Text>
-                  <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(selectedRequest.priority) }]}>
-                    <Text style={styles.priorityBadgeText}>{getPriorityText(selectedRequest.priority)}</Text>
+                  <View
+                    style={[
+                      styles.priorityBadge,
+                      {
+                        backgroundColor: getPriorityColor(
+                          selectedRequest.priority
+                        ),
+                      },
+                    ]}
+                  >
+                    <Text style={styles.priorityBadgeText}>
+                      {getPriorityText(selectedRequest.priority)}
+                    </Text>
                   </View>
                 </View>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>تاريخ الطلب:</Text>
                   <Text style={styles.infoValue}>
-                    {new Date(selectedRequest.createdAt).toLocaleDateString("ar-SA")}
+                    {new Date(selectedRequest.createdAt).toLocaleDateString(
+                      "ar-SA"
+                    )}
                   </Text>
                 </View>
 
                 {selectedRequest.description && (
                   <View style={styles.descriptionContainer}>
                     <Text style={styles.infoLabel}>الوصف:</Text>
-                    <Text style={styles.descriptionText}>{selectedRequest.description}</Text>
+                    <Text style={styles.descriptionText}>
+                      {selectedRequest.description}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -236,44 +283,59 @@ export default function AdminPetApprovals() {
                 <Text style={styles.sectionTitle}>معلومات الحيوان</Text>
 
                 {selectedRequest.petImage && (
-                  <Image source={{ uri: selectedRequest.petImage }} style={styles.petImage} />
+                  <Image
+                    source={{ uri: selectedRequest.petImage }}
+                    style={styles.petImage}
+                  />
                 )}
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>الاسم:</Text>
-                  <Text style={styles.infoValue}>{selectedRequest.petName || "غير محدد"}</Text>
+                  <Text style={styles.infoValue}>
+                    {selectedRequest.petName || "غير محدد"}
+                  </Text>
                 </View>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>النوع:</Text>
-                  <Text style={styles.infoValue}>{getPetTypeText(selectedRequest.petType || "")}</Text>
+                  <Text style={styles.infoValue}>
+                    {getPetTypeText(selectedRequest.petType || "")}
+                  </Text>
                 </View>
 
                 {selectedRequest.petBreed && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>السلالة:</Text>
-                    <Text style={styles.infoValue}>{selectedRequest.petBreed}</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedRequest.petBreed}
+                    </Text>
                   </View>
                 )}
 
                 {selectedRequest.petAge && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>العمر:</Text>
-                    <Text style={styles.infoValue}>{selectedRequest.petAge} سنة</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedRequest.petAge} سنة
+                    </Text>
                   </View>
                 )}
 
                 {selectedRequest.petGender && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>الجنس:</Text>
-                    <Text style={styles.infoValue}>{selectedRequest.petGender === "male" ? "ذكر" : "أنثى"}</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedRequest.petGender === "male" ? "ذكر" : "أنثى"}
+                    </Text>
                   </View>
                 )}
 
                 {selectedRequest.petColor && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>اللون:</Text>
-                    <Text style={styles.infoValue}>{selectedRequest.petColor}</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedRequest.petColor}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -284,18 +346,24 @@ export default function AdminPetApprovals() {
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>الاسم:</Text>
-                  <Text style={styles.infoValue}>{selectedRequest.ownerName || "غير محدد"}</Text>
+                  <Text style={styles.infoValue}>
+                    {selectedRequest.ownerName || "غير محدد"}
+                  </Text>
                 </View>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>البريد الإلكتروني:</Text>
-                  <Text style={styles.infoValue}>{selectedRequest.ownerEmail || "غير محدد"}</Text>
+                  <Text style={styles.infoValue}>
+                    {selectedRequest.ownerEmail || "غير محدد"}
+                  </Text>
                 </View>
 
                 {selectedRequest.ownerPhone && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>الهاتف:</Text>
-                    <Text style={styles.infoValue}>{selectedRequest.ownerPhone}</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedRequest.ownerPhone}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -311,28 +379,36 @@ export default function AdminPetApprovals() {
                   {selectedRequest.contactInfo && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>معلومات التواصل:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.contactInfo}</Text>
+                      <Text style={styles.infoValue}>
+                        {selectedRequest.contactInfo}
+                      </Text>
                     </View>
                   )}
 
                   {selectedRequest.location && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>الموقع:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.location}</Text>
+                      <Text style={styles.infoValue}>
+                        {selectedRequest.location}
+                      </Text>
                     </View>
                   )}
 
                   {selectedRequest.price && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>السعر:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.price} ريال</Text>
+                      <Text style={styles.infoValue}>
+                        {selectedRequest.price} ريال
+                      </Text>
                     </View>
                   )}
 
                   {selectedRequest.specialRequirements && (
                     <View style={styles.descriptionContainer}>
                       <Text style={styles.infoLabel}>متطلبات خاصة:</Text>
-                      <Text style={styles.descriptionText}>{selectedRequest.specialRequirements}</Text>
+                      <Text style={styles.descriptionText}>
+                        {selectedRequest.specialRequirements}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -342,26 +418,38 @@ export default function AdminPetApprovals() {
               {selectedRequest.images && selectedRequest.images.length > 0 && (
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>الصور المرفقة</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
-                    {selectedRequest.images.map((image: string, index: number) => (
-                      <Image
-                        key={`image-${selectedRequest.id}-${index}`}
-                        source={{ uri: image }}
-                        style={styles.attachedImage}
-                      />
-                    ))}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.imagesContainer}
+                  >
+                    {selectedRequest.images.map(
+                      (image: string, index: number) => (
+                        <Image
+                          key={`image-${selectedRequest.id}-${index}`}
+                          source={{ uri: image }}
+                          style={styles.attachedImage}
+                        />
+                      )
+                    )}
                   </ScrollView>
                 </View>
               )}
             </ScrollView>
 
             <View style={styles.actionButtons}>
-              <TouchableOpacity style={styles.approveButton} onPress={() => handleAction(selectedRequest, "approve")}>
+              <TouchableOpacity
+                style={styles.approveButton}
+                onPress={() => handleAction(selectedRequest, "approve")}
+              >
                 <CheckCircle size={20} color="#fff" />
                 <Text style={styles.actionButtonText}>موافقة</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.rejectButton} onPress={() => handleAction(selectedRequest, "reject")}>
+              <TouchableOpacity
+                style={styles.rejectButton}
+                onPress={() => handleAction(selectedRequest, "reject")}
+              >
                 <XCircle size={20} color="#fff" />
                 <Text style={styles.actionButtonText}>رفض</Text>
               </TouchableOpacity>
@@ -376,7 +464,9 @@ export default function AdminPetApprovals() {
     <Modal visible={showActionModal} animationType="slide" transparent>
       <View style={styles.modalOverlay}>
         <View style={styles.actionModalContent}>
-          <Text style={styles.modalTitle}>{actionType === "approve" ? "موافقة على الطلب" : "رفض الطلب"}</Text>
+          <Text style={styles.modalTitle}>
+            {actionType === "approve" ? "موافقة على الطلب" : "رفض الطلب"}
+          </Text>
 
           {actionType === "reject" && (
             <View style={styles.inputContainer}>
@@ -412,13 +502,18 @@ export default function AdminPetApprovals() {
             <TouchableOpacity
               style={[
                 styles.confirmActionButton,
-                { backgroundColor: actionType === "approve" ? "#27AE60" : "#E74C3C" },
+                {
+                  backgroundColor:
+                    actionType === "approve" ? "#27AE60" : "#E74C3C",
+                },
               ]}
               onPress={confirmAction}
               disabled={reviewApprovalMutation.isPending}
             >
               <Text style={styles.confirmActionButtonText}>
-                {reviewApprovalMutation.isPending ? "جاري المعالجة..." : "تأكيد"}
+                {reviewApprovalMutation.isPending
+                  ? "جاري المعالجة..."
+                  : "تأكيد"}
               </Text>
             </TouchableOpacity>
 
@@ -448,20 +543,37 @@ export default function AdminPetApprovals() {
     >
       <View style={styles.requestHeader}>
         <View style={styles.requestInfo}>
-          <Text style={styles.requestTitle}>{item.title}</Text>
+          <Text style={styles.requestTitle}>{item?.title}</Text>
           <Text style={styles.petInfo}>
-            {getPetTypeText(item.petType || "")} - {item.petName || "غير محدد"}
+            {getPetTypeText(item?.petType || "")} -{" "}
+            {item?.petName || "غير محدد"}
           </Text>
-          <Text style={styles.ownerInfo}>المالك: {item.ownerName || "غير محدد"}</Text>
+          <Text style={styles.ownerInfo}>
+            المالك: {item?.ownerName || "غير محدد"}
+          </Text>
         </View>
 
         <View style={styles.requestMeta}>
-          <View style={[styles.typeBadge, { backgroundColor: getRequestTypeColor(item.requestType) }]}>
-            <Text style={styles.typeBadgeText}>{getRequestTypeText(item.requestType)}</Text>
+          <View
+            style={[
+              styles.typeBadge,
+              { backgroundColor: getRequestTypeColor(item?.requestType) },
+            ]}
+          >
+            <Text style={styles.typeBadgeText}>
+              {getRequestTypeText(item?.requestType)}
+            </Text>
           </View>
 
-          <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(item.priority) }]}>
-            <Text style={styles.priorityBadgeText}>{getPriorityText(item.priority)}</Text>
+          <View
+            style={[
+              styles.priorityBadge,
+              { backgroundColor: getPriorityColor(item?.priority) },
+            ]}
+          >
+            <Text style={styles.priorityBadgeText}>
+              {getPriorityText(item?.priority)}
+            </Text>
           </View>
         </View>
       </View>
@@ -469,7 +581,9 @@ export default function AdminPetApprovals() {
       <View style={styles.requestFooter}>
         <View style={styles.requestDate}>
           <Clock size={12} color="#666" />
-          <Text style={styles.dateText}>{new Date(item.createdAt).toLocaleDateString("ar-SA")}</Text>
+          <Text style={styles.dateText}>
+            {new Date(item?.createdAt).toLocaleDateString("ar-SA")}
+          </Text>
         </View>
 
         <View style={styles.quickActions}>
@@ -532,19 +646,27 @@ export default function AdminPetApprovals() {
       {approvalStats && (
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{approvalStats.stats.pending}</Text>
+            <Text style={styles.statNumber}>
+              {approvalStats?.stats?.pending}
+            </Text>
             <Text style={styles.statLabel}>في الانتظار</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={[styles.statNumber, { color: "#27AE60" }]}>{approvalStats.stats.approved}</Text>
+            <Text style={[styles.statNumber, { color: "#27AE60" }]}>
+              {approvalStats.stats.approved}
+            </Text>
             <Text style={styles.statLabel}>تمت الموافقة</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={[styles.statNumber, { color: "#E74C3C" }]}>{approvalStats.stats.rejected}</Text>
+            <Text style={[styles.statNumber, { color: "#E74C3C" }]}>
+              {approvalStats.stats.rejected}
+            </Text>
             <Text style={styles.statLabel}>مرفوضة</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={[styles.statNumber, { color: "#3498DB" }]}>{approvalStats.stats.total}</Text>
+            <Text style={[styles.statNumber, { color: "#3498DB" }]}>
+              {approvalStats.stats.total}
+            </Text>
             <Text style={styles.statLabel}>المجموع</Text>
           </View>
         </View>
@@ -553,9 +675,12 @@ export default function AdminPetApprovals() {
       {/* Requests List */}
       <FlatList
         data={
-          (pendingApprovals || []).map((request) => ({
+          (pendingApprovals || [])?.map((request) => ({
             ...request,
-            requestType: request.requestType as "adoption" | "breeding" | "lost_pet",
+            requestType: request.requestType as
+              | "adoption"
+              | "breeding"
+              | "lost_pet",
             images: Array.isArray(request.images) ? request.images : [],
           })) as PetApprovalRequest[]
         }

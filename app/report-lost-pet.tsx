@@ -22,12 +22,9 @@ import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 
 export default function ReportLostPetScreen() {
-  const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
-  const { petId } = useLocalSearchParams<{ petId?: string }>();
 
-  const [pet, setPet] = useState<Pet | null>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [breed, setBreed] = useState("");
@@ -42,21 +39,9 @@ export default function ReportLostPetScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create pet approval request mutation
-  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
-
-  // useEffect(() => {
-  //   if (petId) {
-  //     const foundPet = pets.find(p => p.id === petId);
-  //     if (foundPet) {
-  //       setPet(foundPet);
-  //       setName(foundPet.name);
-  //       setType(foundPet.type);
-  //       setBreed(foundPet.breed || '');
-  //       setColor(foundPet.color || '');
-  //       setImage(foundPet.image || null);
-  //     }
-  //   }
-  // }, [petId, pets]);
+  const createApprovalMutation = useMutation(
+    trpc.pets.createApprovalRequest.mutationOptions({})
+  );
 
   const handleAddImage = async () => {
     try {
@@ -118,7 +103,9 @@ export default function ReportLostPetScreen() {
             contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
           }`,
           images: image ? [image] : [],
-          contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
+          contactInfo: `${contactName} - ${contactPhone}${
+            contactEmail ? ` - ${contactEmail}` : ""
+          }`,
           location: location.trim(),
         },
         {
@@ -153,7 +140,10 @@ export default function ReportLostPetScreen() {
         }}
       />
 
-      <ScrollView style={[styles.container, { direction: "rtl" }]} contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        style={[styles.container, { direction: "rtl" }]}
+        contentContainerStyle={styles.contentContainer}
+      >
         <Text style={styles.title}>{"تقرير حيوان مفقود"}</Text>
 
         <View style={styles.formGroup}>
@@ -161,12 +151,18 @@ export default function ReportLostPetScreen() {
           {image ? (
             <View style={styles.imageContainer}>
               <Image source={{ uri: image }} style={styles.image} />
-              <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
+              <TouchableOpacity
+                style={styles.removeImageButton}
+                onPress={handleRemoveImage}
+              >
                 <X size={16} color={COLORS.white} />
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
+            <TouchableOpacity
+              style={styles.addImageButton}
+              onPress={handleAddImage}
+            >
               <Plus size={24} color={COLORS.primary} />
               <Text style={styles.addImageText}>إضافة صورة</Text>
             </TouchableOpacity>
@@ -229,7 +225,10 @@ export default function ReportLostPetScreen() {
               placeholder="أدخل الموقع"
               placeholderTextColor={COLORS.darkGray}
             />
-            <TouchableOpacity style={styles.mapButton} onPress={handleSelectLocation}>
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={handleSelectLocation}
+            >
               <MapPin size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -321,7 +320,8 @@ export default function ReportLostPetScreen() {
         {/* Notice */}
         <View style={styles.noticeContainer}>
           <Text style={styles.noticeText}>
-            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك عند الموافقة على البلاغ.
+            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك
+            عند الموافقة على البلاغ.
           </Text>
         </View>
       </ScrollView>

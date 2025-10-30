@@ -1,22 +1,37 @@
-import { StyleSheet, Text, View, Image, ScrollView, Linking, Alert, TouchableOpacity } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  Linking,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
+import React, { useEffect, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from "expo-router";
 import Button from "../../components/Button";
-import { Calendar, MapPin, Phone, Mail, AlertTriangle } from 'lucide-react-native';
+import {
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  AlertTriangle,
+} from "lucide-react-native";
 import { LostPet } from "../../types";
 import { mockLostPets } from "../../mocks/data";
 
 export default function LostPetScreen() {
   const { t } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
-  
+
   const [pet, setPet] = useState<LostPet | null>(null);
 
   useEffect(() => {
     if (id) {
-      const foundPet = mockLostPets.find(p => p.id === id);
+      const foundPet = mockLostPets.find((p) => p.id === id);
       if (foundPet) {
         setPet(foundPet);
       }
@@ -37,11 +52,11 @@ export default function LostPetScreen() {
 
   const handleReportSighting = () => {
     Alert.alert(
-      'الإبلاغ عن مشاهدة',
-      'هل شاهدت هذا الحيوان؟ سيتم التواصل مع صاحبه.',
+      "الإبلاغ عن مشاهدة",
+      "هل شاهدت هذا الحيوان؟ سيتم التواصل مع صاحبه.",
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'نعم، أبلغ', onPress: () => console.log('Report sighting') },
+        { text: "إلغاء", style: "cancel" },
+        { text: "نعم، أبلغ", onPress: () => console.log("Report sighting") },
       ]
     );
   };
@@ -64,46 +79,48 @@ export default function LostPetScreen() {
             <Text style={styles.lostBadgeText}>مفقود</Text>
           </View>
         </View>
-        
+
         <View style={styles.content}>
           <Text style={styles.petName}>{pet.name}</Text>
-          <Text style={styles.petType}>{pet.type} {pet.breed ? `- ${pet.breed}` : ''}</Text>
-          
+          <Text style={styles.petType}>
+            {pet.type} {pet.breed ? `- ${pet.breed}` : ""}
+          </Text>
+
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <MapPin size={20} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>آخر مشاهدة</Text>
             </View>
-            
+
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>الموقع</Text>
               <Text style={styles.infoValue}>{pet.lastSeen.location}</Text>
             </View>
-            
+
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>التاريخ</Text>
               <Text style={styles.infoValue}>
-                {new Date(pet.lastSeen.date).toLocaleDateString('ar-SA')}
+                {new Date(pet.lastSeen.date).toLocaleDateString("ar-SA")}
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Phone size={20} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
             </View>
-            
+
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>الاسم</Text>
               <Text style={styles.infoValue}>{pet.contactInfo.name}</Text>
             </View>
-            
+
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>الهاتف</Text>
               <Text style={styles.infoValue}>{pet.contactInfo.phone}</Text>
             </View>
-            
+
             {pet.contactInfo.email && (
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>البريد الإلكتروني</Text>
@@ -111,34 +128,37 @@ export default function LostPetScreen() {
               </View>
             )}
           </View>
-          
+
           {pet.description && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AlertTriangle size={20} color={COLORS.primary} />
                 <Text style={styles.sectionTitle}>وصف</Text>
               </View>
-              
+
               <Text style={styles.description}>{pet.description}</Text>
             </View>
           )}
         </View>
       </ScrollView>
-      
+
       <View style={styles.bottomActions}>
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.callButton} onPress={handleCall}>
             <Phone size={20} color={COLORS.white} />
             <Text style={styles.callButtonText}>اتصال بالمالك</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.emailButton} onPress={handleEmail}>
             <Mail size={20} color={COLORS.primary} />
             <Text style={styles.emailButtonText}>إرسال بريد</Text>
           </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity style={styles.reportButton} onPress={handleReportSighting}>
+
+        <TouchableOpacity
+          style={styles.reportButton}
+          onPress={handleReportSighting}
+        >
           <Text style={styles.reportButtonText}>الإبلاغ عن مشاهدة</Text>
         </TouchableOpacity>
       </View>
@@ -155,30 +175,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageContainer: {
-    width: '100%',
+    width: "100%",
     height: 300,
-    position: 'relative',
+    position: "relative",
   },
   petImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   lostBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     left: 16,
     backgroundColor: COLORS.error,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
   },
   lostBadgeText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginRight: 4,
   },
   content: {
@@ -187,31 +207,31 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   petType: {
     fontSize: 16,
     color: COLORS.darkGray,
     marginBottom: 24,
-    textAlign: 'right',
+    textAlign: "right",
   },
   section: {
     marginBottom: 20,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     borderRadius: 16,
     padding: 20,
   },
   sectionHeader: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginRight: 8,
   },
@@ -222,22 +242,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   infoValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   description: {
     fontSize: 16,
     color: COLORS.black,
     lineHeight: 24,
-    textAlign: 'right',
+    textAlign: "right",
   },
   bottomActions: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -246,10 +266,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingBottom: 32,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: "#E5E7EB",
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 16,
   },
@@ -258,15 +278,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   callButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emailButton: {
     flex: 1,
@@ -275,33 +295,33 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   emailButtonText: {
     color: COLORS.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   reportButton: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: "#F0F9FF",
     borderWidth: 1,
-    borderColor: '#E0F2FE',
+    borderColor: "#E0F2FE",
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   reportButtonText: {
     color: COLORS.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   notFoundText: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 24,
     color: COLORS.darkGray,
   },

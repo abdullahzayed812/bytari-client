@@ -1,9 +1,25 @@
-import { StyleSheet, Text, View, TouchableOpacity, Image, FlatList, Dimensions, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  FlatList,
+  Dimensions,
+  ActivityIndicator,
+} from "react-native";
 import React, { useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
-import { ArrowLeft, ArrowRight, Calendar, MapPin, Plus, Edit3 } from "lucide-react-native";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar,
+  MapPin,
+  Plus,
+  Edit3,
+} from "lucide-react-native";
 import { Stack, useRouter } from "expo-router";
 import { trpc } from "../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -40,7 +56,10 @@ export default function LostPetsListScreen() {
     // Filter lost pets based on user's location
     return lostPetsData.pets.filter((pet) => {
       const petLocation = pet.location || "";
-      return petLocation.includes(user.city || "") || petLocation.includes(user.country || "");
+      return (
+        petLocation.includes(user.city || "") ||
+        petLocation.includes(user.country || "")
+      );
     });
   }, [lostPetsData?.pets, user?.country, user?.city]);
 
@@ -52,8 +71,15 @@ export default function LostPetsListScreen() {
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              {isRTL ? (
+                <ArrowRight size={24} color={COLORS.black} />
+              ) : (
+                <ArrowLeft size={24} color={COLORS.black} />
+              )}
             </TouchableOpacity>
           ),
           headerRight: () =>
@@ -79,7 +105,9 @@ export default function LostPetsListScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>جاري تحميل الحيوانات المفقودة...</Text>
+          <Text style={styles.loadingText}>
+            جاري تحميل الحيوانات المفقودة...
+          </Text>
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
@@ -92,11 +120,15 @@ export default function LostPetsListScreen() {
           numColumns={2}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
-          columnWrapperStyle={filteredLostPets.length % 2 !== 0 ? styles.row : styles.row}
+          columnWrapperStyle={
+            filteredLostPets.length % 2 !== 0 ? styles.row : styles.row
+          }
           renderItem={({ item: pet }) => (
             <TouchableOpacity
               style={styles.lostPetCard}
-              onPress={() => router.push({ pathname: "/lost-pet", params: { id: pet.id } })}
+              onPress={() =>
+                router.push({ pathname: "/lost-pet", params: { id: pet.id } })
+              }
             >
               {/* Pet Image */}
               <Image
@@ -177,7 +209,9 @@ export default function LostPetsListScreen() {
           keyExtractor={(item) => item.id.toString()}
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>لا توجد حيوانات مفقودة في منطقتك حالياً</Text>
+              <Text style={styles.emptyText}>
+                لا توجد حيوانات مفقودة في منطقتك حالياً
+              </Text>
               <Text style={styles.emptySubText}>
                 {user?.city && user?.country
                   ? `البحث في: ${user.city}, ${user.country}`

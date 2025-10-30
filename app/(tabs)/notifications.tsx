@@ -1,9 +1,23 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useRouter } from "expo-router";
-import { ArrowLeft, ArrowRight, Bell, Building2, MessageSquare, AlertCircle } from "lucide-react-native";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  Building2,
+  MessageSquare,
+  AlertCircle,
+} from "lucide-react-native";
 import { Stack } from "expo-router";
 import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
@@ -19,55 +33,17 @@ interface Notification {
   icon?: string;
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "clinic",
-    title: "عيادة الرحمة البيطرية",
-    message: "تم قبول طلب تسجيل عيادتكم في النظام. يمكنكم الآن الوصول إلى لوحة التحكم.",
-    time: "2024-01-15T10:30:00Z",
-    read: false,
-  },
-  {
-    id: "2",
-    type: "system",
-    title: "تحديث النظام",
-    message: "تم إضافة ميزات جديدة للتطبيق. قم بتحديث التطبيق للاستفادة من الميزات الجديدة.",
-    time: "2024-01-14T15:45:00Z",
-    read: true,
-  },
-
-  {
-    id: "4",
-    type: "clinic",
-    title: "عيادة الأمل البيطرية",
-    message: 'تم إضافة سجل طبي جديد لحيوانك الأليف "فلافي".',
-    time: "2024-01-13T14:15:00Z",
-    read: true,
-  },
-  {
-    id: "5",
-    type: "system",
-    title: "تذكير",
-    message: "لا تنس تحديث معلومات حيوانك الأليف في الملف الشخصي.",
-    time: "2024-01-12T11:00:00Z",
-    read: false,
-  },
-];
-
 export default function NotificationsScreen() {
   const { t, isRTL } = useI18n();
   const router = useRouter();
-  const { user, userMode } = useApp();
+  const { user } = useApp();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // استعلام الإشعارات من قاعدة البيانات
   const notificationsQuery = useQuery(
-    trpc.admin.notifications.getNotifications.queryOptions(
-      { adminId: parseInt(user?.id || "0") },
+    trpc.notifications.list.queryOptions(
+      { userId: parseInt(user?.id || "0") },
       {
-        enabled: !!user?.id && !isNaN(parseInt(user.id)) && userMode === "veterinarian",
+        enabled: !!user?.id && !isNaN(parseInt(user.id)),
         refetchOnMount: true,
         refetchOnWindowFocus: true,
       }
@@ -75,43 +51,41 @@ export default function NotificationsScreen() {
   );
 
   useEffect(() => {
-    if (notificationsQuery.data && userMode === "veterinarian") {
-      // تحويل البيانات من قاعدة البيانات إلى تنسيق الإشعارات
-      const dbNotifications: Notification[] = notificationsQuery.data?.map((notif: any) => ({
-        id: notif.id.toString(),
-        type: notif.type === "system" ? "system" : "clinic",
-        title: notif.title,
-        message: notif.content,
-        time: notif.createdAt,
-        read: notif.isRead,
-        icon: undefined,
-      }));
+    if (notificationsQuery.data?.success) {
+      const dbNotifications: Notification[] =
+        notificationsQuery.data.notifications.map((notif: any) => ({
+          id: notif.id.toString(),
+          type: notif.type || "system",
+          title: notif.title,
+          message: notif.message || notif.content,
+          time: notif.createdAt,
+          read: notif.isRead,
+        }));
 
       setNotifications(dbNotifications);
-      setIsLoading(false);
-    } else if (!notificationsQuery.isLoading) {
-      // إذا لم تكن هناك بيانات من قاعدة البيانات، استخدم البيانات الوهمية
-      setNotifications(mockNotifications);
-      setIsLoading(false);
     }
-  }, [notificationsQuery.data, notificationsQuery.isLoading, userMode]);
+  }, [notificationsQuery.data]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "clinic":
+      case "appointment":
+      case "order":
         return <Building2 size={20} color={COLORS.primary} />;
-
-      case "system":
+      case "inquiry":
         return <AlertCircle size={20} color={COLORS.warning} />;
+      case "system":
       default:
         return <Bell size={20} color={COLORS.darkGray} />;
     }
   };
 
   const formatTime = (timeString: string) => {
+    if (!timeString) return "";
     const date = new Date(timeString);
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+    );
 
     if (diffInHours < 1) {
       return "الآن";
@@ -125,9 +99,13 @@ export default function NotificationsScreen() {
 
   const handleNotificationPress = (notification: Notification) => {
     console.log("Notification pressed:", notification.id);
-    // Handle navigation based on notification type
-    if (notification.type === "clinic") {
-      // Navigate to clinic or medical records
+    // Example navigation logic:
+    if (notification?.type === "appointment") {
+      router.push("/appointments");
+    } else if (notification?.type === "order") {
+      router.push("/orders");
+    } else if (notification?.type === "inquiry") {
+      router.push("/inquiries");
     }
   };
 
@@ -137,47 +115,85 @@ export default function NotificationsScreen() {
         options={{
           headerShown: true,
           title: "الإشعارات",
-          headerStyle: {
-            backgroundColor: COLORS.white,
-          },
+          headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: {
             color: COLORS.black,
             fontSize: 18,
             fontWeight: "bold",
           },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              {isRTL ? (
+                <ArrowRight size={24} color={COLORS.black} />
+              ) : (
+                <ArrowLeft size={24} color={COLORS.black} />
+              )}
             </TouchableOpacity>
           ),
         }}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {isLoading ? (
+        {notificationsQuery.isLoading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>جاري تحميل الإشعارات...</Text>
           </View>
-        ) : (
+        ) : notifications.length > 0 ? (
           notifications.map((notification) => (
             <TouchableOpacity
               key={notification.id}
-              style={[styles.notificationCard, !notification.read && styles.unreadCard]}
+              style={[
+                styles.notificationCard,
+                !notification.read && styles.unreadCard,
+              ]}
               onPress={() => handleNotificationPress(notification)}
             >
-              <View style={[styles.notificationContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                <View style={styles.iconContainer}>{getNotificationIcon(notification.type)}</View>
+              <View
+                style={[
+                  styles.notificationContent,
+                  { flexDirection: isRTL ? "row-reverse" : "row" },
+                ]}
+              >
+                <View style={styles.iconContainer}>
+                  {getNotificationIcon(notification.type)}
+                </View>
 
                 <View
-                  style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
+                  style={[
+                    styles.textContainer,
+                    {
+                      flex: 1,
+                      marginLeft: isRTL ? 0 : 12,
+                      marginRight: isRTL ? 12 : 0,
+                    },
+                  ]}
                 >
-                  <Text style={[styles.notificationTitle, { textAlign: isRTL ? "right" : "left" }]}>
+                  <Text
+                    style={[
+                      styles.notificationTitle,
+                      { textAlign: isRTL ? "right" : "left" },
+                    ]}
+                  >
                     {notification.title}
                   </Text>
-                  <Text style={[styles.notificationMessage, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                  <Text
+                    style={[
+                      styles.notificationMessage,
+                      { textAlign: isRTL ? "right" : "left" },
+                    ]}
+                    numberOfLines={2}
+                  >
                     {notification.message}
                   </Text>
-                  <Text style={[styles.notificationTime, { textAlign: isRTL ? "right" : "left" }]}>
+                  <Text
+                    style={[
+                      styles.notificationTime,
+                      { textAlign: isRTL ? "right" : "left" },
+                    ]}
+                  >
                     {formatTime(notification.time)}
                   </Text>
                 </View>
@@ -186,13 +202,13 @@ export default function NotificationsScreen() {
               </View>
             </TouchableOpacity>
           ))
-        )}
-
-        {!isLoading && notifications.length === 0 && (
+        ) : (
           <View style={styles.emptyState}>
             <Bell size={64} color={COLORS.lightGray} />
             <Text style={styles.emptyStateText}>لا توجد إشعارات</Text>
-            <Text style={styles.emptyStateSubtext}>ستظهر الإشعارات هنا عند وصولها</Text>
+            <Text style={styles.emptyStateSubtext}>
+              ستظهر الإشعارات هنا عند وصولها
+            </Text>
           </View>
         )}
       </ScrollView>

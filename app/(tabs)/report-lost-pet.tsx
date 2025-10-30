@@ -15,23 +15,35 @@ import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import Button from "../../components/Button";
-import { Calendar, MapPin, Plus, X } from "lucide-react-native";
+import {
+  Calendar,
+  Clipboard,
+  Droplet,
+  Heart,
+  MapPin,
+  Plus,
+  User,
+  X,
+} from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Pet } from "../../types";
 import { trpc } from "../../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/lib/hooks";
 
 export default function ReportLostPetScreen() {
-  const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
-  const { petId } = useLocalSearchParams<{ petId?: string }>();
 
-  const [pet, setPet] = useState<Pet | null>(null);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [breed, setBreed] = useState("");
   const [color, setColor] = useState("");
+  const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
+  const [gender, setGender] = useState("");
+  const [medicalHistory, setMedicalHistory] = useState("");
+  const [vaccinations, setVaccinations] = useState("");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [description, setDescription] = useState("");
@@ -41,22 +53,11 @@ export default function ReportLostPetScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Create pet approval request mutation
-  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
+  const { showToast } = useToast();
 
-  // useEffect(() => {
-  //   if (petId) {
-  //     const foundPet = pets.find(p => p.id === petId);
-  //     if (foundPet) {
-  //       setPet(foundPet);
-  //       setName(foundPet.name);
-  //       setType(foundPet.type);
-  //       setBreed(foundPet.breed || '');
-  //       setColor(foundPet.color || '');
-  //       setImage(foundPet.image || null);
-  //     }
-  //   }
-  // }, [petId, pets]);
+  const createApprovalMutation = useMutation(
+    trpc.pets.createApprovalRequest.mutationOptions({})
+  );
 
   const handleAddImage = async () => {
     try {
@@ -82,63 +83,66 @@ export default function ReportLostPetScreen() {
   const handleSelectLocation = () => {
     router.push({
       pathname: "/map-location",
-      params: {
-        returnTo: "report-lost-pet",
-      },
+      params: { returnTo: "report-lost-pet" },
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!name || !type || !location || !contactName || !contactPhone) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      showToast({ type: "error", message: "يرجى ملء جميع الحقول المطلوبة" });
       return;
     }
 
     if (!user) {
-      Alert.alert("خطأ", "يرجى تسجيل الدخول أولاً");
+      showToast({ type: "error", message: "يرجى تسجيل الدخول أولاً" });
       return;
     }
 
     setIsSubmitting(true);
 
-    try {
-      // Create pet approval request for lost pet
-      createApprovalMutation.mutate(
-        {
-          name: name.trim(),
-          type: type.trim(),
-          breed: breed.trim() || undefined,
-          color: color.trim() || undefined,
-          image:
-            image ||
-            "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-          ownerId: parseInt(user.id.toString()),
-          requestType: "lost_pet",
-          description: `${description}\n\nتاريخ الفقدان: ${date}\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${
-            contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
-          }`,
-          images: image ? [image] : [],
-          contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
-          location: location.trim(),
+    createApprovalMutation.mutate(
+      {
+        name: name.trim(),
+        type: type.trim(),
+        breed: breed.trim() || undefined,
+        age: age ? parseInt(age) : undefined,
+        weight: weight ? parseFloat(weight) : undefined,
+        color: color.trim() || undefined,
+        gender: gender.trim() || undefined,
+        image:
+          image ||
+          "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
+        medicalHistory: medicalHistory.trim() || undefined,
+        vaccinations: vaccinations.trim() || undefined,
+        ownerId: parseInt(user.id.toString()),
+        requestType: "lost_pet",
+        description: `${description}\n\n📅 تاريخ الفقدان: ${date}\n👤 اسم المبلغ: ${contactName}\n📞 رقم الهاتف: ${contactPhone}${
+          contactEmail ? `\n✉️ البريد الإلكتروني: ${contactEmail}` : ""
+        }`,
+        images: image ? [image] : [],
+        contactInfo: `${contactName} - ${contactPhone}${
+          contactEmail ? ` - ${contactEmail}` : ""
+        }`,
+        location: location.trim(),
+      },
+      {
+        onSuccess: (data) => {
+          showToast({
+            type: "success",
+            message:
+              data?.message || "تم إرسال البلاغ بنجاح وهو الآن قيد المراجعة.",
+          });
+          router.navigate("(tabs)/");
         },
-        {
-          onSuccess: (data) => {
-            Alert.alert(
-              "تم إرسال البلاغ",
-              "تم إرسال بلاغ الحيوان المفقود بنجاح وهو الآن في انتظار موافقة الإدارة. سيتم إشعارك عند اتخاذ قرار بشأن البلاغ.",
-              [{ text: "موافق", onPress: () => router.back() }]
-            );
-          },
-          onError: (error) => {
-            Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال البلاغ");
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Error submitting lost pet report:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+        onError: (error: any) => {
+          showToast({
+            type: "error",
+            message:
+              error?.message || "حدث خطأ أثناء إرسال البلاغ. حاول مرة أخرى.",
+          });
+        },
+      }
+    );
   };
 
   return (
@@ -153,26 +157,37 @@ export default function ReportLostPetScreen() {
         }}
       />
 
-      <ScrollView style={[styles.container, { direction: "rtl" }]} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>{"تقرير حيوان مفقود"}</Text>
+      <ScrollView
+        style={[styles.container, { direction: "rtl" }]}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <Text style={styles.title}>تقرير حيوان مفقود</Text>
 
+        {/* Image */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>صورة الحيوان</Text>
           {image ? (
             <View style={styles.imageContainer}>
               <Image source={{ uri: image }} style={styles.image} />
-              <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
+              <TouchableOpacity
+                style={styles.removeImageButton}
+                onPress={handleRemoveImage}
+              >
                 <X size={16} color={COLORS.white} />
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
+            <TouchableOpacity
+              style={styles.addImageButton}
+              onPress={handleAddImage}
+            >
               <Plus size={24} color={COLORS.primary} />
               <Text style={styles.addImageText}>إضافة صورة</Text>
             </TouchableOpacity>
           )}
         </View>
 
+        {/* Basic Info */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>اسم الحيوان</Text>
           <TextInput
@@ -195,9 +210,12 @@ export default function ReportLostPetScreen() {
           />
         </View>
 
+        {/* Optional Details with icons */}
         <View style={styles.row}>
           <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>السلالة (اختياري)</Text>
+            <Text style={styles.label}>
+              <User size={14} /> السلالة (اختياري)
+            </Text>
             <TextInput
               style={styles.input}
               value={breed}
@@ -208,7 +226,9 @@ export default function ReportLostPetScreen() {
           </View>
 
           <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>اللون (اختياري)</Text>
+            <Text style={styles.label}>
+              <Droplet size={14} /> اللون (اختياري)
+            </Text>
             <TextInput
               style={styles.input}
               value={color}
@@ -219,6 +239,82 @@ export default function ReportLostPetScreen() {
           </View>
         </View>
 
+        <View style={styles.row}>
+          <View style={[styles.formGroup, styles.halfWidth]}>
+            <Text style={styles.label}>
+              <Calendar size={14} /> العمر (اختياري)
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={age}
+              onChangeText={setAge}
+              placeholder="عدد السنوات"
+              placeholderTextColor={COLORS.darkGray}
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={[styles.formGroup, styles.halfWidth]}>
+            <Text style={styles.label}>
+              <Heart size={14} /> الوزن (اختياري)
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={weight}
+              onChangeText={setWeight}
+              placeholder="بالكيلوجرام"
+              placeholderTextColor={COLORS.darkGray}
+              keyboardType="numeric"
+            />
+          </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>
+            <User size={14} /> الجنس (اختياري)
+          </Text>
+          <TextInput
+            style={styles.input}
+            value={gender}
+            onChangeText={setGender}
+            placeholder="ذكر / أنثى"
+            placeholderTextColor={COLORS.darkGray}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>
+            <Clipboard size={14} /> التاريخ الطبي (اختياري)
+          </Text>
+          <TextInput
+            style={styles.textArea}
+            value={medicalHistory}
+            onChangeText={setMedicalHistory}
+            placeholder="أي معلومات طبية مهمة"
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            placeholderTextColor={COLORS.darkGray}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>
+            <Clipboard size={14} /> التطعيمات (اختياري)
+          </Text>
+          <TextInput
+            style={styles.textArea}
+            value={vaccinations}
+            onChangeText={setVaccinations}
+            placeholder="التطعيمات التي تلقاها الحيوان"
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            placeholderTextColor={COLORS.darkGray}
+          />
+        </View>
+
+        {/* Location */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>آخر مكان شوهد فيه</Text>
           <View style={styles.locationContainer}>
@@ -229,7 +325,10 @@ export default function ReportLostPetScreen() {
               placeholder="أدخل الموقع"
               placeholderTextColor={COLORS.darkGray}
             />
-            <TouchableOpacity style={styles.mapButton} onPress={handleSelectLocation}>
+            <TouchableOpacity
+              style={styles.mapButton}
+              onPress={handleSelectLocation}
+            >
               <MapPin size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -246,6 +345,7 @@ export default function ReportLostPetScreen() {
           />
         </View>
 
+        {/* Description */}
         <View style={styles.formGroup}>
           <Text style={styles.label}>وصف إضافي (اختياري)</Text>
           <TextInput
@@ -260,6 +360,7 @@ export default function ReportLostPetScreen() {
           />
         </View>
 
+        {/* Contact Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
 
@@ -318,10 +419,10 @@ export default function ReportLostPetScreen() {
           }
         />
 
-        {/* Notice */}
         <View style={styles.noticeContainer}>
           <Text style={styles.noticeText}>
-            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك عند الموافقة على البلاغ.
+            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك
+            عند الموافقة على البلاغ.
           </Text>
         </View>
       </ScrollView>

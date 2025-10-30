@@ -1,51 +1,78 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Calendar, MapPin, Phone, Heart, User, Palette, Weight, Ruler } from 'lucide-react-native';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  Alert,
+} from "react-native";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Phone,
+  Heart,
+  User,
+  Palette,
+  Weight,
+  Ruler,
+} from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { mockLostPets } from "../mocks/data";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
 export default function AdoptionPetDetailsScreen() {
   const { t, isRTL } = useI18n();
   const router = useRouter();
-  const { id, type } = useLocalSearchParams<{ id: string; type: 'adoption' | 'breeding' }>();
+  const { id, type } = useLocalSearchParams<{
+    id: string;
+    type: "adoption" | "breeding";
+  }>();
   const [isFavorite, setIsFavorite] = useState(false);
 
   // Find the pet by ID
-  const pet = mockLostPets.find(p => p.id === id);
+  const pet = mockLostPets.find((p) => p.id === id);
 
   if (!pet) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'Pet Not Found' }} />
+        <Stack.Screen options={{ title: "Pet Not Found" }} />
         <Text>Pet not found</Text>
       </View>
     );
   }
 
   const handleContact = () => {
-    const actionType = type === 'adoption' ? 'التبني' : 'التزاوج';
+    const actionType = type === "adoption" ? "التبني" : "التزاوج";
     Alert.alert(
-      'اتصال بالمالك',
+      "اتصال بالمالك",
       `هل تريد الاتصال بمالك ${pet.name} لـ${actionType}؟`,
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'اتصال', onPress: () => console.log(`Contacting owner for ${actionType}`) }
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "اتصال",
+          onPress: () => console.log(`Contacting owner for ${actionType}`),
+        },
       ]
     );
   };
 
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
-    console.log(`${isFavorite ? 'Removed from' : 'Added to'} favorites: ${pet.name}`);
+    console.log(
+      `${isFavorite ? "Removed from" : "Added to"} favorites: ${pet.name}`
+    );
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: pet.name,
           headerStyle: {
@@ -53,10 +80,10 @@ export default function AdoptionPetDetailsScreen() {
           },
           headerTintColor: COLORS.black,
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontWeight: "bold",
           },
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.back()}
               style={styles.backButton}
             >
@@ -64,30 +91,40 @@ export default function AdoptionPetDetailsScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={handleFavorite}
               style={styles.favoriteHeaderButton}
             >
-              <Heart 
-                size={24} 
-                color={isFavorite ? '#EF4444' : COLORS.darkGray}
-                fill={isFavorite ? '#EF4444' : 'transparent'}
+              <Heart
+                size={24}
+                color={isFavorite ? "#EF4444" : COLORS.darkGray}
+                fill={isFavorite ? "#EF4444" : "transparent"}
               />
             </TouchableOpacity>
           ),
-        }} 
+        }}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Pet Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: pet.image }} style={styles.petImage} />
-          
+
           {/* Status Badge */}
           <View style={styles.badgeContainer}>
-            <View style={[styles.badge, type === 'adoption' ? styles.adoptionBadge : styles.breedingBadge]}>
+            <View
+              style={[
+                styles.badge,
+                type === "adoption"
+                  ? styles.adoptionBadge
+                  : styles.breedingBadge,
+              ]}
+            >
               <Text style={styles.badgeText}>
-                {type === 'adoption' ? 'للتبني' : 'للتزاوج'}
+                {type === "adoption" ? "للتبني" : "للتزاوج"}
               </Text>
             </View>
           </View>
@@ -102,14 +139,16 @@ export default function AdoptionPetDetailsScreen() {
         {/* Pet Details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات الحيوان</Text>
-          
+
           <View style={styles.detailRow}>
             <View style={styles.detailIcon}>
               <Calendar size={20} color="#10B981" />
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>العمر</Text>
-              <Text style={styles.detailValue}>{Math.floor(Math.random() * 5) + 1} سنوات</Text>
+              <Text style={styles.detailValue}>
+                {Math.floor(Math.random() * 5) + 1} سنوات
+              </Text>
             </View>
           </View>
 
@@ -119,7 +158,9 @@ export default function AdoptionPetDetailsScreen() {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>الجنس</Text>
-              <Text style={styles.detailValue}>{Math.random() > 0.5 ? 'ذكر' : 'أنثى'}</Text>
+              <Text style={styles.detailValue}>
+                {Math.random() > 0.5 ? "ذكر" : "أنثى"}
+              </Text>
             </View>
           </View>
 
@@ -139,7 +180,9 @@ export default function AdoptionPetDetailsScreen() {
             </View>
             <View style={styles.detailContent}>
               <Text style={styles.detailLabel}>الوزن</Text>
-              <Text style={styles.detailValue}>{Math.floor(Math.random() * 20) + 5} كيلو</Text>
+              <Text style={styles.detailValue}>
+                {Math.floor(Math.random() * 20) + 5} كيلو
+              </Text>
             </View>
           </View>
 
@@ -158,17 +201,16 @@ export default function AdoptionPetDetailsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الوصف</Text>
           <Text style={styles.description}>
-            {type === 'adoption' 
+            {type === "adoption"
               ? `${pet.name} حيوان أليف محبوب ومدرب جيداً، يبحث عن عائلة محبة لتوفير له بيت دافئ وملئ بالحب والرعاية.`
-              : `${pet.name} حيوان أص��ل وصحي، مناسب للتزاوج. يتمتع بصحة ممتازة وسلالة نقية.`
-            }
+              : `${pet.name} حيوان أص��ل وصحي، مناسب للتزاوج. يتمتع بصحة ممتازة وسلالة نقية.`}
           </Text>
         </View>
 
         {/* Owner Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات المالك</Text>
-          
+
           <View style={styles.ownerCard}>
             <View style={styles.ownerAvatar}>
               <User size={24} color={COLORS.white} />
@@ -177,7 +219,10 @@ export default function AdoptionPetDetailsScreen() {
               <Text style={styles.ownerName}>{pet.contactInfo.name}</Text>
               <Text style={styles.ownerLocation}>{pet.lastSeen.location}</Text>
             </View>
-            <TouchableOpacity style={styles.contactButton} onPress={handleContact}>
+            <TouchableOpacity
+              style={styles.contactButton}
+              onPress={handleContact}
+            >
               <Phone size={16} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -189,13 +234,13 @@ export default function AdoptionPetDetailsScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.contactActionButton}
           onPress={handleContact}
         >
           <Phone size={20} color={COLORS.white} />
           <Text style={styles.contactActionText}>
-            {type === 'adoption' ? 'اتصال للتبني' : 'اتصال للتزاوج'}
+            {type === "adoption" ? "اتصال للتبني" : "اتصال للتزاوج"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -220,15 +265,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
   },
   petImage: {
     width: screenWidth,
     height: 300,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   badgeContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     right: 16,
   },
@@ -238,15 +283,15 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   adoptionBadge: {
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
   },
   breedingBadge: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: "#8B5CF6",
   },
   badgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   section: {
     backgroundColor: COLORS.white,
@@ -262,34 +307,34 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 4,
   },
   petType: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   detailIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F0FDF4',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#F0FDF4",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   detailContent: {
@@ -302,7 +347,7 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
   },
   description: {
@@ -311,8 +356,8 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   ownerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.gray,
     borderRadius: 12,
     padding: 12,
@@ -321,9 +366,9 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#10B981",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   ownerInfo: {
@@ -331,7 +376,7 @@ const styles = StyleSheet.create({
   },
   ownerName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 2,
   },
@@ -343,15 +388,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#10B981",
+    alignItems: "center",
+    justifyContent: "center",
   },
   bottomSpacing: {
     height: 100,
   },
   actionContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
@@ -363,17 +408,17 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
   },
   contactActionButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
     borderRadius: 12,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
   },
   contactActionText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

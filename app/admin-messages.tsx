@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+  Image,
+} from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
@@ -62,7 +72,8 @@ const mockMessages: AdminMessage[] = [
     id: "2",
     type: "inquiry",
     title: "استفسار عن تطعيم القطط",
-    message: "مرحباً، أريد معرفة مواعيد تطعيم القطط الصغيرة وما هي التطعيمات المطلوبة؟",
+    message:
+      "مرحباً، أريد معرفة مواعيد تطعيم القطط الصغيرة وما هي التطعيمات المطلوبة؟",
     from: {
       name: "سارة أحمد",
       email: "sara@example.com",
@@ -76,7 +87,8 @@ const mockMessages: AdminMessage[] = [
       role: "مشرف طبي",
       timestamp: new Date(Date.now() - 1000 * 60 * 30),
     },
-    reply: "تطعيمات القطط تبدأ من عمر 6-8 أسابيع وتشمل التطعيم الثلاثي والرباعي...",
+    reply:
+      "تطعيمات القطط تبدأ من عمر 6-8 أسابيع وتشمل التطعيم الثلاثي والرباعي...",
   },
   {
     id: "3",
@@ -112,13 +124,25 @@ const mockMessages: AdminMessage[] = [
 export default function AdminMessagesScreen() {
   const router = useRouter();
   const { hasAdminAccess, isSuperAdmin, isModerator, user } = useApp();
-  const { data: messagesData, isLoading, error } = useQuery(trpc.admin.messages.getSystemMessages.queryOptions({}));
-  const messages = messagesData ?? mockMessages;
-  const [filter, setFilter] = useState<"all" | "pending" | "replied" | "high">("all");
-  const [selectedMessage, setSelectedMessage] = useState<AdminMessage | null>(null);
+  const {
+    data: messagesData,
+    isLoading,
+    error,
+  } = useQuery(
+    trpc.admin.messages.getUserSystemMessages.queryOptions({ userId: user?.id })
+  );
+
+  const messages = messagesData?.messages ?? mockMessages;
+  const [filter, setFilter] = useState<"all" | "pending" | "replied" | "high">(
+    "all"
+  );
+  const [selectedMessage, setSelectedMessage] = useState<AdminMessage | null>(
+    null
+  );
   const [replyModalVisible, setReplyModalVisible] = useState<boolean>(false);
   const [replyText, setReplyText] = useState<string>("");
-  const [sendMessageModalVisible, setSendMessageModalVisible] = useState<boolean>(false);
+  const [sendMessageModalVisible, setSendMessageModalVisible] =
+    useState<boolean>(false);
   const [newMessage, setNewMessage] = useState<{
     title: string;
     content: string;
@@ -160,7 +184,9 @@ export default function AdminMessagesScreen() {
     linkUrl: "",
   });
 
-  const sendMessageMutation = useMutation(trpc.admin.messages.sendSystemMessage.mutationOptions());
+  const sendMessageMutation = useMutation(
+    trpc.admin.messages.sendSystemMessage.mutationOptions()
+  );
 
   if (!hasAdminAccess && !isModerator) {
     Alert.alert("خطأ", "ليس لديك صلاحية للوصول إلى هذه الصفحة");
@@ -217,7 +243,7 @@ export default function AdminMessagesScreen() {
   const sendReply = () => {
     if (!replyText.trim() || !selectedMessage) return;
 
-    const updatedMessages = messages.map((msg) => {
+    const updatedMessages = messages?.map((msg) => {
       if (msg.id === selectedMessage.id) {
         return {
           ...msg,
@@ -233,7 +259,7 @@ export default function AdminMessagesScreen() {
       return msg;
     });
 
-    setMessages(updatedMessages);
+    // setMessages(updatedMessages);
     setReplyModalVisible(false);
     setReplyText("");
     setSelectedMessage(null);
@@ -247,7 +273,10 @@ export default function AdminMessagesScreen() {
       return;
     }
 
-    if (newMessage.targetAudience === "multiple" && newMessage.targetCategories.length === 0) {
+    if (
+      newMessage.targetAudience === "multiple" &&
+      newMessage.targetCategories.length === 0
+    ) {
       Alert.alert("خطأ", "يرجى اختيار فئة واحدة على الأقل");
       return;
     }
@@ -259,7 +288,10 @@ export default function AdminMessagesScreen() {
         content: newMessage.content,
         type: newMessage.type,
         targetAudience: newMessage.targetAudience,
-        targetCategories: newMessage.targetAudience === "multiple" ? newMessage.targetCategories : undefined,
+        targetCategories:
+          newMessage.targetAudience === "multiple"
+            ? newMessage.targetCategories
+            : undefined,
         priority: newMessage.priority,
       },
       {
@@ -353,10 +385,14 @@ export default function AdminMessagesScreen() {
   };
 
   const markAsRead = (id: string) => {
-    setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, status: "closed" as const } : msg)));
+    // setMessages((prev) =>
+    //   prev.map((msg) =>
+    //     msg.id === id ? { ...msg, status: "closed" as const } : msg
+    //   )
+    // );
   };
 
-  const filteredMessages = messages.filter((msg) => {
+  const filteredMessages = messages?.filter((msg) => {
     switch (filter) {
       case "pending":
         return msg.status === "pending";
@@ -415,7 +451,10 @@ export default function AdminMessagesScreen() {
 
       {/* Send New Message Button */}
       <View style={styles.headerActions}>
-        <TouchableOpacity style={styles.sendMessageButton} onPress={() => setSendMessageModalVisible(true)}>
+        <TouchableOpacity
+          style={styles.sendMessageButton}
+          onPress={() => setSendMessageModalVisible(true)}
+        >
           <Plus size={20} color={COLORS.white} />
           <Text style={styles.sendMessageButtonText}>إرسال رسالة جديدة</Text>
         </TouchableOpacity>
@@ -427,28 +466,65 @@ export default function AdminMessagesScreen() {
           style={[styles.filterButton, filter === "all" && styles.activeFilter]}
           onPress={() => setFilter("all")}
         >
-          <Text style={[styles.filterText, filter === "all" && styles.activeFilterText]}>الكل</Text>
+          <Text
+            style={[
+              styles.filterText,
+              filter === "all" && styles.activeFilterText,
+            ]}
+          >
+            الكل
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterButton, filter === "pending" && styles.activeFilter]}
+          style={[
+            styles.filterButton,
+            filter === "pending" && styles.activeFilter,
+          ]}
           onPress={() => setFilter("pending")}
         >
-          <Text style={[styles.filterText, filter === "pending" && styles.activeFilterText]}>قيد الانتظار</Text>
+          <Text
+            style={[
+              styles.filterText,
+              filter === "pending" && styles.activeFilterText,
+            ]}
+          >
+            قيد الانتظار
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterButton, filter === "replied" && styles.activeFilter]}
+          style={[
+            styles.filterButton,
+            filter === "replied" && styles.activeFilter,
+          ]}
           onPress={() => setFilter("replied")}
         >
-          <Text style={[styles.filterText, filter === "replied" && styles.activeFilterText]}>تم الرد</Text>
+          <Text
+            style={[
+              styles.filterText,
+              filter === "replied" && styles.activeFilterText,
+            ]}
+          >
+            تم الرد
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterButton, filter === "high" && styles.activeFilter]}
+          style={[
+            styles.filterButton,
+            filter === "high" && styles.activeFilter,
+          ]}
           onPress={() => setFilter("high")}
         >
-          <Text style={[styles.filterText, filter === "high" && styles.activeFilterText]}>عالية الأولوية</Text>
+          <Text
+            style={[
+              styles.filterText,
+              filter === "high" && styles.activeFilterText,
+            ]}
+          >
+            عالية الأولوية
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -456,7 +532,10 @@ export default function AdminMessagesScreen() {
         {filteredMessages.map((message) => (
           <TouchableOpacity
             key={message.id}
-            style={[styles.messageCard, message.status === "pending" && styles.pendingCard]}
+            style={[
+              styles.messageCard,
+              message.status === "pending" && styles.pendingCard,
+            ]}
             onPress={() => markAsRead(message.id)}
           >
             <View style={styles.messageHeader}>
@@ -464,13 +543,22 @@ export default function AdminMessagesScreen() {
                 {getMessageIcon(message.type)}
                 <View style={styles.messageContent}>
                   <Text style={styles.messageTitle}>{message.title}</Text>
-                  <Text style={styles.messageType}>{getTypeLabel(message.type)}</Text>
-                  <Text style={styles.messageFrom}>من: {message.from.name}</Text>
+                  <Text style={styles.messageType}>
+                    {getTypeLabel(message.type)}
+                  </Text>
+                  <Text style={styles.messageFrom}>
+                    من: {message.from.name}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.messageActions}>
-                <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(message.priority) }]} />
+                <View
+                  style={[
+                    styles.priorityIndicator,
+                    { backgroundColor: getPriorityColor(message.priority) },
+                  ]}
+                />
                 {getStatusIcon(message.status)}
               </View>
             </View>
@@ -483,16 +571,22 @@ export default function AdminMessagesScreen() {
               <View style={styles.replyInfo}>
                 <CheckCircle size={14} color={COLORS.success} />
                 <Text style={styles.replyText}>
-                  تم الرد بواسطة {message.repliedBy.name} ({message.repliedBy.role})
+                  تم الرد بواسطة {message.repliedBy.name} (
+                  {message.repliedBy.role})
                 </Text>
               </View>
             )}
 
             <View style={styles.messageFooter}>
-              <Text style={styles.timestamp}>{formatTime(message.timestamp)}</Text>
+              <Text style={styles.timestamp}>
+                {formatTime(message.timestamp)}
+              </Text>
 
               {message.status === "pending" && (
-                <TouchableOpacity style={styles.replyButton} onPress={() => handleReply(message)}>
+                <TouchableOpacity
+                  style={styles.replyButton}
+                  onPress={() => handleReply(message)}
+                >
                   <Send size={14} color={COLORS.white} />
                   <Text style={styles.replyButtonText}>رد</Text>
                 </TouchableOpacity>
@@ -520,16 +614,25 @@ export default function AdminMessagesScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>الرد على الرسالة</Text>
-              <TouchableOpacity style={styles.closeButton} onPress={() => setReplyModalVisible(false)}>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setReplyModalVisible(false)}
+              >
                 <X size={24} color={COLORS.gray} />
               </TouchableOpacity>
             </View>
 
             {selectedMessage && (
               <View style={styles.originalMessage}>
-                <Text style={styles.originalTitle}>{selectedMessage.title}</Text>
-                <Text style={styles.originalText}>{selectedMessage.message}</Text>
-                <Text style={styles.originalFrom}>من: {selectedMessage.from.name}</Text>
+                <Text style={styles.originalTitle}>
+                  {selectedMessage.title}
+                </Text>
+                <Text style={styles.originalText}>
+                  {selectedMessage.message}
+                </Text>
+                <Text style={styles.originalFrom}>
+                  من: {selectedMessage.from.name}
+                </Text>
               </View>
             )}
 
@@ -544,12 +647,18 @@ export default function AdminMessagesScreen() {
             />
 
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setReplyModalVisible(false)}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setReplyModalVisible(false)}
+              >
                 <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.sendButton, !replyText.trim() && styles.disabledButton]}
+                style={[
+                  styles.sendButton,
+                  !replyText.trim() && styles.disabledButton,
+                ]}
                 onPress={sendReply}
                 disabled={!replyText.trim()}
               >
@@ -573,7 +682,10 @@ export default function AdminMessagesScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>إرسال رسالة جديدة</Text>
-                <TouchableOpacity style={styles.closeButton} onPress={() => setSendMessageModalVisible(false)}>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => setSendMessageModalVisible(false)}
+                >
                   <X size={24} color={COLORS.gray} />
                 </TouchableOpacity>
               </View>
@@ -585,7 +697,9 @@ export default function AdminMessagesScreen() {
                   style={styles.textInput}
                   placeholder="أدخل عنوان الرسالة"
                   value={newMessage.title}
-                  onChangeText={(text) => setNewMessage((prev) => ({ ...prev, title: text }))}
+                  onChangeText={(text) =>
+                    setNewMessage((prev) => ({ ...prev, title: text }))
+                  }
                 />
               </View>
 
@@ -596,7 +710,9 @@ export default function AdminMessagesScreen() {
                   style={[styles.textInput, styles.textArea]}
                   placeholder="أدخل محتوى الرسالة"
                   value={newMessage.content}
-                  onChangeText={(text) => setNewMessage((prev) => ({ ...prev, content: text }))}
+                  onChangeText={(text) =>
+                    setNewMessage((prev) => ({ ...prev, content: text }))
+                  }
                   multiline
                   numberOfLines={4}
                   textAlignVertical="top"
@@ -615,10 +731,24 @@ export default function AdminMessagesScreen() {
                   ].map((type) => (
                     <TouchableOpacity
                       key={type.key}
-                      style={[styles.optionButton, newMessage.type === type.key && styles.selectedOption]}
-                      onPress={() => setNewMessage((prev) => ({ ...prev, type: type.key as any }))}
+                      style={[
+                        styles.optionButton,
+                        newMessage.type === type.key && styles.selectedOption,
+                      ]}
+                      onPress={() =>
+                        setNewMessage((prev) => ({
+                          ...prev,
+                          type: type.key as any,
+                        }))
+                      }
                     >
-                      <Text style={[styles.optionText, newMessage.type === type.key && styles.selectedOptionText]}>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          newMessage.type === type.key &&
+                            styles.selectedOptionText,
+                        ]}
+                      >
                         {type.label}
                       </Text>
                     </TouchableOpacity>
@@ -638,11 +768,24 @@ export default function AdminMessagesScreen() {
                   ].map((priority) => (
                     <TouchableOpacity
                       key={priority.key}
-                      style={[styles.optionButton, newMessage.priority === priority.key && styles.selectedOption]}
-                      onPress={() => setNewMessage((prev) => ({ ...prev, priority: priority.key as any }))}
+                      style={[
+                        styles.optionButton,
+                        newMessage.priority === priority.key &&
+                          styles.selectedOption,
+                      ]}
+                      onPress={() =>
+                        setNewMessage((prev) => ({
+                          ...prev,
+                          priority: priority.key as any,
+                        }))
+                      }
                     >
                       <Text
-                        style={[styles.optionText, newMessage.priority === priority.key && styles.selectedOptionText]}
+                        style={[
+                          styles.optionText,
+                          newMessage.priority === priority.key &&
+                            styles.selectedOptionText,
+                        ]}
                       >
                         {priority.label}
                       </Text>
@@ -670,19 +813,27 @@ export default function AdminMessagesScreen() {
                   ].map((audience) => (
                     <TouchableOpacity
                       key={audience.key}
-                      style={[styles.optionButton, newMessage.targetAudience === audience.key && styles.selectedOption]}
+                      style={[
+                        styles.optionButton,
+                        newMessage.targetAudience === audience.key &&
+                          styles.selectedOption,
+                      ]}
                       onPress={() =>
                         setNewMessage((prev) => ({
                           ...prev,
                           targetAudience: audience.key as any,
-                          targetCategories: audience.key !== "multiple" ? [] : prev.targetCategories,
+                          targetCategories:
+                            audience.key !== "multiple"
+                              ? []
+                              : prev.targetCategories,
                         }))
                       }
                     >
                       <Text
                         style={[
                           styles.optionText,
-                          newMessage.targetAudience === audience.key && styles.selectedOptionText,
+                          newMessage.targetAudience === audience.key &&
+                            styles.selectedOptionText,
                         ]}
                       >
                         {audience.label}
@@ -714,13 +865,19 @@ export default function AdminMessagesScreen() {
                         onPress={() => toggleCategory(category)}
                       >
                         <View
-                          style={[styles.checkbox, newMessage.targetCategories.includes(category) && styles.checkedBox]}
+                          style={[
+                            styles.checkbox,
+                            newMessage.targetCategories.includes(category) &&
+                              styles.checkedBox,
+                          ]}
                         >
                           {newMessage.targetCategories.includes(category) && (
                             <CheckCircle size={16} color={COLORS.white} />
                           )}
                         </View>
-                        <Text style={styles.categoryLabel}>{getCategoryLabel(category)}</Text>
+                        <Text style={styles.categoryLabel}>
+                          {getCategoryLabel(category)}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -737,16 +894,29 @@ export default function AdminMessagesScreen() {
                       locationTargeting: {
                         ...prev.locationTargeting,
                         enabled: !prev.locationTargeting.enabled,
-                        country: !prev.locationTargeting.enabled ? prev.locationTargeting.country : "",
-                        governorate: !prev.locationTargeting.enabled ? prev.locationTargeting.governorate : "",
+                        country: !prev.locationTargeting.enabled
+                          ? prev.locationTargeting.country
+                          : "",
+                        governorate: !prev.locationTargeting.enabled
+                          ? prev.locationTargeting.governorate
+                          : "",
                       },
                     }))
                   }
                 >
-                  <View style={[styles.checkbox, newMessage.locationTargeting.enabled && styles.checkedBox]}>
-                    {newMessage.locationTargeting.enabled && <CheckCircle size={16} color={COLORS.white} />}
+                  <View
+                    style={[
+                      styles.checkbox,
+                      newMessage.locationTargeting.enabled && styles.checkedBox,
+                    ]}
+                  >
+                    {newMessage.locationTargeting.enabled && (
+                      <CheckCircle size={16} color={COLORS.white} />
+                    )}
                   </View>
-                  <Text style={styles.categoryLabel}>تحديد الموقع (اختياري)</Text>
+                  <Text style={styles.categoryLabel}>
+                    تحديد الموقع (اختياري)
+                  </Text>
                 </TouchableOpacity>
 
                 {newMessage.locationTargeting.enabled && (
@@ -755,36 +925,45 @@ export default function AdminMessagesScreen() {
                     <View style={styles.locationRow}>
                       <Text style={styles.locationLabel}>البلد:</Text>
                       <View style={styles.locationOptions}>
-                        {["العراق", "السعودية", "الأردن", "الكويت", "الإمارات", "قطر", "البحرين", "عمان"].map(
-                          (country) => (
-                            <TouchableOpacity
-                              key={country}
+                        {[
+                          "العراق",
+                          "السعودية",
+                          "الأردن",
+                          "الكويت",
+                          "الإمارات",
+                          "قطر",
+                          "البحرين",
+                          "عمان",
+                        ].map((country) => (
+                          <TouchableOpacity
+                            key={country}
+                            style={[
+                              styles.locationButton,
+                              newMessage.locationTargeting.country ===
+                                country && styles.selectedLocationButton,
+                            ]}
+                            onPress={() =>
+                              setNewMessage((prev) => ({
+                                ...prev,
+                                locationTargeting: {
+                                  ...prev.locationTargeting,
+                                  country: country,
+                                  governorate: "", // Reset governorate when country changes
+                                },
+                              }))
+                            }
+                          >
+                            <Text
                               style={[
-                                styles.locationButton,
-                                newMessage.locationTargeting.country === country && styles.selectedLocationButton,
+                                styles.locationButtonText,
+                                newMessage.locationTargeting.country ===
+                                  country && styles.selectedLocationButtonText,
                               ]}
-                              onPress={() =>
-                                setNewMessage((prev) => ({
-                                  ...prev,
-                                  locationTargeting: {
-                                    ...prev.locationTargeting,
-                                    country: country,
-                                    governorate: "", // Reset governorate when country changes
-                                  },
-                                }))
-                              }
                             >
-                              <Text
-                                style={[
-                                  styles.locationButtonText,
-                                  newMessage.locationTargeting.country === country && styles.selectedLocationButtonText,
-                                ]}
-                              >
-                                {country}
-                              </Text>
-                            </TouchableOpacity>
-                          )
-                        )}
+                              {country}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
                       </View>
                     </View>
 
@@ -817,8 +996,8 @@ export default function AdminMessagesScreen() {
                               key={governorate}
                               style={[
                                 styles.locationButton,
-                                newMessage.locationTargeting.governorate === governorate &&
-                                  styles.selectedLocationButton,
+                                newMessage.locationTargeting.governorate ===
+                                  governorate && styles.selectedLocationButton,
                               ]}
                               onPress={() =>
                                 setNewMessage((prev) => ({
@@ -833,7 +1012,8 @@ export default function AdminMessagesScreen() {
                               <Text
                                 style={[
                                   styles.locationButtonText,
-                                  newMessage.locationTargeting.governorate === governorate &&
+                                  newMessage.locationTargeting.governorate ===
+                                    governorate &&
                                     styles.selectedLocationButtonText,
                                 ]}
                               >
@@ -846,7 +1026,8 @@ export default function AdminMessagesScreen() {
                     )}
 
                     {/* Location Summary */}
-                    {(newMessage.locationTargeting.country || newMessage.locationTargeting.governorate) && (
+                    {(newMessage.locationTargeting.country ||
+                      newMessage.locationTargeting.governorate) && (
                       <View style={styles.locationSummary}>
                         <Text style={styles.locationSummaryText}>
                           سيتم إرسال الرسالة إلى المستخدمين في:{" "}
@@ -868,7 +1049,9 @@ export default function AdminMessagesScreen() {
                     style={styles.textInput}
                     placeholder="أدخل رابط الصورة"
                     value={newMessage.imageUrl}
-                    onChangeText={(text) => setNewMessage((prev) => ({ ...prev, imageUrl: text }))}
+                    onChangeText={(text) =>
+                      setNewMessage((prev) => ({ ...prev, imageUrl: text }))
+                    }
                   />
                   <TouchableOpacity style={styles.mediaButton}>
                     <ImageIcon size={20} color={COLORS.primary} />
@@ -876,10 +1059,15 @@ export default function AdminMessagesScreen() {
                 </View>
                 {newMessage.imageUrl ? (
                   <View style={styles.imagePreview}>
-                    <Image source={{ uri: newMessage.imageUrl }} style={styles.previewImage} />
+                    <Image
+                      source={{ uri: newMessage.imageUrl }}
+                      style={styles.previewImage}
+                    />
                     <TouchableOpacity
                       style={styles.removeButton}
-                      onPress={() => setNewMessage((prev) => ({ ...prev, imageUrl: "" }))}
+                      onPress={() =>
+                        setNewMessage((prev) => ({ ...prev, imageUrl: "" }))
+                      }
                     >
                       <Trash2 size={16} color={COLORS.error} />
                     </TouchableOpacity>
@@ -895,7 +1083,9 @@ export default function AdminMessagesScreen() {
                     style={styles.textInput}
                     placeholder="أدخل الرابط"
                     value={newMessage.linkUrl}
-                    onChangeText={(text) => setNewMessage((prev) => ({ ...prev, linkUrl: text }))}
+                    onChangeText={(text) =>
+                      setNewMessage((prev) => ({ ...prev, linkUrl: text }))
+                    }
                   />
                   <TouchableOpacity style={styles.mediaButton}>
                     <Link size={20} color={COLORS.primary} />
@@ -909,7 +1099,9 @@ export default function AdminMessagesScreen() {
                     </Text>
                     <TouchableOpacity
                       style={styles.removeButton}
-                      onPress={() => setNewMessage((prev) => ({ ...prev, linkUrl: "" }))}
+                      onPress={() =>
+                        setNewMessage((prev) => ({ ...prev, linkUrl: "" }))
+                      }
                     >
                       <Trash2 size={16} color={COLORS.error} />
                     </TouchableOpacity>
@@ -918,7 +1110,10 @@ export default function AdminMessagesScreen() {
               </View>
 
               <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setSendMessageModalVisible(false)}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setSendMessageModalVisible(false)}
+                >
                   <Text style={styles.cancelButtonText}>إلغاء</Text>
                 </TouchableOpacity>
 
@@ -927,14 +1122,16 @@ export default function AdminMessagesScreen() {
                     styles.sendButton,
                     (!newMessage.title.trim() ||
                       !newMessage.content.trim() ||
-                      (newMessage.targetAudience === "multiple" && newMessage.targetCategories.length === 0)) &&
+                      (newMessage.targetAudience === "multiple" &&
+                        newMessage.targetCategories.length === 0)) &&
                       styles.disabledButton,
                   ]}
                   onPress={handleSendNewMessage}
                   disabled={
                     !newMessage.title.trim() ||
                     !newMessage.content.trim() ||
-                    (newMessage.targetAudience === "multiple" && newMessage.targetCategories.length === 0)
+                    (newMessage.targetAudience === "multiple" &&
+                      newMessage.targetCategories.length === 0)
                   }
                 >
                   <Send size={16} color={COLORS.white} />

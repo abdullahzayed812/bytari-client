@@ -1,4 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+} from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -10,6 +19,7 @@ import { Camera, MapPin } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/lib/hooks";
 
 const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
@@ -19,6 +29,7 @@ export default function AddAdoptionPetScreen() {
   const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -38,8 +49,9 @@ export default function AddAdoptionPetScreen() {
       "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
   });
 
-  // Create pet approval request mutation
-  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
+  const createApprovalMutation = useMutation(
+    trpc.pets.createApprovalRequest.mutationOptions({})
+  );
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -47,9 +59,13 @@ export default function AddAdoptionPetScreen() {
 
   const handleImageUpload = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
+        showToast({
+          type: "error",
+          message: "نحتاج إلى إذن للوصول إلى الصور",
+        });
         return;
       }
 
@@ -60,30 +76,46 @@ export default function AddAdoptionPetScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
+        showToast({
+          type: "success",
+          message: "تم اختيار الصورة بنجاح",
+        });
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
+      showToast({
+        type: "error",
+        message: "حدث خطأ أثناء اختيار الصورة",
+      });
     }
   };
 
   const handleSubmit = async () => {
+    // ✅ Validate required fields
     if (!formData.name.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال اسم الحيوان");
+      showToast({ type: "error", message: "يرجى إدخال اسم الحيوان" });
+      return;
+    }
+    if (!formData.age.trim()) {
+      showToast({ type: "error", message: "يرجى إدخال عمر الحيوان" });
+      return;
+    }
+    if (!formData.color.trim()) {
+      showToast({ type: "error", message: "يرجى إدخال لون الحيوان" });
       return;
     }
     if (!formData.location.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال الموقع");
+      showToast({ type: "error", message: "يرجى إدخال الموقع" });
       return;
     }
     if (!formData.description.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال وصف الحيوان");
+      showToast({ type: "error", message: "يرجى إدخال وصف الحيوان" });
       return;
     }
     if (!user) {
-      Alert.alert("خطأ", "يرجى تسجيل الدخول أولاً");
+      showToast({ type: "error", message: "يرجى تسجيل الدخول أولاً" });
       return;
     }
 
@@ -107,13 +139,21 @@ export default function AddAdoptionPetScreen() {
         specialRequirements: formData.specialRequirements.trim() || undefined,
       },
       {
-        onSuccess: () => {
-          Alert.alert("تم إرسال الطلب", "تم إرسال طلبك بنجاح وهو الآن في انتظار موافقة الإدارة.", [
-            { text: "موافق", onPress: () => router.back() },
-          ]);
+        onSuccess: (data) => {
+          showToast({
+            type: "success",
+            message:
+              data?.message ||
+              "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
+          });
+          router.back();
+          trpc.pets.getApproved.invalidate();
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الطلب");
+          showToast({
+            type: "error",
+            message: error.message || "حدث خطأ أثناء إرسال الطلب",
+          });
         },
       }
     );
@@ -124,10 +164,18 @@ export default function AddAdoptionPetScreen() {
       {PET_TYPES.map((type) => (
         <TouchableOpacity
           key={type}
-          style={[styles.typeButton, formData.type === type && styles.typeButtonActive]}
+          style={[
+            styles.typeButton,
+            formData.type === type && styles.typeButtonActive,
+          ]}
           onPress={() => handleInputChange("type", type)}
         >
-          <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>
+          <Text
+            style={[
+              styles.typeButtonText,
+              formData.type === type && styles.typeButtonTextActive,
+            ]}
+          >
             {t(`pets.types.${type}`)}
           </Text>
         </TouchableOpacity>
@@ -140,10 +188,18 @@ export default function AddAdoptionPetScreen() {
       {GENDERS.map((gender) => (
         <TouchableOpacity
           key={gender}
-          style={[styles.genderButton, formData.gender === gender && styles.genderButtonActive]}
+          style={[
+            styles.genderButton,
+            formData.gender === gender && styles.genderButtonActive,
+          ]}
           onPress={() => handleInputChange("gender", gender)}
         >
-          <Text style={[styles.genderButtonText, formData.gender === gender && styles.genderButtonTextActive]}>
+          <Text
+            style={[
+              styles.genderButtonText,
+              formData.gender === gender && styles.genderButtonTextActive,
+            ]}
+          >
             {gender === "male" ? "ذكر" : "أنثى"}
           </Text>
         </TouchableOpacity>
@@ -156,11 +212,18 @@ export default function AddAdoptionPetScreen() {
       {LISTING_TYPES.map((type) => (
         <TouchableOpacity
           key={type}
-          style={[styles.listingTypeButton, formData.listingType === type && styles.listingTypeButtonActive]}
+          style={[
+            styles.listingTypeButton,
+            formData.listingType === type && styles.listingTypeButtonActive,
+          ]}
           onPress={() => handleInputChange("listingType", type)}
         >
           <Text
-            style={[styles.listingTypeButtonText, formData.listingType === type && styles.listingTypeButtonTextActive]}
+            style={[
+              styles.listingTypeButtonText,
+              formData.listingType === type &&
+                styles.listingTypeButtonTextActive,
+            ]}
           >
             {type === "adoption" ? "للتبني" : "للتزاوج"}
           </Text>
@@ -181,11 +244,17 @@ export default function AddAdoptionPetScreen() {
         }}
       />
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
         {/* Pet Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: formData.image }} style={styles.petImage} />
-          <TouchableOpacity style={styles.cameraButton} onPress={handleImageUpload}>
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleImageUpload}
+          >
             <Camera size={20} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -283,7 +352,11 @@ export default function AddAdoptionPetScreen() {
               placeholder="أدخل الموقع (المدينة، المنطقة)"
               placeholderTextColor={COLORS.lightGray}
             />
-            <MapPin size={20} color={COLORS.lightGray} style={styles.inputIcon} />
+            <MapPin
+              size={20}
+              color={COLORS.lightGray}
+              style={styles.inputIcon}
+            />
           </View>
         </View>
 
@@ -339,7 +412,9 @@ export default function AddAdoptionPetScreen() {
           <TextInput
             style={[styles.input, styles.textArea]}
             value={formData.specialRequirements}
-            onChangeText={(value) => handleInputChange("specialRequirements", value)}
+            onChangeText={(value) =>
+              handleInputChange("specialRequirements", value)
+            }
             placeholder={
               formData.listingType === "adoption"
                 ? "أي متطلبات خاصة للمتبني (اختياري)..."
@@ -355,13 +430,18 @@ export default function AddAdoptionPetScreen() {
         {/* Notice */}
         <View style={styles.noticeContainer}>
           <Text style={styles.noticeText}>
-            📋 ملاحظة: سيتم مراجعة طلبك من قبل الإدارة قبل النشر. سيتم إشعارك عند الموافقة على الطلب.
+            📋 ملاحظة: سيتم مراجعة طلبك من قبل الإدارة قبل النشر. سيتم إشعارك
+            عند الموافقة على الطلب.
           </Text>
         </View>
 
         {/* Submit Button */}
         <Button
-          title={formData.listingType === "adoption" ? "إضافة للتبني" : "إضافة للتزاوج"}
+          title={
+            formData.listingType === "adoption"
+              ? "إضافة للتبني"
+              : "إضافة للتزاوج"
+          }
           onPress={handleSubmit}
           type="primary"
           size="large"
