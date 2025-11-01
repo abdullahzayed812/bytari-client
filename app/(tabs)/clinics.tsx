@@ -1,9 +1,29 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../../constants/colors";
-import { ArrowLeft, Plus, Edit3, Eye, EyeOff, Trash2, Star, MapPin, Phone, Download } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Plus,
+  Edit3,
+  Eye,
+  EyeOff,
+  Trash2,
+  Star,
+  MapPin,
+  Phone,
+  Download,
+} from "lucide-react-native";
 
 import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
@@ -54,7 +74,10 @@ export default function ClinicsScreen() {
   };
 
   const handleEditClinic = (clinicId: number) => {
-    router.push({ pathname: "/edit-clinic", params: { id: clinicId.toString() } });
+    router.push({
+      pathname: "/edit-clinic",
+      params: { id: clinicId.toString() },
+    });
   };
 
   const handleAddClinic = () => {
@@ -71,7 +94,12 @@ export default function ClinicsScreen() {
       <TouchableOpacity
         key={clinic.id}
         style={styles.clinicCard}
-        onPress={() => router.push({ pathname: "/clinic-profile", params: { id: clinic.id.toString() } })}
+        onPress={() =>
+          router.push({
+            pathname: "/clinic-profile",
+            params: { id: clinic.id.toString() },
+          })
+        }
       >
         <View style={styles.clinicCardContent}>
           <Image source={{ uri: clinicImage }} style={styles.clinicImage} />
@@ -103,7 +131,9 @@ export default function ClinicsScreen() {
 
             <View style={styles.ratingContainer}>
               <Star size={16} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.ratingText}>{clinic.rating?.toFixed(1) || "0.0"}</Text>
+              <Text style={styles.ratingText}>
+                {clinic.rating?.toFixed(1) || "0.0"}
+              </Text>
             </View>
           </View>
         </View>
@@ -152,7 +182,9 @@ export default function ClinicsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>جميع العيادات المسجلة</Text>
-          <Text style={styles.headerSubtitle}>تصفح جميع العيادات البيطرية المسجلة في النظام</Text>
+          <Text style={styles.headerSubtitle}>
+            تصفح جميع العيادات البيطرية المسجلة في النظام
+          </Text>
         </View>
 
         {/* Add Clinic Button - Only for Super Admin */}
@@ -171,7 +203,9 @@ export default function ClinicsScreen() {
 
         {/* Clinics List */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>العيادات المتاحة ({clinics?.length})</Text>
+          <Text style={styles.sectionTitle}>
+            العيادات المتاحة ({clinics?.length})
+          </Text>
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={COLORS.primary} />

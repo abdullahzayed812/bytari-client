@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface User {
@@ -24,7 +30,7 @@ interface AppContextType {
   hasSeenSplash: boolean;
   isAuthenticated: boolean;
   user: User | null;
-  userMode: "pet_owner" | "veterinarian";
+  userMode: "pet_owner" | "veterinarian" | "admin";
   pointsHistory: any[];
   hasAdminAccess: boolean;
   isSuperAdmin: boolean;
@@ -55,9 +61,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Mock data for now - will be replaced with real backend data
   const pointsHistory = user?.points
     ? [
-        { id: 1, action: "تسجيل دخول يومي", points: 10, date: new Date().toISOString() },
-        { id: 2, action: "إضافة حيوان أليف", points: 50, date: new Date().toISOString() },
-        { id: 3, action: "مشاركة التطبيق", points: 25, date: new Date().toISOString() },
+        {
+          id: 1,
+          action: "تسجيل دخول يومي",
+          points: 10,
+          date: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          action: "إضافة حيوان أليف",
+          points: 50,
+          date: new Date().toISOString(),
+        },
+        {
+          id: 3,
+          action: "مشاركة التطبيق",
+          points: 25,
+          date: new Date().toISOString(),
+        },
       ]
     : [];
 
@@ -106,7 +127,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       setIsAuthenticated(true);
       setUserMode(
-        userData?.accountType === "admin" || userData?.accountType === "veterinarian" ? "veterinarian" : "pet_owner"
+        userData?.accountType === "admin" ||
+          userData?.accountType === "veterinarian"
+          ? "veterinarian"
+          : "pet_owner"
       );
 
       console.log("✅ User data saved and state updated successfully");
@@ -139,7 +163,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const isVet = user.accountType === "veterinarian";
-    const isAdmin = user.hasAdminAccess || user.isSuperAdmin || user.isModerator;
+    const isAdmin =
+      user.hasAdminAccess || user.isSuperAdmin || user.isModerator;
 
     // Only allow veterinarians or admins
     if (!isVet && !isAdmin) return;

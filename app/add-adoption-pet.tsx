@@ -20,6 +20,7 @@ import * as ImagePicker from "expo-image-picker";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/lib/hooks";
+import { useToastContext } from "@/providers/ToastProvider";
 
 const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
@@ -29,7 +30,7 @@ export default function AddAdoptionPetScreen() {
   const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -176,7 +177,7 @@ export default function AddAdoptionPetScreen() {
               formData.type === type && styles.typeButtonTextActive,
             ]}
           >
-            {t(`pets.types.${type}`)}
+            {`${type}`}
           </Text>
         </TouchableOpacity>
       ))}
@@ -373,9 +374,9 @@ export default function AddAdoptionPetScreen() {
         </View>
 
         {/* Price (for breeding) */}
-        {formData.listingType === "breeding" && (
+        {/* {formData.listingType === "breeding" && (
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>السعر (ريال)</Text>
+            <Text style={styles.label}>السعر (دينار)</Text>
             <TextInput
               style={styles.input}
               value={formData.price}
@@ -385,7 +386,7 @@ export default function AddAdoptionPetScreen() {
               keyboardType="numeric"
             />
           </View>
-        )}
+        )} */}
 
         {/* Description */}
         <View style={styles.inputGroup}>

@@ -6,16 +6,13 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  TextInput,
-  ActivityIndicator,
 } from "react-native";
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { useRouter, useFocusEffect } from "expo-router";
 import Button from "../../components/Button 2";
-import { Pet, PoultryFarm } from "../../types";
 import {
   Calendar,
   Plus,
@@ -24,16 +21,14 @@ import {
   Store,
   Feather,
   Users,
-  Square,
   Activity,
   DollarSign,
   Stethoscope,
-  UserCheck,
-  UserPlus,
   CheckCircle,
   Package,
-  Search,
   AlertCircle,
+  UserPlus,
+  UserCheck,
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -44,16 +39,19 @@ export default function PetsScreen() {
   const { userMode, user, hasAdminAccess, isSuperAdmin, isModerator } =
     useApp();
   const flatListRef = useRef<FlatList>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<Pet[]>([]);
+
+  const [showAssignVetModal, setShowAssignVetModal] = useState(false);
+  const [showAssignSupervisorModal, setShowAssignSupervisorModal] =
+    useState(false);
 
   // Fetch user's own pets
-  const userPetsQuery = useQuery(
-    trpc.pets.getUserPets.queryOptions(
-      { userId: Number(user?.id) || 0 },
-      { enabled: !!user?.id && userMode !== "veterinarian" }
-    )
-  );
+  const userPetsQuery = useQuery({
+    ...trpc.pets.getUserPets.queryOptions(
+      { userId: Number(user?.id) || 0 }
+      // { enabled: !!user?.id && userMode !== "veterinarian" }
+    ),
+    enabled: !!user?.id && userMode !== "veterinarian",
+  });
 
   // Fetch user's own farms
   const userFarmsQuery = useQuery(
@@ -66,31 +64,31 @@ export default function PetsScreen() {
   );
 
   // Fetch all pets for admin
-  const allPetsQuery = useQuery(
-    trpc.pets.getAllForAdmin.queryOptions(
-      { adminId: Number(user?.id) || 0 },
-      { enabled: !!user?.id && (hasAdminAccess || isSuperAdmin || isModerator) }
-    )
-  );
+  // const allPetsQuery = useQuery(
+  //   trpc.pets.getAllForAdmin.queryOptions(
+  //     { adminId: Number(user?.id) || 0 },
+  //     { enabled: !!user?.id && (hasAdminAccess || isSuperAdmin || isModerator) }
+  //   )
+  // );
 
-  // Fetch all farms for admin
-  const allFarmsQuery = useQuery(
-    trpc.pets.getAllFarmsForAdmin.queryOptions(
-      { adminId: Number(user?.id) || 0 },
-      { enabled: !!user?.id && (hasAdminAccess || isSuperAdmin || isModerator) }
-    )
-  );
+  // // Fetch all farms for admin
+  // const allFarmsQuery = useQuery(
+  //   trpc.pets.getAllFarmsForAdmin.queryOptions(
+  //     { adminId: Number(user?.id) || 0 },
+  //     { enabled: !!user?.id && (hasAdminAccess || isSuperAdmin || isModerator) }
+  //   )
+  // );
 
   // Fetch user's approved clinics (for veterinarians)
   const userClinicsQuery = useQuery(
-    trpc.clinics.getUserApprovedClinics.queryOptions(undefined, {
-      enabled: !!user?.id && userMode === "veterinarian",
-    })
+    {
+      ...trpc.clinics.getUserApprovedClinics.queryOptions({userId: Number(user?.id)}),       
+    enabled: !!user?.id && userMode === "veterinarian", }
   );
 
   // Fetch user's approved warehouses (for veterinarians)
   const userWarehousesQuery = useQuery(
-    trpc.warehouses.getUserApprovedWarehouses.queryOptions(undefined, {
+    trpc.warehouses.getUserApprovedWarehouses.queryOptions({ userId: Number(user?.id)}, {
       enabled: !!user?.id && userMode === "veterinarian",
     })
   );
@@ -108,49 +106,31 @@ export default function PetsScreen() {
 
   // Get user pets or admin view
   const displayPets = useMemo(() => {
-    if (hasAdminAccess || isSuperAdmin || isModerator) {
-      return allPetsQuery.data?.pets || [];
-    }
+    // if (hasAdminAccess || isSuperAdmin || isModerator) {
+    //   return allPetsQuery.data?.pets || [];
+    // }
     return userPetsQuery.data?.pets || [];
   }, [
     hasAdminAccess,
     isSuperAdmin,
     isModerator,
-    allPetsQuery.data,
+    // allPetsQuery.data,
     userPetsQuery.data,
   ]);
 
   // Get user farms or admin view
   const displayFarms = useMemo(() => {
-    if (hasAdminAccess || isSuperAdmin || isModerator) {
-      return allFarmsQuery.data?.farms || [];
-    }
+    // if (hasAdminAccess || isSuperAdmin || isModerator) {
+    //   return allFarmsQuery.data?.farms || [];
+    // }
     return userFarmsQuery.data?.farms || [];
   }, [
     hasAdminAccess,
     isSuperAdmin,
     isModerator,
-    allFarmsQuery.data,
+    // allFarmsQuery.data,
     userFarmsQuery.data,
   ]);
-
-  // Handle search functionality
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim() === "") {
-      setSearchResults([]);
-      return;
-    }
-
-    const results = displayPets.filter(
-      (pet: any) =>
-        pet.id.toString().includes(query.toLowerCase()) ||
-        pet.name.toLowerCase().includes(query.toLowerCase()) ||
-        pet.type.toLowerCase().includes(query.toLowerCase())
-    );
-
-    setSearchResults(results);
-  };
 
   const handlePetPress = (pet: any) => {
     router.push({
@@ -200,6 +180,10 @@ export default function PetsScreen() {
       sick: "مريض",
     };
     return statuses[status] || status;
+  };
+
+  const handleAddPet = () => {
+    router.push('/add-pet');
   };
 
   // If user is veterinarian, show clinic interface
@@ -410,6 +394,28 @@ export default function PetsScreen() {
               icon={<Store size={16} color={COLORS.white} />}
               style={[styles.actionButton, styles.storeButton]}
             />
+
+            {hasAdminAccess && (
+              <>
+                <Button
+                  title="تعيين طبيب بيطري"
+                  onPress={() => setShowAssignVetModal(true)}
+                  type="primary"
+                  size="medium"
+                  icon={<UserPlus size={16} color={COLORS.white} />}
+                  style={[styles.actionButton, styles.assignVetButton]}
+                />
+
+                <Button
+                  title="تعيين مشرف على حقول الدواجن"
+                  onPress={() => setShowAssignSupervisorModal(true)}
+                  type="primary"
+                  size="medium"
+                  icon={<UserCheck size={16} color={COLORS.white} />}
+                  style={[styles.actionButton, styles.assignSupervisorButton]}
+                />
+              </>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -476,68 +482,10 @@ export default function PetsScreen() {
               </Text>
             </View>
 
-            {/* Search Section */}
-            <View style={styles.searchSection}>
-              <Text style={styles.searchTitle}>البحث عن حيوان</Text>
-              <View style={styles.searchContainer}>
-                <Search
-                  size={20}
-                  color={COLORS.darkGray}
-                  style={styles.searchIcon}
-                />
-                <TextInput
-                  style={styles.searchInput}
-                  value={searchQuery}
-                  onChangeText={handleSearch}
-                  placeholder="ابحث بالاسم أو النوع أو الرقم..."
-                  placeholderTextColor={COLORS.darkGray}
-                />
-              </View>
-
-              {searchQuery && searchResults.length > 0 && (
-                <View style={styles.searchResults}>
-                  <Text style={styles.searchResultsTitle}>
-                    نتائج البحث ({searchResults.length})
-                  </Text>
-                  {searchResults.map((pet: any) => (
-                    <TouchableOpacity
-                      key={pet.id}
-                      style={styles.searchResultItem}
-                      onPress={() => handlePetPress(pet)}
-                    >
-                      <Image
-                        source={{
-                          uri:
-                            pet.image ||
-                            "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
-                        }}
-                        style={styles.searchResultImage}
-                      />
-                      <View style={styles.searchResultInfo}>
-                        <Text style={styles.searchResultName}>{pet.name}</Text>
-                        <Text style={styles.searchResultType}>
-                          {t(`pets.types.${pet.type}`)}
-                        </Text>
-                        <Text style={styles.searchResultId}>#{pet.id}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
-              {searchQuery && searchResults.length === 0 && (
-                <View style={styles.noResults}>
-                  <Text style={styles.noResultsText}>
-                    لا توجد نتائج للبحث "{searchQuery}"
-                  </Text>
-                </View>
-              )}
-            </View>
-
             {/* Action Buttons */}
             <View style={styles.headerButtons}>
               <Button
-                title={t("pets.addPet")}
+                title={t("اضافة حيوان")}
                 onPress={() => router.push("/add-pet")}
                 type="primary"
                 size="small"
@@ -545,7 +493,7 @@ export default function PetsScreen() {
                 style={styles.headerButton}
               />
               <Button
-                title={t("pets.addPoultryFarm")}
+                title={t("اضافة حقل دواجن")}
                 onPress={() => router.push("/add-poultry-farm")}
                 type="secondary"
                 size="small"
@@ -676,6 +624,28 @@ export default function PetsScreen() {
             </View>
           </View>
         }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>لا يوجد حيوانات مسجلة</Text>
+            <Button
+              title={t('pets.addPet')}
+              onPress={handleAddPet}
+              type="primary"
+              size="medium"
+              icon={<Plus size={16} color={COLORS.white} />}
+              style={styles.emptyButton}
+            />
+            <Button
+              title={t('pets.addPoultryFarm')}
+              onPress={() => router.push('/add-poultry-farm')}
+              type="secondary"
+              size="medium"
+              icon={<Feather size={16} color={COLORS.primary} />}
+              style={[styles.emptyButton, styles.poultryButton]}
+            />
+          </View>
+        }
+      />
       />
     </View>
   );
@@ -802,6 +772,12 @@ const styles = StyleSheet.create({
   sectionHeader: {
     marginBottom: 12,
     marginTop: 8,
+  },
+  poultryButton: {
+    marginTop: 12,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
   sectionTitle: {
     fontSize: 18,
@@ -1181,5 +1157,12 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     marginBottom: 20,
+  },
+
+  assignVetButton: {
+    backgroundColor: "#10B981",
+  },
+  assignSupervisorButton: {
+    backgroundColor: "#8B5CF6",
   },
 });

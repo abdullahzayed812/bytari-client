@@ -30,6 +30,7 @@ import { Pet } from "../../types";
 import { trpc } from "../../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/lib/hooks";
+import { useToastContext } from "@/providers/ToastProvider";
 
 export default function ReportLostPetScreen() {
   const { user } = useApp();
@@ -53,7 +54,7 @@ export default function ReportLostPetScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
 
   const createApprovalMutation = useMutation(
     trpc.pets.createApprovalRequest.mutationOptions({})

@@ -1,186 +1,133 @@
-import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert, TextInput, Modal } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
+import React, { useEffect, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import Button from "../../components/Button";
-import { Calendar, Clock, MapPin, MessageSquare, AlertTriangle, Plus, X, Camera, Edit3, Trash2 } from 'lucide-react-native';
-import { MedicalRecord, Pet, Reminder, Vaccination } from "../../types";
-import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import Button from "../../components/Button 2";
+import { Camera, Edit3, Trash2, X, AlertTriangle } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { trpc } from "../../lib/trpc";
+import { useToastContext } from "@/providers/ToastProvider";
 
 export default function PetDetailsScreen() {
   const { t } = useI18n();
-  const { pets, updatePet, userMode, user, sendNotification, addTreatmentCard } = useApp();
+  const { userMode, user } = useApp();
   const router = useRouter();
-  const { id, clinicAccess } = useLocalSearchParams<{ id: string; clinicAccess?: string }>();
-  
-  const [pet, setPet] = useState<Pet | null>(null);
-  const [activeTab, setActiveTab] = useState<'info' | 'medical' | 'vaccinations' | 'reminders'>('info');
-  const [showTreatmentModal, setShowTreatmentModal] = useState(false);
-  const [treatmentForm, setTreatmentForm] = useState({
-    medications: [{ name: '', dosage: '', frequency: '', duration: '' }],
-    instructions: '',
-    followUpDate: '',
-  });
-  
-  // Modal states for adding records
-  const [showMedicalModal, setShowMedicalModal] = useState(false);
-  const [showVaccinationModal, setShowVaccinationModal] = useState(false);
-  const [showReminderModal, setShowReminderModal] = useState(false);
-  const [showFollowUpModal, setShowFollowUpModal] = useState(false);
-  const [followUpRequestSent, setFollowUpRequestSent] = useState(false);
-  
-  // Form states
-  const [medicalForm, setMedicalForm] = useState({ diagnosis: '', treatment: '', notes: '', prescriptionImage: '' });
-  const [vaccinationForm, setVaccinationForm] = useState({ name: '', nextDate: '', notes: '' });
-  const [reminderForm, setReminderForm] = useState({ title: '', description: '', date: '' });
-  const [followUpForm, setFollowUpForm] = useState({ reason: '', notes: '', urgency: 'normal' });
+  const { id, clinicAccess } = useLocalSearchParams<{
+    id: string;
+    clinicAccess?: string;
+  }>();
+  const { showToast } = useToastContext();
+
+  const [activeTab, setActiveTab] = useState<
+    "info" | "medical" | "vaccinations" | "reminders"
+  >("info");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: '',
-    type: '',
-    breed: '',
-    age: '',
-    gender: '',
-    weight: '',
-    color: '',
-    birthDate: '',
-    image: ''
+    name: "",
+    type: "",
+    breed: "",
+    age: "",
+    gender: "",
+    weight: "",
+    color: "",
+    image: "",
+    medicalHistory: "",
+    vaccinations: "",
+    isLost: false,
   });
-  
-  const isClinicAccess = clinicAccess === 'true' && userMode === 'veterinarian';
-  const isOwner = !isClinicAccess && userMode === 'pet_owner';
-  
-  // Check if pet has any clinic follow-ups (medical records, vaccinations, or reminders from clinics)
-  const hasClinicFollowUps = pet ? (
-    pet.medicalRecords.length > 0 || 
-    pet.vaccinations.some(v => v.clinicName) || 
-    pet.reminders.length > 0
-  ) : false;
 
+  const isClinicAccess = clinicAccess === "true" && userMode === "veterinarian";
+  const isOwner = !isClinicAccess && userMode === "pet_owner";
+  const isAdmin = userMode === "admin";
+
+  // Fetch pet details based on user mode
+  const petQuery = useQuery({
+    ...trpc.admin.pets.getProfile.queryOptions({
+      petId: Number(id),
+      // adminId: Number(user?.id) || 0,
+    }),
+    // enabled: !!id && !!user?.id && isAdmin,
+  });
+
+  // Fallback to regular pet query for non-admin users
+  // const regularPetQuery = useQuery({
+  //   ...trpc.pets.getAllForAdmin.queryOptions({
+  //     petId: Number(id),
+  //     adminId: Number(user?.id),
+  //   }),
+  //   enabled: !!id && !isAdmin,
+  // });
+
+  const pet = petQuery.data;
+  const isLoading = petQuery.isLoading;
+
+  const createApprovalMutation = useMutation(
+    trpc.pets.createApprovalRequest.mutationOptions({})
+  );
+
+  // Update pet mutation for admin
+  const updatePetMutation = useMutation(
+    trpc.admin.updatePetProfile.mutationOptions({})
+  );
+
+  // Delete pet mutation for admin
+  const deletePetMutation = useMutation(
+    trpc.admin.deletePet.mutationOptions({})
+  );
+
+  // Regular update for pet owners
+  const updatePetOwnerMutation = useMutation(
+    trpc.pets.update.mutationOptions({})
+  );
+
+  // Initialize edit form when pet data is loaded
   useEffect(() => {
-    if (id) {
-      // First try to find in user's pets
-      let foundPet = pets.find((p: Pet) => p.id === id);
-      
-      // If not found and this is clinic access, search in all mock pets
-      if (!foundPet && isClinicAccess) {
-        const { mockPets } = require('@/mocks/data');
-        foundPet = mockPets.find((p: Pet) => p.id === id);
-      }
-      
-      // If still not found, search in all mock pets for general access
-      if (!foundPet) {
-        const { mockPets } = require('@/mocks/data');
-        foundPet = mockPets.find((p: Pet) => p.id === id);
-      }
-      
-      if (foundPet) {
-        setPet(foundPet);
-        setEditForm({
-          name: foundPet.name || '',
-          type: foundPet.type || '',
-          breed: foundPet.breed || '',
-          age: foundPet.age?.toString() || '',
-          gender: foundPet.gender || '',
-          weight: foundPet.weight?.toString() || '',
-          color: foundPet.color || '',
-          birthDate: foundPet.birthDate || '',
-          image: foundPet.image || ''
-        });
-      }
+    if (pet) {
+      setEditForm({
+        name: pet.name || "",
+        type: pet.type || "",
+        breed: pet.breed || "",
+        age: pet.age?.toString() || "",
+        gender: pet.gender || "",
+        weight: pet.weight?.toString() || "",
+        color: pet.color || "",
+        image: pet.image || "",
+        medicalHistory: pet.medicalHistory || "",
+        vaccinations: pet.vaccinations || "",
+        isLost: pet.isLost || false,
+      });
     }
-  }, [id, pets, isClinicAccess]);
+  }, [pet]);
 
   const handleReportLost = () => {
     if (pet) {
       router.push({
-        pathname: '/report-lost-pet',
-        params: { petId: pet.id }
+        pathname: "/report-lost-pet",
+        params: { petId: pet.id },
       });
-    }
-  };
-
-  const handleAddMedicalRecord = () => {
-    if (!isClinicAccess || !pet || !user) return;
-    setShowMedicalModal(true);
-  };
-
-  const handleAddVaccination = () => {
-    if (!isClinicAccess || !pet || !user) return;
-    setShowVaccinationModal(true);
-  };
-
-  const handleAddReminder = () => {
-    if (!isClinicAccess || !pet || !user) return;
-    setShowReminderModal(true);
-  };
-
-  const handleFollowUp = () => {
-    if (!isClinicAccess || !pet || !user) return;
-    setShowFollowUpModal(true);
-  };
-
-  const submitFollowUpRequest = async () => {
-    if (!followUpForm.reason) {
-      Alert.alert('خطأ', 'يرجى إدخال سبب المتابعة');
-      return;
-    }
-    
-    if (!pet) return;
-    
-    await sendClinicNotification(
-      'follow_up', 
-      'طلب متابعة الحالة', 
-      `تم طلب متابعة حالة الحيوان ${pet?.name} - السبب: ${followUpForm.reason}`
-    );
-    
-    setShowFollowUpModal(false);
-    setFollowUpRequestSent(true);
-    setFollowUpForm({ reason: '', notes: '', urgency: 'normal' });
-    
-    Alert.alert(
-      'تم إرسال الطلب',
-      'تم إرسال طلب متابعة الحالة لصاحب الحيوان وفي انتظار الموافقة',
-      [{ text: 'موافق', onPress: () => setFollowUpRequestSent(false) }]
-    );
-  };
-
-  const handleAddTreatmentCard = () => {
-    if (!isClinicAccess || !pet || !user) return;
-    setShowTreatmentModal(true);
-  };
-
-  const handlePrescriptionImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إلى إذن للوصول إلى الصور');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setMedicalForm(prev => ({ ...prev, prescriptionImage: result.assets[0].uri }));
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
     }
   };
 
   const handlePetImageUpload = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إلى إذن للوصول إلى الصور');
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
         return;
       }
 
@@ -192,229 +139,12 @@ export default function PetDetailsScreen() {
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setEditForm(prev => ({ ...prev, image: result.assets[0].uri }));
+        setEditForm((prev) => ({ ...prev, image: result.assets[0].uri }));
       }
     } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
+      console.error("Error picking image:", error);
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
     }
-  };
-
-  const sendClinicNotification = async (actionType: 'medical_record' | 'vaccination' | 'reminder' | 'follow_up', title: string, message: string) => {
-    if (!pet || !user) return;
-    
-    const actionTypeText = {
-      'medical_record': 'إضافة سجل طبي',
-      'vaccination': 'إضافة تطعيم', 
-      'reminder': 'إضافة تذكير',
-      'follow_up': 'متابعة الحالة'
-    }[actionType];
-    
-    await sendNotification({
-      userId: pet.ownerId,
-      type: actionType,
-      title: `طلب ${actionTypeText}`,
-      message: `طلبت العيادة ${user.clinicName || 'العيادة'} ${actionTypeText} للحيوان ${pet.name}. يمكنك الموافقة أو الرفض أو الإبلاغ عن العيادة إذا لم تزرها.`,
-      data: {
-        petId: pet.id,
-        petName: pet.name,
-        clinicId: user.id,
-        clinicName: user.clinicName || 'العيادة',
-        actionType
-      },
-      status: 'pending',
-    });
-  };
-
-  const addMedicalRecord = async (diagnosis: string, treatment: string, notes: string) => {
-    if (!pet || !user) return;
-    
-    const newRecord = {
-      id: Date.now().toString(),
-      petId: pet.id,
-      clinicId: user.id,
-      clinicName: user.clinicName || 'العيادة',
-      diagnosis,
-      treatment,
-      notes,
-      date: new Date().toISOString(),
-    };
-    
-    const updatedPet = {
-      ...pet,
-      medicalRecords: [...pet.medicalRecords, newRecord]
-    };
-    
-    await updatePet(updatedPet);
-    setPet(updatedPet);
-    
-    await sendClinicNotification('medical_record', 'سجل طبي جديد', `تم إضافة سجل طبي جديد للحيوان ${pet.name}`);
-  };
-
-  const addVaccination = async (name: string, nextDate: string, notes: string) => {
-    if (!pet || !user) return;
-    
-    const newVaccination = {
-      id: Date.now().toString(),
-      petId: pet.id,
-      name,
-      date: new Date().toISOString(),
-      nextDate: nextDate ? new Date(nextDate).toISOString() : undefined,
-      clinicName: user.clinicName || 'العيادة',
-      notes,
-    };
-    
-    const updatedPet = {
-      ...pet,
-      vaccinations: [...pet.vaccinations, newVaccination]
-    };
-    
-    await updatePet(updatedPet);
-    setPet(updatedPet);
-    
-    await sendClinicNotification('vaccination', 'تطعيم جديد', `تم إضافة تطعيم ${name} للحيوان ${pet.name}`);
-  };
-
-  const addReminder = async (title: string, description: string, reminderDate: string) => {
-    if (!pet || !user) return;
-    
-    const newReminder = {
-      id: Date.now().toString(),
-      petId: pet.id,
-      title,
-      description,
-      date: new Date(reminderDate).toISOString(),
-      type: 'checkup' as const,
-      isCompleted: false,
-    };
-    
-    const updatedPet = {
-      ...pet,
-      reminders: [...pet.reminders, newReminder]
-    };
-    
-    await updatePet(updatedPet);
-    setPet(updatedPet);
-    
-    await sendClinicNotification('reminder', 'تذكير جديد', `تم إضافة تذكير ${title} للحيوان ${pet.name}`);
-  };
-
-  const submitTreatmentCard = async () => {
-    if (!pet || !user || !treatmentForm.medications[0].name) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
-      return;
-    }
-    
-    await addTreatmentCard({
-      petId: pet.id,
-      clinicId: user.id,
-      clinicName: user.clinicName || 'العيادة',
-      medications: treatmentForm.medications.filter(med => med.name),
-      instructions: treatmentForm.instructions,
-      followUpDate: treatmentForm.followUpDate,
-    });
-    
-    setShowTreatmentModal(false);
-    setTreatmentForm({
-      medications: [{ name: '', dosage: '', frequency: '', duration: '' }],
-      instructions: '',
-      followUpDate: '',
-    });
-    
-    Alert.alert(
-      'تم إرسال الطلب',
-      'تم إرسال طلب كرت صرف العلاج لصاحب الحيوان وفي انتظار الموافقة',
-      [{ text: 'موافق' }]
-    );
-  };
-
-  const addMedicationField = () => {
-    setTreatmentForm(prev => ({
-      ...prev,
-      medications: [...prev.medications, { name: '', dosage: '', frequency: '', duration: '' }]
-    }));
-  };
-
-  const removeMedicationField = (index: number) => {
-    setTreatmentForm(prev => ({
-      ...prev,
-      medications: prev.medications.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateMedication = (index: number, field: string, value: string) => {
-    setTreatmentForm(prev => ({
-      ...prev,
-      medications: prev.medications.map((med, i) => 
-        i === index ? { ...med, [field]: value } : med
-      )
-    }));
-  };
-  
-  const submitMedicalRecord = async () => {
-    if (!medicalForm.diagnosis || !medicalForm.treatment) {
-      Alert.alert('خطأ', 'يرجى ملء الحقول المطلوبة');
-      return;
-    }
-    
-    await sendClinicNotification(
-      'medical_record',
-      'طلب إضافة سجل طبي',
-      `طلب إضافة سجل طبي جديد للحيوان ${pet?.name} - التشخيص: ${medicalForm.diagnosis}`
-    );
-    
-    setShowMedicalModal(false);
-    setMedicalForm({ diagnosis: '', treatment: '', notes: '', prescriptionImage: '' });
-    
-    Alert.alert(
-      'تم إرسال الطلب',
-      'تم إرسال طلب إضافة السجل الطبي لصاحب الحيوان وفي انتظار الموافقة',
-      [{ text: 'موافق' }]
-    );
-  };
-  
-  const submitVaccination = async () => {
-    if (!vaccinationForm.name) {
-      Alert.alert('خطأ', 'يرجى إدخال اسم التطعيم');
-      return;
-    }
-    
-    await sendClinicNotification(
-      'vaccination',
-      'طلب إضافة تطعيم',
-      `طلب إضافة تطعيم ${vaccinationForm.name} للحيوان ${pet?.name}`
-    );
-    
-    setShowVaccinationModal(false);
-    setVaccinationForm({ name: '', nextDate: '', notes: '' });
-    
-    Alert.alert(
-      'تم إرسال الطلب',
-      'تم إرسال طلب إضافة التطعيم لصاحب الحيوان وفي انتظار الموافقة',
-      [{ text: 'موافق' }]
-    );
-  };
-  
-  const submitReminder = async () => {
-    if (!reminderForm.title || !reminderForm.date) {
-      Alert.alert('خطأ', 'يرجى ملء الحقول المطلوبة');
-      return;
-    }
-    
-    await sendClinicNotification(
-      'reminder',
-      'طلب إضافة تذكير',
-      `طلب إضافة تذكير ${reminderForm.title} للحيوان ${pet?.name}`
-    );
-    
-    setShowReminderModal(false);
-    setReminderForm({ title: '', description: '', date: '' });
-    
-    Alert.alert(
-      'تم إرسال الطلب',
-      'تم إرسال طلب إضافة التذكير لصاحب الحيوان وفي انتظار الموافقة',
-      [{ text: 'موافق' }]
-    );
   };
 
   const handleEditPet = () => {
@@ -424,123 +154,238 @@ export default function PetDetailsScreen() {
 
   const submitEditPet = async () => {
     if (!editForm.name || !editForm.type) {
-      Alert.alert('خطأ', 'يرجى ملء الحقول المطلوبة');
+      Alert.alert("خطأ", "يرجى ملء الحقول المطلوبة");
       return;
     }
-    
-    if (!pet) return;
-    
-    const updatedPet = {
-      ...pet,
-      name: editForm.name,
-      type: editForm.type as 'dog' | 'cat' | 'rabbit' | 'bird' | 'other',
-      breed: editForm.breed,
-      age: editForm.age ? parseInt(editForm.age) : pet.age,
-      gender: editForm.gender as 'male' | 'female',
-      weight: editForm.weight ? parseFloat(editForm.weight) : pet.weight,
-      color: editForm.color,
-      birthDate: editForm.birthDate,
-      image: editForm.image || pet.image
-    };
-    
-    await updatePet(updatedPet);
-    setPet(updatedPet);
-    setShowEditModal(false);
-    
-    Alert.alert('تم', 'تم تحديث معلومات الحيوان بنجاح');
+
+    if (!pet || !user) return;
+
+    if (isAdmin) {
+      // Admin update with all fields
+      updatePetMutation.mutate(
+        {
+          petId: pet.id,
+          adminId: user.id,
+          name: editForm.name.trim(),
+          type: editForm.type,
+          breed: editForm.breed.trim() || undefined,
+          age: editForm.age ? parseInt(editForm.age) : undefined,
+          gender: editForm.gender as "male" | "female" | undefined,
+          weight: editForm.weight ? parseFloat(editForm.weight) : undefined,
+          color: editForm.color.trim() || undefined,
+          image: editForm.image || undefined,
+          medicalHistory: editForm.medicalHistory.trim() || undefined,
+          vaccinations: editForm.vaccinations.trim() || undefined,
+          isLost: editForm.isLost,
+        },
+        {
+          onSuccess: () => {
+            showToast({
+              message: "تم تحديث معلومات الحيوان بنجاح",
+              type: "success",
+            });
+            setShowEditModal(false);
+            trpc.admin.getPetProfile.invalidate();
+          },
+          onError: (error) => {
+            showToast({
+              message: error.message || "حدث خطأ أثناء تحديث الحيوان",
+              type: "error",
+            });
+          },
+        }
+      );
+    } else {
+      // Pet owner update (limited fields)
+      updatePetOwnerMutation.mutate(
+        {
+          id: pet.id,
+          name: editForm.name.trim(),
+          type: editForm.type as "dog" | "cat" | "rabbit" | "bird" | "other",
+          breed: editForm.breed.trim() || undefined,
+          age: editForm.age ? parseInt(editForm.age) : undefined,
+          gender: editForm.gender as "male" | "female",
+          weight: editForm.weight ? parseFloat(editForm.weight) : undefined,
+          color: editForm.color.trim() || undefined,
+          image: editForm.image || undefined,
+        },
+        {
+          onSuccess: () => {
+            showToast({
+              message: "تم تحديث معلومات الحيوان بنجاح",
+              type: "success",
+            });
+            setShowEditModal(false);
+            trpc.pets.getById.invalidate();
+          },
+          onError: (error) => {
+            showToast({
+              message: error.message || "حدث خطأ أثناء تحديث الحيوان",
+              type: "error",
+            });
+          },
+        }
+      );
+    }
   };
 
-  const handleDeleteMedicalRecord = (recordId: string) => {
-    if (!pet) return;
-    
-    Alert.alert(
-      'حذف السجل الطبي',
-      'هل أنت متأكد من حذف هذا السجل الطبي؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            const updatedPet = {
-              ...pet,
-              medicalRecords: pet.medicalRecords.filter(record => record.id !== recordId)
-            };
-            await updatePet(updatedPet);
-            setPet(updatedPet);
-            Alert.alert('تم', 'تم حذف السجل الطبي');
-          }
-        }
-      ]
-    );
-  };
+  const handleDeletePet = () => {
+    if (!pet || !user || !isAdmin) return;
 
-  const handleDeleteVaccination = (vaccinationId: string) => {
-    if (!pet) return;
-    
     Alert.alert(
-      'حذف التطعيم',
-      'هل أنت متأكد من حذف هذا التطعيم؟',
+      "حذف الحيوان",
+      "هل أنت متأكد من حذف هذا الحيوان؟ هذا الإجراء لا يمكن التراجع عنه.",
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: "إلغاء", style: "cancel" },
         {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            const updatedPet = {
-              ...pet,
-              vaccinations: pet.vaccinations.filter(vaccination => vaccination.id !== vaccinationId)
-            };
-            await updatePet(updatedPet);
-            setPet(updatedPet);
-            Alert.alert('تم', 'تم حذف التطعيم');
-          }
-        }
-      ]
-    );
-  };
-
-  const handleDeleteReminder = (reminderId: string) => {
-    if (!pet) return;
-    
-    Alert.alert(
-      'حذف التذكير',
-      'هل أنت متأكد من حذف هذا التذكير؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            const updatedPet = {
-              ...pet,
-              reminders: pet.reminders.filter(reminder => reminder.id !== reminderId)
-            };
-            await updatePet(updatedPet);
-            setPet(updatedPet);
-            Alert.alert('تم', 'تم حذف التذكير');
-          }
-        }
+          text: "حذف",
+          style: "destructive",
+          onPress: () => {
+            deletePetMutation.mutate(
+              {
+                petId: pet.id,
+                adminId: user.id,
+                reason: "Admin deletion",
+              },
+              {
+                onSuccess: () => {
+                  showToast({
+                    message: "تم حذف الحيوان بنجاح",
+                    type: "success",
+                  });
+                  router.back();
+                },
+                onError: (error) => {
+                  showToast({
+                    message: error.message || "حدث خطأ أثناء حذف الحيوان",
+                    type: "error",
+                  });
+                },
+              }
+            );
+          },
+        },
       ]
     );
   };
 
   const handleCancelFollowUp = () => {
-    
     Alert.alert(
-      'إلغاء المتابعات',
-      'هل تريد إلغاء جميع طلبات المتابعة المعلقة لهذا الحيوان؟',
+      "إلغاء المتابعات",
+      "هل تريد إلغاء جميع طلبات المتابعة المعلقة لهذا الحيوان؟",
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: "إلغاء", style: "cancel" },
         {
-          text: 'نعم',
+          text: "نعم",
           onPress: () => {
-            Alert.alert('تم', 'تم إلغاء جميع طلبات المتابعة المعلقة');
-          }
-        }
+            Alert.alert("تم", "تم إلغاء جميع طلبات المتابعة المعلقة");
+          },
+        },
       ]
     );
   };
+
+  const handleAdoptionBreeding = (type: string) => {
+    Alert.alert("عرض للتبني", "هل تريد عرض هذا الحيوان للتبني؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "نعم",
+        onPress: () => {
+          // ✅ Validate required fields
+          if (!pet?.name?.trim()) {
+            showToast({
+              type: "error",
+              message: "يرجى إدخال اسم الحيوان",
+            });
+            return;
+          }
+          if (!pet?.age > 0) {
+            showToast({
+              type: "error",
+              message: "يرجى إدخال عمر الحيوان",
+            });
+            return;
+          }
+          if (!pet?.color?.trim()) {
+            showToast({
+              type: "error",
+              message: "يرجى إدخال لون الحيوان",
+            });
+            return;
+          }
+          // if (!pet?.location?.trim()) {
+          //   showToast({
+          //     type: "error",
+          //     message: "يرجى إدخال الموقع",
+          //   });
+          //   return;
+          // }
+          // if (!pet?.description?.trim()) {
+          //   showToast({
+          //     type: "error",
+          //     message: "يرجى إدخال وصف الحيوان",
+          //   });
+          //   return;
+          // }
+          if (!user) {
+            showToast({
+              type: "error",
+              message: "يرجى تسجيل الدخول أولاً",
+            });
+            return;
+          }
+
+          createApprovalMutation.mutate(
+            {
+              name: pet?.name,
+              type: pet?.type,
+              breed: pet?.breed || undefined,
+              age: pet?.age ? parseInt(pet?.age) : undefined,
+              gender: pet?.gender,
+              weight: pet?.weight ? parseFloat(pet?.weight) : undefined,
+              color: pet?.color || undefined,
+              image: pet?.image,
+              ownerId: parseInt(user.id.toString()),
+              requestType: type,
+              description: pet?.description,
+              images: [pet?.image],
+              contactInfo: pet?.contactInfo || undefined,
+              location: pet?.location,
+              price: pet?.price ? parseFloat(pet?.price) : undefined,
+              specialRequirements: pet.specialRequirements || undefined,
+            },
+            {
+              onSuccess: (data) => {
+                showToast({
+                  type: "success",
+                  message:
+                    data?.message ||
+                    "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
+                });
+                // trpc.pets.getApproved.invalidate();
+              },
+              onError: (error) => {
+                showToast({
+                  type: "error",
+                  message: error.message || "حدث خطأ أثناء إرسال الطلب",
+                });
+              },
+            }
+          );
+
+          // Alert.alert("تم", "تم عرض الحيوان للتبني بنجاح");
+        },
+      },
+    ]);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   if (!pet) {
     return (
@@ -552,386 +397,267 @@ export default function PetDetailsScreen() {
 
   return (
     <ScrollView style={styles.container}>
+      <View
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {createApprovalMutation.isPending ? (
+          <ActivityIndicator size="large" />
+        ) : null}
+      </View>
       <View style={styles.header}>
         <Image source={{ uri: pet.image }} style={styles.petImage} />
         <View style={styles.petInfo}>
           <View style={styles.petNameRow}>
             <Text style={styles.petName}>{pet.name}</Text>
-            {/* Edit Icon - Always show for demonstration */}
             <TouchableOpacity onPress={handleEditPet} style={styles.editIcon}>
               <Edit3 size={20} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
           <Text style={styles.petType}>
-            {t(`pets.types.${pet.type}`)} {pet.breed ? `- ${pet.breed}` : ''}
+            {t(`${pet.type}`)} {pet.breed ? `- ${pet.breed}` : ""}
           </Text>
-          
+
           <View style={styles.petDetailsRow}>
             <View style={styles.petDetailItem}>
-              <Text style={styles.petDetailLabel}>{t('pets.age')}</Text>
+              <Text style={styles.petDetailLabel}>{t("العمر")}</Text>
               <Text style={styles.petDetailValue}>{pet.age} سنة</Text>
             </View>
-            
+
             <View style={styles.petDetailItem}>
-              <Text style={styles.petDetailLabel}>{t('pets.gender')}</Text>
+              <Text style={styles.petDetailLabel}>{t("الجنس")}</Text>
               <Text style={styles.petDetailValue}>
-                {pet.gender === 'male' ? t('pets.male') : t('pets.female')}
+                {pet.gender === "male" ? t("`ذكر`") : t("انثى")}
               </Text>
             </View>
-            
+
             {pet.weight && (
               <View style={styles.petDetailItem}>
-                <Text style={styles.petDetailLabel}>{t('pets.weight')}</Text>
+                <Text style={styles.petDetailLabel}>{t("الوزن")}</Text>
                 <Text style={styles.petDetailValue}>{pet.weight} كجم</Text>
               </View>
             )}
           </View>
         </View>
       </View>
-      
+
       <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'info' && styles.activeTab]}
-          onPress={() => setActiveTab('info')}
+          style={[styles.tab, activeTab === "info" && styles.activeTab]}
+          onPress={() => setActiveTab("info")}
         >
-          <Text style={[styles.tabText, activeTab === 'info' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "info" && styles.activeTabText,
+            ]}
+          >
             معلومات
           </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'medical' && styles.activeTab]}
-          onPress={() => setActiveTab('medical')}
+          style={[styles.tab, activeTab === "medical" && styles.activeTab]}
+          onPress={() => setActiveTab("medical")}
         >
-          <Text style={[styles.tabText, activeTab === 'medical' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "medical" && styles.activeTabText,
+            ]}
+          >
             السجل الطبي
           </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'vaccinations' && styles.activeTab]}
-          onPress={() => setActiveTab('vaccinations')}
+          style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]}
+          onPress={() => setActiveTab("vaccinations")}
         >
-          <Text style={[styles.tabText, activeTab === 'vaccinations' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "vaccinations" && styles.activeTabText,
+            ]}
+          >
             التطعيمات
           </Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'reminders' && styles.activeTab]}
-          onPress={() => setActiveTab('reminders')}
+          style={[styles.tab, activeTab === "reminders" && styles.activeTab]}
+          onPress={() => setActiveTab("reminders")}
         >
-          <Text style={[styles.tabText, activeTab === 'reminders' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "reminders" && styles.activeTabText,
+            ]}
+          >
             التذكيرات
           </Text>
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.content}>
-        {activeTab === 'info' && (
+        {activeTab === "info" && (
           <View>
             <View style={styles.infoSection}>
               <Text style={styles.sectionTitle}>معلومات عامة</Text>
-              
+
               <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>{t('pets.birthDate')}</Text>
-                <Text style={styles.infoValue}>
-                  {pet.birthDate ? new Date(pet.birthDate).toLocaleDateString() : 'غير محدد'}
-                </Text>
+                <Text style={styles.infoLabel}>{t("اللون")}</Text>
+                <Text style={styles.infoValue}>{pet.color || "غير محدد"}</Text>
               </View>
-              
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>{t('pets.color')}</Text>
-                <Text style={styles.infoValue}>{pet.color || 'غير محدد'}</Text>
-              </View>
-              
+
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>رقم المعرف</Text>
                 <Text style={styles.infoValue}>{pet.id}</Text>
               </View>
-            </View>
-            
-            {/* Owner Actions - Always show for demonstration */}
-            <View style={styles.ownerActions}>
-              {/* Cancel Follow-ups Button */}
-              <Button
-                title="إلغاء المتابعات"
-                onPress={handleCancelFollowUp}
-                type="outline"
-                size="medium"
-                style={styles.actionButton}
-                icon={<X size={16} color={COLORS.primary} />}
-              />
-              
-              {/* Report Lost Button */}
-              <Button
-                title={t('pets.reportLost')}
-                onPress={handleReportLost}
-                type="outline"
-                size="medium"
-                icon={<AlertTriangle size={16} color={COLORS.primary} />}
-                style={styles.actionButton}
-              />
-              
-              {/* Adoption and Breeding Buttons */}
-              <View style={styles.adoptionBreedingButtons}>
-                <Button
-                  title="عرض للتبني"
-                  onPress={() => {
-                    console.log(`Show pet ${pet.id} for adoption`);
-                    Alert.alert(
-                      'عرض للتبني',
-                      'هل تريد عرض هذا الحيوان للتبني؟ سيتم إضافته إلى قائمة الحيوانات المتاحة للتبني.',
-                      [
-                        { text: 'إلغاء', style: 'cancel' },
-                        { 
-                          text: 'نعم', 
-                          onPress: () => {
-                            Alert.alert('تم', 'تم عرض الحيوان للتبني بنجاح');
-                          }
-                        }
-                      ]
-                    );
-                  }}
-                  type="primary"
-                  size="medium"
-                  style={[styles.actionButton, styles.adoptionButton]}
-                />
-                
-                <Button
-                  title="عرض للتزاوج"
-                  onPress={() => {
-                    console.log(`Show pet ${pet.id} for breeding`);
-                    Alert.alert(
-                      'عرض للتزاوج',
-                      'هل تريد عرض هذا الحيوان للتزاوج؟ سيتم إضافته إلى قائمة الحيوانات المتاحة للتزاوج.',
-                      [
-                        { text: 'إلغاء', style: 'cancel' },
-                        { 
-                          text: 'نعم', 
-                          onPress: () => {
-                            Alert.alert('تم', 'تم عرض الحيوان للتزاوج بنجاح');
-                          }
-                        }
-                      ]
-                    );
-                  }}
-                  type="primary"
-                  size="medium"
-                  style={[styles.actionButton, styles.breedingButton]}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-        
-        {activeTab === 'medical' && (
-          <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('pets.medicalRecord')}</Text>
-              {isClinicAccess && (
-                <Button
-                  title="إضافة سجل"
-                  onPress={handleAddMedicalRecord}
-                  type="primary"
-                  size="small"
-                />
+
+              {pet.isLost && (
+                <View style={styles.lostBanner}>
+                  <AlertTriangle size={20} color={COLORS.error} />
+                  <Text style={styles.lostBannerText}>هذا الحيوان مفقود</Text>
+                </View>
+              )}
+
+              {/* Show owner info for admin */}
+              {isAdmin && "ownerName" in pet && (
+                <>
+                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
+                    معلومات المالك
+                  </Text>
+                  <View style={styles.infoItem}>
+                    <Text style={styles.infoLabel}>الاسم</Text>
+                    <Text style={styles.infoValue}>{pet.ownerName}</Text>
+                  </View>
+                  <View style={styles.infoItem}>
+                    <Text style={styles.infoLabel}>البريد الإلكتروني</Text>
+                    <Text style={styles.infoValue}>{pet.ownerEmail}</Text>
+                  </View>
+                </>
+              )}
+
+              {/* Medical History - Admin only */}
+              {isAdmin && pet.medicalHistory && (
+                <>
+                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
+                    التاريخ الطبي
+                  </Text>
+                  <View style={styles.infoItem}>
+                    <Text style={styles.infoValue}>{pet.medicalHistory}</Text>
+                  </View>
+                </>
               )}
             </View>
-            
-            {pet.medicalRecords.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>لا يوجد سجلات طبية</Text>
-              </View>
-            ) : (
-              pet.medicalRecords.map((record: MedicalRecord) => (
-                <View key={record.id} style={styles.recordCard}>
-                  <View style={styles.recordHeader}>
-                    <View style={styles.recordTitleRow}>
-                      <Text style={styles.recordTitle}>{record.diagnosis}</Text>
-                      {/* Delete Button - Always show for demonstration */}
-                      <TouchableOpacity 
-                        onPress={() => handleDeleteMedicalRecord(record.id)}
-                        style={styles.deleteButton}
-                      >
-                        <Trash2 size={16} color={COLORS.error} />
-                      </TouchableOpacity>
-                    </View>
-                    <Text style={styles.recordDate}>
-                      {new Date(record.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>العيادة</Text>
-                    <Text style={styles.recordValue}>{record.clinicName}</Text>
-                  </View>
-                  
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>العلاج</Text>
-                    <Text style={styles.recordValue}>{record.treatment}</Text>
-                  </View>
-                  
-                  {record.notes && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>ملاحظات</Text>
-                      <Text style={styles.recordValue}>{record.notes}</Text>
-                    </View>
-                  )}
+
+            {/* Owner Actions */}
+            {isOwner && (
+              <View style={styles.ownerActions}>
+                <Button
+                  title="إلغاء المتابعات"
+                  onPress={handleCancelFollowUp}
+                  type="outline"
+                  size="medium"
+                  style={styles.actionButton}
+                  icon={<X size={16} color={COLORS.primary} />}
+                />
+
+                <Button
+                  title={t("بلغ عن حوان مفقود")}
+                  onPress={handleReportLost}
+                  type="outline"
+                  size="medium"
+                  style={styles.actionButton}
+                />
+
+                <View style={styles.adoptionBreedingButtons}>
+                  <Button
+                    title="عرض للتبني"
+                    onPress={() => handleAdoptionBreeding("adoption")}
+                    type="primary"
+                    size="medium"
+                    style={[styles.actionButton, styles.adoptionButton]}
+                  />
+
+                  <Button
+                    title="عرض للتزاوج"
+                    onPress={() => handleAdoptionBreeding("breeding")}
+                    type="primary"
+                    size="medium"
+                    style={[styles.actionButton, styles.breedingButton]}
+                  />
                 </View>
-              ))
+              </View>
+            )}
+
+            {/* Admin Actions */}
+            {isAdmin && (
+              <View style={styles.adminActions}>
+                <Button
+                  title="حذف الحيوان"
+                  onPress={handleDeletePet}
+                  type="outline"
+                  size="medium"
+                  style={[styles.actionButton, styles.deleteButton]}
+                  icon={<Trash2 size={16} color={COLORS.error} />}
+                />
+              </View>
             )}
           </View>
         )}
-        
-        {activeTab === 'vaccinations' && (
+
+        {activeTab === "medical" && (
           <View>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('pets.vaccinations')}</Text>
-              {isClinicAccess && (
-                <Button
-                  title="إضافة تطعيم"
-                  onPress={handleAddVaccination}
-                  type="primary"
-                  size="small"
-                />
-              )}
+              <Text style={styles.sectionTitle}>{t("السحل الطبي")}</Text>
             </View>
-            
-            {pet.vaccinations.length === 0 ? (
+
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>
+                لا يوجد سجلات طبية متاحة
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {activeTab === "vaccinations" && (
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t("التطعيمات")}</Text>
+            </View>
+
+            {pet.vaccinations ? (
+              <View style={styles.recordCard}>
+                <Text style={styles.recordValue}>{pet.vaccinations}</Text>
+              </View>
+            ) : (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>لا يوجد تطعيمات</Text>
               </View>
-            ) : (
-              pet.vaccinations.map((vaccination: Vaccination) => (
-                <View key={vaccination.id} style={styles.recordCard}>
-                  <View style={styles.recordHeader}>
-                    <View style={styles.recordTitleRow}>
-                      <Text style={styles.recordTitle}>{vaccination.name}</Text>
-                      {/* Delete Button - Always show for demonstration */}
-                      <TouchableOpacity 
-                        onPress={() => handleDeleteVaccination(vaccination.id)}
-                        style={styles.deleteButton}
-                      >
-                        <Trash2 size={16} color={COLORS.error} />
-                      </TouchableOpacity>
-                    </View>
-                    <Text style={styles.recordDate}>
-                      {new Date(vaccination.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  
-                  {vaccination.clinicName && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>العيادة</Text>
-                      <Text style={styles.recordValue}>{vaccination.clinicName}</Text>
-                    </View>
-                  )}
-                  
-                  {vaccination.nextDate && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>الموعد القادم</Text>
-                      <Text style={styles.recordValue}>
-                        {new Date(vaccination.nextDate).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  )}
-                  
-                  {vaccination.notes && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>ملاحظات</Text>
-                      <Text style={styles.recordValue}>{vaccination.notes}</Text>
-                    </View>
-                  )}
-                </View>
-              ))
             )}
           </View>
         )}
-        
-        {activeTab === 'reminders' && (
+
+        {activeTab === "reminders" && (
           <View>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('pets.reminders')}</Text>
-              {isClinicAccess && (
-                <Button
-                  title="إضافة تذكير"
-                  onPress={handleAddReminder}
-                  type="primary"
-                  size="small"
-                />
-              )}
+              <Text style={styles.sectionTitle}>{t("التذكيرات")}</Text>
             </View>
-            
-            {pet.reminders.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>لا يوجد تذكيرات</Text>
-              </View>
-            ) : (
-              pet.reminders.map((reminder: Reminder) => (
-                <View
-                  key={reminder.id}
-                  style={[
-                    styles.recordCard,
-                    reminder.isCompleted && styles.completedReminderCard,
-                  ]}
-                >
-                  <View style={styles.recordHeader}>
-                    <View style={styles.recordTitleRow}>
-                      <Text style={styles.recordTitle}>{reminder.title}</Text>
-                      {/* Delete Button - Always show for demonstration */}
-                      <TouchableOpacity 
-                        onPress={() => handleDeleteReminder(reminder.id)}
-                        style={styles.deleteButton}
-                      >
-                        <Trash2 size={16} color={COLORS.error} />
-                      </TouchableOpacity>
-                    </View>
-                    <Text style={styles.recordDate}>
-                      {new Date(reminder.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  
-                  {reminder.description && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>الوصف</Text>
-                      <Text style={styles.recordValue}>{reminder.description}</Text>
-                    </View>
-                  )}
-                  
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>النوع</Text>
-                    <Text style={styles.recordValue}>
-                      {reminder.type === 'vaccination'
-                        ? 'تطعيم'
-                        : reminder.type === 'medication'
-                        ? 'دواء'
-                        : reminder.type === 'checkup'
-                        ? 'فحص'
-                        : 'أخرى'}
-                    </Text>
-                  </View>
-                  
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>الحالة</Text>
-                    <Text
-                      style={[
-                        styles.recordValue,
-                        reminder.isCompleted
-                          ? styles.completedStatus
-                          : styles.pendingStatus,
-                      ]}
-                    >
-                      {reminder.isCompleted ? 'مكتمل' : 'قيد الانتظار'}
-                    </Text>
-                  </View>
-                </View>
-              ))
-            )}
+
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateText}>لا يوجد تذكيرات</Text>
+            </View>
           </View>
         )}
       </View>
-      
+
       {/* Edit Pet Modal */}
       <Modal
         visible={showEditModal}
@@ -944,28 +670,47 @@ export default function PetDetailsScreen() {
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>تعديل معلومات الحيوان</Text>
-            <TouchableOpacity onPress={submitEditPet}>
-              <Text style={styles.saveButton}>حفظ</Text>
+            <TouchableOpacity
+              onPress={submitEditPet}
+              disabled={
+                updatePetMutation.isPending || updatePetOwnerMutation.isPending
+              }
+            >
+              <Text style={styles.saveButton}>
+                {updatePetMutation.isPending || updatePetOwnerMutation.isPending
+                  ? "جاري الحفظ..."
+                  : "حفظ"}
+              </Text>
             </TouchableOpacity>
           </View>
-          
+
           <ScrollView style={styles.modalContent}>
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>صورة الحيوان</Text>
               <View style={styles.imageUploadContainer}>
-                <TouchableOpacity onPress={handlePetImageUpload} style={styles.imageUploadButton}>
+                <TouchableOpacity
+                  onPress={handlePetImageUpload}
+                  style={styles.imageUploadButton}
+                >
                   {editForm.image ? (
-                    <Image source={{ uri: editForm.image }} style={styles.uploadedImage} />
+                    <Image
+                      source={{ uri: editForm.image }}
+                      style={styles.uploadedImage}
+                    />
                   ) : (
                     <View style={styles.imagePlaceholder}>
                       <Camera size={32} color={COLORS.darkGray} />
-                      <Text style={styles.imagePlaceholderText}>اضغط لاختيار صورة</Text>
+                      <Text style={styles.imagePlaceholderText}>
+                        اضغط لاختيار صورة
+                      </Text>
                     </View>
                   )}
                 </TouchableOpacity>
                 {editForm.image && (
-                  <TouchableOpacity 
-                    onPress={() => setEditForm(prev => ({ ...prev, image: '' }))}
+                  <TouchableOpacity
+                    onPress={() =>
+                      setEditForm((prev) => ({ ...prev, image: "" }))
+                    }
                     style={styles.removeImageButton}
                   >
                     <X size={16} color={COLORS.white} />
@@ -973,133 +718,210 @@ export default function PetDetailsScreen() {
                 )}
               </View>
             </View>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>اسم الحيوان *</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.name}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, name: text }))}
+                onChangeText={(text) =>
+                  setEditForm((prev) => ({ ...prev, name: text }))
+                }
                 placeholder="أدخل اسم الحيوان"
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>نوع الحيوان *</Text>
               <View style={styles.typeSelector}>
-                {['dog', 'cat', 'rabbit', 'bird', 'other'].map((type) => (
+                {["dog", "cat", "rabbit", "bird", "other"].map((type) => (
                   <TouchableOpacity
                     key={type}
                     style={[
                       styles.typeOption,
-                      editForm.type === type && styles.selectedTypeOption
+                      editForm.type === type && styles.selectedTypeOption,
                     ]}
-                    onPress={() => setEditForm(prev => ({ ...prev, type }))}
+                    onPress={() => setEditForm((prev) => ({ ...prev, type }))}
                   >
-                    <Text style={[
-                      styles.typeOptionText,
-                      editForm.type === type && styles.selectedTypeOptionText
-                    ]}>
-                      {type === 'dog' ? 'كلب' : 
-                       type === 'cat' ? 'قطة' :
-                       type === 'rabbit' ? 'أرنب' :
-                       type === 'bird' ? 'طائر' : 'أخرى'}
+                    <Text
+                      style={[
+                        styles.typeOptionText,
+                        editForm.type === type && styles.selectedTypeOptionText,
+                      ]}
+                    >
+                      {type === "dog"
+                        ? "كلب"
+                        : type === "cat"
+                        ? "قطة"
+                        : type === "rabbit"
+                        ? "أرنب"
+                        : type === "bird"
+                        ? "طائر"
+                        : "أخرى"}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>السلالة</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.breed}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, breed: text }))}
+                onChangeText={(text) =>
+                  setEditForm((prev) => ({ ...prev, breed: text }))
+                }
                 placeholder="أدخل السلالة"
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
-            
+
             <View style={styles.formRow}>
               <View style={styles.formHalf}>
                 <Text style={styles.formLabel}>العمر (سنة)</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.age}
-                  onChangeText={(text) => setEditForm(prev => ({ ...prev, age: text }))}
+                  onChangeText={(text) =>
+                    setEditForm((prev) => ({ ...prev, age: text }))
+                  }
                   placeholder="العمر"
                   placeholderTextColor={COLORS.darkGray}
                   keyboardType="numeric"
                 />
               </View>
-              
+
               <View style={styles.formHalf}>
                 <Text style={styles.formLabel}>الوزن (كجم)</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.weight}
-                  onChangeText={(text) => setEditForm(prev => ({ ...prev, weight: text }))}
+                  onChangeText={(text) =>
+                    setEditForm((prev) => ({ ...prev, weight: text }))
+                  }
                   placeholder="الوزن"
                   placeholderTextColor={COLORS.darkGray}
                   keyboardType="numeric"
                 />
               </View>
             </View>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>الجنس</Text>
               <View style={styles.genderSelector}>
                 <TouchableOpacity
                   style={[
                     styles.genderOption,
-                    editForm.gender === 'male' && styles.selectedGenderOption
+                    editForm.gender === "male" && styles.selectedGenderOption,
                   ]}
-                  onPress={() => setEditForm(prev => ({ ...prev, gender: 'male' }))}
+                  onPress={() =>
+                    setEditForm((prev) => ({ ...prev, gender: "male" }))
+                  }
                 >
-                  <Text style={[
-                    styles.genderOptionText,
-                    editForm.gender === 'male' && styles.selectedGenderOptionText
-                  ]}>ذكر</Text>
+                  <Text
+                    style={[
+                      styles.genderOptionText,
+                      editForm.gender === "male" &&
+                        styles.selectedGenderOptionText,
+                    ]}
+                  >
+                    ذكر
+                  </Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={[
                     styles.genderOption,
-                    editForm.gender === 'female' && styles.selectedGenderOption
+                    editForm.gender === "female" && styles.selectedGenderOption,
                   ]}
-                  onPress={() => setEditForm(prev => ({ ...prev, gender: 'female' }))}
+                  onPress={() =>
+                    setEditForm((prev) => ({ ...prev, gender: "female" }))
+                  }
                 >
-                  <Text style={[
-                    styles.genderOptionText,
-                    editForm.gender === 'female' && styles.selectedGenderOptionText
-                  ]}>أنثى</Text>
+                  <Text
+                    style={[
+                      styles.genderOptionText,
+                      editForm.gender === "female" &&
+                        styles.selectedGenderOptionText,
+                    ]}
+                  >
+                    أنثى
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
-            
+
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>اللون</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.color}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, color: text }))}
+                onChangeText={(text) =>
+                  setEditForm((prev) => ({ ...prev, color: text }))
+                }
                 placeholder="أدخل لون الحيوان"
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
-            
-            <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>تاريخ الميلاد</Text>
-              <TextInput
-                style={styles.formInput}
-                value={editForm.birthDate}
-                onChangeText={(text) => setEditForm(prev => ({ ...prev, birthDate: text }))}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={COLORS.darkGray}
-              />
-            </View>
+
+            {/* Admin-only fields */}
+            {isAdmin && (
+              <>
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>التاريخ الطبي</Text>
+                  <TextInput
+                    style={[styles.formInput, styles.textArea]}
+                    value={editForm.medicalHistory}
+                    onChangeText={(text) =>
+                      setEditForm((prev) => ({ ...prev, medicalHistory: text }))
+                    }
+                    placeholder="أدخل التاريخ الطبي"
+                    placeholderTextColor={COLORS.darkGray}
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>التطعيمات</Text>
+                  <TextInput
+                    style={[styles.formInput, styles.textArea]}
+                    value={editForm.vaccinations}
+                    onChangeText={(text) =>
+                      setEditForm((prev) => ({ ...prev, vaccinations: text }))
+                    }
+                    placeholder="أدخل التطعيمات"
+                    placeholderTextColor={COLORS.darkGray}
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <View style={styles.checkboxContainer}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkbox,
+                        editForm.isLost && styles.checkboxChecked,
+                      ]}
+                      onPress={() =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          isLost: !prev.isLost,
+                        }))
+                      }
+                    >
+                      {editForm.isLost && (
+                        <Text style={styles.checkmark}>✓</Text>
+                      )}
+                    </TouchableOpacity>
+                    <Text style={styles.checkboxLabel}>الحيوان مفقود</Text>
+                  </View>
+                </View>
+              </>
+            )}
           </ScrollView>
         </View>
       </Modal>
@@ -1112,10 +934,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white,
   },
+  loadingText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 24,
+    color: COLORS.darkGray,
+  },
   header: {
     padding: 16,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
@@ -1130,7 +958,7 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
   },
@@ -1140,11 +968,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   petDetailsRow: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
   },
   petDetailItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   petDetailLabel: {
     fontSize: 12,
@@ -1153,18 +981,18 @@ const styles = StyleSheet.create({
   },
   petDetailValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
   },
   tabsContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row-reverse",
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   activeTab: {
     borderBottomWidth: 2,
@@ -1176,7 +1004,7 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     padding: 16,
@@ -1186,13 +1014,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
   },
   infoItem: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -1203,22 +1031,33 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
   },
-  reportLostButton: {
-    width: '100%',
+  lostBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: "#FEE2E2",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 12,
+    gap: 8,
+  },
+  lostBannerText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.error,
   },
   sectionHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   emptyState: {
     padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.gray,
     borderRadius: 8,
   },
@@ -1232,52 +1071,20 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
-  completedReminderCard: {
-    opacity: 0.7,
-  },
-  recordHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  recordTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.black,
-  },
-  recordDate: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-  },
-  recordItem: {
-    marginBottom: 8,
-  },
-  recordLabel: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-    marginBottom: 4,
-  },
   recordValue: {
     fontSize: 14,
     color: COLORS.black,
   },
-  completedStatus: {
-    color: COLORS.success,
-  },
-  pendingStatus: {
-    color: COLORS.warning,
-  },
   notFoundText: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 24,
     color: COLORS.darkGray,
   },
   petNameRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   editIcon: {
@@ -1286,48 +1093,46 @@ const styles = StyleSheet.create({
   ownerActions: {
     gap: 16,
   },
+  adminActions: {
+    gap: 16,
+    marginTop: 16,
+  },
   adoptionBreedingButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   actionButton: {
     flex: 1,
   },
   adoptionButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
   },
   breedingButton: {
-    backgroundColor: '#8B5CF6',
-  },
-  recordTitleRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    flex: 1,
+    backgroundColor: "#8B5CF6",
   },
   deleteButton: {
-    padding: 4,
-    marginLeft: 8,
+    borderColor: COLORS.error,
   },
   modalContainer: {
     flex: 1,
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   saveButton: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
   },
   modalContent: {
@@ -1339,10 +1144,10 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   formInput: {
     borderWidth: 1,
@@ -1350,11 +1155,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: 'right',
+    textAlign: "right",
     backgroundColor: COLORS.white,
   },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
   formRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginBottom: 20,
   },
@@ -1362,8 +1171,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   typeSelector: {
-    flexDirection: 'row-reverse',
-    flexWrap: 'wrap',
+    flexDirection: "row-reverse",
+    flexWrap: "wrap",
     gap: 8,
   },
   typeOption: {
@@ -1386,7 +1195,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   genderSelector: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row-reverse",
     gap: 12,
   },
   genderOption: {
@@ -1396,7 +1205,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.lightGray,
     backgroundColor: COLORS.white,
-    alignItems: 'center',
+    alignItems: "center",
   },
   selectedGenderOption: {
     backgroundColor: COLORS.primary,
@@ -1410,8 +1219,8 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   imageUploadContainer: {
-    position: 'relative',
-    alignItems: 'center',
+    position: "relative",
+    alignItems: "center",
   },
   imageUploadButton: {
     width: 120,
@@ -1419,9 +1228,9 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderWidth: 2,
     borderColor: COLORS.lightGray,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLORS.gray,
   },
   uploadedImage: {
@@ -1430,23 +1239,49 @@ const styles = StyleSheet.create({
     borderRadius: 58,
   },
   imagePlaceholder: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   imagePlaceholderText: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   removeImageButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     right: 0,
     backgroundColor: COLORS.error,
     borderRadius: 12,
     width: 24,
     height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    borderRadius: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  checkboxChecked: {
+    backgroundColor: COLORS.primary,
+  },
+  checkmark: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: COLORS.black,
   },
 });

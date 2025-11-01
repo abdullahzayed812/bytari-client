@@ -1,5 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, FlatList } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+  FlatList,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { trpc } from "../lib/trpc";
@@ -61,12 +71,18 @@ interface Farm {
 
 export default function FieldAssignmentsManagement() {
   const router = useRouter();
-  const [selectedTab, setSelectedTab] = useState<"assignments" | "requests">("assignments");
+  const [selectedTab, setSelectedTab] = useState<"assignments" | "requests">(
+    "assignments"
+  );
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assignmentType, setAssignmentType] = useState<"vet" | "supervisor">("vet");
+  const [assignmentType, setAssignmentType] = useState<"vet" | "supervisor">(
+    "vet"
+  );
   const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "assigned" | "unassigned">("all");
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "assigned" | "unassigned"
+  >("all");
 
   // Mock data for supervision requests from poultry farm owners
   const [supervisionRequests] = useState([
@@ -146,9 +162,15 @@ export default function FieldAssignmentsManagement() {
   );
 
   // Get available vets and supervisors
-  const { data: availableVets } = useQuery(trpc.admin.fieldAssignments.getAvailableVets.queryOptions());
-  const { data: availableSupervisors } = useQuery(trpc.admin.fieldAssignments.getAvailableSupervisors.queryOptions());
-  const { data: availableFarms } = useQuery(trpc.admin.fieldAssignments.getAvailableFarms.queryOptions());
+  const { data: availableVets } = useQuery(
+    trpc.admin.fieldAssignments.getAvailableVets.queryOptions()
+  );
+  const { data: availableSupervisors } = useQuery(
+    trpc.admin.fieldAssignments.getAvailableSupervisors.queryOptions()
+  );
+  const { data: availableFarms } = useQuery(
+    trpc.admin.fieldAssignments.getAvailableFarms.queryOptions()
+  );
 
   // Mutations
   const assignVetMutation = useMutation(
@@ -195,7 +217,11 @@ export default function FieldAssignmentsManagement() {
     })
   );
 
-  const handleAssignVet = (vetId: string, vetName: string, vetPhone: string) => {
+  const handleAssignVet = (
+    vetId: string,
+    vetName: string,
+    vetPhone: string
+  ) => {
     if (!selectedFarm) return;
 
     assignVetMutation.mutate({
@@ -206,7 +232,11 @@ export default function FieldAssignmentsManagement() {
     });
   };
 
-  const handleAssignSupervisor = (supervisorId: string, supervisorName: string, supervisorPhone: string) => {
+  const handleAssignSupervisor = (
+    supervisorId: string,
+    supervisorName: string,
+    supervisorPhone: string
+  ) => {
     if (!selectedFarm) return;
 
     assignSupervisorMutation.mutate({
@@ -218,14 +248,18 @@ export default function FieldAssignmentsManagement() {
   };
 
   const handleRemoveVet = (farmId: string) => {
-    Alert.alert("تأكيد الإلغاء", "هل أنت متأكد من إلغاء تعيين الطبيب البيطري؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "تأكيد",
-        style: "destructive",
-        onPress: () => removeVetMutation.mutate({ farmId }),
-      },
-    ]);
+    Alert.alert(
+      "تأكيد الإلغاء",
+      "هل أنت متأكد من إلغاء تعيين الطبيب البيطري؟",
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "تأكيد",
+          style: "destructive",
+          onPress: () => removeVetMutation.mutate({ farmId }),
+        },
+      ]
+    );
   };
 
   const handleRemoveSupervisor = (farmId: string) => {
@@ -310,8 +344,11 @@ export default function FieldAssignmentsManagement() {
 
     const matchesFilter =
       filterStatus === "all" ||
-      (filterStatus === "assigned" && (assignment.assignedVetId || assignment.assignedSupervisorId)) ||
-      (filterStatus === "unassigned" && !assignment.assignedVetId && !assignment.assignedSupervisorId);
+      (filterStatus === "assigned" &&
+        (assignment.assignedVetId || assignment.assignedSupervisorId)) ||
+      (filterStatus === "unassigned" &&
+        !assignment.assignedVetId &&
+        !assignment.assignedSupervisorId);
 
     return matchesSearch && matchesFilter;
   });
@@ -339,11 +376,18 @@ export default function FieldAssignmentsManagement() {
               <Stethoscope size={16} color="#4ECDC4" />
               <View style={styles.assignmentText}>
                 <Text style={styles.assignmentTitle}>الطبيب البيطري</Text>
-                <Text style={styles.assignmentName}>{item.assignedVetName}</Text>
-                <Text style={styles.assignmentPhone}>{item.assignedVetPhone}</Text>
+                <Text style={styles.assignmentName}>
+                  {item.assignedVetName}
+                </Text>
+                <Text style={styles.assignmentPhone}>
+                  {item.assignedVetPhone}
+                </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveVet(item.farmId)}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleRemoveVet(item.farmId)}
+            >
               <UserX size={16} color="#FF6B6B" />
             </TouchableOpacity>
           </View>
@@ -352,7 +396,9 @@ export default function FieldAssignmentsManagement() {
             style={styles.assignButton}
             onPress={() => {
               setAssignmentType("vet");
-              setSelectedFarm(availableFarms?.find((f) => f.id === item.farmId) || null);
+              setSelectedFarm(
+                availableFarms?.find((f) => f.id === item.farmId) || null
+              );
               setShowAssignModal(true);
             }}
           >
@@ -367,11 +413,18 @@ export default function FieldAssignmentsManagement() {
               <Shield size={16} color="#96CEB4" />
               <View style={styles.assignmentText}>
                 <Text style={styles.assignmentTitle}>المشرف</Text>
-                <Text style={styles.assignmentName}>{item.assignedSupervisorName}</Text>
-                <Text style={styles.assignmentPhone}>{item.assignedSupervisorPhone}</Text>
+                <Text style={styles.assignmentName}>
+                  {item.assignedSupervisorName}
+                </Text>
+                <Text style={styles.assignmentPhone}>
+                  {item.assignedSupervisorPhone}
+                </Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveSupervisor(item.farmId)}>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleRemoveSupervisor(item.farmId)}
+            >
               <UserX size={16} color="#FF6B6B" />
             </TouchableOpacity>
           </View>
@@ -380,7 +433,9 @@ export default function FieldAssignmentsManagement() {
             style={styles.assignButton}
             onPress={() => {
               setAssignmentType("supervisor");
-              setSelectedFarm(availableFarms?.find((f) => f.id === item.farmId) || null);
+              setSelectedFarm(
+                availableFarms?.find((f) => f.id === item.farmId) || null
+              );
               setShowAssignModal(true);
             }}
           >
@@ -424,12 +479,26 @@ export default function FieldAssignmentsManagement() {
         <View style={styles.requestInfo}>
           <Text style={styles.requestName}>{item.fullName}</Text>
           <Text style={styles.requestLocation}>{item.location}</Text>
-          <View style={[styles.requestTypeBadge, { backgroundColor: getRequestTypeColor(item.requestType) }]}>
-            <Text style={styles.requestTypeText}>{getRequestTypeText(item.requestType)}</Text>
+          <View
+            style={[
+              styles.requestTypeBadge,
+              { backgroundColor: getRequestTypeColor(item.requestType) },
+            ]}
+          >
+            <Text style={styles.requestTypeText}>
+              {getRequestTypeText(item.requestType)}
+            </Text>
           </View>
         </View>
-        <View style={[styles.requestStatusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.requestStatusText}>{getStatusText(item.status)}</Text>
+        <View
+          style={[
+            styles.requestStatusBadge,
+            { backgroundColor: getStatusColor(item.status) },
+          ]}
+        >
+          <Text style={styles.requestStatusText}>
+            {getStatusText(item.status)}
+          </Text>
         </View>
       </View>
 
@@ -469,18 +538,26 @@ export default function FieldAssignmentsManagement() {
 
       {item.status === "pending" && (
         <View style={styles.requestActions}>
-          <TouchableOpacity style={styles.approveButton} onPress={() => handleApproveRequest(item.id)}>
+          <TouchableOpacity
+            style={styles.approveButton}
+            onPress={() => handleApproveRequest(item.id)}
+          >
             <CheckCircle size={16} color="#fff" />
             <Text style={styles.approveButtonText}>موافقة وتعيين</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.rejectButton} onPress={() => handleRejectRequest(item.id)}>
+          <TouchableOpacity
+            style={styles.rejectButton}
+            onPress={() => handleRejectRequest(item.id)}
+          >
             <X size={16} color="#fff" />
             <Text style={styles.rejectButtonText}>رفض</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      <Text style={styles.submittedDate}>تاريخ التقديم: {new Date(item.submittedAt).toLocaleDateString("ar-SA")}</Text>
+      <Text style={styles.submittedDate}>
+        تاريخ التقديم: {new Date(item.submittedAt).toLocaleDateString("ar-SA")}
+      </Text>
     </View>
   );
 
@@ -489,8 +566,13 @@ export default function FieldAssignmentsManagement() {
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>{assignmentType === "vet" ? "تعيين طبيب بيطري" : "تعيين مشرف"}</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setShowAssignModal(false)}>
+            <Text style={styles.modalTitle}>
+              {assignmentType === "vet" ? "تعيين طبيب بيطري" : "تعيين مشرف"}
+            </Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowAssignModal(false)}
+            >
               <X size={24} color="#666" />
             </TouchableOpacity>
           </View>
@@ -499,8 +581,12 @@ export default function FieldAssignmentsManagement() {
             <View style={styles.farmDetails}>
               <Text style={styles.farmDetailsTitle}>تفاصيل الحقل:</Text>
               <Text style={styles.farmDetailsText}>{selectedFarm.name}</Text>
-              <Text style={styles.farmDetailsText}>المالك: {selectedFarm.ownerName}</Text>
-              <Text style={styles.farmDetailsText}>الموقع: {selectedFarm.location}</Text>
+              <Text style={styles.farmDetailsText}>
+                المالك: {selectedFarm.ownerName}
+              </Text>
+              <Text style={styles.farmDetailsText}>
+                الموقع: {selectedFarm.location}
+              </Text>
             </View>
           )}
 
@@ -516,7 +602,9 @@ export default function FieldAssignmentsManagement() {
                       <Stethoscope size={20} color="#4ECDC4" />
                       <View style={styles.personDetails}>
                         <Text style={styles.personName}>{vet.name}</Text>
-                        <Text style={styles.personSpecialization}>{vet.specialization}</Text>
+                        <Text style={styles.personSpecialization}>
+                          {vet.specialization}
+                        </Text>
                         <Text style={styles.personContact}>{vet.phone}</Text>
                       </View>
                     </View>
@@ -527,14 +615,24 @@ export default function FieldAssignmentsManagement() {
                   <TouchableOpacity
                     key={supervisor.id}
                     style={styles.personCard}
-                    onPress={() => handleAssignSupervisor(supervisor.id, supervisor.name, supervisor.phone)}
+                    onPress={() =>
+                      handleAssignSupervisor(
+                        supervisor.id,
+                        supervisor.name,
+                        supervisor.phone
+                      )
+                    }
                   >
                     <View style={styles.personInfo}>
                       <Shield size={20} color="#96CEB4" />
                       <View style={styles.personDetails}>
                         <Text style={styles.personName}>{supervisor.name}</Text>
-                        <Text style={styles.personSpecialization}>{supervisor.experience}</Text>
-                        <Text style={styles.personContact}>{supervisor.phone}</Text>
+                        <Text style={styles.personSpecialization}>
+                          {supervisor.experience}
+                        </Text>
+                        <Text style={styles.personContact}>
+                          {supervisor.phone}
+                        </Text>
                       </View>
                     </View>
                     <UserCheck size={20} color="#96CEB4" />
@@ -554,7 +652,10 @@ export default function FieldAssignmentsManagement() {
           headerStyle: { backgroundColor: "#FF6B6B" },
           headerTintColor: "#fff",
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
               <ArrowLeft size={24} color="#fff" />
             </TouchableOpacity>
           ),
@@ -564,19 +665,42 @@ export default function FieldAssignmentsManagement() {
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, selectedTab === "assignments" && styles.activeTab]}
+          style={[
+            styles.tab,
+            selectedTab === "assignments" && styles.activeTab,
+          ]}
           onPress={() => setSelectedTab("assignments")}
         >
-          <Building2 size={20} color={selectedTab === "assignments" ? "#FF6B6B" : "#666"} />
-          <Text style={[styles.tabText, selectedTab === "assignments" && styles.activeTabText]}>التعيينات الحالية</Text>
+          <Building2
+            size={20}
+            color={selectedTab === "assignments" ? "#FF6B6B" : "#666"}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "assignments" && styles.activeTabText,
+            ]}
+          >
+            التعيينات الحالية
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, selectedTab === "requests" && styles.activeTab]}
           onPress={() => setSelectedTab("requests")}
         >
-          <Clock size={20} color={selectedTab === "requests" ? "#FF6B6B" : "#666"} />
-          <Text style={[styles.tabText, selectedTab === "requests" && styles.activeTabText]}>طلبات أصحاب المزارع</Text>
+          <Clock
+            size={20}
+            color={selectedTab === "requests" ? "#FF6B6B" : "#666"}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              selectedTab === "requests" && styles.activeTabText,
+            ]}
+          >
+            طلبات أصحاب المزارع
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -596,22 +720,50 @@ export default function FieldAssignmentsManagement() {
 
             <View style={styles.filterContainer}>
               <TouchableOpacity
-                style={[styles.filterButton, filterStatus === "all" && styles.activeFilter]}
+                style={[
+                  styles.filterButton,
+                  filterStatus === "all" && styles.activeFilter,
+                ]}
                 onPress={() => setFilterStatus("all")}
               >
-                <Text style={[styles.filterText, filterStatus === "all" && styles.activeFilterText]}>الكل</Text>
+                <Text
+                  style={[
+                    styles.filterText,
+                    filterStatus === "all" && styles.activeFilterText,
+                  ]}
+                >
+                  الكل
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterButton, filterStatus === "assigned" && styles.activeFilter]}
+                style={[
+                  styles.filterButton,
+                  filterStatus === "assigned" && styles.activeFilter,
+                ]}
                 onPress={() => setFilterStatus("assigned")}
               >
-                <Text style={[styles.filterText, filterStatus === "assigned" && styles.activeFilterText]}>معين</Text>
+                <Text
+                  style={[
+                    styles.filterText,
+                    filterStatus === "assigned" && styles.activeFilterText,
+                  ]}
+                >
+                  معين
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterButton, filterStatus === "unassigned" && styles.activeFilter]}
+                style={[
+                  styles.filterButton,
+                  filterStatus === "unassigned" && styles.activeFilter,
+                ]}
                 onPress={() => setFilterStatus("unassigned")}
               >
-                <Text style={[styles.filterText, filterStatus === "unassigned" && styles.activeFilterText]}>
+                <Text
+                  style={[
+                    styles.filterText,
+                    filterStatus === "unassigned" && styles.activeFilterText,
+                  ]}
+                >
                   غير معين
                 </Text>
               </TouchableOpacity>
@@ -633,17 +785,32 @@ export default function FieldAssignmentsManagement() {
           <View style={styles.statsContainer}>
             <View style={styles.statCard}>
               <Clock size={24} color="#FFA500" />
-              <Text style={styles.statNumber}>{supervisionRequests.filter((r) => r.status === "pending").length}</Text>
+              <Text style={styles.statNumber}>
+                {
+                  supervisionRequests.filter((r) => r.status === "pending")
+                    .length
+                }
+              </Text>
               <Text style={styles.statLabel}>قيد المراجعة</Text>
             </View>
             <View style={styles.statCard}>
               <CheckCircle size={24} color="#4CAF50" />
-              <Text style={styles.statNumber}>{supervisionRequests.filter((r) => r.status === "approved").length}</Text>
+              <Text style={styles.statNumber}>
+                {
+                  supervisionRequests.filter((r) => r.status === "approved")
+                    .length
+                }
+              </Text>
               <Text style={styles.statLabel}>مقبول</Text>
             </View>
             <View style={styles.statCard}>
               <X size={24} color="#F44336" />
-              <Text style={styles.statNumber}>{supervisionRequests.filter((r) => r.status === "rejected").length}</Text>
+              <Text style={styles.statNumber}>
+                {
+                  supervisionRequests.filter((r) => r.status === "rejected")
+                    .length
+                }
+              </Text>
               <Text style={styles.statLabel}>مرفوض</Text>
             </View>
           </View>

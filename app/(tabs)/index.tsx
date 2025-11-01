@@ -2633,4 +2633,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
   },
+  poultryButton: {
+    marginTop: 12,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
 });

@@ -1,6 +1,15 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+} from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -30,13 +39,12 @@ export default function PoultryFarmDetailsScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
 
-  // Mock farm ID - in real app this would come from route params
-  const farmId = "farm1";
+  const { id } = useLocalSearchParams<{ id: string }>();
 
   // Fetch field assignment data
   const fieldAssignmentQuery = useQuery(
-    trpc.admin.fieldAssignments.getAssignment.queryOptions({
-      farmId: farmId,
+    trpc.poultryFarms.get.queryOptions({
+      farmId: Number(id),
     })
   );
 
@@ -128,13 +136,19 @@ export default function PoultryFarmDetailsScreen() {
   }, [loadFarmData]);
 
   const handleAddBatch = () => {
-    if (!batchForm.initialCount || !batchForm.pricePerChick || !batchForm.averageWeight) {
+    if (
+      !batchForm.initialCount ||
+      !batchForm.pricePerChick ||
+      !batchForm.averageWeight
+    ) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
     // حساب رقم الدفعة الجديد بناءً على الدفعات المكتملة والدفعة الحالية
-    const completedBatchesCount = farm.batches.filter((b) => b.status === "sold" || b.status === "completed").length;
+    const completedBatchesCount = farm.batches.filter(
+      (b) => b.status === "sold" || b.status === "completed"
+    ).length;
     const currentBatchExists = currentBatch ? 1 : 0;
     const newBatchNumber = completedBatchesCount + currentBatchExists + 1;
 
@@ -147,7 +161,8 @@ export default function PoultryFarmDetailsScreen() {
       currentCount: parseInt(batchForm.initialCount),
       chicksAge: 0,
       pricePerChick: parseFloat(batchForm.pricePerChick),
-      totalInvestment: parseInt(batchForm.initialCount) * parseFloat(batchForm.pricePerChick),
+      totalInvestment:
+        parseInt(batchForm.initialCount) * parseFloat(batchForm.pricePerChick),
       weeks: [],
       status: "active",
       createdAt: new Date().toISOString(),
@@ -173,8 +188,12 @@ export default function PoultryFarmDetailsScreen() {
   const handleConfirmSellBatch = () => {
     if (!currentBatch) return;
 
-    const netCount = sellBatchForm.netCount ? parseInt(sellBatchForm.netCount) : undefined;
-    const netProfit = sellBatchForm.netProfit ? parseFloat(sellBatchForm.netProfit) : undefined;
+    const netCount = sellBatchForm.netCount
+      ? parseInt(sellBatchForm.netCount)
+      : undefined;
+    const netProfit = sellBatchForm.netProfit
+      ? parseFloat(sellBatchForm.netProfit)
+      : undefined;
 
     // Validate net count if provided
     if (netCount !== undefined && (isNaN(netCount) || netCount < 0)) {
@@ -201,7 +220,9 @@ export default function PoultryFarmDetailsScreen() {
       status: "sold" as const,
       endDate: new Date().toISOString(),
       finalCount: netCount || currentBatch.currentCount,
-      totalProfit: netProfit || currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0),
+      totalProfit:
+        netProfit ||
+        currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0),
       days: currentDays, // حفظ جميع البيانات اليومية مع الدفعة المباعة
     };
 
@@ -219,9 +240,13 @@ export default function PoultryFarmDetailsScreen() {
 
     Alert.alert(
       "تم بيع الدفعة بنجاح! ✅",
-      `تم بيع الدفعة رقم ${updatedBatch.batchNumber}\n\n📊 ملخص البيع:\n• العدد النهائي: ${
+      `تم بيع الدفعة رقم ${
+        updatedBatch.batchNumber
+      }\n\n📊 ملخص البيع:\n• العدد النهائي: ${
         updatedBatch.finalCount
-      }\n• الربح الصافي: ${updatedBatch.totalProfit?.toFixed(2)} دينار\n\nتم حفظ جميع البيانات في السجلات.`,
+      }\n• الربح الصافي: ${updatedBatch.totalProfit?.toFixed(
+        2
+      )} دينار\n\nتم حفظ جميع البيانات في السجلات.`,
       [{ text: "موافق", style: "default" }]
     );
   };
@@ -232,34 +257,51 @@ export default function PoultryFarmDetailsScreen() {
   };
 
   const handleRequestVet = () => {
-    Alert.alert("طلب تعيين طبيب بيطري", "سيتم إرسال طلبك إلى الإدارة لتعيين طبيب بيطري لمتابعة حقل الدواجن", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "إرسال الطلب",
-        onPress: () => {
-          Alert.alert("تم الإرسال", "تم إرسال طلب تعيين الطبيب البيطري بنجاح");
+    Alert.alert(
+      "طلب تعيين طبيب بيطري",
+      "سيتم إرسال طلبك إلى الإدارة لتعيين طبيب بيطري لمتابعة حقل الدواجن",
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "إرسال الطلب",
+          onPress: () => {
+            Alert.alert(
+              "تم الإرسال",
+              "تم إرسال طلب تعيين الطبيب البيطري بنجاح"
+            );
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleContactVet = () => {
     if (!farm.assignedVet) return;
-    Alert.alert("تواصل مع الطبيب البيطري", `هل تريد التواصل مع ${farm.assignedVet.name}؟`, [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "اتصال",
-        onPress: () => {
-          Alert.alert("جاري الاتصال...", `يتم الاتصال بـ ${farm.assignedVet?.name}`);
+    Alert.alert(
+      "تواصل مع الطبيب البيطري",
+      `هل تريد التواصل مع ${farm.assignedVet.name}؟`,
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "اتصال",
+          onPress: () => {
+            Alert.alert(
+              "جاري الاتصال...",
+              `يتم الاتصال بـ ${farm.assignedVet?.name}`
+            );
+          },
         },
-      },
-      {
-        text: "رسالة",
-        onPress: () => {
-          Alert.alert("فتح المحادثة", `يتم فتح محادثة مع ${farm.assignedVet?.name}`);
+        {
+          text: "رسالة",
+          onPress: () => {
+            Alert.alert(
+              "فتح المحادثة",
+              `يتم فتح محادثة مع ${farm.assignedVet?.name}`
+            );
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleRemoveVet = () => {
@@ -286,34 +328,48 @@ export default function PoultryFarmDetailsScreen() {
   };
 
   const handleRequestSupervisor = () => {
-    Alert.alert("طلب إشراف", "سيتم إرسال طلبك إلى الإدارة لتعيين مشرف لمتابعة حقل الدواجن", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "إرسال الطلب",
-        onPress: () => {
-          Alert.alert("تم الإرسال", "تم إرسال طلب الإشراف بنجاح");
+    Alert.alert(
+      "طلب إشراف",
+      "سيتم إرسال طلبك إلى الإدارة لتعيين مشرف لمتابعة حقل الدواجن",
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "إرسال الطلب",
+          onPress: () => {
+            Alert.alert("تم الإرسال", "تم إرسال طلب الإشراف بنجاح");
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleContactSupervisor = () => {
     if (!farm.assignedSupervisor) return;
-    Alert.alert("تواصل مع المشرف", `هل تريد التواصل مع ${farm.assignedSupervisor.name}؟`, [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "اتصال",
-        onPress: () => {
-          Alert.alert("جاري الاتصال...", `يتم الاتصال بـ ${farm.assignedSupervisor?.name}`);
+    Alert.alert(
+      "تواصل مع المشرف",
+      `هل تريد التواصل مع ${farm.assignedSupervisor.name}؟`,
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "اتصال",
+          onPress: () => {
+            Alert.alert(
+              "جاري الاتصال...",
+              `يتم الاتصال بـ ${farm.assignedSupervisor?.name}`
+            );
+          },
         },
-      },
-      {
-        text: "رسالة",
-        onPress: () => {
-          Alert.alert("فتح المحادثة", `يتم فتح محادثة مع ${farm.assignedSupervisor?.name}`);
+        {
+          text: "رسالة",
+          onPress: () => {
+            Alert.alert(
+              "فتح المحادثة",
+              `يتم فتح محادثة مع ${farm.assignedSupervisor?.name}`
+            );
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleRemoveSupervisor = () => {
@@ -348,7 +404,10 @@ export default function PoultryFarmDetailsScreen() {
       !dailyDataForm.feedConsumption.trim() ||
       !dailyDataForm.averageWeight.trim()
     ) {
-      Alert.alert("خطأ", "يرجى ملء الحقول المطلوبة:\n• عدد النفوق\n• استهلاك العلف\n• متوسط الوزن");
+      Alert.alert(
+        "خطأ",
+        "يرجى ملء الحقول المطلوبة:\n• عدد النفوق\n• استهلاك العلف\n• متوسط الوزن"
+      );
       return;
     }
 
@@ -420,7 +479,11 @@ export default function PoultryFarmDetailsScreen() {
             .filter((t) => t.name.length > 0)
         : [],
       vaccinations: [],
-      estimatedProfit: calculateDailyProfit(currentBatch, feedConsumption, mortality),
+      estimatedProfit: calculateDailyProfit(
+        currentBatch,
+        feedConsumption,
+        mortality
+      ),
       notes: dailyDataForm.notes || "",
       createdAt: today.toISOString(),
     };
@@ -456,7 +519,11 @@ export default function PoultryFarmDetailsScreen() {
     );
   };
 
-  const calculateDailyProfit = (batch: PoultryBatch, feedConsumption: number, mortality: number) => {
+  const calculateDailyProfit = (
+    batch: PoultryBatch,
+    feedConsumption: number,
+    mortality: number
+  ) => {
     const feedCost = feedConsumption * 0.5;
     const mortalityLoss = mortality * batch.pricePerChick;
     const estimatedRevenue = batch.currentCount * 0.02; // ربح يومي تقديري
@@ -480,10 +547,21 @@ export default function PoultryFarmDetailsScreen() {
       const weekNumber = parseInt(weekNum);
       const weekDays = weeks[weekNumber];
 
-      const totalFeedConsumption = weekDays.reduce((sum, day) => sum + day.feedConsumption, 0);
-      const totalMortality = weekDays.reduce((sum, day) => sum + day.mortality, 0);
-      const avgWeight = weekDays.reduce((sum, day) => sum + day.averageWeight, 0) / weekDays.length;
-      const totalProfit = weekDays.reduce((sum, day) => sum + day.estimatedProfit, 0);
+      const totalFeedConsumption = weekDays.reduce(
+        (sum, day) => sum + day.feedConsumption,
+        0
+      );
+      const totalMortality = weekDays.reduce(
+        (sum, day) => sum + day.mortality,
+        0
+      );
+      const avgWeight =
+        weekDays.reduce((sum, day) => sum + day.averageWeight, 0) /
+        weekDays.length;
+      const totalProfit = weekDays.reduce(
+        (sum, day) => sum + day.estimatedProfit,
+        0
+      );
 
       return {
         weekNumber,
@@ -549,8 +627,15 @@ export default function PoultryFarmDetailsScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>الدفعة رقم {currentBatch.batchNumber}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(currentBatch.status) }]}>
+          <Text style={styles.cardTitle}>
+            الدفعة رقم {currentBatch.batchNumber}
+          </Text>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(currentBatch.status) },
+            ]}
+          >
             <Text style={styles.statusText}>
               {currentBatch.status === "active"
                 ? "نشط"
@@ -579,7 +664,10 @@ export default function PoultryFarmDetailsScreen() {
           <View style={styles.statItem}>
             <Weight size={24} color={COLORS.warning} />
             <Text style={styles.statValue}>
-              {currentDays.length > 0 ? currentDays[currentDays.length - 1].averageWeight : 0}g
+              {currentDays.length > 0
+                ? currentDays[currentDays.length - 1].averageWeight
+                : 0}
+              g
             </Text>
             <Text style={styles.statLabel}>متوسط الوزن</Text>
           </View>
@@ -587,7 +675,9 @@ export default function PoultryFarmDetailsScreen() {
           <View style={styles.statItem}>
             <DollarSign size={24} color={COLORS.success} />
             <Text style={styles.statValue}>
-              {currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(0)}
+              {currentDays
+                .reduce((sum, day) => sum + day.estimatedProfit, 0)
+                .toFixed(0)}
             </Text>
             <Text style={styles.statLabel}>الربح المقدر</Text>
           </View>
@@ -657,7 +747,9 @@ export default function PoultryFarmDetailsScreen() {
 
     return (
       <View style={[styles.card, { marginTop: 24 }]}>
-        <Text style={styles.cardTitle}>البيانات اليومية ({currentDays.length} يوم)</Text>
+        <Text style={styles.cardTitle}>
+          البيانات اليومية ({currentDays.length} يوم)
+        </Text>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {Object.keys(weeklyData).map((weekNum) => {
@@ -668,50 +760,86 @@ export default function PoultryFarmDetailsScreen() {
               <View key={weekNumber} style={styles.weekContainer}>
                 <View style={styles.weekHeader}>
                   <Text style={styles.weekTitle}>الأسبوع {weekNumber}</Text>
-                  <Text style={styles.weekSubtitle}>({weekDays.length} من 7 أيام)</Text>
+                  <Text style={styles.weekSubtitle}>
+                    ({weekDays.length} من 7 أيام)
+                  </Text>
                 </View>
 
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.weekDaysScroll}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.weekDaysScroll}
+                >
                   {Array.from({ length: 7 }, (_, dayIndex) => {
                     const dayNumber = (weekNumber - 1) * 7 + dayIndex + 1;
-                    const dayData = weekDays.find((d) => d.dayNumber === dayNumber);
+                    const dayData = weekDays.find(
+                      (d) => d.dayNumber === dayNumber
+                    );
 
                     return (
-                      <View key={dayIndex} style={[styles.dayCard, !dayData && styles.emptyDayCard]}>
-                        <Text style={styles.dayTitle}>اليوم {dayIndex + 1}</Text>
+                      <View
+                        key={dayIndex}
+                        style={[
+                          styles.dayCard,
+                          !dayData && styles.emptyDayCard,
+                        ]}
+                      >
+                        <Text style={styles.dayTitle}>
+                          اليوم {dayIndex + 1}
+                        </Text>
                         <Text style={styles.dayNumber}>({dayNumber})</Text>
 
                         {dayData ? (
                           <View style={styles.dayStats}>
                             <View style={styles.dayStat}>
-                              <Text style={styles.dayStatValue}>{dayData.feedConsumption}kg</Text>
+                              <Text style={styles.dayStatValue}>
+                                {dayData.feedConsumption}kg
+                              </Text>
                               <Text style={styles.dayStatLabel}>العلف</Text>
                             </View>
 
                             <View style={styles.dayStat}>
-                              <Text style={styles.dayStatValue}>{dayData.averageWeight}g</Text>
+                              <Text style={styles.dayStatValue}>
+                                {dayData.averageWeight}g
+                              </Text>
                               <Text style={styles.dayStatLabel}>الوزن</Text>
                             </View>
 
                             <View style={styles.dayStat}>
-                              <Text style={[styles.dayStatValue, { color: COLORS.error }]}>{dayData.mortality}</Text>
+                              <Text
+                                style={[
+                                  styles.dayStatValue,
+                                  { color: COLORS.error },
+                                ]}
+                              >
+                                {dayData.mortality}
+                              </Text>
                               <Text style={styles.dayStatLabel}>النفوق</Text>
                             </View>
 
                             {dayData.estimatedProfit > 0 && (
                               <View style={styles.dayStat}>
-                                <Text style={[styles.dayStatValue, { color: COLORS.success }]}>
+                                <Text
+                                  style={[
+                                    styles.dayStatValue,
+                                    { color: COLORS.success },
+                                  ]}
+                                >
                                   {dayData.estimatedProfit.toFixed(0)}
                                 </Text>
                                 <Text style={styles.dayStatLabel}>الربح</Text>
                               </View>
                             )}
 
-                            <Text style={styles.dayDate}>{new Date(dayData.date).toLocaleDateString("ar")}</Text>
+                            <Text style={styles.dayDate}>
+                              {new Date(dayData.date).toLocaleDateString("ar")}
+                            </Text>
                           </View>
                         ) : (
                           <View style={styles.emptyDayContent}>
-                            <Text style={styles.emptyDayText}>لا يوجد بيانات</Text>
+                            <Text style={styles.emptyDayText}>
+                              لا يوجد بيانات
+                            </Text>
                           </View>
                         )}
                       </View>
@@ -725,13 +853,21 @@ export default function PoultryFarmDetailsScreen() {
                   <View style={styles.weekSummaryStats}>
                     <View style={styles.weekSummaryStat}>
                       <Text style={styles.weekSummaryValue}>
-                        {weekDays.reduce((sum, day) => sum + day.feedConsumption, 0).toFixed(1)}kg
+                        {weekDays
+                          .reduce((sum, day) => sum + day.feedConsumption, 0)
+                          .toFixed(1)}
+                        kg
                       </Text>
                       <Text style={styles.weekSummaryLabel}>إجمالي العلف</Text>
                     </View>
 
                     <View style={styles.weekSummaryStat}>
-                      <Text style={[styles.weekSummaryValue, { color: COLORS.error }]}>
+                      <Text
+                        style={[
+                          styles.weekSummaryValue,
+                          { color: COLORS.error },
+                        ]}
+                      >
                         {weekDays.reduce((sum, day) => sum + day.mortality, 0)}
                       </Text>
                       <Text style={styles.weekSummaryLabel}>إجمالي النفوق</Text>
@@ -739,14 +875,27 @@ export default function PoultryFarmDetailsScreen() {
 
                     <View style={styles.weekSummaryStat}>
                       <Text style={styles.weekSummaryValue}>
-                        {Math.round(weekDays.reduce((sum, day) => sum + day.averageWeight, 0) / weekDays.length)}g
+                        {Math.round(
+                          weekDays.reduce(
+                            (sum, day) => sum + day.averageWeight,
+                            0
+                          ) / weekDays.length
+                        )}
+                        g
                       </Text>
                       <Text style={styles.weekSummaryLabel}>متوسط الوزن</Text>
                     </View>
 
                     <View style={styles.weekSummaryStat}>
-                      <Text style={[styles.weekSummaryValue, { color: COLORS.success }]}>
-                        {weekDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(0)}
+                      <Text
+                        style={[
+                          styles.weekSummaryValue,
+                          { color: COLORS.success },
+                        ]}
+                      >
+                        {weekDays
+                          .reduce((sum, day) => sum + day.estimatedProfit, 0)
+                          .toFixed(0)}
                       </Text>
                       <Text style={styles.weekSummaryLabel}>الربح المقدر</Text>
                     </View>
@@ -765,7 +914,9 @@ export default function PoultryFarmDetailsScreen() {
       return null;
     }
 
-    const completedBatches = farm.batches.filter((batch) => batch.status === "sold" || batch.status === "completed");
+    const completedBatches = farm.batches.filter(
+      (batch) => batch.status === "sold" || batch.status === "completed"
+    );
 
     if (!completedBatches.length) {
       return null;
@@ -773,7 +924,9 @@ export default function PoultryFarmDetailsScreen() {
 
     return (
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>الدفعات المكتملة ({completedBatches.length})</Text>
+        <Text style={styles.cardTitle}>
+          الدفعات المكتملة ({completedBatches.length})
+        </Text>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {completedBatches.map((batch) => (
@@ -783,21 +936,37 @@ export default function PoultryFarmDetailsScreen() {
               onPress={() => handleViewBatchDetails(batch)}
             >
               <View style={styles.batchItemHeader}>
-                <Text style={styles.batchItemTitle}>الدفعة رقم {batch.batchNumber}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(batch.status) }]}>
-                  <Text style={styles.statusText}>{batch.status === "sold" ? "مباع" : "مكتمل"}</Text>
+                <Text style={styles.batchItemTitle}>
+                  الدفعة رقم {batch.batchNumber}
+                </Text>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: getStatusColor(batch.status) },
+                  ]}
+                >
+                  <Text style={styles.statusText}>
+                    {batch.status === "sold" ? "مباع" : "مكتمل"}
+                  </Text>
                 </View>
               </View>
 
               <View style={styles.batchItemStats}>
                 <View style={styles.batchItemStat}>
                   <Text style={styles.batchItemStatLabel}>العدد النهائي:</Text>
-                  <Text style={styles.batchItemStatValue}>{batch.finalCount || batch.currentCount}</Text>
+                  <Text style={styles.batchItemStatValue}>
+                    {batch.finalCount || batch.currentCount}
+                  </Text>
                 </View>
 
                 <View style={styles.batchItemStat}>
                   <Text style={styles.batchItemStatLabel}>الربح الصافي:</Text>
-                  <Text style={[styles.batchItemStatValue, { color: COLORS.success }]}>
+                  <Text
+                    style={[
+                      styles.batchItemStatValue,
+                      { color: COLORS.success },
+                    ]}
+                  >
                     {batch.totalProfit?.toFixed(2) || "0.00"} د.ع
                   </Text>
                 </View>
@@ -806,7 +975,8 @@ export default function PoultryFarmDetailsScreen() {
                   <Text style={styles.batchItemStatLabel}>المدة:</Text>
                   <Text style={styles.batchItemStatValue}>
                     {Math.ceil(
-                      (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
+                      (new Date(batch.endDate || batch.createdAt).getTime() -
+                        new Date(batch.startDate).getTime()) /
                         (1000 * 60 * 60 * 24)
                     )}{" "}
                     يوم
@@ -816,10 +986,14 @@ export default function PoultryFarmDetailsScreen() {
 
               <Text style={styles.batchItemDate}>
                 {new Date(batch.startDate).toLocaleDateString("ar")} -{" "}
-                {new Date(batch.endDate || batch.createdAt).toLocaleDateString("ar")}
+                {new Date(batch.endDate || batch.createdAt).toLocaleDateString(
+                  "ar"
+                )}
               </Text>
 
-              <Text style={styles.viewDetailsText}>اضغط لعرض التفاصيل الكاملة</Text>
+              <Text style={styles.viewDetailsText}>
+                اضغط لعرض التفاصيل الكاملة
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -843,10 +1017,17 @@ export default function PoultryFarmDetailsScreen() {
                 <Stethoscope size={20} color={COLORS.success} />
                 <View style={styles.personInfo}>
                   <Text style={styles.personName}>{farm.assignedVet.name}</Text>
-                  <Text style={styles.personRole}>طبيب بيطري - {farm.assignedVet.specialization}</Text>
-                  <Text style={styles.personPhone}>{farm.assignedVet.phone}</Text>
+                  <Text style={styles.personRole}>
+                    طبيب بيطري - {farm.assignedVet.specialization}
+                  </Text>
+                  <Text style={styles.personPhone}>
+                    {farm.assignedVet.phone}
+                  </Text>
                   <Text style={styles.assignmentDate}>
-                    تم التعيين: {new Date(farm.assignedVet.assignedAt!).toLocaleDateString("ar")}
+                    تم التعيين:{" "}
+                    {new Date(farm.assignedVet.assignedAt!).toLocaleDateString(
+                      "ar"
+                    )}
                   </Text>
                 </View>
               </View>
@@ -885,11 +1066,20 @@ export default function PoultryFarmDetailsScreen() {
               <View style={styles.assignedPerson}>
                 <UserCheck size={20} color={COLORS.primary} />
                 <View style={styles.personInfo}>
-                  <Text style={styles.personName}>{farm.assignedSupervisor.name}</Text>
-                  <Text style={styles.personRole}>مشرف - خبرة {farm.assignedSupervisor.experience}</Text>
-                  <Text style={styles.personPhone}>{farm.assignedSupervisor.phone}</Text>
+                  <Text style={styles.personName}>
+                    {farm.assignedSupervisor.name}
+                  </Text>
+                  <Text style={styles.personRole}>
+                    مشرف - خبرة {farm.assignedSupervisor.experience}
+                  </Text>
+                  <Text style={styles.personPhone}>
+                    {farm.assignedSupervisor.phone}
+                  </Text>
                   <Text style={styles.assignmentDate}>
-                    تم التعيين: {new Date(farm.assignedSupervisor.assignedAt!).toLocaleDateString("ar")}
+                    تم التعيين:{" "}
+                    {new Date(
+                      farm.assignedSupervisor.assignedAt!
+                    ).toLocaleDateString("ar")}
                   </Text>
                 </View>
               </View>
@@ -943,8 +1133,15 @@ export default function PoultryFarmDetailsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color={COLORS.white} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft
+            size={24}
+            color={COLORS.white}
+            style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
+          />
         </TouchableOpacity>
         <Text style={styles.title}>حقل الدواجن</Text>
         <View style={styles.placeholder} />
@@ -975,7 +1172,9 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={styles.input}
                   value={batchForm.averageWeight}
-                  onChangeText={(value) => setBatchForm((prev) => ({ ...prev, averageWeight: value }))}
+                  onChangeText={(value) =>
+                    setBatchForm((prev) => ({ ...prev, averageWeight: value }))
+                  }
                   placeholder="أدخل وزن الفرد الواحد بالجرام"
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
@@ -987,7 +1186,9 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={styles.input}
                   value={batchForm.initialCount}
-                  onChangeText={(value) => setBatchForm((prev) => ({ ...prev, initialCount: value }))}
+                  onChangeText={(value) =>
+                    setBatchForm((prev) => ({ ...prev, initialCount: value }))
+                  }
                   placeholder="أدخل عدد الطيور"
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
@@ -999,7 +1200,9 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={styles.input}
                   value={batchForm.pricePerChick}
-                  onChangeText={(value) => setBatchForm((prev) => ({ ...prev, pricePerChick: value }))}
+                  onChangeText={(value) =>
+                    setBatchForm((prev) => ({ ...prev, pricePerChick: value }))
+                  }
                   placeholder="أدخل السعر الإجمالي للدفعة"
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
@@ -1015,7 +1218,13 @@ export default function PoultryFarmDetailsScreen() {
                 size="medium"
                 style={styles.modalButton}
               />
-              <Button title="إضافة" onPress={handleAddBatch} type="primary" size="medium" style={styles.modalButton} />
+              <Button
+                title="إضافة"
+                onPress={handleAddBatch}
+                type="primary"
+                size="medium"
+                style={styles.modalButton}
+              />
             </View>
           </View>
         </View>
@@ -1031,29 +1240,39 @@ export default function PoultryFarmDetailsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {selectedWeek ? `الأسبوع ${selectedWeek.weekNumber}` : "التقرير الأسبوعي"}
+              {selectedWeek
+                ? `الأسبوع ${selectedWeek.weekNumber}`
+                : "التقرير الأسبوعي"}
             </Text>
 
             {selectedWeek && (
               <ScrollView style={styles.weekDetails}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>استهلاك العلف:</Text>
-                  <Text style={styles.detailValue}>{selectedWeek.feedConsumption} كيلو</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedWeek.feedConsumption} كيلو
+                  </Text>
                 </View>
 
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>تكلفة العلف:</Text>
-                  <Text style={styles.detailValue}>{selectedWeek.feedCost} دينار</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedWeek.feedCost} دينار
+                  </Text>
                 </View>
 
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>متوسط الوزن:</Text>
-                  <Text style={styles.detailValue}>{selectedWeek.averageWeight} جرام</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedWeek.averageWeight} جرام
+                  </Text>
                 </View>
 
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>النفوق:</Text>
-                  <Text style={[styles.detailValue, { color: COLORS.error }]}>{selectedWeek.mortality} طائر</Text>
+                  <Text style={[styles.detailValue, { color: COLORS.error }]}>
+                    {selectedWeek.mortality} طائر
+                  </Text>
                 </View>
 
                 <View style={styles.detailRow}>
@@ -1099,16 +1318,22 @@ export default function PoultryFarmDetailsScreen() {
           <View style={[styles.modalContent, { maxHeight: "90%" }]}>
             <Text style={styles.modalTitle}>إضافة بيانات يومية</Text>
             <Text style={styles.modalSubtitle}>
-              اليوم {currentDays.length + 1} - {new Date().toLocaleDateString("ar")}
+              اليوم {currentDays.length + 1} -{" "}
+              {new Date().toLocaleDateString("ar")}
             </Text>
 
-            <ScrollView style={styles.dailyForm} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.dailyForm}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>عدد النفوق اليوم * 🐔💀</Text>
                 <TextInput
                   style={styles.input}
                   value={dailyDataForm.mortality}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, mortality: value }))}
+                  onChangeText={(value) =>
+                    setDailyDataForm((prev) => ({ ...prev, mortality: value }))
+                  }
                   placeholder="أدخل عدد الطيور النافقة اليوم"
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
@@ -1120,7 +1345,12 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={dailyDataForm.mortalityReasons}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, mortalityReasons: value }))}
+                  onChangeText={(value) =>
+                    setDailyDataForm((prev) => ({
+                      ...prev,
+                      mortalityReasons: value,
+                    }))
+                  }
                   placeholder="أدخل أسباب النفوق (مفصولة بفاصلة)\nمثال: ضعف عام، مشاكل تنفسية، حوادث"
                   multiline
                   numberOfLines={3}
@@ -1129,11 +1359,18 @@ export default function PoultryFarmDetailsScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>استهلاك العلف اليوم (كيلو) * 🌾</Text>
+                <Text style={styles.inputLabel}>
+                  استهلاك العلف اليوم (كيلو) * 🌾
+                </Text>
                 <TextInput
                   style={styles.input}
                   value={dailyDataForm.feedConsumption}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, feedConsumption: value }))}
+                  onChangeText={(value) =>
+                    setDailyDataForm((prev) => ({
+                      ...prev,
+                      feedConsumption: value,
+                    }))
+                  }
                   placeholder="أدخل كمية العلف المستهلكة اليوم بالكيلو"
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
@@ -1145,7 +1382,12 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={styles.input}
                   value={dailyDataForm.averageWeight}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, averageWeight: value }))}
+                  onChangeText={(value) =>
+                    setDailyDataForm((prev) => ({
+                      ...prev,
+                      averageWeight: value,
+                    }))
+                  }
                   placeholder="أدخل متوسط وزن الطيور بالجرام"
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
@@ -1153,11 +1395,15 @@ export default function PoultryFarmDetailsScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>العلاجات المستخدمة اليوم 💊</Text>
+                <Text style={styles.inputLabel}>
+                  العلاجات المستخدمة اليوم 💊
+                </Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={dailyDataForm.treatments}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, treatments: value }))}
+                  onChangeText={(value) =>
+                    setDailyDataForm((prev) => ({ ...prev, treatments: value }))
+                  }
                   placeholder="أدخل العلاجات المستخدمة اليوم (مفصولة بفاصلة)\nمثال: مضاد حيوي، فيتامينات، مطهر"
                   multiline
                   numberOfLines={3}
@@ -1170,7 +1416,9 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={dailyDataForm.notes}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, notes: value }))}
+                  onChangeText={(value) =>
+                    setDailyDataForm((prev) => ({ ...prev, notes: value }))
+                  }
                   placeholder="أدخل أي ملاحظات عن اليوم\nمثال: تغيير في السلوك، حالة الطقس، مشاكل في التهوية"
                   multiline
                   numberOfLines={4}
@@ -1180,10 +1428,18 @@ export default function PoultryFarmDetailsScreen() {
 
               <View style={styles.infoBox}>
                 <Text style={styles.infoTitle}>💡 نصائح يومية:</Text>
-                <Text style={styles.infoText}>• سجل البيانات في نفس الوقت يومياً</Text>
-                <Text style={styles.infoText}>• راقب سلوك الطيور وشهيتها للطعام</Text>
-                <Text style={styles.infoText}>• تأكد من نظافة المياه والمعالف</Text>
-                <Text style={styles.infoText}>• لاحظ أي تغييرات في البيئة المحيطة</Text>
+                <Text style={styles.infoText}>
+                  • سجل البيانات في نفس الوقت يومياً
+                </Text>
+                <Text style={styles.infoText}>
+                  • راقب سلوك الطيور وشهيتها للطعام
+                </Text>
+                <Text style={styles.infoText}>
+                  • تأكد من نظافة المياه والمعالف
+                </Text>
+                <Text style={styles.infoText}>
+                  • لاحظ أي تغييرات في البيئة المحيطة
+                </Text>
               </View>
             </ScrollView>
 
@@ -1228,11 +1484,16 @@ export default function PoultryFarmDetailsScreen() {
           <View style={[styles.modalContent, { maxHeight: "90%" }]}>
             <Text style={styles.modalTitle}>التقرير الأسبوعي</Text>
 
-            <ScrollView style={styles.weeklyReport} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.weeklyReport}
+              showsVerticalScrollIndicator={false}
+            >
               {generateWeeklyReport()?.map((week) => (
                 <View key={week.weekNumber} style={styles.weekReportCard}>
                   <View style={styles.weekReportHeader}>
-                    <Text style={styles.weekReportTitle}>الأسبوع {week.weekNumber}</Text>
+                    <Text style={styles.weekReportTitle}>
+                      الأسبوع {week.weekNumber}
+                    </Text>
                     <Text style={styles.weekReportDate}>
                       {new Date(week.startDate).toLocaleDateString("ar")} -{" "}
                       {new Date(week.endDate).toLocaleDateString("ar")}
@@ -1241,32 +1502,64 @@ export default function PoultryFarmDetailsScreen() {
 
                   <View style={styles.weekReportStats}>
                     <View style={styles.weekReportStat}>
-                      <Text style={styles.weekReportStatValue}>{week.totalFeedConsumption.toFixed(1)}kg</Text>
-                      <Text style={styles.weekReportStatLabel}>إجمالي العلف</Text>
+                      <Text style={styles.weekReportStatValue}>
+                        {week.totalFeedConsumption.toFixed(1)}kg
+                      </Text>
+                      <Text style={styles.weekReportStatLabel}>
+                        إجمالي العلف
+                      </Text>
                     </View>
 
                     <View style={styles.weekReportStat}>
-                      <Text style={styles.weekReportStatValue}>{week.averageWeight}g</Text>
-                      <Text style={styles.weekReportStatLabel}>متوسط الوزن</Text>
+                      <Text style={styles.weekReportStatValue}>
+                        {week.averageWeight}g
+                      </Text>
+                      <Text style={styles.weekReportStatLabel}>
+                        متوسط الوزن
+                      </Text>
                     </View>
 
                     <View style={styles.weekReportStat}>
-                      <Text style={[styles.weekReportStatValue, { color: COLORS.error }]}>{week.totalMortality}</Text>
-                      <Text style={styles.weekReportStatLabel}>إجمالي النفوق</Text>
+                      <Text
+                        style={[
+                          styles.weekReportStatValue,
+                          { color: COLORS.error },
+                        ]}
+                      >
+                        {week.totalMortality}
+                      </Text>
+                      <Text style={styles.weekReportStatLabel}>
+                        إجمالي النفوق
+                      </Text>
                     </View>
 
                     <View style={styles.weekReportStat}>
-                      <Text style={[styles.weekReportStatValue, { color: COLORS.success }]}>{week.totalProfit}</Text>
-                      <Text style={styles.weekReportStatLabel}>الربح المقدر</Text>
+                      <Text
+                        style={[
+                          styles.weekReportStatValue,
+                          { color: COLORS.success },
+                        ]}
+                      >
+                        {week.totalProfit}
+                      </Text>
+                      <Text style={styles.weekReportStatLabel}>
+                        الربح المقدر
+                      </Text>
                     </View>
                   </View>
 
-                  <Text style={styles.weekReportDays}>عدد الأيام المسجلة: {week.days.length}</Text>
+                  <Text style={styles.weekReportDays}>
+                    عدد الأيام المسجلة: {week.days.length}
+                  </Text>
                 </View>
               )) || (
                 <View style={styles.emptyReport}>
-                  <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
-                  <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
+                  <Text style={styles.emptyReportText}>
+                    لا توجد بيانات كافية لإنشاء تقرير أسبوعي
+                  </Text>
+                  <Text style={styles.emptyReportSubtext}>
+                    يجب تسجيل البيانات اليومية أولاً
+                  </Text>
                 </View>
               )}
             </ScrollView>
@@ -1295,7 +1588,8 @@ export default function PoultryFarmDetailsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>بيع الدفعة</Text>
             <Text style={styles.modalSubtitle}>
-              الدفعة رقم {currentBatch?.batchNumber} - العدد الحالي: {currentBatch?.currentCount}
+              الدفعة رقم {currentBatch?.batchNumber} - العدد الحالي:{" "}
+              {currentBatch?.currentCount}
             </Text>
 
             <View style={styles.modalForm}>
@@ -1304,12 +1598,18 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={styles.input}
                   value={sellBatchForm.netCount}
-                  onChangeText={(value) => setSellBatchForm((prev) => ({ ...prev, netCount: value }))}
-                  placeholder={`العدد الافتراضي: ${currentBatch?.currentCount || 0}`}
+                  onChangeText={(value) =>
+                    setSellBatchForm((prev) => ({ ...prev, netCount: value }))
+                  }
+                  placeholder={`العدد الافتراضي: ${
+                    currentBatch?.currentCount || 0
+                  }`}
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
                 />
-                <Text style={styles.inputHint}>العدد الفعلي للطيور المباعة</Text>
+                <Text style={styles.inputHint}>
+                  العدد الفعلي للطيور المباعة
+                </Text>
               </View>
 
               <View style={styles.inputGroup}>
@@ -1317,21 +1617,31 @@ export default function PoultryFarmDetailsScreen() {
                 <TextInput
                   style={styles.input}
                   value={sellBatchForm.netProfit}
-                  onChangeText={(value) => setSellBatchForm((prev) => ({ ...prev, netProfit: value }))}
+                  onChangeText={(value) =>
+                    setSellBatchForm((prev) => ({ ...prev, netProfit: value }))
+                  }
                   placeholder={`الربح المقدر: ${currentDays
                     .reduce((sum, day) => sum + day.estimatedProfit, 0)
                     .toFixed(2)} د.ع`}
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
                 />
-                <Text style={styles.inputHint}>الربح الفعلي من بيع الدفعة بالدينار العراقي</Text>
+                <Text style={styles.inputHint}>
+                  الربح الفعلي من بيع الدفعة بالدينار العراقي
+                </Text>
               </View>
 
               <View style={styles.infoBox}>
                 <Text style={styles.infoTitle}>📋 ملاحظة:</Text>
-                <Text style={styles.infoText}>• إذا تركت الحقول فارغة، سيتم استخدام القيم المحسوبة تلقائياً</Text>
-                <Text style={styles.infoText}>• سيتم حفظ جميع البيانات الأسبوعية واليومية في السجلات</Text>
-                <Text style={styles.infoText}>• يمكنك مراجعة تفاصيل الدفعة لاحقاً من قائمة الدفعات المكتملة</Text>
+                <Text style={styles.infoText}>
+                  • إذا تركت الحقول فارغة، سيتم استخدام القيم المحسوبة تلقائياً
+                </Text>
+                <Text style={styles.infoText}>
+                  • سيتم حفظ جميع البيانات الأسبوعية واليومية في السجلات
+                </Text>
+                <Text style={styles.infoText}>
+                  • يمكنك مراجعة تفاصيل الدفعة لاحقاً من قائمة الدفعات المكتملة
+                </Text>
               </View>
             </View>
 
@@ -1367,10 +1677,15 @@ export default function PoultryFarmDetailsScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { maxHeight: "90%" }]}>
-            <Text style={styles.modalTitle}>تفاصيل الدفعة رقم {selectedBatch?.batchNumber}</Text>
+            <Text style={styles.modalTitle}>
+              تفاصيل الدفعة رقم {selectedBatch?.batchNumber}
+            </Text>
 
             {selectedBatch && (
-              <ScrollView style={styles.batchDetailsScroll} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.batchDetailsScroll}
+                showsVerticalScrollIndicator={false}
+              >
                 {/* Batch Summary */}
                 <View style={styles.batchSummaryCard}>
                   <Text style={styles.batchSummaryTitle}>ملخص الدفعة</Text>
@@ -1378,44 +1693,60 @@ export default function PoultryFarmDetailsScreen() {
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>تاريخ البداية:</Text>
                     <Text style={styles.summaryValue}>
-                      {new Date(selectedBatch.startDate).toLocaleDateString("ar")}
+                      {new Date(selectedBatch.startDate).toLocaleDateString(
+                        "ar"
+                      )}
                     </Text>
                   </View>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>تاريخ النهاية:</Text>
                     <Text style={styles.summaryValue}>
-                      {selectedBatch.endDate ? new Date(selectedBatch.endDate).toLocaleDateString("ar") : "غير محدد"}
+                      {selectedBatch.endDate
+                        ? new Date(selectedBatch.endDate).toLocaleDateString(
+                            "ar"
+                          )
+                        : "غير محدد"}
                     </Text>
                   </View>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>العدد الأولي:</Text>
-                    <Text style={styles.summaryValue}>{selectedBatch.initialCount}</Text>
+                    <Text style={styles.summaryValue}>
+                      {selectedBatch.initialCount}
+                    </Text>
                   </View>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>العدد النهائي:</Text>
-                    <Text style={styles.summaryValue}>{selectedBatch.finalCount || selectedBatch.currentCount}</Text>
+                    <Text style={styles.summaryValue}>
+                      {selectedBatch.finalCount || selectedBatch.currentCount}
+                    </Text>
                   </View>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>الربح الصافي:</Text>
-                    <Text style={[styles.summaryValue, { color: COLORS.success }]}>
+                    <Text
+                      style={[styles.summaryValue, { color: COLORS.success }]}
+                    >
                       {selectedBatch.totalProfit?.toFixed(2) || "0.00"} د.ع
                     </Text>
                   </View>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>إجمالي الاستثمار:</Text>
-                    <Text style={styles.summaryValue}>{selectedBatch.totalInvestment.toFixed(2)} د.ع</Text>
+                    <Text style={styles.summaryValue}>
+                      {selectedBatch.totalInvestment.toFixed(2)} د.ع
+                    </Text>
                   </View>
                 </View>
 
                 {/* Weekly Details */}
                 {selectedBatch.days && selectedBatch.days.length > 0 && (
                   <View style={styles.weeklyDetailsCard}>
-                    <Text style={styles.weeklyDetailsTitle}>التفاصيل الأسبوعية</Text>
+                    <Text style={styles.weeklyDetailsTitle}>
+                      التفاصيل الأسبوعية
+                    </Text>
 
                     {(() => {
                       const weeklyData: { [key: number]: PoultryDay[] } = {};
@@ -1431,42 +1762,81 @@ export default function PoultryFarmDetailsScreen() {
                         const weekNumber = parseInt(weekNum);
                         const weekDays = weeklyData[weekNumber];
 
-                        const totalFeedConsumption = weekDays.reduce((sum, day) => sum + day.feedConsumption, 0);
-                        const totalMortality = weekDays.reduce((sum, day) => sum + day.mortality, 0);
-                        const avgWeight = weekDays.reduce((sum, day) => sum + day.averageWeight, 0) / weekDays.length;
-                        const totalProfit = weekDays.reduce((sum, day) => sum + day.estimatedProfit, 0);
+                        const totalFeedConsumption = weekDays.reduce(
+                          (sum, day) => sum + day.feedConsumption,
+                          0
+                        );
+                        const totalMortality = weekDays.reduce(
+                          (sum, day) => sum + day.mortality,
+                          0
+                        );
+                        const avgWeight =
+                          weekDays.reduce(
+                            (sum, day) => sum + day.averageWeight,
+                            0
+                          ) / weekDays.length;
+                        const totalProfit = weekDays.reduce(
+                          (sum, day) => sum + day.estimatedProfit,
+                          0
+                        );
 
                         return (
                           <View key={weekNumber} style={styles.weekDetailCard}>
-                            <Text style={styles.weekDetailTitle}>الأسبوع {weekNumber}</Text>
+                            <Text style={styles.weekDetailTitle}>
+                              الأسبوع {weekNumber}
+                            </Text>
 
                             <View style={styles.weekDetailStats}>
                               <View style={styles.weekDetailStat}>
-                                <Text style={styles.weekDetailStatValue}>{totalFeedConsumption.toFixed(1)}kg</Text>
-                                <Text style={styles.weekDetailStatLabel}>إجمالي العلف</Text>
+                                <Text style={styles.weekDetailStatValue}>
+                                  {totalFeedConsumption.toFixed(1)}kg
+                                </Text>
+                                <Text style={styles.weekDetailStatLabel}>
+                                  إجمالي العلف
+                                </Text>
                               </View>
 
                               <View style={styles.weekDetailStat}>
-                                <Text style={styles.weekDetailStatValue}>{Math.round(avgWeight)}g</Text>
-                                <Text style={styles.weekDetailStatLabel}>متوسط الوزن</Text>
+                                <Text style={styles.weekDetailStatValue}>
+                                  {Math.round(avgWeight)}g
+                                </Text>
+                                <Text style={styles.weekDetailStatLabel}>
+                                  متوسط الوزن
+                                </Text>
                               </View>
 
                               <View style={styles.weekDetailStat}>
-                                <Text style={[styles.weekDetailStatValue, { color: COLORS.error }]}>
+                                <Text
+                                  style={[
+                                    styles.weekDetailStatValue,
+                                    { color: COLORS.error },
+                                  ]}
+                                >
                                   {totalMortality}
                                 </Text>
-                                <Text style={styles.weekDetailStatLabel}>إجمالي النفوق</Text>
+                                <Text style={styles.weekDetailStatLabel}>
+                                  إجمالي النفوق
+                                </Text>
                               </View>
 
                               <View style={styles.weekDetailStat}>
-                                <Text style={[styles.weekDetailStatValue, { color: COLORS.success }]}>
+                                <Text
+                                  style={[
+                                    styles.weekDetailStatValue,
+                                    { color: COLORS.success },
+                                  ]}
+                                >
                                   {totalProfit.toFixed(0)}
                                 </Text>
-                                <Text style={styles.weekDetailStatLabel}>الربح المقدر</Text>
+                                <Text style={styles.weekDetailStatLabel}>
+                                  الربح المقدر
+                                </Text>
                               </View>
                             </View>
 
-                            <Text style={styles.weekDetailDays}>عدد الأيام المسجلة: {weekDays.length}</Text>
+                            <Text style={styles.weekDetailDays}>
+                              عدد الأيام المسجلة: {weekDays.length}
+                            </Text>
                           </View>
                         );
                       });

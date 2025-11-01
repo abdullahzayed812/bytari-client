@@ -52,13 +52,13 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <QueryClientProvider client={queryClient}>
-        <AppProvider>
-          <NotificationProvider>
-            <FavoritesProvider>
-              <OrdersProvider>
-                <CartProvider>
-                  <I18nProvider>
-                    <ToastProvider>
+        <ToastProvider>
+          <AppProvider>
+            <NotificationProvider>
+              <FavoritesProvider>
+                <OrdersProvider>
+                  <CartProvider>
+                    <I18nProvider>
                       <Stack screenOptions={defaultScreenOptions}>
                         <Stack.Screen
                           name="splash"
@@ -313,13 +313,13 @@ export default function RootLayout() {
                           options={{ headerShown: false }}
                         />
                       </Stack>
-                    </ToastProvider>
-                  </I18nProvider>
-                </CartProvider>
-              </OrdersProvider>
-            </FavoritesProvider>
-          </NotificationProvider>
-        </AppProvider>
+                    </I18nProvider>
+                  </CartProvider>
+                </OrdersProvider>
+              </FavoritesProvider>
+            </NotificationProvider>
+          </AppProvider>
+        </ToastProvider>
       </QueryClientProvider>
       {/* </trpc.Provider> */}
     </GestureHandlerRootView>

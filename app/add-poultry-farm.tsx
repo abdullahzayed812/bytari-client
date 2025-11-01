@@ -37,6 +37,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../lib/hooks";
 import * as ImagePicker from "expo-image-picker";
 import DatePicker from "react-native-date-picker";
+import { useToastContext } from "@/providers/ToastProvider";
 
 type FarmType = "broiler" | "layer" | "breeder" | "mixed";
 type HealthStatus = "healthy" | "quarantine" | "sick";
@@ -45,7 +46,7 @@ export default function AddPoultryFarmScreen() {
   const { t, isRTL } = useI18n();
   const { user } = useApp();
   const router = useRouter();
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
 
   const [formData, setFormData] = useState({
     name: "",

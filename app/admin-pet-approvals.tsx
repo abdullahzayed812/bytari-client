@@ -17,6 +17,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { CheckCircle, Clock, Eye, XCircle } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
+import { useToastContext } from "@/providers/ToastProvider";
 
 interface PetApprovalRequest {
   id: number;
@@ -49,6 +50,7 @@ interface PetApprovalRequest {
 
 export default function AdminPetApprovals() {
   const { user } = useApp();
+  const { showToast } = useToastContext();
   const [selectedRequest, setSelectedRequest] =
     useState<PetApprovalRequest | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -183,7 +185,7 @@ export default function AdminPetApprovals() {
         action: actionType,
         rejectionReason: rejectionReason.trim() || undefined,
         adminNotes: adminNotes.trim() || undefined,
-        reviewerId: 1, // Replace with actual admin ID
+        reviewerId: user?.id,
       },
       {
         onSuccess: () => {
@@ -193,9 +195,10 @@ export default function AdminPetApprovals() {
           setRejectionReason("");
           setAdminNotes("");
           Alert.alert("تم", "تم معالجة الطلب بنجاح");
+          showToast({ type: "success", message: "تم معالجة الطلب بنجاح" });
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message);
+          showToast({ type: "success", message: error.message });
         },
       }
     );

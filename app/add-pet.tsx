@@ -21,6 +21,7 @@ import { Camera, Calendar } from "lucide-react-native";
 import { Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useToast } from "@/lib/hooks";
+import { useToastContext } from "@/providers/ToastProvider";
 
 const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
@@ -28,7 +29,7 @@ const GENDERS = ["male", "female"] as const;
 export default function AddPetScreen() {
   const { t } = useI18n();
   const { user } = useApp();
-  const { showToast } = useToast();
+  const { showToast } = useToastContext();
   const router = useRouter();
   const params = useLocalSearchParams<{ editMode?: string; petId?: string }>();
   const isEditMode = params.editMode === "true";
@@ -139,7 +140,7 @@ export default function AddPetScreen() {
             message: "تم إضافة الحيوان بنجاح",
             type: "success",
           });
-          router.back();
+          router.navigate("(tabs)/pets");
         },
         onError: (error) => {
           showToast({
@@ -168,7 +169,7 @@ export default function AddPetScreen() {
               formData.type === type && styles.typeButtonTextActive,
             ]}
           >
-            {t(`pets.types.${type}`)}
+            {`${type}`}
           </Text>
         </TouchableOpacity>
       ))}

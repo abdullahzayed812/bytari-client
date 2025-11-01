@@ -1,3 +1,4 @@
+import { COLORS } from "@/constants/colors";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, Pressable } from "react-native";
 
@@ -37,10 +38,7 @@ export const Toast: React.FC<ToastProps> = ({
         }),
       ]).start();
 
-      const timer = setTimeout(() => {
-        hideToast();
-      }, duration);
-
+      const timer = setTimeout(() => hideToast(), duration);
       return () => clearTimeout(timer);
     }
   }, [visible]);
@@ -57,39 +55,40 @@ export const Toast: React.FC<ToastProps> = ({
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      onHide();
-    });
+    ]).start(() => onHide());
   };
 
   if (!visible) return null;
 
-  const getToastStyle = () => {
+  const getToastColors = () => {
     switch (type) {
       case "success":
-        return styles.success;
+        return { backgroundColor: "#10b981", textColor: "#FFFFFF" };
       case "error":
-        return styles.error;
+        return { backgroundColor: "#ef4444", textColor: "#FFFFFF" };
       case "warning":
-        return styles.warning;
+        return { backgroundColor: "#f59e0b", textColor: "#000000" };
+      case "info":
       default:
-        return styles.info;
+        return { backgroundColor: "#F5F5F5", textColor: "#000000" };
     }
   };
+
+  const { backgroundColor, textColor } = getToastColors();
 
   return (
     <Animated.View
       style={[
         styles.container,
-        getToastStyle(),
         {
+          backgroundColor,
           opacity,
           transform: [{ translateY }],
         },
       ]}
     >
       <Pressable onPress={hideToast} style={styles.pressable}>
-        <Text style={styles.message}>{message}</Text>
+        <Text style={[styles.message, { color: textColor }]}>{message}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -114,20 +113,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   message: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-  },
-  success: {
-    backgroundColor: "#10b981",
-  },
-  error: {
-    backgroundColor: "#ef4444",
-  },
-  warning: {
-    backgroundColor: "#f59e0b",
-  },
-  info: {
-    backgroundColor: "#F5F5F5",
   },
 });

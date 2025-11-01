@@ -1,7 +1,23 @@
 import React, { useState, useMemo } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Image, Dimensions, FlatList, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Image,
+  Dimensions,
+  FlatList,
+  ActivityIndicator,
+} from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { ArrowLeft, Calendar, MapPin, Heart, Plus, Edit3 } from "lucide-react-native";
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  Heart,
+  Plus,
+  Edit3,
+} from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
@@ -43,17 +59,26 @@ export default function AdoptionBreedingListScreen() {
     // Filter pets based on user's location
     return petsData.pets.filter((pet) => {
       const petLocation = pet.location || "";
-      return petLocation.includes(user.city || "") || petLocation.includes(user.country || "");
+      return (
+        petLocation.includes(user.city || "") ||
+        petLocation.includes(user.country || "")
+      );
     });
   }, [petsData?.pets, user?.country, user?.city]);
 
   const handlePetPress = (petId: string) => {
-    router.push({ pathname: "/adoption-pet-details", params: { id: petId, type: activeTab } });
+    router.push({
+      pathname: "/adoption-pet-details",
+      params: { id: petId, type: activeTab },
+    });
   };
 
   const renderPetCard = ({ item: pet }: { item: any }) => {
     return (
-      <TouchableOpacity style={styles.petCard} onPress={() => handlePetPress(pet.id)}>
+      <TouchableOpacity
+        style={styles.petCard}
+        onPress={() => handlePetPress(pet.id)}
+      >
         {/* Pet Image */}
         <Image
           source={{
@@ -67,8 +92,17 @@ export default function AdoptionBreedingListScreen() {
 
         {/* Status Badge */}
         <View style={styles.badgeContainer}>
-          <View style={[styles.badge, activeTab === "adoption" ? styles.adoptionBadge : styles.breedingBadge]}>
-            <Text style={styles.badgeText}>{activeTab === "adoption" ? "للتبني" : "للتزاوج"}</Text>
+          <View
+            style={[
+              styles.badge,
+              activeTab === "adoption"
+                ? styles.adoptionBadge
+                : styles.breedingBadge,
+            ]}
+          >
+            <Text style={styles.badgeText}>
+              {activeTab === "adoption" ? "للتبني" : "للتزاوج"}
+            </Text>
           </View>
         </View>
 
@@ -78,7 +112,7 @@ export default function AdoptionBreedingListScreen() {
             {pet.petName || pet.title}
           </Text>
           <Text style={styles.petType} numberOfLines={1}>
-            {pet.petType ? t(`pets.types.${pet.petType}`) : pet.petType}
+            {pet.petType ? `${pet.petType}` : pet.petType}
           </Text>
 
           {/* Age */}
@@ -109,7 +143,10 @@ export default function AdoptionBreedingListScreen() {
 
         {/* Action Buttons */}
         <View style={styles.petActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => handlePetPress(pet.id)}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => handlePetPress(pet.id)}
+          >
             <Text style={styles.actionButtonText}>التفاصيل</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -129,7 +166,11 @@ export default function AdoptionBreedingListScreen() {
               // TODO: Implement contact owner functionality
             }}
           >
-            <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>اتصال</Text>
+            <Text
+              style={[styles.actionButtonText, styles.primaryActionButtonText]}
+            >
+              اتصال
+            </Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -149,7 +190,10 @@ export default function AdoptionBreedingListScreen() {
             fontWeight: "bold",
           },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -176,9 +220,14 @@ export default function AdoptionBreedingListScreen() {
       {/* Add Pet Button */}
       {userMode === "pet_owner" && (
         <View style={styles.addPetButtonContainer}>
-          <TouchableOpacity onPress={() => router.push("/add-adoption-pet")} style={styles.addPetButton}>
+          <TouchableOpacity
+            onPress={() => router.push("/add-adoption-pet")}
+            style={styles.addPetButton}
+          >
             <Plus size={20} color={COLORS.white} />
-            <Text style={styles.addPetButtonText}>عرض حيوان للتبني أو التزاوج</Text>
+            <Text style={styles.addPetButtonText}>
+              عرض حيوان للتبني أو التزاوج
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -189,13 +238,27 @@ export default function AdoptionBreedingListScreen() {
           style={[styles.tab, activeTab === "adoption" && styles.activeTab]}
           onPress={() => setActiveTab("adoption")}
         >
-          <Text style={[styles.tabText, activeTab === "adoption" && styles.activeTabText]}>للتبني</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "adoption" && styles.activeTabText,
+            ]}
+          >
+            للتبني
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === "breeding" && styles.activeTab]}
           onPress={() => setActiveTab("breeding")}
         >
-          <Text style={[styles.tabText, activeTab === "breeding" && styles.activeTabText]}>للتزاوج</Text>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "breeding" && styles.activeTabText,
+            ]}
+          >
+            للتزاوج
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -216,13 +279,17 @@ export default function AdoptionBreedingListScreen() {
           numColumns={2}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
-          columnWrapperStyle={filteredPets.length % 2 !== 0 ? styles.row : styles.row}
+          columnWrapperStyle={
+            filteredPets.length % 2 !== 0 ? styles.row : styles.row
+          }
           renderItem={renderPetCard}
           keyExtractor={(item) => `${activeTab}-${item.id}`}
           ListEmptyComponent={() => (
             <View style={styles.emptyPetsContainer}>
               <Text style={styles.emptyPetsText}>
-                لا توجد حيوانات {activeTab === "adoption" ? "للتبني" : "للتزاوج"} في منطقتك حالياً
+                لا توجد حيوانات{" "}
+                {activeTab === "adoption" ? "للتبني" : "للتزاوج"} في منطقتك
+                حالياً
               </Text>
               <Text style={styles.emptyPetsSubText}>
                 {user?.city && user?.country
