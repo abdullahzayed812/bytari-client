@@ -628,7 +628,7 @@ export default function PetsScreen() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>لا يوجد حيوانات مسجلة</Text>
             <Button
-              title={t('pets.addPet')}
+              title={t('إضافة حيوان')}
               onPress={handleAddPet}
               type="primary"
               size="medium"
@@ -636,7 +636,7 @@ export default function PetsScreen() {
               style={styles.emptyButton}
             />
             <Button
-              title={t('pets.addPoultryFarm')}
+              title={t('إضافة حقل')}
               onPress={() => router.push('/add-poultry-farm')}
               type="secondary"
               size="medium"

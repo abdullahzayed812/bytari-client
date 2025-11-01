@@ -217,14 +217,11 @@ export default function TabLayout() {
         <Tabs.Screen
           name="pets"
           options={{
-            title:
-              userMode === "veterinarian" || isSuperAdmin
-                ? "عيادتي"
-                : t("pets.title"),
+            title: userMode === "veterinarian" ? "عيادتي" : t("pets.title"),
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                {userMode === "veterinarian" || isSuperAdmin ? (
+                {userMode === "veterinarian" ? (
                   <Building2
                     size={22}
                     color={focused ? COLORS.white : COLORS.primary}
