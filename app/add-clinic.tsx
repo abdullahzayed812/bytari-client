@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
@@ -7,23 +15,45 @@ import { ArrowLeft, Plus, Upload } from "lucide-react-native";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import Button from "@/components/Button 2";
+import { useToastContext } from "@/providers/ToastProvider";
 
 export default function AddClinicScreen() {
   const router = useRouter();
 
   const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    email: "",
-    description: "",
+    name: "test clinic name",
+    description: "test description",
+    address: "test address",
+    phone: "010000000000000000",
+    email: "clinic@mail.com",
+    workingHours: "3",
+    licenseNumber: "191919191919191",
+    licenseImages: ["http://bytari/media/img1.png"],
+    identityImages: ["http://bytari/media/img1.png"],
+    images: [],
   });
+  const { showToast } = useToastContext();
 
   const mutation = useMutation(trpc.clinics.create.mutationOptions());
 
   const handleSave = () => {
     if (!formData.name || !formData.address || !formData.phone) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      return;
+    }
+
+    if (formData.licenseImages.length === 0) {
+      showToast({
+        type: "error",
+        message: "صور الترخيص مطلوبة.",
+      });
+      return;
+    }
+    if (formData.identityImages.length === 0) {
+      showToast({
+        type: "error",
+        message: "صورة الهويه مطلوبة.",
+      });
       return;
     }
 
@@ -37,15 +67,12 @@ export default function AddClinicScreen() {
         description: formData.description || "",
 
         licenseNumber: "TEMP123456", // TODO: Replace with actual value from UI when field is added
-        licenseImages: [], // TODO: Implement image upload for license images
-        identityImages: [], // TODO: Implement image upload for identity images
+        licenseImages: formData.licenseImages, // TODO: Implement image upload for license images
+        identityImages: formData.identityImages, // TODO: Implement image upload for identity images
 
         latitude: 0,
         longitude: 0,
-        workingHours: "",
-        services: [],
-        images: [],
-        officialDocuments: [],
+        workingHours: formData.workingHours,
       },
       {
         onSuccess: (data) => {
@@ -68,7 +95,10 @@ export default function AddClinicScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -104,7 +134,9 @@ export default function AddClinicScreen() {
             <TextInput
               style={styles.input}
               value={formData.address}
-              onChangeText={(text) => setFormData({ ...formData, address: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, address: text })
+              }
               placeholder="أدخل عنوان العيادة"
               textAlign="right"
             />
@@ -139,7 +171,9 @@ export default function AddClinicScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) => setFormData({ ...formData, description: text })}
+              onChangeText={(text) =>
+                setFormData({ ...formData, description: text })
+              }
               placeholder="أدخل وصف العيادة"
               textAlign="right"
               multiline

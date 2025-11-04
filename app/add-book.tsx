@@ -16,6 +16,8 @@ import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { ArrowLeft, FileText, Image, Plus, Upload } from "lucide-react-native";
+import Button from "@/components/Button 2";
 
 export default function AddBookScreen() {
   const { user } = useApp();
@@ -85,10 +87,10 @@ export default function AddBookScreen() {
       return;
     }
 
-    if (!selectedFile) {
-      Alert.alert("خطأ", "يرجى اختيار ملف الكتاب");
-      return;
-    }
+    // if (!selectedFile) {
+    //   Alert.alert("خطأ", "يرجى اختيار ملف الكتاب");
+    //   return;
+    // }
 
     createBookMutation.mutate(
       {
@@ -98,7 +100,7 @@ export default function AddBookScreen() {
         description: formData.description,
         pages: formData.pages ? parseInt(formData.pages) : undefined,
         category: formData.category as any,
-        coverImage: selectedImage,
+        coverImage: selectedImage || "",
         pdfUrl: selectedFile ? selectedFile.uri : undefined,
       },
       {

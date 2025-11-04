@@ -35,6 +35,8 @@ import {
 } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useApp } from "@/providers/AppProvider";
+import { useToastContext } from "@/providers/ToastProvider";
 
 interface ApprovalRequest {
   id: number;
@@ -63,10 +65,12 @@ interface ApprovalRequest {
   createdAt: Date;
   requesterName: string;
   requesterEmail: string;
+  requesterPhone: string;
+  resourceDetails?: any;
 }
 
 export default function AdminApprovalsScreen() {
-  const [currentUser] = useState({ id: 1, name: "مدير النظام" });
+  const { user } = useApp();
   const [selectedType, setSelectedType] = useState<
     | "all"
     | "vet_registration"
@@ -87,6 +91,8 @@ export default function AdminApprovalsScreen() {
   const [activationStartDate, setActivationStartDate] = useState("");
   const [activationEndDate, setActivationEndDate] = useState("");
 
+  const { showToast } = useToastContext();
+
   // Get pending approvals with error handling and performance optimization
   const {
     data: approvalsData,
@@ -95,7 +101,7 @@ export default function AdminApprovalsScreen() {
     error: approvalsError,
   } = useQuery({
     ...trpc.admin.approvals.getPending.queryOptions({
-      adminId: currentUser.id,
+      adminId: user?.id,
       type:
         selectedType === "lost_pets" ||
         selectedType === "breeding_pets" ||
@@ -114,260 +120,260 @@ export default function AdminApprovalsScreen() {
     [approvalsData]
   );
 
-  // Use mock data if server request fails with memoization
-  const effectiveApprovals = useMemo(() => {
-    if (approvalsError) {
-      console.error("Approvals error:", approvalsError);
-      // Rich mock data for testing when server fails
-      return [
-        {
-          id: 1,
-          requestType: "vet_registration" as const,
-          requesterId: 1,
-          resourceId: 1,
-          title: "طلب تسجيل طبيب بيطري - د. أحمد محمد",
-          description: "طلب تسجيل جديد للحصول على ترخيص مزاولة المهنة",
-          documents: null,
-          licenseImages: JSON.stringify([
-            "vet_license_ahmad_2024.jpg",
-            "professional_certificate.pdf",
-          ]),
-          identityImages: JSON.stringify([
-            "national_id_front.jpg",
-            "national_id_back.jpg",
-            "doctor_id_card.jpg",
-          ]),
-          officialDocuments: JSON.stringify([
-            "graduation_certificate.pdf",
-            "medical_license.pdf",
-            "specialization_cert.pdf",
-          ]),
-          paymentStatus: "completed" as const,
-          paymentAmount: 750,
-          paymentMethod: "بطاقة ائتمان - فيزا",
-          paymentTransactionId: "TXN_VET_2024_001234",
-          paymentCompletedAt: new Date("2024-01-15T10:30:00"),
-          paymentReceipt: "payment_receipt_vet_001234.pdf",
-          status: "pending",
-          priority: "high",
-          createdAt: new Date("2024-01-10T09:15:00"),
-          requesterName: "د. أحمد محمد علي",
-          requesterEmail: "dr.ahmed.mohamed@vetclinic.com",
-        },
-        {
-          id: 2,
-          requestType: "clinic_activation" as const,
-          requesterId: 2,
-          resourceId: 2,
-          title: "طلب تفعيل عيادة الرحمة البيطرية",
-          description:
-            "طلب تفعيل عيادة بيطرية متخصصة في علاج الحيوانات الأليفة",
-          documents: null,
-          licenseImages: JSON.stringify([
-            "clinic_license_2024.jpg",
-            "health_permit.pdf",
-          ]),
-          identityImages: JSON.stringify([
-            "owner_national_id.jpg",
-            "business_owner_id.jpg",
-          ]),
-          officialDocuments: JSON.stringify([
-            "commercial_register.pdf",
-            "tax_certificate.pdf",
-            "municipality_permit.pdf",
-            "fire_safety_cert.pdf",
-          ]),
-          paymentStatus: "completed" as const,
-          paymentAmount: 1200,
-          paymentMethod: "تحويل بنكي - البنك الأهلي",
-          paymentTransactionId: "BANK_TXN_CLI_2024_005678",
-          paymentCompletedAt: new Date("2024-01-12T14:45:00"),
-          paymentReceipt: "bank_transfer_receipt_005678.pdf",
-          status: "pending",
-          priority: "normal",
-          createdAt: new Date("2024-01-08T11:20:00"),
-          requesterName: "محمد سالم الأحمدي",
-          requesterEmail: "mohammed.salem@rahma-clinic.com",
-        },
-        {
-          id: 10001,
-          requestType: "clinic_renewal" as const,
-          requesterId: 6,
-          resourceId: 1,
-          title: "طلب تجديد اشتراك عيادة الشفاء البيطرية",
-          description: "انتهت صلاحية تفعيل العيادة في 15/12/2024",
-          documents: null,
-          licenseImages: null,
-          identityImages: null,
-          officialDocuments: null,
-          paymentStatus: "pending" as const,
-          paymentAmount: 1200,
-          paymentMethod: null,
-          paymentTransactionId: null,
-          paymentCompletedAt: null,
-          paymentReceipt: null,
-          status: "pending",
-          priority: "high",
-          createdAt: new Date("2024-12-15T10:00:00"),
-          requesterName: "د. علي أحمد",
-          requesterEmail: "dr.ali@shifa-clinic.com",
-        },
-        {
-          id: 20001,
-          requestType: "store_renewal" as const,
-          requesterId: 7,
-          resourceId: 1,
-          title: "طلب تجديد اشتراك مخزن الأدوية البيطرية",
-          description: "انتهت صلاحية تفعيل المخزن في 10/12/2024",
-          documents: null,
-          licenseImages: null,
-          identityImages: null,
-          officialDocuments: null,
-          paymentStatus: "completed" as const,
-          paymentAmount: 800,
-          paymentMethod: "بطاقة ائتمان - فيزا",
-          paymentTransactionId: "TXN_STORE_RENEWAL_2024_001",
-          paymentCompletedAt: new Date("2024-12-10T14:30:00"),
-          paymentReceipt: "renewal_receipt_001.pdf",
-          status: "pending",
-          priority: "normal",
-          createdAt: new Date("2024-12-10T09:00:00"),
-          requesterName: "أحمد محمود",
-          requesterEmail: "ahmed@vet-pharmacy.com",
-        },
-        {
-          id: 3,
-          requestType: "store_activation" as const,
-          requesterId: 3,
-          resourceId: 3,
-          title: "طلب تفعيل متجر أليف للحيوانات الأليفة",
-          description: "متجر متخصص في بيع مستلزمات وأغذية الحيوانات الأليفة",
-          documents: null,
-          licenseImages: JSON.stringify([
-            "store_license.jpg",
-            "retail_permit.pdf",
-          ]),
-          identityImages: JSON.stringify([
-            "owner_id_front.jpg",
-            "owner_id_back.jpg",
-            "student_id.jpg",
-          ]),
-          officialDocuments: JSON.stringify([
-            "commercial_license.pdf",
-            "vat_certificate.pdf",
-            "store_lease_contract.pdf",
-          ]),
-          paymentStatus: "pending" as const,
-          paymentAmount: 800,
-          paymentMethod: null,
-          paymentTransactionId: null,
-          paymentCompletedAt: null,
-          paymentReceipt: null,
-          status: "pending",
-          priority: "normal",
-          createdAt: new Date("2024-01-14T16:30:00"),
-          requesterName: "فاطمة أحمد الزهراني",
-          requesterEmail: "fatima.ahmed@aleef-store.com",
-        },
-        {
-          id: 4,
-          requestType: "vet_registration" as const,
-          requesterId: 4,
-          resourceId: 4,
-          title: "طلب تسجيل طبيب بيطري - د. سارة خالد",
-          description: "طبيبة بيطرية متخصصة في جراحة الحيوانات الصغيرة",
-          documents: null,
-          licenseImages: JSON.stringify([
-            "vet_license_sarah.jpg",
-            "surgery_specialization.pdf",
-          ]),
-          identityImages: JSON.stringify([
-            "doctor_national_id.jpg",
-            "medical_association_card.jpg",
-          ]),
-          officialDocuments: JSON.stringify([
-            "phd_certificate.pdf",
-            "residency_completion.pdf",
-            "board_certification.pdf",
-          ]),
-          paymentStatus: "failed" as const,
-          paymentAmount: 750,
-          paymentMethod: "بطاقة ائتمان - ماستركارد",
-          paymentTransactionId: "FAILED_TXN_2024_009876",
-          paymentCompletedAt: null,
-          paymentReceipt: null,
-          status: "pending",
-          priority: "high",
-          createdAt: new Date("2024-01-13T13:45:00"),
-          requesterName: "د. سارة خالد المطيري",
-          requesterEmail: "dr.sarah.khalid@surgery-vet.com",
-        },
-        {
-          id: 5,
-          requestType: "clinic_activation" as const,
-          requesterId: 5,
-          resourceId: 5,
-          title: "طلب تفعيل مستشفى الحيوان المتقدم",
-          description: "مستشفى بيطري متكامل مع أحدث التقنيات والمعدات",
-          documents: null,
-          licenseImages: JSON.stringify([
-            "hospital_license.jpg",
-            "advanced_equipment_cert.pdf",
-          ]),
-          identityImages: JSON.stringify([
-            "director_id.jpg",
-            "medical_director_card.jpg",
-          ]),
-          officialDocuments: JSON.stringify([
-            "hospital_permit.pdf",
-            "equipment_certificates.pdf",
-            "staff_qualifications.pdf",
-            "insurance_policy.pdf",
-          ]),
-          paymentStatus: "not_required" as const,
-          paymentAmount: null,
-          paymentMethod: null,
-          paymentTransactionId: null,
-          paymentCompletedAt: null,
-          paymentReceipt: null,
-          status: "pending",
-          priority: "urgent",
-          createdAt: new Date("2024-01-16T08:00:00"),
-          requesterName: "د. عبدالله الراشد",
-          requesterEmail: "dr.abdullah@advanced-animal-hospital.com",
-        },
-      ];
-    }
-    return approvals || [];
-  }, [approvals, approvalsError]);
+  // // Use mock data if server request fails with memoization
+  // const effectiveApprovals = useMemo(() => {
+  //   if (approvalsError) {
+  //     console.error("Approvals error:", approvalsError);
+  //     // Rich mock data for testing when server fails
+  //     return [
+  //       {
+  //         id: 1,
+  //         requestType: "vet_registration" as const,
+  //         requesterId: 1,
+  //         resourceId: 1,
+  //         title: "طلب تسجيل طبيب بيطري - د. أحمد محمد",
+  //         description: "طلب تسجيل جديد للحصول على ترخيص مزاولة المهنة",
+  //         documents: null,
+  //         licenseImages: JSON.stringify([
+  //           "vet_license_ahmad_2024.jpg",
+  //           "professional_certificate.pdf",
+  //         ]),
+  //         identityImages: JSON.stringify([
+  //           "national_id_front.jpg",
+  //           "national_id_back.jpg",
+  //           "doctor_id_card.jpg",
+  //         ]),
+  //         officialDocuments: JSON.stringify([
+  //           "graduation_certificate.pdf",
+  //           "medical_license.pdf",
+  //           "specialization_cert.pdf",
+  //         ]),
+  //         paymentStatus: "completed" as const,
+  //         paymentAmount: 750,
+  //         paymentMethod: "بطاقة ائتمان - فيزا",
+  //         paymentTransactionId: "TXN_VET_2024_001234",
+  //         paymentCompletedAt: new Date("2024-01-15T10:30:00"),
+  //         paymentReceipt: "payment_receipt_vet_001234.pdf",
+  //         status: "pending",
+  //         priority: "high",
+  //         createdAt: new Date("2024-01-10T09:15:00"),
+  //         requesterName: "د. أحمد محمد علي",
+  //         requesterEmail: "dr.ahmed.mohamed@vetclinic.com",
+  //       },
+  //       {
+  //         id: 2,
+  //         requestType: "clinic_activation" as const,
+  //         requesterId: 2,
+  //         resourceId: 2,
+  //         title: "طلب تفعيل عيادة الرحمة البيطرية",
+  //         description:
+  //           "طلب تفعيل عيادة بيطرية متخصصة في علاج الحيوانات الأليفة",
+  //         documents: null,
+  //         licenseImages: JSON.stringify([
+  //           "clinic_license_2024.jpg",
+  //           "health_permit.pdf",
+  //         ]),
+  //         identityImages: JSON.stringify([
+  //           "owner_national_id.jpg",
+  //           "business_owner_id.jpg",
+  //         ]),
+  //         officialDocuments: JSON.stringify([
+  //           "commercial_register.pdf",
+  //           "tax_certificate.pdf",
+  //           "municipality_permit.pdf",
+  //           "fire_safety_cert.pdf",
+  //         ]),
+  //         paymentStatus: "completed" as const,
+  //         paymentAmount: 1200,
+  //         paymentMethod: "تحويل بنكي - البنك الأهلي",
+  //         paymentTransactionId: "BANK_TXN_CLI_2024_005678",
+  //         paymentCompletedAt: new Date("2024-01-12T14:45:00"),
+  //         paymentReceipt: "bank_transfer_receipt_005678.pdf",
+  //         status: "pending",
+  //         priority: "normal",
+  //         createdAt: new Date("2024-01-08T11:20:00"),
+  //         requesterName: "محمد سالم الأحمدي",
+  //         requesterEmail: "mohammed.salem@rahma-clinic.com",
+  //       },
+  //       {
+  //         id: 10001,
+  //         requestType: "clinic_renewal" as const,
+  //         requesterId: 6,
+  //         resourceId: 1,
+  //         title: "طلب تجديد اشتراك عيادة الشفاء البيطرية",
+  //         description: "انتهت صلاحية تفعيل العيادة في 15/12/2024",
+  //         documents: null,
+  //         licenseImages: null,
+  //         identityImages: null,
+  //         officialDocuments: null,
+  //         paymentStatus: "pending" as const,
+  //         paymentAmount: 1200,
+  //         paymentMethod: null,
+  //         paymentTransactionId: null,
+  //         paymentCompletedAt: null,
+  //         paymentReceipt: null,
+  //         status: "pending",
+  //         priority: "high",
+  //         createdAt: new Date("2024-12-15T10:00:00"),
+  //         requesterName: "د. علي أحمد",
+  //         requesterEmail: "dr.ali@shifa-clinic.com",
+  //       },
+  //       {
+  //         id: 20001,
+  //         requestType: "store_renewal" as const,
+  //         requesterId: 7,
+  //         resourceId: 1,
+  //         title: "طلب تجديد اشتراك مخزن الأدوية البيطرية",
+  //         description: "انتهت صلاحية تفعيل المخزن في 10/12/2024",
+  //         documents: null,
+  //         licenseImages: null,
+  //         identityImages: null,
+  //         officialDocuments: null,
+  //         paymentStatus: "completed" as const,
+  //         paymentAmount: 800,
+  //         paymentMethod: "بطاقة ائتمان - فيزا",
+  //         paymentTransactionId: "TXN_STORE_RENEWAL_2024_001",
+  //         paymentCompletedAt: new Date("2024-12-10T14:30:00"),
+  //         paymentReceipt: "renewal_receipt_001.pdf",
+  //         status: "pending",
+  //         priority: "normal",
+  //         createdAt: new Date("2024-12-10T09:00:00"),
+  //         requesterName: "أحمد محمود",
+  //         requesterEmail: "ahmed@vet-pharmacy.com",
+  //       },
+  //       {
+  //         id: 3,
+  //         requestType: "store_activation" as const,
+  //         requesterId: 3,
+  //         resourceId: 3,
+  //         title: "طلب تفعيل متجر أليف للحيوانات الأليفة",
+  //         description: "متجر متخصص في بيع مستلزمات وأغذية الحيوانات الأليفة",
+  //         documents: null,
+  //         licenseImages: JSON.stringify([
+  //           "store_license.jpg",
+  //           "retail_permit.pdf",
+  //         ]),
+  //         identityImages: JSON.stringify([
+  //           "owner_id_front.jpg",
+  //           "owner_id_back.jpg",
+  //           "student_id.jpg",
+  //         ]),
+  //         officialDocuments: JSON.stringify([
+  //           "commercial_license.pdf",
+  //           "vat_certificate.pdf",
+  //           "store_lease_contract.pdf",
+  //         ]),
+  //         paymentStatus: "pending" as const,
+  //         paymentAmount: 800,
+  //         paymentMethod: null,
+  //         paymentTransactionId: null,
+  //         paymentCompletedAt: null,
+  //         paymentReceipt: null,
+  //         status: "pending",
+  //         priority: "normal",
+  //         createdAt: new Date("2024-01-14T16:30:00"),
+  //         requesterName: "فاطمة أحمد الزهراني",
+  //         requesterEmail: "fatima.ahmed@aleef-store.com",
+  //       },
+  //       {
+  //         id: 4,
+  //         requestType: "vet_registration" as const,
+  //         requesterId: 4,
+  //         resourceId: 4,
+  //         title: "طلب تسجيل طبيب بيطري - د. سارة خالد",
+  //         description: "طبيبة بيطرية متخصصة في جراحة الحيوانات الصغيرة",
+  //         documents: null,
+  //         licenseImages: JSON.stringify([
+  //           "vet_license_sarah.jpg",
+  //           "surgery_specialization.pdf",
+  //         ]),
+  //         identityImages: JSON.stringify([
+  //           "doctor_national_id.jpg",
+  //           "medical_association_card.jpg",
+  //         ]),
+  //         officialDocuments: JSON.stringify([
+  //           "phd_certificate.pdf",
+  //           "residency_completion.pdf",
+  //           "board_certification.pdf",
+  //         ]),
+  //         paymentStatus: "failed" as const,
+  //         paymentAmount: 750,
+  //         paymentMethod: "بطاقة ائتمان - ماستركارد",
+  //         paymentTransactionId: "FAILED_TXN_2024_009876",
+  //         paymentCompletedAt: null,
+  //         paymentReceipt: null,
+  //         status: "pending",
+  //         priority: "high",
+  //         createdAt: new Date("2024-01-13T13:45:00"),
+  //         requesterName: "د. سارة خالد المطيري",
+  //         requesterEmail: "dr.sarah.khalid@surgery-vet.com",
+  //       },
+  //       {
+  //         id: 5,
+  //         requestType: "clinic_activation" as const,
+  //         requesterId: 5,
+  //         resourceId: 5,
+  //         title: "طلب تفعيل مستشفى الحيوان المتقدم",
+  //         description: "مستشفى بيطري متكامل مع أحدث التقنيات والمعدات",
+  //         documents: null,
+  //         licenseImages: JSON.stringify([
+  //           "hospital_license.jpg",
+  //           "advanced_equipment_cert.pdf",
+  //         ]),
+  //         identityImages: JSON.stringify([
+  //           "director_id.jpg",
+  //           "medical_director_card.jpg",
+  //         ]),
+  //         officialDocuments: JSON.stringify([
+  //           "hospital_permit.pdf",
+  //           "equipment_certificates.pdf",
+  //           "staff_qualifications.pdf",
+  //           "insurance_policy.pdf",
+  //         ]),
+  //         paymentStatus: "not_required" as const,
+  //         paymentAmount: null,
+  //         paymentMethod: null,
+  //         paymentTransactionId: null,
+  //         paymentCompletedAt: null,
+  //         paymentReceipt: null,
+  //         status: "pending",
+  //         priority: "urgent",
+  //         createdAt: new Date("2024-01-16T08:00:00"),
+  //         requesterName: "د. عبدالله الراشد",
+  //         requesterEmail: "dr.abdullah@advanced-animal-hospital.com",
+  //       },
+  //     ];
+  //   }
+  //   return approvals || [];
+  // }, [approvals, approvalsError]);
 
-  // Filter approvals based on selected type for better performance
-  const filteredApprovals = useMemo(() => {
-    if (!effectiveApprovals || effectiveApprovals.length === 0) return [];
+  // // Filter approvals based on selected type for better performance
+  // const filteredApprovals = useMemo(() => {
+  //   if (!effectiveApprovals || effectiveApprovals.length === 0) return [];
 
-    if (selectedType === "all") return effectiveApprovals;
+  //   if (selectedType === "all") return effectiveApprovals;
 
-    return effectiveApprovals.filter((approval) => {
-      if (
-        selectedType === "lost_pets" ||
-        selectedType === "breeding_pets" ||
-        selectedType === "pet_management"
-      ) {
-        return true;
-      }
-      return approval.requestType === selectedType;
-    });
-  }, [effectiveApprovals, selectedType]);
+  //   return effectiveApprovals.filter((approval) => {
+  //     if (
+  //       selectedType === "lost_pets" ||
+  //       selectedType === "breeding_pets" ||
+  //       selectedType === "pet_management"
+  //     ) {
+  //       return true;
+  //     }
+  //     return approval.requestType === selectedType;
+  //   });
+  // }, [effectiveApprovals, selectedType]);
 
   // Get approval details with optimization
-  const { data: approvalDetails } = useQuery({
-    ...trpc.admin.approvals.getDetails.queryOptions({
-      requestId: selectedRequest?.id || 0,
-      adminId: currentUser.id,
-    }),
-    enabled: !!selectedRequest,
-    staleTime: 60000,
-  });
+  // const { data: selectedRequest } = useQuery({
+  //   ...trpc.admin.approvals.getDetails.queryOptions({
+  //     requestId: selectedRequest?.id || 0,
+  //     adminId: user?.id,
+  //   }),
+  //   enabled: !!selectedRequest,
+  //   staleTime: 60000,
+  // });
 
   // Approve mutation
   const approveMutation = useMutation(
@@ -441,90 +447,104 @@ export default function AdminApprovalsScreen() {
   };
 
   const handleApprove = (request: ApprovalRequest) => {
-    if (
-      request.requestType === "clinic_activation" ||
-      request.requestType === "store_activation" ||
-      request.requestType === "clinic_renewal" ||
-      request.requestType === "store_renewal"
-    ) {
-      // Show modal for activation dates
-      setSelectedRequest(request);
-      const today = new Date();
-      const nextYear = new Date(
-        today.getFullYear() + 1,
-        today.getMonth(),
-        today.getDate()
-      );
-      setActivationStartDate(today.toISOString().split("T")[0]);
-      setActivationEndDate(nextYear.toISOString().split("T")[0]);
-      setShowApprovalModal(true);
-    } else {
-      // Direct approval for vet registration
-      Alert.alert(
-        "تأكيد الموافقة",
-        `هل أنت متأكد من الموافقة على ${request.title}؟`,
-        [
-          { text: "إلغاء", style: "cancel" },
-          {
-            text: "موافقة",
-            style: "default",
-            onPress: () => {
-              approveMutation.mutate(
-                {
-                  requestId: request.id,
-                  adminId: currentUser.id,
-                  adminNotes: "تم قبول الطلب من قبل الإدارة",
-                },
-                {
-                  onSuccess: () => {
-                    Alert.alert("نجح", "تم قبول الطلب بنجاح");
-                    refetch();
-                    setShowDetailsModal(false);
-                  },
-                  onError: (error) => {
-                    Alert.alert("خطأ", error.message);
-                  },
-                }
-              );
-            },
-          },
-        ]
-      );
-    }
+    // if (
+    //   request.requestType === "clinic_activation" ||
+    //   request.requestType === "store_activation" ||
+    //   request.requestType === "clinic_renewal" ||
+    //   request.requestType === "store_renewal"
+    // ) {
+    //   // Show modal for activation dates
+    //   setSelectedRequest(request);
+    //   const today = new Date();
+    //   const nextYear = new Date(
+    //     today.getFullYear() + 1,
+    //     today.getMonth(),
+    //     today.getDate()
+    //   );
+    //   setActivationStartDate(today.toISOString().split("T")[0]);
+    //   setActivationEndDate(nextYear.toISOString().split("T")[0]);
+    // } else {
+    // Direct approval for vet registration
+    setSelectedRequest(request);
+    setShowApprovalModal(true);
+    // approveMutation.mutate(
+    //   {
+    //     requestId: Number(request.id),
+    //     adminId: Number(user?.id),
+    //     adminNotes: "تم قبول الطلب من قبل الإدارة",
+    //   },
+    //   {
+    //     onSuccess: () => {
+    //       showToast({
+    //         type: "success",
+    //         message: "تم قبول الطلب بنجاح",
+    //       });
+    //       refetch();
+    //       setShowDetailsModal(false);
+    //     },
+    //     onError: (error) => {
+    //       showToast({ type: "success", message: error?.message });
+    //       // Alert.alert("خطأ", error.message);
+    //     },
+    //   }
+    // );
+
+    // Alert.alert(
+    //   "تأكيد الموافقة",
+    //   `هل أنت متأكد من الموافقة على ${request.title}؟`,
+    //   [
+    //     { text: "إلغاء", style: "cancel" },
+    //     {
+    //       text: "موافقة",
+    //       style: "default",
+    //       onPress: () => {
+
+    //       },
+    //     },
+    //   ]
+    // );
+    // }
+  };
+
+  const parseDate = (str: string) => {
+    const [day, month, year] = str.split("/").map(Number);
+    return new Date(year, month - 1, day);
   };
 
   const confirmApprovalWithDates = () => {
-    if (!selectedRequest || !activationStartDate || !activationEndDate) {
-      Alert.alert("خطأ", "يجب تحديد تواريخ التفعيل");
+    if (!activationStartDate || !activationEndDate) {
+      showToast({ type: "error", message: "يجب تحديد تواريخ التفعيل" });
       return;
     }
 
     approveMutation.mutate(
       {
-        requestId: selectedRequest.id,
-        adminId: currentUser.id,
+        requestId: Number(selectedRequest?.id),
+        adminId: Number(user?.id),
         adminNotes: "تم قبول الطلب من قبل الإدارة مع تحديد تواريخ التفعيل",
-        activationStartDate: new Date(activationStartDate),
-        activationEndDate: new Date(activationEndDate),
+        activationStartDate: parseDate(activationStartDate),
+        activationEndDate: parseDate(activationEndDate),
       },
       {
         onSuccess: () => {
-          Alert.alert("نجح", "تم قبول الطلب بنجاح");
+          showToast({ type: "success", message: "تم قبول الطلب بنجاج" });
           refetch();
-          setShowApprovalModal(false);
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message);
+          showToast({ type: "error", message: error.message });
         },
       }
     );
+
     setShowApprovalModal(false);
+    setShowDetailsModal(false);
   };
 
   const handleReject = (request: ApprovalRequest) => {
     setSelectedRequest(request);
     setRejectionReason("");
     setShowRejectModal(true);
+    // console.log(request);
   };
 
   const confirmReject = () => {
@@ -533,27 +553,27 @@ export default function AdminApprovalsScreen() {
     if (rejectionReason.trim()) {
       rejectMutation.mutate(
         {
-          requestId: selectedRequest.id,
-          adminId: currentUser.id,
+          requestId: Number(selectedRequest.requesterId),
+          adminId: Number(user?.id),
           rejectionReason: rejectionReason.trim(),
           adminNotes: "تم رفض الطلب من قبل الإدارة",
         },
         {
           onSuccess: () => {
-            Alert.alert("نجح", "تم رفض الطلب");
-            refetch();
+            showToast({ type: "success", message: "تم رفض الطلب بنجاح" });
             setShowRejectModal(false);
             setRejectionReason("");
+            refetch();
           },
           onError: (error) => {
-            Alert.alert("خطأ", error.message);
+            showToast({ type: "error", message: error.message });
           },
         }
       );
       setShowRejectModal(false);
       setRejectionReason("");
     } else {
-      Alert.alert("خطأ", "يجب إدخال سبب الرفض");
+      showToast({ type: "error", message: "يجب إدخال سبب الرفض" });
     }
   };
 
@@ -743,38 +763,34 @@ export default function AdminApprovalsScreen() {
           </View>
 
           <ScrollView style={styles.modalScroll}>
-            {(approvalDetails || selectedRequest) && (
+            {selectedRequest && (
               <>
                 <View style={styles.detailSection}>
                   <Text style={styles.sectionTitle}>معلومات الطلب</Text>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>النوع:</Text>
                     <Text style={styles.detailValue}>
-                      {getRequestTypeText(
-                        (approvalDetails || selectedRequest)!.requestType
-                      )}
+                      {getRequestTypeText(selectedRequest!.requestType)}
                     </Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>العنوان:</Text>
                     <Text style={styles.detailValue}>
-                      {(approvalDetails || selectedRequest)!.title}
+                      {selectedRequest!.title}
                     </Text>
                   </View>
-                  {(approvalDetails || selectedRequest)!.description && (
+                  {selectedRequest!.description && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>الوصف:</Text>
                       <Text style={styles.detailValue}>
-                        {(approvalDetails || selectedRequest)!.description}
+                        {selectedRequest!.description}
                       </Text>
                     </View>
                   )}
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>تاريخ التقديم:</Text>
                     <Text style={styles.detailValue}>
-                      {formatDate(
-                        (approvalDetails || selectedRequest)!.createdAt
-                      )}
+                      {formatDate(selectedRequest!.createdAt)}
                     </Text>
                   </View>
                 </View>
@@ -784,20 +800,20 @@ export default function AdminApprovalsScreen() {
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>الاسم:</Text>
                     <Text style={styles.detailValue}>
-                      {(approvalDetails || selectedRequest)!.requesterName}
+                      {selectedRequest!.requesterName}
                     </Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>البريد الإلكتروني:</Text>
                     <Text style={styles.detailValue}>
-                      {(approvalDetails || selectedRequest)!.requesterEmail}
+                      {selectedRequest!.requesterEmail}
                     </Text>
                   </View>
-                  {approvalDetails && approvalDetails.requesterPhone && (
+                  {selectedRequest.requesterPhone && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>الهاتف:</Text>
                       <Text style={styles.detailValue}>
-                        {approvalDetails.requesterPhone}
+                        {selectedRequest.requesterPhone}
                       </Text>
                     </View>
                   )}
@@ -813,33 +829,29 @@ export default function AdminApprovalsScreen() {
                         styles.paymentMainStatusBadge,
                         {
                           backgroundColor: getPaymentStatusColor(
-                            (approvalDetails || selectedRequest)!.paymentStatus
+                            selectedRequest!.paymentStatus
                           ),
                         },
                       ]}
                     >
                       <Text style={styles.paymentMainStatusText}>
-                        {getPaymentStatusText(
-                          (approvalDetails || selectedRequest)!.paymentStatus
-                        )}
+                        {getPaymentStatusText(selectedRequest!.paymentStatus)}
                       </Text>
                     </View>
                   </View>
 
                   <View style={styles.paymentStatusContainer}>
                     {/* Payment Requirements for Clinics and Stores */}
-                    {((approvalDetails || selectedRequest)!.requestType ===
-                      "clinic_activation" ||
-                      (approvalDetails || selectedRequest)!.requestType ===
-                        "store_activation") && (
+                    {(selectedRequest!.requestType === "clinic_activation" ||
+                      selectedRequest!.requestType === "store_activation") && (
                       <View style={styles.paymentRequirementCard}>
                         <View style={styles.paymentRequirementHeader}>
                           <View style={styles.paymentRequirementIcon}>
                             <CreditCard size={18} color={COLORS.white} />
                           </View>
                           <Text style={styles.paymentRequirementTitle}>
-                            {(approvalDetails || selectedRequest)!
-                              .requestType === "clinic_activation"
+                            {selectedRequest!.requestType ===
+                            "clinic_activation"
                               ? "رسوم تفعيل العيادة"
                               : "رسوم تفعيل المتجر"}
                           </Text>
@@ -851,8 +863,7 @@ export default function AdminApprovalsScreen() {
                               المبلغ المطلوب:
                             </Text>
                             <Text style={styles.paymentRequirementAmount}>
-                              {(approvalDetails || selectedRequest)!
-                                .paymentAmount || "غير محدد"}{" "}
+                              {selectedRequest!.paymentAmount || "غير محدد"}{" "}
                               ريال
                             </Text>
                           </View>
@@ -863,11 +874,11 @@ export default function AdminApprovalsScreen() {
                                 styles.paymentStatusDot,
                                 {
                                   backgroundColor:
-                                    (approvalDetails || selectedRequest)!
-                                      .paymentStatus === "completed"
+                                    selectedRequest!.paymentStatus ===
+                                    "completed"
                                       ? COLORS.success
-                                      : (approvalDetails || selectedRequest)!
-                                          .paymentStatus === "pending"
+                                      : selectedRequest!.paymentStatus ===
+                                        "pending"
                                       ? COLORS.warning
                                       : COLORS.error,
                                 },
@@ -878,24 +889,21 @@ export default function AdminApprovalsScreen() {
                                 styles.paymentStatusIndicatorText,
                                 {
                                   color:
-                                    (approvalDetails || selectedRequest)!
-                                      .paymentStatus === "completed"
+                                    selectedRequest!.paymentStatus ===
+                                    "completed"
                                       ? COLORS.success
-                                      : (approvalDetails || selectedRequest)!
-                                          .paymentStatus === "pending"
+                                      : selectedRequest!.paymentStatus ===
+                                        "pending"
                                       ? COLORS.warning
                                       : COLORS.error,
                                 },
                               ]}
                             >
-                              {(approvalDetails || selectedRequest)!
-                                .paymentStatus === "completed"
+                              {selectedRequest!.paymentStatus === "completed"
                                 ? "تم دفع الرسوم"
-                                : (approvalDetails || selectedRequest)!
-                                    .paymentStatus === "pending"
+                                : selectedRequest!.paymentStatus === "pending"
                                 ? "في انتظار الدفع"
-                                : (approvalDetails || selectedRequest)!
-                                    .paymentStatus === "failed"
+                                : selectedRequest!.paymentStatus === "failed"
                                 ? "فشل في الدفع"
                                 : "غير مطلوب"}
                             </Text>
@@ -905,31 +913,25 @@ export default function AdminApprovalsScreen() {
                     )}
 
                     {/* Payment Details */}
-                    {(approvalDetails || selectedRequest)!.paymentStatus !==
-                      "not_required" && (
+                    {selectedRequest!.paymentStatus !== "not_required" && (
                       <View style={styles.paymentDetailsCard}>
                         <Text style={styles.paymentDetailsTitle}>
                           تفاصيل الدفع
                         </Text>
 
-                        {(approvalDetails || selectedRequest)!
-                          .paymentMethod && (
+                        {selectedRequest!.paymentMethod && (
                           <View style={styles.paymentDetailRow}>
                             <CreditCard size={16} color={COLORS.gray} />
                             <Text style={styles.paymentDetailLabel}>
                               طريقة الدفع:
                             </Text>
                             <Text style={styles.paymentDetailValue}>
-                              {
-                                (approvalDetails || selectedRequest)!
-                                  .paymentMethod
-                              }
+                              {selectedRequest!.paymentMethod}
                             </Text>
                           </View>
                         )}
 
-                        {(approvalDetails || selectedRequest)!
-                          .paymentTransactionId && (
+                        {selectedRequest!.paymentTransactionId && (
                           <View style={styles.paymentDetailRow}>
                             <Receipt size={16} color={COLORS.gray} />
                             <Text style={styles.paymentDetailLabel}>
@@ -941,32 +943,24 @@ export default function AdminApprovalsScreen() {
                                 styles.transactionId,
                               ]}
                             >
-                              {
-                                (approvalDetails || selectedRequest)!
-                                  .paymentTransactionId
-                              }
+                              {selectedRequest!.paymentTransactionId}
                             </Text>
                           </View>
                         )}
 
-                        {(approvalDetails || selectedRequest)!
-                          .paymentCompletedAt && (
+                        {selectedRequest!.paymentCompletedAt && (
                           <View style={styles.paymentDetailRow}>
                             <Clock size={16} color={COLORS.gray} />
                             <Text style={styles.paymentDetailLabel}>
                               تاريخ الدفع:
                             </Text>
                             <Text style={styles.paymentDetailValue}>
-                              {formatDate(
-                                (approvalDetails || selectedRequest)!
-                                  .paymentCompletedAt!
-                              )}
+                              {formatDate(selectedRequest!.paymentCompletedAt!)}
                             </Text>
                           </View>
                         )}
 
-                        {(approvalDetails || selectedRequest)!
-                          .paymentReceipt && (
+                        {selectedRequest!.paymentReceipt && (
                           <TouchableOpacity style={styles.paymentReceiptButton}>
                             <Receipt size={18} color={COLORS.primary} />
                             <Text style={styles.paymentReceiptButtonText}>
@@ -979,9 +973,8 @@ export default function AdminApprovalsScreen() {
                     )}
 
                     {/* Payment Status Messages */}
-                    {(approvalDetails || selectedRequest)!.paymentStatus ===
-                      "pending" &&
-                      (approvalDetails || selectedRequest)!.paymentAmount && (
+                    {selectedRequest!.paymentStatus === "pending" &&
+                      selectedRequest!.paymentAmount && (
                         <View style={styles.paymentAlert}>
                           <View style={styles.paymentAlertIcon}>
                             <AlertTriangle size={20} color={COLORS.warning} />
@@ -998,8 +991,7 @@ export default function AdminApprovalsScreen() {
                         </View>
                       )}
 
-                    {(approvalDetails || selectedRequest)!.paymentStatus ===
-                      "completed" && (
+                    {selectedRequest!.paymentStatus === "completed" && (
                       <View
                         style={[
                           styles.paymentAlert,
@@ -1034,8 +1026,7 @@ export default function AdminApprovalsScreen() {
                       </View>
                     )}
 
-                    {(approvalDetails || selectedRequest)!.paymentStatus ===
-                      "failed" && (
+                    {selectedRequest!.paymentStatus === "failed" && (
                       <View
                         style={[
                           styles.paymentAlert,
@@ -1073,9 +1064,9 @@ export default function AdminApprovalsScreen() {
                 </View>
 
                 {/* Documents Section */}
-                {((approvalDetails || selectedRequest)!.licenseImages ||
-                  (approvalDetails || selectedRequest)!.identityImages ||
-                  (approvalDetails || selectedRequest)!.officialDocuments) && (
+                {(selectedRequest!.licenseImages ||
+                  selectedRequest!.identityImages ||
+                  selectedRequest!.officialDocuments) && (
                   <View style={styles.detailSection}>
                     <View style={styles.sectionHeaderWithIcon}>
                       <Shield size={20} color={COLORS.primary} />
@@ -1088,7 +1079,7 @@ export default function AdminApprovalsScreen() {
                     </View>
 
                     {/* Identity Images - Most Important First */}
-                    {(approvalDetails || selectedRequest)!.identityImages && (
+                    {selectedRequest!.identityImages && (
                       <View style={styles.documentGroup}>
                         <View style={styles.documentHeader}>
                           <View style={styles.documentIconContainer}>
@@ -1115,59 +1106,56 @@ export default function AdminApprovalsScreen() {
                         <View style={styles.documentPreviewContainer}>
                           <Text style={styles.documentCount}>
                             {
-                              JSON.parse(
-                                (approvalDetails || selectedRequest)!
-                                  .identityImages!
-                              ).length
+                              JSON.parse(selectedRequest!.identityImages!)
+                                .length
                             }{" "}
                             صورة مرفقة
                           </Text>
                           <View style={styles.documentImageGrid}>
-                            {JSON.parse(
-                              (approvalDetails || selectedRequest)!
-                                .identityImages!
-                            ).map((doc: string, index: number) => (
-                              <TouchableOpacity
-                                key={index}
-                                style={styles.documentImageItem}
-                              >
-                                <View style={styles.documentImageContainer}>
-                                  <Image size={24} color={COLORS.primary} />
-                                  <Text style={styles.documentImageLabel}>
-                                    صورة {index + 1}
-                                  </Text>
-                                </View>
-                                <View style={styles.documentImageInfo}>
-                                  <Text style={styles.documentImageName}>
-                                    {doc}
-                                  </Text>
-                                  <Text style={styles.documentImageType}>
-                                    {doc.includes("student") ||
-                                    doc.includes("طالب")
-                                      ? "هوية طالب"
-                                      : doc.includes("doctor") ||
-                                        doc.includes("طبيب")
-                                      ? "هوية طبيب"
-                                      : doc.includes("national") ||
-                                        doc.includes("وطنية")
-                                      ? "هوية وطنية"
-                                      : "هوية شخصية"}
-                                  </Text>
-                                </View>
+                            {JSON.parse(selectedRequest!.identityImages!).map(
+                              (doc: string, index: number) => (
                                 <TouchableOpacity
-                                  style={styles.viewImageButton}
+                                  key={index}
+                                  style={styles.documentImageItem}
                                 >
-                                  <Eye size={16} color={COLORS.white} />
+                                  <View style={styles.documentImageContainer}>
+                                    <Image size={24} color={COLORS.primary} />
+                                    <Text style={styles.documentImageLabel}>
+                                      صورة {index + 1}
+                                    </Text>
+                                  </View>
+                                  <View style={styles.documentImageInfo}>
+                                    <Text style={styles.documentImageName}>
+                                      {doc}
+                                    </Text>
+                                    <Text style={styles.documentImageType}>
+                                      {doc.includes("student") ||
+                                      doc.includes("طالب")
+                                        ? "هوية طالب"
+                                        : doc.includes("doctor") ||
+                                          doc.includes("طبيب")
+                                        ? "هوية طبيب"
+                                        : doc.includes("national") ||
+                                          doc.includes("وطنية")
+                                        ? "هوية وطنية"
+                                        : "هوية شخصية"}
+                                    </Text>
+                                  </View>
+                                  <TouchableOpacity
+                                    style={styles.viewImageButton}
+                                  >
+                                    <Eye size={16} color={COLORS.white} />
+                                  </TouchableOpacity>
                                 </TouchableOpacity>
-                              </TouchableOpacity>
-                            ))}
+                              )
+                            )}
                           </View>
                         </View>
                       </View>
                     )}
 
                     {/* License Images */}
-                    {(approvalDetails || selectedRequest)!.licenseImages && (
+                    {selectedRequest!.licenseImages && (
                       <View style={styles.documentGroup}>
                         <View style={styles.documentHeader}>
                           <View
@@ -1198,55 +1186,48 @@ export default function AdminApprovalsScreen() {
 
                         <View style={styles.documentPreviewContainer}>
                           <Text style={styles.documentCount}>
-                            {
-                              JSON.parse(
-                                (approvalDetails || selectedRequest)!
-                                  .licenseImages!
-                              ).length
-                            }{" "}
+                            {JSON.parse(selectedRequest!.licenseImages!).length}{" "}
                             صورة مرفقة
                           </Text>
                           <View style={styles.documentImageGrid}>
-                            {JSON.parse(
-                              (approvalDetails || selectedRequest)!
-                                .licenseImages!
-                            ).map((doc: string, index: number) => (
-                              <TouchableOpacity
-                                key={index}
-                                style={styles.documentImageItem}
-                              >
-                                <View style={styles.documentImageContainer}>
-                                  <Image size={24} color={COLORS.info} />
-                                  <Text style={styles.documentImageLabel}>
-                                    ترخيص {index + 1}
-                                  </Text>
-                                </View>
-                                <View style={styles.documentImageInfo}>
-                                  <Text style={styles.documentImageName}>
-                                    {doc}
-                                  </Text>
-                                  <Text style={styles.documentImageType}>
-                                    ترخيص مهني
-                                  </Text>
-                                </View>
+                            {JSON.parse(selectedRequest!.licenseImages!).map(
+                              (doc: string, index: number) => (
                                 <TouchableOpacity
-                                  style={[
-                                    styles.viewImageButton,
-                                    { backgroundColor: COLORS.info },
-                                  ]}
+                                  key={index}
+                                  style={styles.documentImageItem}
                                 >
-                                  <Eye size={16} color={COLORS.white} />
+                                  <View style={styles.documentImageContainer}>
+                                    <Image size={24} color={COLORS.info} />
+                                    <Text style={styles.documentImageLabel}>
+                                      ترخيص {index + 1}
+                                    </Text>
+                                  </View>
+                                  <View style={styles.documentImageInfo}>
+                                    <Text style={styles.documentImageName}>
+                                      {doc}
+                                    </Text>
+                                    <Text style={styles.documentImageType}>
+                                      ترخيص مهني
+                                    </Text>
+                                  </View>
+                                  <TouchableOpacity
+                                    style={[
+                                      styles.viewImageButton,
+                                      { backgroundColor: COLORS.info },
+                                    ]}
+                                  >
+                                    <Eye size={16} color={COLORS.white} />
+                                  </TouchableOpacity>
                                 </TouchableOpacity>
-                              </TouchableOpacity>
-                            ))}
+                              )
+                            )}
                           </View>
                         </View>
                       </View>
                     )}
 
                     {/* Official Documents */}
-                    {(approvalDetails || selectedRequest)!
-                      .officialDocuments && (
+                    {selectedRequest!.officialDocuments && (
                       <View style={styles.documentGroup}>
                         <View style={styles.documentHeader}>
                           <View
@@ -1280,17 +1261,14 @@ export default function AdminApprovalsScreen() {
                         <View style={styles.documentPreviewContainer}>
                           <Text style={styles.documentCount}>
                             {
-                              JSON.parse(
-                                (approvalDetails || selectedRequest)!
-                                  .officialDocuments!
-                              ).length
+                              JSON.parse(selectedRequest!.officialDocuments!)
+                                .length
                             }{" "}
                             مستند مرفق
                           </Text>
                           <View style={styles.documentList}>
                             {JSON.parse(
-                              (approvalDetails || selectedRequest)!
-                                .officialDocuments!
+                              selectedRequest!.officialDocuments!
                             ).map((doc: string, index: number) => (
                               <TouchableOpacity
                                 key={index}
@@ -1349,27 +1327,27 @@ export default function AdminApprovalsScreen() {
                 )}
 
                 {/* Resource Details */}
-                {approvalDetails && approvalDetails.resourceDetails && (
+                {selectedRequest && selectedRequest.resourceDetails && (
                   <View style={styles.detailSection}>
                     <Text style={styles.sectionTitle}>تفاصيل إضافية</Text>
-                    {approvalDetails.requestType === "vet_registration" &&
-                      approvalDetails.resourceDetails &&
-                      "licenseNumber" in approvalDetails.resourceDetails && (
+                    {selectedRequest.requestType === "vet_registration" &&
+                      selectedRequest.resourceDetails &&
+                      "licenseNumber" in selectedRequest.resourceDetails && (
                         <>
                           <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>رقم الترخيص:</Text>
                             <Text style={styles.detailValue}>
-                              {approvalDetails.resourceDetails.licenseNumber}
+                              {selectedRequest.resourceDetails.licenseNumber}
                             </Text>
                           </View>
                           {"specialization" in
-                            approvalDetails.resourceDetails &&
-                            approvalDetails.resourceDetails.specialization && (
+                            selectedRequest.resourceDetails &&
+                            selectedRequest.resourceDetails.specialization && (
                               <View style={styles.detailRow}>
                                 <Text style={styles.detailLabel}>التخصص:</Text>
                                 <Text style={styles.detailValue}>
                                   {
-                                    approvalDetails.resourceDetails
+                                    selectedRequest.resourceDetails
                                       .specialization
                                   }
                                 </Text>
@@ -1377,31 +1355,31 @@ export default function AdminApprovalsScreen() {
                             )}
                         </>
                       )}
-                    {(approvalDetails.requestType === "clinic_activation" ||
-                      approvalDetails.requestType === "store_activation") &&
-                      approvalDetails.resourceDetails &&
-                      "name" in approvalDetails.resourceDetails && (
+                    {(selectedRequest.requestType === "clinic_activation" ||
+                      selectedRequest.requestType === "store_activation") &&
+                      selectedRequest.resourceDetails &&
+                      "name" in selectedRequest.resourceDetails && (
                         <>
                           <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>الاسم:</Text>
                             <Text style={styles.detailValue}>
-                              {approvalDetails.resourceDetails.name}
+                              {selectedRequest.resourceDetails.name}
                             </Text>
                           </View>
-                          {"address" in approvalDetails.resourceDetails && (
+                          {"address" in selectedRequest.resourceDetails && (
                             <View style={styles.detailRow}>
                               <Text style={styles.detailLabel}>العنوان:</Text>
                               <Text style={styles.detailValue}>
-                                {approvalDetails.resourceDetails.address}
+                                {selectedRequest.resourceDetails.address}
                               </Text>
                             </View>
                           )}
-                          {"phone" in approvalDetails.resourceDetails &&
-                            approvalDetails.resourceDetails.phone && (
+                          {"phone" in selectedRequest.resourceDetails &&
+                            selectedRequest.resourceDetails.phone && (
                               <View style={styles.detailRow}>
                                 <Text style={styles.detailLabel}>الهاتف:</Text>
                                 <Text style={styles.detailValue}>
-                                  {approvalDetails.resourceDetails.phone}
+                                  {selectedRequest.resourceDetails.phone}
                                 </Text>
                               </View>
                             )}
@@ -1498,7 +1476,9 @@ export default function AdminApprovalsScreen() {
             <User
               size={16}
               color={
-                selectedType === "vet_registration" ? COLORS.white : COLORS.gray
+                selectedType === "vet_registration"
+                  ? COLORS.white
+                  : COLORS.primary
               }
             />
             <Text
@@ -1524,7 +1504,7 @@ export default function AdminApprovalsScreen() {
               color={
                 selectedType === "clinic_activation"
                   ? COLORS.white
-                  : COLORS.gray
+                  : COLORS.primary
               }
             />
             <Text
@@ -1548,7 +1528,9 @@ export default function AdminApprovalsScreen() {
             <Store
               size={16}
               color={
-                selectedType === "store_activation" ? COLORS.white : COLORS.gray
+                selectedType === "store_activation"
+                  ? COLORS.white
+                  : COLORS.primary
               }
             />
             <Text
@@ -1574,7 +1556,7 @@ export default function AdminApprovalsScreen() {
               color={
                 selectedType === "clinic_renewal"
                   ? COLORS.white
-                  : COLORS.success
+                  : COLORS.primary
               }
             />
             <Text
@@ -1680,8 +1662,8 @@ export default function AdminApprovalsScreen() {
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {filteredApprovals && filteredApprovals.length > 0 ? (
-          filteredApprovals.map((request) => (
+        {approvals?.length > 0 ? (
+          approvals?.map((request) => (
             <View key={request.id} style={styles.requestCard}>
               <View style={styles.requestHeader}>
                 <View style={styles.requestInfo}>
@@ -1835,9 +1817,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   filterTabText: {
-    fontSize: 14,
-    color: COLORS.gray,
-    fontWeight: "500",
+    fontSize: 16,
+    color: COLORS.primary,
+    // fontWeight: "500",
   },
   activeFilterTabText: {
     color: COLORS.white,
@@ -2002,6 +1984,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 4,
+    borderRadius: "100%",
+    backgroundColor: "red",
   },
   modalScroll: {
     maxHeight: 400,

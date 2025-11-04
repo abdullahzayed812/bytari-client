@@ -43,10 +43,10 @@ export default function AuthScreen() {
   const { t, isRTL } = useI18n();
   const { login } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("ali@mail.com");
+  const [password, setPassword] = useState("123123");
+  const [confirmPassword, setConfirmPassword] = useState("123123");
+  const [name, setName] = useState("ali");
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showCountryPicker, setShowCountryPicker] = useState(false);
@@ -244,11 +244,11 @@ export default function AuthScreen() {
           email: usernameOrEmail,
           password,
           phone: `${selectedCountry.code}${phoneNumber}`,
-          country: selectedLocationCountry,
+          city: selectedLocationCountry,
           province: selectedProvince,
           gender: selectedGender as "male" | "female",
-          idFrontImage: idFrontImage?.uri, // Assuming URI is the path to the uploaded file
-          idBackImage: idBackImage?.uri,
+          idFrontImage: "", // Assuming URI is the path to the uploaded file
+          idBackImage: "",
           veterinarianType,
         },
         {
@@ -408,6 +408,7 @@ export default function AuthScreen() {
         copyToCacheDirectory: true,
       });
 
+      console.log(result.assets[0].uri);
       if (!result.canceled && result.assets[0]) {
         setIdBackImage(result.assets[0]);
         if (errors.idBack) {
@@ -1072,7 +1073,7 @@ export default function AuthScreen() {
                   </Text>
                   <TouchableOpacity
                     style={[
-                      styles.documentButton,
+                      +styles.documentButton,
                       errors.idBack && styles.inputError,
                     ]}
                     onPress={handleIdBackPick}

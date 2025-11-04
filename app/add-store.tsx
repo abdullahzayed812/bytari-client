@@ -1,10 +1,30 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
+import { useToastContext } from "../providers/ToastProvider";
 import Button from "../components/Button";
-import { ArrowRight, Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "lucide-react-native";
+import {
+  ArrowRight,
+  Upload,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Eye,
+  EyeOff,
+  Edit,
+  School,
+} from "lucide-react-native";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { queryClient, trpc } from "../lib/trpc";
@@ -25,7 +45,8 @@ interface StoreFormData {
 
 export default function AddStoreScreen() {
   const { t, isRTL } = useI18n();
-  const { user, hasAdminAccess } = useApp();
+  const { hasAdminAccess } = useApp();
+  const { showToast } = useToastContext();
   const [showSubscription, setShowSubscription] = useState(false);
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
@@ -39,31 +60,36 @@ export default function AddStoreScreen() {
     workingHours: "",
   });
 
-  const createStoreMutation = useMutation(trpc.stores.create.mutationOptions({}));
+  const createStoreMutation = useMutation(
+    trpc.stores.create.mutationOptions({})
+  );
 
   const handleSubmit = async () => {
+    // Validation
     if (!formData.name.trim()) {
-      Alert.alert("خطأ", "اسم المذخر مطلوب");
+      showToast("خطأ", "اسم المذخر مطلوب", "error");
       return;
     }
     if (!formData.address.trim()) {
-      Alert.alert("خطأ", "العنوان مطلوب");
+      showToast("خطأ", "العنوان مطلوب", "error");
+      return;
+    }
+    if (!formData.category.trim()) {
+      showToast("خطأ", "الفئة مطلوبة", "error");
       return;
     }
     if (!formData.licenseNumber.trim()) {
-      Alert.alert("خطأ", "رقم الترخيص مطلوب");
+      showToast("خطأ", "رقم الترخيص مطلوب", "error");
       return;
     }
     if (!formData.licenseImage.trim()) {
-      Alert.alert("خطأ", "صورة الترخيص مطلوبة");
+      showToast("خطأ", "صورة الترخيص مطلوبة", "error");
       return;
     }
 
-    // setIsSubmitting(true);
     try {
       createStoreMutation.mutate(
         {
-          userId: user?.id,
           name: formData.name,
           description: formData.description,
           address: formData.address,
@@ -76,33 +102,27 @@ export default function AddStoreScreen() {
         },
         {
           onSuccess: (data) => {
-            Alert.alert("نجح", data.message, [
-              {
-                text: "موافق",
-                onPress: () => {
-                  queryClient.invalidateQueries(trpc.content.stores.list.queryKey);
-                  router.back();
-                },
-              },
-            ]);
+            showToast("نجح", data.message, "success");
+            queryClient.invalidateQueries(trpc.content.stores.list.queryKey);
+            router.back();
           },
           onError: (error) => {
-            Alert.alert("خطأ", error.message);
+            showToast("خطأ", error.message, "error");
           },
         }
       );
     } catch (error) {
       console.error("Error creating store:", error);
-    } finally {
-      // setIsSubmitting(false);
+      showToast("خطأ", "حدث خطأ أثناء إرسال الطلب", "error");
     }
   };
 
   const handleImageUpload = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
+        showToast("خطأ", "نحتاج إلى إذن للوصول إلى الصور", "error");
         return;
       }
 
@@ -118,10 +138,11 @@ export default function AddStoreScreen() {
           ...prev,
           licenseImage: result.assets[0].uri,
         }));
+        showToast("نجح", "تم رفع الصورة بنجاح", "success");
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
+      showToast("خطأ", "حدث خطأ أثناء اختيار الصورة", "error");
     }
   };
 
@@ -143,7 +164,9 @@ export default function AddStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, name: text }))
+                }
                 placeholder="أدخل اسم المذخر"
                 textAlign={isRTL ? "right" : "left"}
               />
@@ -154,7 +177,9 @@ export default function AddStoreScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, description: text }))
+                }
                 placeholder="وصف المذخر والخدمات المقدمة"
                 multiline
                 numberOfLines={3}
@@ -169,7 +194,9 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.address}
-                  onChangeText={(text) => setFormData((prev) => ({ ...prev, address: text }))}
+                  onChangeText={(text) =>
+                    setFormData((prev) => ({ ...prev, address: text }))
+                  }
                   placeholder="العنوان الكامل للمذخر"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -187,7 +214,9 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.phone}
-                  onChangeText={(text) => setFormData((prev) => ({ ...prev, phone: text }))}
+                  onChangeText={(text) =>
+                    setFormData((prev) => ({ ...prev, phone: text }))
+                  }
                   placeholder="رقم الهاتف"
                   keyboardType="phone-pad"
                   textAlign={isRTL ? "right" : "left"}
@@ -202,7 +231,9 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.email}
-                  onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
+                  onChangeText={(text) =>
+                    setFormData((prev) => ({ ...prev, email: text }))
+                  }
                   placeholder="البريد الإلكتروني"
                   keyboardType="email-address"
                   textAlign={isRTL ? "right" : "left"}
@@ -211,13 +242,15 @@ export default function AddStoreScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>الفئة</Text>
+              <Text style={styles.label}>الفئة *</Text>
               <View style={styles.inputWithIcon}>
                 <School size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.category}
-                  onChangeText={(text) => setFormData((prev) => ({ ...prev, category: text }))}
+                  onChangeText={(text) =>
+                    setFormData((prev) => ({ ...prev, category: text }))
+                  }
                   placeholder="الفئة المتعلق بها المتجر"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -231,7 +264,9 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.workingHours}
-                  onChangeText={(text) => setFormData((prev) => ({ ...prev, workingHours: text }))}
+                  onChangeText={(text) =>
+                    setFormData((prev) => ({ ...prev, workingHours: text }))
+                  }
                   placeholder="مثال: السبت - الخميس: 8:00 ص - 10:00 م"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -247,7 +282,9 @@ export default function AddStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.licenseNumber}
-                onChangeText={(text) => setFormData((prev) => ({ ...prev, licenseNumber: text }))}
+                onChangeText={(text) =>
+                  setFormData((prev) => ({ ...prev, licenseNumber: text }))
+                }
                 placeholder="رقم ترخيص المذخر"
                 textAlign={isRTL ? "right" : "left"}
               />
@@ -255,25 +292,40 @@ export default function AddStoreScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>صورة الترخيص *</Text>
-              <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={handleImageUpload}
+              >
                 <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadText}>{formData.licenseImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>
+                <Text style={styles.uploadText}>
+                  {formData.licenseImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}
+                </Text>
               </TouchableOpacity>
-              {formData.licenseImage && <Image source={{ uri: formData.licenseImage }} style={styles.previewImage} />}
+              {formData.licenseImage && (
+                <Image
+                  source={{ uri: formData.licenseImage }}
+                  style={styles.previewImage}
+                />
+              )}
             </View>
           </View>
 
           {/* Admin Controls for Subscription */}
           {hasAdminAccess && (
             <View style={styles.adminControls}>
-              <TouchableOpacity style={styles.adminButton} onPress={() => setShowSubscription(!showSubscription)}>
+              <TouchableOpacity
+                style={styles.adminButton}
+                onPress={() => setShowSubscription(!showSubscription)}
+              >
                 {showSubscription ? (
                   <EyeOff size={20} color={COLORS.primary} />
                 ) : (
                   <Eye size={20} color={COLORS.primary} />
                 )}
                 <Text style={styles.adminButtonText}>
-                  {showSubscription ? "إخفاء معلومات الاشتراك" : "إظهار معلومات الاشتراك"}
+                  {showSubscription
+                    ? "إخفاء معلومات الاشتراك"
+                    : "إظهار معلومات الاشتراك"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -290,14 +342,24 @@ export default function AddStoreScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-              <Text style={styles.subscriptionText}>• الاشتراك الشهري: 25 دولار</Text>
-              <Text style={styles.subscriptionText}>• يتضمن: عرض المذخر في التطبيق، إضافة المنتجات، إدارة المخزون</Text>
-              <Text style={styles.subscriptionText}>• سيتم تفعيل المذخر بعد الموافقة على الطلب ودفع الاشتراك</Text>
+              <Text style={styles.subscriptionText}>
+                • الاشتراك الشهري: 25 دولار
+              </Text>
+              <Text style={styles.subscriptionText}>
+                • يتضمن: عرض المذخر في التطبيق، إضافة المنتجات، إدارة المخزون
+              </Text>
+              <Text style={styles.subscriptionText}>
+                • سيتم تفعيل المذخر بعد الموافقة على الطلب ودفع الاشتراك
+              </Text>
             </View>
           )}
 
           <Button
-            title={createStoreMutation.isPending ? "جاري الإرسال..." : "إرسال طلب الإضافة"}
+            title={
+              createStoreMutation.isPending
+                ? "جاري الإرسال..."
+                : "إرسال طلب الإضافة"
+            }
             onPress={handleSubmit}
             disabled={createStoreMutation.isPending}
             style={styles.submitButton}

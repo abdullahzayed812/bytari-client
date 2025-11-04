@@ -1,16 +1,41 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, FlatList, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  FlatList,
+  Alert,
+} from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Search, Star, MapPin, Phone, Users, Calendar, TrendingUp, Stethoscope, Bell, Syringe, Settings, ClipboardList, Heart } from 'lucide-react-native';
+import { useRouter, Stack } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ArrowLeft,
+  Search,
+  Star,
+  MapPin,
+  Phone,
+  Users,
+  Calendar,
+  TrendingUp,
+  Stethoscope,
+  Bell,
+  Syringe,
+  Settings,
+  ClipboardList,
+  Heart,
+} from "lucide-react-native";
 import { mockPets } from "../mocks/data";
 import { useApp } from "../providers/AppProvider";
 
 export default function ClinicDashboard() {
   const router = useRouter();
   const { userClinics } = useApp();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [clinicData, setClinicData] = useState<any>(null);
@@ -30,48 +55,76 @@ export default function ClinicDashboard() {
         stats: {
           totalAnimals: 85, // Mock data
           activePatients: 18, // Mock data
-          completedTreatments: 256 // Mock data
+          completedTreatments: 256, // Mock data
         },
-        recentAnimals: mockPets.map(pet => ({
+        recentAnimals: mockPets.map((pet) => ({
           id: pet.id,
           name: pet.name,
-          type: pet.type === 'cat' ? 'قط' : pet.type === 'dog' ? 'كلب' : pet.type === 'rabbit' ? 'أرنب' : pet.type === 'bird' ? 'طائر' : 'حيوان أليف',
+          type:
+            pet.type === "cat"
+              ? "قط"
+              : pet.type === "dog"
+              ? "كلب"
+              : pet.type === "rabbit"
+              ? "أرنب"
+              : pet.type === "bird"
+              ? "طائر"
+              : "حيوان أليف",
           breed: pet.breed,
-          age: `${pet.age} ${pet.age === 1 ? 'سنة' : 'سنوات'}`,
-          owner: 'محمد أحمد',
-          lastVisit: '10-06-2024',
-          status: Math.random() > 0.5 ? 'تحت العلاج' : Math.random() > 0.5 ? 'متعافي' : 'فحص دوري',
+          age: `${pet.age} ${pet.age === 1 ? "سنة" : "سنوات"}`,
+          owner: "محمد أحمد",
+          lastVisit: "10-06-2024",
+          status:
+            Math.random() > 0.5
+              ? "تحت العلاج"
+              : Math.random() > 0.5
+              ? "متعافي"
+              : "فحص دوري",
           image: pet.image,
-          petData: pet
-        }))
+          petData: pet,
+        })),
       });
     } else {
       // Fallback to mock data if no user clinics
       setClinicData({
-        id: 'clinic1',
-        name: 'عيادتي البيطرية',
-        address: 'الموقع المسجل',
-        phone: '+964 770 123 4567',
+        id: "clinic1",
+        name: "عيادتي البيطرية",
+        address: "الموقع المسجل",
+        phone: "+964 770 123 4567",
         rating: 4.8,
         reviewsCount: 156,
         isPremium: false,
         stats: {
           totalAnimals: 85,
           activePatients: 18,
-          completedTreatments: 256
+          completedTreatments: 256,
         },
-        recentAnimals: mockPets.map(pet => ({
+        recentAnimals: mockPets.map((pet) => ({
           id: pet.id,
           name: pet.name,
-          type: pet.type === 'cat' ? 'قط' : pet.type === 'dog' ? 'كلب' : pet.type === 'rabbit' ? 'أرنب' : pet.type === 'bird' ? 'طائر' : 'حيوان أليف',
+          type:
+            pet.type === "cat"
+              ? "قط"
+              : pet.type === "dog"
+              ? "كلب"
+              : pet.type === "rabbit"
+              ? "أرنب"
+              : pet.type === "bird"
+              ? "طائر"
+              : "حيوان أليف",
           breed: pet.breed,
-          age: `${pet.age} ${pet.age === 1 ? 'سنة' : 'سنوات'}`,
-          owner: 'محمد أحمد',
-          lastVisit: '10-06-2024',
-          status: Math.random() > 0.5 ? 'تحت العلاج' : Math.random() > 0.5 ? 'متعافي' : 'فحص دوري',
+          age: `${pet.age} ${pet.age === 1 ? "سنة" : "سنوات"}`,
+          owner: "محمد أحمد",
+          lastVisit: "10-06-2024",
+          status:
+            Math.random() > 0.5
+              ? "تحت العلاج"
+              : Math.random() > 0.5
+              ? "متعافي"
+              : "فحص دوري",
           image: pet.image,
-          petData: pet
-        }))
+          petData: pet,
+        })),
       });
     }
   }, [userClinics]);
@@ -91,79 +144,81 @@ export default function ClinicDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'تحت العلاج': return COLORS.warning;
-      case 'متعافي': return COLORS.success;
-      case 'فحص دوري': return COLORS.primary;
-      default: return COLORS.darkGray;
+      case "تحت العلاج":
+        return COLORS.warning;
+      case "متعافي":
+        return COLORS.success;
+      case "فحص دوري":
+        return COLORS.primary;
+      default:
+        return COLORS.darkGray;
     }
   };
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
-      Alert.alert('تنبيه', 'يرجى إدخال نص للبحث');
+      Alert.alert("تنبيه", "يرجى إدخال نص للبحث");
       return;
     }
 
     setIsSearching(true);
-    
+
     // Filter animals based on search query
-    const results = clinicData.recentAnimals.filter((animal: any) => 
-      animal.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      animal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      animal.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      animal.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (animal.breed && animal.breed.toLowerCase().includes(searchQuery.toLowerCase()))
+    const results = clinicData.recentAnimals.filter(
+      (animal: any) =>
+        animal.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        animal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        animal.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        animal.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (animal.breed &&
+          animal.breed.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     setFilteredAnimals(results);
-    
+
     if (results.length === 0) {
-      Alert.alert('نتائج البحث', 'لم يتم العثور على نتائج مطابقة للبحث');
+      Alert.alert("نتائج البحث", "لم يتم العثور على نتائج مطابقة للبحث");
     }
   };
 
   const clearSearch = () => {
-    setSearchQuery('');
+    setSearchQuery("");
     setFilteredAnimals([]);
     setIsSearching(false);
   };
 
   const handleReportsAndStats = () => {
-    Alert.alert(
-      'التقارير والإحصائيات',
-      'اختر نوع التقرير المطلوب:',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'تقرير شهري', onPress: () => generateMonthlyReport() },
-        { text: 'إحصائيات العيادة', onPress: () => showClinicStats() },
-        { text: 'تقرير الحيوانات', onPress: () => generateAnimalsReport() }
-      ]
-    );
+    Alert.alert("التقارير والإحصائيات", "اختر نوع التقرير المطلوب:", [
+      { text: "إلغاء", style: "cancel" },
+      { text: "تقرير شهري", onPress: () => generateMonthlyReport() },
+      { text: "إحصائيات العيادة", onPress: () => showClinicStats() },
+      { text: "تقرير الحيوانات", onPress: () => generateAnimalsReport() },
+    ]);
   };
 
   const generateMonthlyReport = () => {
-    Alert.alert('تقرير شهري', 'تم إنشاء التقرير الشهري بنجاح');
+    Alert.alert("تقرير شهري", "تم إنشاء التقرير الشهري بنجاح");
   };
 
   const showClinicStats = () => {
     Alert.alert(
-      'إحصائيات العيادة',
+      "إحصائيات العيادة",
       `إجمالي الحيوانات: ${clinicData.stats.totalAnimals}\nالمرضى النشطون: ${clinicData.stats.activePatients}\nالعلاجات المكتملة: ${clinicData.stats.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`
     );
   };
 
   const generateAnimalsReport = () => {
-    Alert.alert('تقرير الحيوانات', 'تم إنشاء تقرير الحيوانات بنجاح');
+    Alert.alert("تقرير الحيوانات", "تم إنشاء تقرير الحيوانات بنجاح");
   };
 
   const handleAllAnimals = () => {
     // Navigate directly to clinic animals page
     router.push({
-      pathname: '/clinic-animals',
+      pathname: "/clinic-animals",
       params: {
         clinicId: clinicData.id,
-        clinicName: clinicData.name
-      }
+        clinicName: clinicData.name,
+      },
     });
   };
 
@@ -171,16 +226,16 @@ export default function ClinicDashboard() {
     if (animal.petData) {
       // Navigate to pet details with full pet data
       router.push({
-        pathname: '/pet-details',
+        pathname: "/pet-details",
         params: {
           petId: animal.petData.id,
-          fromClinic: 'true'
-        }
+          fromClinic: "true",
+        },
       });
     } else {
       // Fallback for animals without full data
       router.push({
-        pathname: '/pet-details',
+        pathname: "/pet-details",
         params: {
           petId: animal.id,
           petName: animal.name,
@@ -190,15 +245,15 @@ export default function ClinicDashboard() {
           ownerName: animal.owner,
           lastVisit: animal.lastVisit,
           status: animal.status,
-          image: animal.image
-        }
+          image: animal.image,
+        },
       });
     }
   };
 
   const renderAnimalItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.animalCard} 
+    <TouchableOpacity
+      style={styles.animalCard}
       activeOpacity={0.8}
       onPress={() => handleAnimalPress(item)}
     >
@@ -206,11 +261,18 @@ export default function ClinicDashboard() {
       <View style={styles.animalInfo}>
         <View style={styles.animalHeader}>
           <Text style={styles.animalName}>{item.name}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(item.status) },
+            ]}
+          >
             <Text style={styles.statusText}>{item.status}</Text>
           </View>
         </View>
-        <Text style={styles.animalDetails}>{item.type} - {item.breed}</Text>
+        <Text style={styles.animalDetails}>
+          {item.type} - {item.breed}
+        </Text>
         <Text style={styles.animalAge}>العمر: {item.age}</Text>
         <Text style={styles.ownerName}>المالك: {item.owner}</Text>
         <Text style={styles.lastVisit}>آخر زيارة: {item.lastVisit}</Text>
@@ -225,7 +287,10 @@ export default function ClinicDashboard() {
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <ArrowLeft size={24} color={COLORS.black} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>لوحة العيادة</Text>
@@ -244,18 +309,26 @@ export default function ClinicDashboard() {
                   <Text style={styles.clinicName}>{clinicData.name}</Text>
                   {clinicData.isPremium && (
                     <View style={styles.premiumBadge}>
-                      <Star size={12} color={COLORS.white} fill={COLORS.white} />
+                      <Star
+                        size={12}
+                        color={COLORS.white}
+                        fill={COLORS.white}
+                      />
                       <Text style={styles.premiumText}>Premium</Text>
                     </View>
                   )}
                 </View>
                 <View style={styles.clinicDetailRow}>
                   <MapPin size={14} color={COLORS.darkGray} />
-                  <Text style={styles.clinicDetailText}>{clinicData.address}</Text>
+                  <Text style={styles.clinicDetailText}>
+                    {clinicData.address}
+                  </Text>
                 </View>
                 <View style={styles.clinicDetailRow}>
                   <Phone size={14} color={COLORS.darkGray} />
-                  <Text style={styles.clinicDetailText}>{clinicData.phone}</Text>
+                  <Text style={styles.clinicDetailText}>
+                    {clinicData.phone}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -263,15 +336,21 @@ export default function ClinicDashboard() {
             {/* Stats */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{clinicData.stats.totalAnimals}</Text>
+                <Text style={styles.statNumber}>
+                  {clinicData.stats.totalAnimals}
+                </Text>
                 <Text style={styles.statLabel}>إجمالي الحيوانات</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{clinicData.stats.activePatients}</Text>
+                <Text style={styles.statNumber}>
+                  {clinicData.stats.activePatients}
+                </Text>
                 <Text style={styles.statLabel}>المرضى النشطون</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{clinicData.stats.completedTreatments}</Text>
+                <Text style={styles.statNumber}>
+                  {clinicData.stats.completedTreatments}
+                </Text>
                 <Text style={styles.statLabel}>العلاجات المكتملة</Text>
               </View>
             </View>
@@ -288,7 +367,7 @@ export default function ClinicDashboard() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.searchButton}
                 onPress={handleSearch}
               >
@@ -301,7 +380,7 @@ export default function ClinicDashboard() {
           <View style={styles.recentSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {isSearching ? 'نتائج البحث' : 'الحيوانات الأخيرة'}
+                {isSearching ? "نتائج البحث" : "الحيوانات الأخيرة"}
               </Text>
               {isSearching ? (
                 <TouchableOpacity onPress={clearSearch}>
@@ -313,7 +392,7 @@ export default function ClinicDashboard() {
                 </TouchableOpacity>
               )}
             </View>
-            
+
             <FlatList
               data={isSearching ? filteredAnimals : clinicData.recentAnimals}
               renderItem={renderAnimalItem}
@@ -334,19 +413,31 @@ export default function ClinicDashboard() {
           <View style={styles.actionsSection}>
             <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
             <View style={styles.actionsGrid}>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/clinic-today-cases')}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push("/clinic-today-cases")}
+              >
                 <ClipboardList size={24} color={COLORS.primary} />
                 <Text style={styles.actionText}>حالات اليوم</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionCard} onPress={() => handleAllAnimals()}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => handleAllAnimals()}
+              >
                 <Users size={24} color={COLORS.success} />
                 <Text style={styles.actionText}>جميع الحيوانات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/clinic-reminders')}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push("/clinic-reminders")}
+              >
                 <Bell size={24} color={COLORS.warning} />
                 <Text style={styles.actionText}>تذكيرات الحيوانات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push('/clinic-vaccinations')}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => router.push("/clinic-vaccinations")}
+              >
                 <Syringe size={24} color={COLORS.error} />
                 <Text style={styles.actionText}>التطعيمات</Text>
               </TouchableOpacity>
@@ -357,27 +448,45 @@ export default function ClinicDashboard() {
           <View style={styles.settingsSection}>
             <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
             <View style={styles.settingsGrid}>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push('/clinic-settings')}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push("/clinic-settings")}
+              >
                 <Settings size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>إعدادات عامة</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push('/clinic-vaccinations')}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push("/clinic-vaccinations")}
+              >
                 <Syringe size={20} color={COLORS.success} />
                 <Text style={styles.settingText}>إدارة التطعيمات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push('/clinic-reminders')}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push("/clinic-reminders")}
+              >
                 <Bell size={20} color={COLORS.warning} />
                 <Text style={styles.settingText}>إدارة التذكيرات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push('/clinic-followups')}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push("/clinic-followups")}
+              >
                 <Heart size={20} color={COLORS.error} />
                 <Text style={styles.settingText}>المتابعات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push('/appointments')}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push("/appointments")}
+              >
                 <Calendar size={20} color={COLORS.darkGray} />
                 <Text style={styles.settingText}>جدولة المواعيد</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => handleReportsAndStats()}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => handleReportsAndStats()}
+              >
                 <TrendingUp size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>التقارير والإحصائيات</Text>
               </TouchableOpacity>
@@ -398,9 +507,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -412,7 +521,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   headerSpacer: {
@@ -434,8 +543,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   clinicHeader: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 20,
   },
   clinicIconContainer: {
@@ -443,27 +552,27 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   clinicInfo: {
     flex: 1,
     marginRight: 16,
   },
   clinicNameRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   clinicName: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   premiumBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -473,11 +582,11 @@ const styles = StyleSheet.create({
   premiumText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   clinicDetailRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 6,
     gap: 6,
   },
@@ -486,39 +595,39 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   searchSection: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 4,
@@ -535,7 +644,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   searchButton: {
     backgroundColor: COLORS.success,
@@ -547,18 +656,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   sectionHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   viewAllText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   animalCard: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 12,
@@ -579,14 +688,14 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   animalHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 4,
   },
   animalName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   statusBadge: {
@@ -597,7 +706,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: COLORS.white,
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   animalDetails: {
     fontSize: 14,
@@ -621,22 +730,22 @@ const styles = StyleSheet.create({
   animalId: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 2,
   },
   clearSearchText: {
     fontSize: 14,
     color: COLORS.error,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   actionsSection: {
     marginBottom: 24,
@@ -645,16 +754,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   settingsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   settingCard: {
-    width: '48%',
+    width: "48%",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 12,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -662,26 +771,26 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     minHeight: 80,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   settingText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginTop: 6,
-    textAlign: 'center',
+    textAlign: "center",
   },
   actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   actionCard: {
-    width: '48%',
+    width: "48%",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 12,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -691,19 +800,19 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

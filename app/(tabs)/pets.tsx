@@ -50,16 +50,16 @@ export default function PetsScreen() {
       { userId: Number(user?.id) || 0 }
       // { enabled: !!user?.id && userMode !== "veterinarian" }
     ),
-    enabled: !!user?.id && userMode !== "veterinarian",
+    // enabled: !!user?.id && userMode !== "veterinarian",
   });
 
   // Fetch user's own farms
   const userFarmsQuery = useQuery(
     trpc.poultryFarms.list.queryOptions(
       { ownerId: Number(user?.id) || 0 },
-      {
-        enabled: !!user?.id && userMode !== "veterinarian",
-      }
+      // {
+      //   enabled: !!user?.id && userMode !== "veterinarian",
+      // }
     )
   );
 

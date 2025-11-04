@@ -16,6 +16,8 @@ import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { Image, ArrowLeft, FileText, Plus, Upload } from "lucide-react-native";
+import Button from "@/components/Button 2";
 
 export default function AddArticleScreen() {
   const { user } = useApp();
