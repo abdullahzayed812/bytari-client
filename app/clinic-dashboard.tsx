@@ -1,17 +1,7 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  FlatList,
-  Alert,
-} from "react-native";
-import React, { useState, useEffect } from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, FlatList, Alert } from "react-native";
+import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack } from "expo-router";
+import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ArrowLeft,
@@ -29,107 +19,28 @@ import {
   ClipboardList,
   Heart,
 } from "lucide-react-native";
-import { mockPets } from "../mocks/data";
-import { useApp } from "../providers/AppProvider";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 
 export default function ClinicDashboard() {
   const router = useRouter();
-  const { userClinics } = useApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [clinicData, setClinicData] = useState<any>(null);
 
-  // Load user's first clinic data
-  useEffect(() => {
-    if (userClinics && userClinics.length > 0) {
-      const clinic = userClinics[0];
-      setClinicData({
-        id: clinic.id,
-        name: clinic.name,
-        address: clinic.address,
-        phone: clinic.phone,
-        rating: clinic.rating || 4.8,
-        reviewsCount: 156, // Mock data
-        isPremium: clinic.isPremium || false,
-        stats: {
-          totalAnimals: 85, // Mock data
-          activePatients: 18, // Mock data
-          completedTreatments: 256, // Mock data
-        },
-        recentAnimals: mockPets.map((pet) => ({
-          id: pet.id,
-          name: pet.name,
-          type:
-            pet.type === "cat"
-              ? "قط"
-              : pet.type === "dog"
-              ? "كلب"
-              : pet.type === "rabbit"
-              ? "أرنب"
-              : pet.type === "bird"
-              ? "طائر"
-              : "حيوان أليف",
-          breed: pet.breed,
-          age: `${pet.age} ${pet.age === 1 ? "سنة" : "سنوات"}`,
-          owner: "محمد أحمد",
-          lastVisit: "10-06-2024",
-          status:
-            Math.random() > 0.5
-              ? "تحت العلاج"
-              : Math.random() > 0.5
-              ? "متعافي"
-              : "فحص دوري",
-          image: pet.image,
-          petData: pet,
-        })),
-      });
-    } else {
-      // Fallback to mock data if no user clinics
-      setClinicData({
-        id: "clinic1",
-        name: "عيادتي البيطرية",
-        address: "الموقع المسجل",
-        phone: "+964 770 123 4567",
-        rating: 4.8,
-        reviewsCount: 156,
-        isPremium: false,
-        stats: {
-          totalAnimals: 85,
-          activePatients: 18,
-          completedTreatments: 256,
-        },
-        recentAnimals: mockPets.map((pet) => ({
-          id: pet.id,
-          name: pet.name,
-          type:
-            pet.type === "cat"
-              ? "قط"
-              : pet.type === "dog"
-              ? "كلب"
-              : pet.type === "rabbit"
-              ? "أرنب"
-              : pet.type === "bird"
-              ? "طائر"
-              : "حيوان أليف",
-          breed: pet.breed,
-          age: `${pet.age} ${pet.age === 1 ? "سنة" : "سنوات"}`,
-          owner: "محمد أحمد",
-          lastVisit: "10-06-2024",
-          status:
-            Math.random() > 0.5
-              ? "تحت العلاج"
-              : Math.random() > 0.5
-              ? "متعافي"
-              : "فحص دوري",
-          image: pet.image,
-          petData: pet,
-        })),
-      });
-    }
-  }, [userClinics]);
+  const { clinicId } = useLocalSearchParams();
 
-  if (!clinicData) {
+  const { data: clinicData, isLoading: isClinicDataLoading } = useQuery({
+    ...trpc.clinics.getDashboardData.queryOptions({ clinicId: Number(clinicId) }),
+    enabled: !!clinicId,
+  });
+  const clinic = useMemo(() => (clinicData as any)?.clinic, [clinicData]);
+
+  const { data: allPets, isLoading: isAllPetsLoading } = useQuery(trpc.pets.getAllPets.queryOptions({}));
+
+  const isLoading = isClinicDataLoading || isAllPetsLoading;
+
+  if (isLoading) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -163,16 +74,16 @@ export default function ClinicDashboard() {
 
     setIsSearching(true);
 
-    // Filter animals based on search query
-    const results = clinicData.recentAnimals.filter(
-      (animal: any) =>
-        animal.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        animal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        animal.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        animal.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (animal.breed &&
-          animal.breed.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+    const results = allPets?.pets?.filter((animal: any) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        (animal.id && animal.id.toString().toLowerCase().includes(q)) ||
+        (animal.name && animal.name.toLowerCase().includes(q)) ||
+        (animal.owner && animal.owner.toLowerCase().includes(q)) ||
+        (animal.type && animal.type.toLowerCase().includes(q)) ||
+        (animal.breed && animal.breed.toLowerCase().includes(q))
+      );
+    });
 
     setFilteredAnimals(results);
 
@@ -203,7 +114,7 @@ export default function ClinicDashboard() {
   const showClinicStats = () => {
     Alert.alert(
       "إحصائيات العيادة",
-      `إجمالي الحيوانات: ${clinicData.stats.totalAnimals}\nالمرضى النشطون: ${clinicData.stats.activePatients}\nالعلاجات المكتملة: ${clinicData.stats.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`
+      `إجمالي الحيوانات: ${clinicData?.stats?.totalAnimals}\nالمرضى النشطون: ${clinicData?.stats?.activePatients}\nالعلاجات المكتملة: ${clinicData?.stats?.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`
     );
   };
 
@@ -216,57 +127,29 @@ export default function ClinicDashboard() {
     router.push({
       pathname: "/clinic-animals",
       params: {
-        clinicId: clinicData.id,
-        clinicName: clinicData.name,
+        clinicId: clinicData?.id,
+        clinicName: clinicData?.name,
       },
     });
   };
 
   const handleAnimalPress = (animal: any) => {
-    if (animal.petData) {
-      // Navigate to pet details with full pet data
-      router.push({
-        pathname: "/pet-details",
-        params: {
-          petId: animal.petData.id,
-          fromClinic: "true",
-        },
-      });
-    } else {
-      // Fallback for animals without full data
-      router.push({
-        pathname: "/pet-details",
-        params: {
-          petId: animal.id,
-          petName: animal.name,
-          petType: animal.type,
-          petBreed: animal.breed,
-          petAge: animal.age,
-          ownerName: animal.owner,
-          lastVisit: animal.lastVisit,
-          status: animal.status,
-          image: animal.image,
-        },
-      });
-    }
+    router.push({
+      pathname: "/(tabs)/pet-details",
+      params: {
+        petId: animal.id,
+        clinicAccess: "true",
+      },
+    });
   };
 
   const renderAnimalItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      style={styles.animalCard}
-      activeOpacity={0.8}
-      onPress={() => handleAnimalPress(item)}
-    >
+    <TouchableOpacity style={styles.animalCard} activeOpacity={0.8} onPress={() => handleAnimalPress(item)}>
       <Image source={{ uri: item.image }} style={styles.animalImage} />
       <View style={styles.animalInfo}>
         <View style={styles.animalHeader}>
           <Text style={styles.animalName}>{item.name}</Text>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusColor(item.status) },
-            ]}
-          >
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusText}>{item.status}</Text>
           </View>
         </View>
@@ -287,10 +170,7 @@ export default function ClinicDashboard() {
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <ArrowLeft size={24} color={COLORS.black} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>لوحة العيادة</Text>
@@ -306,29 +186,21 @@ export default function ClinicDashboard() {
               </View>
               <View style={styles.clinicInfo}>
                 <View style={styles.clinicNameRow}>
-                  <Text style={styles.clinicName}>{clinicData.name}</Text>
-                  {clinicData.isPremium && (
+                  <Text style={styles.clinicName}>{clinic?.name}</Text>
+                  {clinic?.isPremium && (
                     <View style={styles.premiumBadge}>
-                      <Star
-                        size={12}
-                        color={COLORS.white}
-                        fill={COLORS.white}
-                      />
+                      <Star size={12} color={COLORS.white} fill={COLORS.white} />
                       <Text style={styles.premiumText}>Premium</Text>
                     </View>
                   )}
                 </View>
                 <View style={styles.clinicDetailRow}>
                   <MapPin size={14} color={COLORS.darkGray} />
-                  <Text style={styles.clinicDetailText}>
-                    {clinicData.address}
-                  </Text>
+                  <Text style={styles.clinicDetailText}>{clinic?.address}</Text>
                 </View>
                 <View style={styles.clinicDetailRow}>
                   <Phone size={14} color={COLORS.darkGray} />
-                  <Text style={styles.clinicDetailText}>
-                    {clinicData.phone}
-                  </Text>
+                  <Text style={styles.clinicDetailText}>{clinic?.phone}</Text>
                 </View>
               </View>
             </View>
@@ -336,21 +208,15 @@ export default function ClinicDashboard() {
             {/* Stats */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {clinicData.stats.totalAnimals}
-                </Text>
+                <Text style={styles.statNumber}>{clinicData?.stats?.totalAnimals}</Text>
                 <Text style={styles.statLabel}>إجمالي الحيوانات</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {clinicData.stats.activePatients}
-                </Text>
+                <Text style={styles.statNumber}>{clinicData?.stats?.activePatients}</Text>
                 <Text style={styles.statLabel}>المرضى النشطون</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {clinicData.stats.completedTreatments}
-                </Text>
+                <Text style={styles.statNumber}>{clinicData?.stats?.completedTreatments}</Text>
                 <Text style={styles.statLabel}>العلاجات المكتملة</Text>
               </View>
             </View>
@@ -367,10 +233,7 @@ export default function ClinicDashboard() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
-              <TouchableOpacity
-                style={styles.searchButton}
-                onPress={handleSearch}
-              >
+              <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
                 <Search size={20} color={COLORS.white} />
               </TouchableOpacity>
             </View>
@@ -379,9 +242,7 @@ export default function ClinicDashboard() {
           {/* Search Results or Recent Animals Section */}
           <View style={styles.recentSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                {isSearching ? "نتائج البحث" : "الحيوانات الأخيرة"}
-              </Text>
+              <Text style={styles.sectionTitle}>{isSearching ? "نتائج البحث" : "الحيوانات الأخيرة"}</Text>
               {isSearching ? (
                 <TouchableOpacity onPress={clearSearch}>
                   <Text style={styles.clearSearchText}>مسح البحث</Text>
@@ -394,9 +255,9 @@ export default function ClinicDashboard() {
             </View>
 
             <FlatList
-              data={isSearching ? filteredAnimals : clinicData.recentAnimals}
+              data={isSearching ? filteredAnimals : clinicData?.recentAnimals}
               renderItem={renderAnimalItem}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
@@ -413,31 +274,19 @@ export default function ClinicDashboard() {
           <View style={styles.actionsSection}>
             <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
             <View style={styles.actionsGrid}>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/clinic-today-cases")}
-              >
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-today-cases")}>
                 <ClipboardList size={24} color={COLORS.primary} />
                 <Text style={styles.actionText}>حالات اليوم</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => handleAllAnimals()}
-              >
+              <TouchableOpacity style={styles.actionCard} onPress={() => handleAllAnimals()}>
                 <Users size={24} color={COLORS.success} />
                 <Text style={styles.actionText}>جميع الحيوانات</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/clinic-reminders")}
-              >
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-reminders")}>
                 <Bell size={24} color={COLORS.warning} />
                 <Text style={styles.actionText}>تذكيرات الحيوانات</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => router.push("/clinic-vaccinations")}
-              >
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-vaccinations")}>
                 <Syringe size={24} color={COLORS.error} />
                 <Text style={styles.actionText}>التطعيمات</Text>
               </TouchableOpacity>
@@ -448,45 +297,27 @@ export default function ClinicDashboard() {
           <View style={styles.settingsSection}>
             <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
             <View style={styles.settingsGrid}>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push("/clinic-settings")}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-settings")}>
                 <Settings size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>إعدادات عامة</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push("/clinic-vaccinations")}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-vaccinations")}>
                 <Syringe size={20} color={COLORS.success} />
                 <Text style={styles.settingText}>إدارة التطعيمات</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push("/clinic-reminders")}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-reminders")}>
                 <Bell size={20} color={COLORS.warning} />
                 <Text style={styles.settingText}>إدارة التذكيرات</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push("/clinic-followups")}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-followups")}>
                 <Heart size={20} color={COLORS.error} />
                 <Text style={styles.settingText}>المتابعات</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push("/appointments")}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/appointments")}>
                 <Calendar size={20} color={COLORS.darkGray} />
                 <Text style={styles.settingText}>جدولة المواعيد</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => handleReportsAndStats()}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => handleReportsAndStats()}>
                 <TrendingUp size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>التقارير والإحصائيات</Text>
               </TouchableOpacity>

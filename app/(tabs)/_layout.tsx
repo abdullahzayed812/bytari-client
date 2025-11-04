@@ -4,14 +4,7 @@ import { View, StyleSheet, Animated } from "react-native";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
-import {
-  Home,
-  ShoppingBag,
-  Grid,
-  User,
-  Building2,
-  PawPrint,
-} from "lucide-react-native";
+import { Home, ShoppingBag, Grid, User, Building2, PawPrint } from "lucide-react-native";
 import { AdminTopBar } from "../../components/AdminTopBar";
 
 // مكون الأيقونة المتحركة
@@ -108,19 +101,14 @@ const AnimatedTabIcon = ({
       />
 
       {/* الأيقونة الرئيسية */}
-      <View
-        style={[styles.iconContainer, focused && styles.activeIconContainer]}
-      >
-        {children}
-      </View>
+      <View style={[styles.iconContainer, focused && styles.activeIconContainer]}>{children}</View>
     </Animated.View>
   );
 };
 
 export default function TabLayout() {
   const { t, isRTL } = useI18n();
-  const { isAuthenticated, isLoading, userMode, hasAdminAccess, isSuperAdmin } =
-    useApp();
+  const { isAuthenticated, isLoading, userMode, hasAdminAccess, isSuperAdmin } = useApp();
 
   if (isLoading) {
     return null;
@@ -133,7 +121,7 @@ export default function TabLayout() {
   return (
     <View style={styles.container}>
       {/* القائمة العلوية للإدارة - تظهر فقط للمستخدمين الذين لديهم صلاحيات إدارية */}
-      {/* <View style={styles.greenBar} /> */}
+      <View style={styles.greenBar} />
       {hasAdminAccess ? <AdminTopBar /> : null}
 
       <Tabs
@@ -176,10 +164,7 @@ export default function TabLayout() {
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <User
-                  size={22}
-                  color={focused ? COLORS.white : COLORS.primary}
-                />
+                <User size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}
@@ -191,10 +176,7 @@ export default function TabLayout() {
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <ShoppingBag
-                  size={22}
-                  color={focused ? COLORS.white : COLORS.primary}
-                />
+                <ShoppingBag size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}
@@ -206,10 +188,7 @@ export default function TabLayout() {
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <Home
-                  size={22}
-                  color={focused ? COLORS.white : COLORS.primary}
-                />
+                <Home size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}
@@ -222,15 +201,9 @@ export default function TabLayout() {
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
                 {userMode === "veterinarian" ? (
-                  <Building2
-                    size={22}
-                    color={focused ? COLORS.white : COLORS.primary}
-                  />
+                  <Building2 size={22} color={focused ? COLORS.white : COLORS.primary} />
                 ) : (
-                  <PawPrint
-                    size={22}
-                    color={focused ? COLORS.white : COLORS.primary}
-                  />
+                  <PawPrint size={22} color={focused ? COLORS.white : COLORS.primary} />
                 )}
               </AnimatedTabIcon>
             ),
@@ -243,10 +216,7 @@ export default function TabLayout() {
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <Grid
-                  size={22}
-                  color={focused ? COLORS.white : COLORS.primary}
-                />
+                <Grid size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}

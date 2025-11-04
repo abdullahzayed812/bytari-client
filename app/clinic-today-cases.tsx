@@ -1,72 +1,23 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Clock, AlertCircle, CheckCircle, Calendar, User, Stethoscope } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import { trpc } from '@/lib/trpc';
 
 export default function ClinicTodayCases() {
   const router = useRouter();
+  const { clinicId } = useLocalSearchParams();
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
-  // Mock today's cases data
-  const todayCases = [
-    {
-      id: 'case1',
-      petName: 'فلافي',
-      petType: 'قط',
-      ownerName: 'أحمد محمد',
-      appointmentTime: '09:00',
-      status: 'waiting',
-      priority: 'normal',
-      reason: 'فحص دوري',
-      notes: 'فحص شامل للقط'
-    },
-    {
-      id: 'case2',
-      petName: 'ماكس',
-      petType: 'كلب',
-      ownerName: 'سارة أحمد',
-      appointmentTime: '10:30',
-      status: 'in-progress',
-      priority: 'urgent',
-      reason: 'إصابة في الساق',
-      notes: 'كسر محتمل في الساق الأمامية'
-    },
-    {
-      id: 'case3',
-      petName: 'لولو',
-      petType: 'أرنب',
-      ownerName: 'محمد علي',
-      appointmentTime: '11:15',
-      status: 'completed',
-      priority: 'normal',
-      reason: 'تطعيم',
-      notes: 'تطعيم سنوي'
-    },
-    {
-      id: 'case4',
-      petName: 'تويتي',
-      petType: 'طائر',
-      ownerName: 'فاطمة حسن',
-      appointmentTime: '14:00',
-      status: 'waiting',
-      priority: 'high',
-      reason: 'مشاكل في التنفس',
-      notes: 'صعوبة في التنفس منذ يومين'
-    },
-    {
-      id: 'case5',
-      petName: 'سيمبا',
-      petType: 'قط',
-      ownerName: 'عمر خالد',
-      appointmentTime: '15:30',
-      status: 'waiting',
-      priority: 'normal',
-      reason: 'فحص أسنان',
-      notes: 'تنظيف وفحص الأسنان'
-    }
-  ];
+  const { data, isLoading } = useQuery({
+    ...trpc.clinics.getTodayCases.queryOptions({ clinicId: Number(clinicId) }),
+    enabled: !!clinicId,
+  });
+
+  const todayCases = data?.todayCases || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -212,6 +163,12 @@ export default function ClinicTodayCases() {
           <View style={styles.headerSpacer} />
         </View>
 
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>جاري تحميل حالات اليوم...</Text>
+          </View>
+        ) : (
+
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Date Header */}
           <View style={styles.dateHeader}>
@@ -265,6 +222,7 @@ export default function ClinicTodayCases() {
             />
           </View>
         </ScrollView>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -277,6 +235,15 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: COLORS.darkGray,
   },
   header: {
     flexDirection: 'row',

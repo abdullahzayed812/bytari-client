@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  Alert,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert, Image } from "react-native";
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../constants/colors";
@@ -102,9 +93,7 @@ type ClinicData = {
 export default function ClinicSystemScreen() {
   const router = useRouter();
   const { hasAdminAccess, isSuperAdmin } = useApp();
-  const [activeTab, setActiveTab] = useState<
-    "overview" | "register" | "subscription"
-  >("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "register" | "subscription">("overview");
   const [registrationData, setRegistrationData] = useState<ClinicRegistration>({
     name: "",
     description: "",
@@ -130,8 +119,7 @@ export default function ClinicSystemScreen() {
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
   const [showFollowUpForm, setShowFollowUpForm] = useState(false);
   const [showMedicalRecordForm, setShowMedicalRecordForm] = useState(false);
-  const [showFollowUpConfirmation, setShowFollowUpConfirmation] =
-    useState(false);
+  const [showFollowUpConfirmation, setShowFollowUpConfirmation] = useState(false);
   const [treatmentData, setTreatmentData] = useState({
     diagnosis: "",
     treatment: "",
@@ -165,10 +153,7 @@ export default function ClinicSystemScreen() {
     const newVisibility = !isSubscriptionVisible;
     setIsSubscriptionVisible(newVisibility);
     try {
-      await AsyncStorage.setItem(
-        "clinicSubscriptionVisible",
-        newVisibility.toString()
-      );
+      await AsyncStorage.setItem("clinicSubscriptionVisible", newVisibility.toString());
       console.log("Subscription visibility updated:", newVisibility);
     } catch (error) {
       console.error("Error saving subscription visibility:", error);
@@ -190,10 +175,7 @@ export default function ClinicSystemScreen() {
 
   const mockTreatments: TreatmentCard[] = [];
 
-  const handleInputChange = (
-    field: keyof ClinicRegistration,
-    value: string
-  ) => {
+  const handleInputChange = (field: keyof ClinicRegistration, value: string) => {
     setRegistrationData((prev) => ({
       ...prev,
       [field]: value,
@@ -252,9 +234,7 @@ export default function ClinicSystemScreen() {
         onSuccess: (data) => {
           showToast({
             type: "success",
-            message:
-              data?.message ||
-              "تم إرسال طلب تسجيل العيادة بنجاح. سيتم مراجعته من قبل الإدارة.",
+            message: data?.message || "تم إرسال طلب تسجيل العيادة بنجاح. سيتم مراجعته من قبل الإدارة.",
           });
 
           // Reset form
@@ -274,6 +254,7 @@ export default function ClinicSystemScreen() {
           // Navigate back after success
           setTimeout(() => {
             router.back();
+            // trpc.clinics.getUserApprovedClinics.invalidate();
           }, 1000);
         },
         onError: (error) => {
@@ -285,10 +266,7 @@ export default function ClinicSystemScreen() {
         },
       });
     } catch (error) {
-      Alert.alert(
-        "خطأ",
-        "حدث خطأ أثناء تسجيل العيادة. يرجى المحاولة مرة أخرى."
-      );
+      Alert.alert("خطأ", "حدث خطأ أثناء تسجيل العيادة. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsSubmitting(false);
     }
@@ -312,22 +290,15 @@ export default function ClinicSystemScreen() {
       console.log("Clinic subscription request:", subscriptionRequest);
 
       // Show success message to user
-      Alert.alert(
-        "تم إرسال الطلب",
-        "تم إرسال طلب الاشتراك بنجاح. سيتم التواصل معك قريباً لتفعيل عيادتك.",
-        [
-          {
-            text: "موافق",
-            style: "default",
-          },
-        ]
-      );
+      Alert.alert("تم إرسال الطلب", "تم إرسال طلب الاشتراك بنجاح. سيتم التواصل معك قريباً لتفعيل عيادتك.", [
+        {
+          text: "موافق",
+          style: "default",
+        },
+      ]);
     } catch (error) {
       console.error("Error sending subscription request:", error);
-      Alert.alert(
-        "خطأ",
-        "حدث خطأ أثناء إرسال طلب الاشتراك. يرجى المحاولة مرة أخرى."
-      );
+      Alert.alert("خطأ", "حدث خطأ أثناء إرسال طلب الاشتراك. يرجى المحاولة مرة أخرى.");
     }
   };
 
@@ -367,10 +338,7 @@ export default function ClinicSystemScreen() {
 
   const addTreatmentCard = (animal: Animal) => {
     if (!mockClinicData.isPremium) {
-      Alert.alert(
-        "خدمة مدفوعة",
-        "هذه الخدمة متاحة فقط للعيادات المشتركة في الخطة المدفوعة"
-      );
+      Alert.alert("خدمة مدفوعة", "هذه الخدمة متاحة فقط للعيادات المشتركة في الخطة المدفوعة");
       return;
     }
     setSelectedAnimal(animal);
@@ -379,10 +347,7 @@ export default function ClinicSystemScreen() {
 
   const addFollowUpRequest = (animal: Animal) => {
     if (!mockClinicData.isPremium) {
-      Alert.alert(
-        "خدمة مدفوعة",
-        "هذه الخدمة متاحة فقط للعيادات المشتركة في الخطة المدفوعة"
-      );
+      Alert.alert("خدمة مدفوعة", "هذه الخدمة متاحة فقط للعيادات المشتركة في الخطة المدفوعة");
       return;
     }
     setSelectedAnimal(animal);
@@ -391,10 +356,7 @@ export default function ClinicSystemScreen() {
 
   const addMedicalRecord = (animal: Animal) => {
     if (!mockClinicData.isPremium) {
-      Alert.alert(
-        "خدمة مدفوعة",
-        "هذه الخدمة متاحة فقط للعيادات المشتركة في الخطة المدفوعة"
-      );
+      Alert.alert("خدمة مدفوعة", "هذه الخدمة متاحة فقط للعيادات المشتركة في الخطة المدفوعة");
       return;
     }
     setSelectedAnimal(animal);
@@ -426,10 +388,7 @@ export default function ClinicSystemScreen() {
 
     console.log("Treatment card notification sent:", notification);
 
-    Alert.alert(
-      "تم الإرسال",
-      "تم إرسال كرت صرف العلاج إلى صاحب الحيوان وفي انتظار الموافقة"
-    );
+    Alert.alert("تم الإرسال", "تم إرسال كرت صرف العلاج إلى صاحب الحيوان وفي انتظار الموافقة");
 
     setShowTreatmentForm(false);
     setTreatmentData({ diagnosis: "", treatment: "", prescriptionImage: "" });
@@ -475,10 +434,7 @@ export default function ClinicSystemScreen() {
         {title} {required && <Text style={styles.required}>*</Text>}
       </Text>
 
-      <TouchableOpacity
-        style={styles.uploadButton}
-        onPress={() => handleImageUpload(type)}
-      >
+      <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload(type)}>
         <Upload size={20} color={COLORS.primary} />
         <Text style={styles.uploadButtonText}>رفع صورة</Text>
       </TouchableOpacity>
@@ -488,10 +444,7 @@ export default function ClinicSystemScreen() {
           {registrationData[type].map((imageUrl, index) => (
             <View key={index} style={styles.imageContainer}>
               <Image source={{ uri: imageUrl }} style={styles.uploadedImage} />
-              <TouchableOpacity
-                style={styles.removeImageButton}
-                onPress={() => removeImage(type, index)}
-              >
+              <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(type, index)}>
                 <Text style={styles.removeImageText}>×</Text>
               </TouchableOpacity>
             </View>
@@ -526,10 +479,7 @@ export default function ClinicSystemScreen() {
 
     console.log("Medical record notification sent:", notification);
 
-    Alert.alert(
-      "تم الإرسال",
-      "تم إرسال السجل الطبي إلى صاحب الحيوان وفي انتظار الموافقة"
-    );
+    Alert.alert("تم الإرسال", "تم إرسال السجل الطبي إلى صاحب الحيوان وفي انتظار الموافقة");
 
     setShowMedicalRecordForm(false);
     setMedicalRecordData({
@@ -564,32 +514,19 @@ export default function ClinicSystemScreen() {
       </View>
 
       <View style={styles.featureSection}>
-        <Text style={styles.sectionTitle}>
-          ✅ بعد الموافقة من المشرف، تُفعّل الصلاحيات التالية:
-        </Text>
+        <Text style={styles.sectionTitle}>✅ بعد الموافقة من المشرف، تُفعّل الصلاحيات التالية:</Text>
       </View>
 
       <View style={styles.featureSection}>
-        <Text style={styles.sectionTitle}>
-          💊 كرت صرف العلاج (للعيادات المدفوعة فقط):
-        </Text>
+        <Text style={styles.sectionTitle}>💊 كرت صرف العلاج (للعيادات المدفوعة فقط):</Text>
         <View style={styles.featureList}>
-          <Text style={styles.featureItem}>
-            • بعد اشتراك العيادة بالخطة المدفوعة، يظهر لها خيار إضافة كرت صرف
-            علاج
-          </Text>
-          <Text style={styles.featureItem}>
-            • يتم تعبئة اسم العيادة والتاريخ تلقائياً من النظام
-          </Text>
+          <Text style={styles.featureItem}>• بعد اشتراك العيادة بالخطة المدفوعة، يظهر لها خيار إضافة كرت صرف علاج</Text>
+          <Text style={styles.featureItem}>• يتم تعبئة اسم العيادة والتاريخ تلقائياً من النظام</Text>
           <Text style={styles.featureItem}>• تقوم العيادة فقط بكتابة:</Text>
           <Text style={styles.subFeatureItem}>○ التشخيص</Text>
           <Text style={styles.subFeatureItem}>○ العلاج</Text>
-          <Text style={styles.featureItem}>
-            • إمكانية رفع صورة الوصفة/التقرير الطبي وإرفاقها بالكرت مباشرة
-          </Text>
-          <Text style={styles.featureItem}>
-            • يظهر الكرت في سجل الحيوان الخاص بالمستخدم مع الصورة المرفقة
-          </Text>
+          <Text style={styles.featureItem}>• إمكانية رفع صورة الوصفة/التقرير الطبي وإرفاقها بالكرت مباشرة</Text>
+          <Text style={styles.featureItem}>• يظهر الكرت في سجل الحيوان الخاص بالمستخدم مع الصورة المرفقة</Text>
         </View>
       </View>
 
@@ -598,23 +535,15 @@ export default function ClinicSystemScreen() {
         <View style={styles.adminControls}>
           <View style={styles.adminHeader}>
             <Text style={styles.adminTitle}>🔧 إعدادات الإدارة</Text>
-            <TouchableOpacity
-              style={styles.editToggleButton}
-              onPress={() => setIsEditMode(!isEditMode)}
-            >
+            <TouchableOpacity style={styles.editToggleButton} onPress={() => setIsEditMode(!isEditMode)}>
               <Edit3 size={16} color={COLORS.white} />
-              <Text style={styles.editToggleText}>
-                {isEditMode ? "إنهاء التعديل" : "تعديل"}
-              </Text>
+              <Text style={styles.editToggleText}>{isEditMode ? "إنهاء التعديل" : "تعديل"}</Text>
             </TouchableOpacity>
           </View>
 
           {isEditMode && (
             <View style={styles.adminActions}>
-              <TouchableOpacity
-                style={styles.visibilityToggleButton}
-                onPress={toggleSubscriptionVisibility}
-              >
+              <TouchableOpacity style={styles.visibilityToggleButton} onPress={toggleSubscriptionVisibility}>
                 {isSubscriptionVisible ? (
                   <EyeOff size={16} color={COLORS.white} />
                 ) : (
@@ -661,10 +590,7 @@ export default function ClinicSystemScreen() {
               </View>
             </View>
             <Text style={styles.planPrice}>6 دولار/شهر</Text>
-            <TouchableOpacity
-              style={styles.upgradeButton}
-              onPress={() => setActiveTab("register")}
-            >
+            <TouchableOpacity style={styles.upgradeButton} onPress={() => setActiveTab("register")}>
               <Text style={styles.buttonText}>اشترك الآن</Text>
             </TouchableOpacity>
           </View>
@@ -686,8 +612,7 @@ export default function ClinicSystemScreen() {
       <Text style={styles.tabTitle}>📋 تسجيل العيادة</Text>
 
       <Text style={styles.description}>
-        املأ النموذج أدناه لتسجيل عيادتك البيطرية. سيتم مراجعة طلبك من قبل
-        الإدارة قبل التفعيل.
+        املأ النموذج أدناه لتسجيل عيادتك البيطرية. سيتم مراجعة طلبك من قبل الإدارة قبل التفعيل.
       </Text>
 
       {/* Basic Information */}
@@ -800,9 +725,7 @@ export default function ClinicSystemScreen() {
             <TextInput
               style={styles.inputWithIconText}
               value={registrationData.licenseNumber}
-              onChangeText={(value) =>
-                handleInputChange("licenseNumber", value)
-              }
+              onChangeText={(value) => handleInputChange("licenseNumber", value)}
               placeholder="رقم ترخيص العيادة البيطرية"
               placeholderTextColor={COLORS.darkGray}
             />
@@ -817,21 +740,15 @@ export default function ClinicSystemScreen() {
 
       {/* Submit Button */}
       <TouchableOpacity
-        style={[
-          styles.submitButton,
-          isSubmitting && styles.submitButtonDisabled,
-        ]}
+        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
         onPress={handleRegisterClinic}
         disabled={isSubmitting}
       >
-        <Text style={styles.buttonText}>
-          {isSubmitting ? "جاري الإرسال..." : "إرسال طلب التسجيل"}
-        </Text>
+        <Text style={styles.buttonText}>{isSubmitting ? "جاري الإرسال..." : "إرسال طلب التسجيل"}</Text>
       </TouchableOpacity>
 
       <Text style={styles.note}>
-        ملاحظة: سيتم مراجعة طلبك خلال 2-3 أيام عمل. ستصلك رسالة تأكيد عند
-        الموافقة على الطلب.
+        ملاحظة: سيتم مراجعة طلبك خلال 2-3 أيام عمل. ستصلك رسالة تأكيد عند الموافقة على الطلب.
       </Text>
     </View>
   );
@@ -844,9 +761,7 @@ export default function ClinicSystemScreen() {
         <View style={styles.pendingApproval}>
           <Clock size={48} color={COLORS.warning} />
           <Text style={styles.pendingText}>في انتظار موافقة المشرف</Text>
-          <Text style={styles.pendingSubtext}>
-            سيتم تفعيل الصلاحيات بعد الموافقة
-          </Text>
+          <Text style={styles.pendingSubtext}>سيتم تفعيل الصلاحيات بعد الموافقة</Text>
         </View>
       ) : (
         <>
@@ -856,9 +771,7 @@ export default function ClinicSystemScreen() {
               <Building2 size={32} color={COLORS.primary} />
               <View style={styles.clinicDetails}>
                 <Text style={styles.clinicName}>{mockClinicData.name}</Text>
-                <Text style={styles.clinicLocation}>
-                  {mockClinicData.location}
-                </Text>
+                <Text style={styles.clinicLocation}>{mockClinicData.location}</Text>
                 <Text style={styles.clinicPhone}>{mockClinicData.phone}</Text>
               </View>
               {mockClinicData.isPremium && (
@@ -871,21 +784,15 @@ export default function ClinicSystemScreen() {
 
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {mockClinicData.totalAnimals}
-                </Text>
+                <Text style={styles.statNumber}>{mockClinicData.totalAnimals}</Text>
                 <Text style={styles.statLabel}>إجمالي الحيوانات</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {mockClinicData.activePatients}
-                </Text>
+                <Text style={styles.statNumber}>{mockClinicData.activePatients}</Text>
                 <Text style={styles.statLabel}>المرضى النشطون</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>
-                  {mockClinicData.totalTreatments}
-                </Text>
+                <Text style={styles.statNumber}>{mockClinicData.totalTreatments}</Text>
                 <Text style={styles.statLabel}>العلاجات المضافة</Text>
               </View>
             </View>
@@ -909,10 +816,7 @@ export default function ClinicSystemScreen() {
                 onSubmitEditing={handleSearchAnimal}
               />
               <TouchableOpacity
-                style={[
-                  styles.searchButton,
-                  isSearching && styles.searchButtonDisabled,
-                ]}
+                style={[styles.searchButton, isSearching && styles.searchButtonDisabled]}
                 onPress={handleSearchAnimal}
                 disabled={isSearching}
               >
@@ -928,9 +832,7 @@ export default function ClinicSystemScreen() {
             {hasSearched && (
               <View style={styles.searchResultsSection}>
                 <Text style={styles.searchResultsTitle}>
-                  {searchResults.length > 0
-                    ? `نتائج البحث (${searchResults.length})`
-                    : "لا توجد نتائج"}
+                  {searchResults.length > 0 ? `نتائج البحث (${searchResults.length})` : "لا توجد نتائج"}
                 </Text>
                 {searchResults.map((animal) => (
                   <TouchableOpacity
@@ -940,20 +842,8 @@ export default function ClinicSystemScreen() {
                   >
                     <View style={styles.animalInfo}>
                       <View style={styles.animalHeader}>
-                        <Text
-                          style={[
-                            styles.animalName,
-                            styles.clickableAnimalName,
-                          ]}
-                        >
-                          {animal.name}
-                        </Text>
-                        <View
-                          style={[
-                            styles.statusBadge,
-                            styles[`status_${animal.status}`],
-                          ]}
-                        >
+                        <Text style={[styles.animalName, styles.clickableAnimalName]}>{animal.name}</Text>
+                        <View style={[styles.statusBadge, styles[`status_${animal.status}`]]}>
                           <Text style={styles.statusText}>
                             {animal.status === "active"
                               ? "نشط"
@@ -966,15 +856,9 @@ export default function ClinicSystemScreen() {
                       <Text style={styles.animalDetails}>
                         {animal.type} - {animal.breed}
                       </Text>
-                      <Text style={styles.animalDetails}>
-                        العمر: {animal.age}
-                      </Text>
-                      <Text style={styles.animalDetails}>
-                        المالك: {animal.owner}
-                      </Text>
-                      <Text style={styles.animalDetails}>
-                        آخر زيارة: {animal.lastVisit}
-                      </Text>
+                      <Text style={styles.animalDetails}>العمر: {animal.age}</Text>
+                      <Text style={styles.animalDetails}>المالك: {animal.owner}</Text>
+                      <Text style={styles.animalDetails}>آخر زيارة: {animal.lastVisit}</Text>
                     </View>
                     <Text style={styles.animalId}>#{animal.id}</Text>
                   </TouchableOpacity>
@@ -987,30 +871,13 @@ export default function ClinicSystemScreen() {
           <View style={styles.recentAnimalsSection}>
             <Text style={styles.sectionTitle}>🐾 الحيوانات الأخيرة</Text>
             {mockAnimals.map((animal) => (
-              <TouchableOpacity
-                key={animal.id}
-                style={styles.animalCard}
-                onPress={() => openAnimalProfile(animal)}
-              >
+              <TouchableOpacity key={animal.id} style={styles.animalCard} onPress={() => openAnimalProfile(animal)}>
                 <View style={styles.animalInfo}>
                   <View style={styles.animalHeader}>
-                    <Text
-                      style={[styles.animalName, styles.clickableAnimalName]}
-                    >
-                      {animal.name}
-                    </Text>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        styles[`status_${animal.status}`],
-                      ]}
-                    >
+                    <Text style={[styles.animalName, styles.clickableAnimalName]}>{animal.name}</Text>
+                    <View style={[styles.statusBadge, styles[`status_${animal.status}`]]}>
                       <Text style={styles.statusText}>
-                        {animal.status === "active"
-                          ? "نشط"
-                          : animal.status === "recovered"
-                          ? "متعافي"
-                          : "تحت العلاج"}
+                        {animal.status === "active" ? "نشط" : animal.status === "recovered" ? "متعافي" : "تحت العلاج"}
                       </Text>
                     </View>
                   </View>
@@ -1018,12 +885,8 @@ export default function ClinicSystemScreen() {
                     {animal.type} - {animal.breed}
                   </Text>
                   <Text style={styles.animalDetails}>العمر: {animal.age}</Text>
-                  <Text style={styles.animalDetails}>
-                    المالك: {animal.owner}
-                  </Text>
-                  <Text style={styles.animalDetails}>
-                    آخر زيارة: {animal.lastVisit}
-                  </Text>
+                  <Text style={styles.animalDetails}>المالك: {animal.owner}</Text>
+                  <Text style={styles.animalDetails}>آخر زيارة: {animal.lastVisit}</Text>
                 </View>
                 <Text style={styles.animalId}>#{animal.id}</Text>
               </TouchableOpacity>
@@ -1039,18 +902,12 @@ export default function ClinicSystemScreen() {
                   <Text style={styles.treatmentDate}>{treatment.date}</Text>
                   <Text style={styles.treatmentId}>#{treatment.id}</Text>
                 </View>
-                <Text style={styles.treatmentDiagnosis}>
-                  التشخيص: {treatment.diagnosis}
-                </Text>
-                <Text style={styles.treatmentText}>
-                  العلاج: {treatment.treatment}
-                </Text>
+                <Text style={styles.treatmentDiagnosis}>التشخيص: {treatment.diagnosis}</Text>
+                <Text style={styles.treatmentText}>العلاج: {treatment.treatment}</Text>
                 {treatment.prescriptionImage && (
                   <View style={styles.prescriptionImageContainer}>
                     <Camera size={16} color={COLORS.primary} />
-                    <Text style={styles.prescriptionImageText}>
-                      صورة الوصفة مرفقة
-                    </Text>
+                    <Text style={styles.prescriptionImageText}>صورة الوصفة مرفقة</Text>
                   </View>
                 )}
               </View>
@@ -1062,120 +919,81 @@ export default function ClinicSystemScreen() {
           </View>
 
           {/* Animal Profile Modal - Now shows clinic-specific actions */}
-          {selectedAnimal &&
-            !showTreatmentForm &&
-            !showFollowUpForm &&
-            !showMedicalRecordForm && (
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <View style={styles.modalHeader}>
-                    <Text style={styles.modalTitle}>الملف الشخصي للحيوان</Text>
-                    <TouchableOpacity
-                      style={styles.closeButton}
-                      onPress={() => setSelectedAnimal(null)}
-                    >
-                      <Text style={styles.closeButtonText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <ScrollView style={styles.modalBody}>
-                    <View style={styles.animalProfileCard}>
-                      <TouchableOpacity
-                        onPress={() => openAnimalProfile(selectedAnimal)}
-                      >
-                        <Text
-                          style={[
-                            styles.animalProfileName,
-                            styles.clickableAnimalName,
-                          ]}
-                        >
-                          {selectedAnimal.name}
-                        </Text>
-                      </TouchableOpacity>
-                      <Text style={styles.animalProfileType}>
-                        {selectedAnimal.type} - {selectedAnimal.breed}
-                      </Text>
-                      <Text style={styles.animalProfileDetails}>
-                        العمر: {selectedAnimal.age}
-                      </Text>
-                      <Text style={styles.animalProfileDetails}>
-                        المالك: {selectedAnimal.owner}
-                      </Text>
-                      <Text style={styles.animalProfileDetails}>
-                        آخر زيارة: {selectedAnimal.lastVisit}
-                      </Text>
-                      <Text style={styles.animalProfileDetails}>
-                        رقم المعرف: #{selectedAnimal.id}
-                      </Text>
-
-                      {/* Follow Pet Button - Only for subscribed clinics */}
-                      {mockClinicData.isPremium && (
-                        <TouchableOpacity
-                          style={styles.followPetButton}
-                          onPress={() => addFollowUpRequest(selectedAnimal)}
-                        >
-                          <Stethoscope size={20} color={COLORS.white} />
-                          <Text style={styles.actionButtonText}>
-                            متابعة الحالة
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-
-                      {/* Clinic Actions - Only for subscribed clinics */}
-                      {mockClinicData.isPremium && (
-                        <View style={styles.clinicActionsContainer}>
-                          <Text style={styles.clinicActionsTitle}>
-                            الإجراءات المتاحة للعيادات المشتركة:
-                          </Text>
-
-                          <View style={styles.clinicActionsList}>
-                            <TouchableOpacity
-                              style={styles.clinicActionButton}
-                              onPress={() => addMedicalRecord(selectedAnimal)}
-                            >
-                              <Plus size={16} color={COLORS.white} />
-                              <Text style={styles.clinicActionText}>
-                                إضافة سجل طبي
-                              </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={styles.clinicActionButton}
-                              onPress={() => {
-                                Alert.alert(
-                                  "إضافة تطعيم",
-                                  "سيتم إضافة تطعيم جديد للحيوان"
-                                );
-                              }}
-                            >
-                              <Shield size={16} color={COLORS.white} />
-                              <Text style={styles.clinicActionText}>
-                                إضافة تطعيم
-                              </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={styles.clinicActionButton}
-                              onPress={() => {
-                                Alert.alert(
-                                  "إضافة تذكير",
-                                  "سيتم إضافة تذكير جديد للحيوان"
-                                );
-                              }}
-                            >
-                              <Calendar size={16} color={COLORS.white} />
-                              <Text style={styles.clinicActionText}>
-                                إضافة تذكير
-                              </Text>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  </ScrollView>
+          {selectedAnimal && !showTreatmentForm && !showFollowUpForm && !showMedicalRecordForm && (
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>الملف الشخصي للحيوان</Text>
+                  <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedAnimal(null)}>
+                    <Text style={styles.closeButtonText}>×</Text>
+                  </TouchableOpacity>
                 </View>
+
+                <ScrollView style={styles.modalBody}>
+                  <View style={styles.animalProfileCard}>
+                    <TouchableOpacity onPress={() => openAnimalProfile(selectedAnimal)}>
+                      <Text style={[styles.animalProfileName, styles.clickableAnimalName]}>{selectedAnimal.name}</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.animalProfileType}>
+                      {selectedAnimal.type} - {selectedAnimal.breed}
+                    </Text>
+                    <Text style={styles.animalProfileDetails}>العمر: {selectedAnimal.age}</Text>
+                    <Text style={styles.animalProfileDetails}>المالك: {selectedAnimal.owner}</Text>
+                    <Text style={styles.animalProfileDetails}>آخر زيارة: {selectedAnimal.lastVisit}</Text>
+                    <Text style={styles.animalProfileDetails}>رقم المعرف: #{selectedAnimal.id}</Text>
+
+                    {/* Follow Pet Button - Only for subscribed clinics */}
+                    {mockClinicData.isPremium && (
+                      <TouchableOpacity
+                        style={styles.followPetButton}
+                        onPress={() => addFollowUpRequest(selectedAnimal)}
+                      >
+                        <Stethoscope size={20} color={COLORS.white} />
+                        <Text style={styles.actionButtonText}>متابعة الحالة</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Clinic Actions - Only for subscribed clinics */}
+                    {mockClinicData.isPremium && (
+                      <View style={styles.clinicActionsContainer}>
+                        <Text style={styles.clinicActionsTitle}>الإجراءات المتاحة للعيادات المشتركة:</Text>
+
+                        <View style={styles.clinicActionsList}>
+                          <TouchableOpacity
+                            style={styles.clinicActionButton}
+                            onPress={() => addMedicalRecord(selectedAnimal)}
+                          >
+                            <Plus size={16} color={COLORS.white} />
+                            <Text style={styles.clinicActionText}>إضافة سجل طبي</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.clinicActionButton}
+                            onPress={() => {
+                              Alert.alert("إضافة تطعيم", "سيتم إضافة تطعيم جديد للحيوان");
+                            }}
+                          >
+                            <Shield size={16} color={COLORS.white} />
+                            <Text style={styles.clinicActionText}>إضافة تطعيم</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.clinicActionButton}
+                            onPress={() => {
+                              Alert.alert("إضافة تذكير", "سيتم إضافة تذكير جديد للحيوان");
+                            }}
+                          >
+                            <Calendar size={16} color={COLORS.white} />
+                            <Text style={styles.clinicActionText}>إضافة تذكير</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                </ScrollView>
               </View>
-            )}
+            </View>
+          )}
 
           {/* Treatment Card Form Modal */}
           {showTreatmentForm && selectedAnimal && (
@@ -1211,9 +1029,7 @@ export default function ClinicSystemScreen() {
 
                   <View style={styles.formSection}>
                     <Text style={styles.formLabel}>التاريخ</Text>
-                    <Text style={styles.formValue}>
-                      {new Date().toLocaleDateString()}
-                    </Text>
+                    <Text style={styles.formValue}>{new Date().toLocaleDateString()}</Text>
                   </View>
 
                   <View style={styles.formSection}>
@@ -1222,9 +1038,7 @@ export default function ClinicSystemScreen() {
                       style={styles.formInput}
                       placeholder="أدخل التشخيص"
                       value={treatmentData.diagnosis}
-                      onChangeText={(text) =>
-                        setTreatmentData({ ...treatmentData, diagnosis: text })
-                      }
+                      onChangeText={(text) => setTreatmentData({ ...treatmentData, diagnosis: text })}
                       textAlign="right"
                       multiline
                     />
@@ -1236,9 +1050,7 @@ export default function ClinicSystemScreen() {
                       style={styles.formInput}
                       placeholder="أدخل العلاج المطلوب"
                       value={treatmentData.treatment}
-                      onChangeText={(text) =>
-                        setTreatmentData({ ...treatmentData, treatment: text })
-                      }
+                      onChangeText={(text) => setTreatmentData({ ...treatmentData, treatment: text })}
                       textAlign="right"
                       multiline
                     />
@@ -1246,16 +1058,11 @@ export default function ClinicSystemScreen() {
 
                   <TouchableOpacity style={styles.imageUploadButton}>
                     <Camera size={20} color={COLORS.primary} />
-                    <Text style={styles.imageUploadButtonText}>
-                      رفع صورة الوصفة (اختياري)
-                    </Text>
+                    <Text style={styles.imageUploadButtonText}>رفع صورة الوصفة (اختياري)</Text>
                   </TouchableOpacity>
 
                   <View style={styles.formActions}>
-                    <TouchableOpacity
-                      style={styles.submitButton}
-                      onPress={submitTreatmentCard}
-                    >
+                    <TouchableOpacity style={styles.submitButton} onPress={submitTreatmentCard}>
                       <Text style={styles.buttonText}>إرسال كرت العلاج</Text>
                     </TouchableOpacity>
                   </View>
@@ -1295,9 +1102,7 @@ export default function ClinicSystemScreen() {
 
                   <View style={styles.formSection}>
                     <Text style={styles.formLabel}>التاريخ</Text>
-                    <Text style={styles.formValue}>
-                      {new Date().toLocaleDateString("ar-SA")}
-                    </Text>
+                    <Text style={styles.formValue}>{new Date().toLocaleDateString("ar-SA")}</Text>
                   </View>
 
                   <View style={styles.formSection}>
@@ -1313,10 +1118,7 @@ export default function ClinicSystemScreen() {
                   </View>
 
                   <View style={styles.formActions}>
-                    <TouchableOpacity
-                      style={styles.submitButton}
-                      onPress={submitFollowUpRequest}
-                    >
+                    <TouchableOpacity style={styles.submitButton} onPress={submitFollowUpRequest}>
                       <Text style={styles.buttonText}>إرسال طلب المتابعة</Text>
                     </TouchableOpacity>
                   </View>
@@ -1387,9 +1189,7 @@ export default function ClinicSystemScreen() {
 
                   <View style={styles.formSection}>
                     <Text style={styles.formLabel}>التاريخ</Text>
-                    <Text style={styles.formValue}>
-                      {new Date().toLocaleDateString("ar-SA")}
-                    </Text>
+                    <Text style={styles.formValue}>{new Date().toLocaleDateString("ar-SA")}</Text>
                   </View>
 
                   <View style={styles.formSection}>
@@ -1438,16 +1238,11 @@ export default function ClinicSystemScreen() {
 
                   <TouchableOpacity style={styles.prescriptionUploadSection}>
                     <Camera size={20} color={COLORS.primary} />
-                    <Text style={styles.prescriptionUploadLabel}>
-                      رفع صورة الوصفة (اختياري)
-                    </Text>
+                    <Text style={styles.prescriptionUploadLabel}>رفع صورة الوصفة (اختياري)</Text>
                   </TouchableOpacity>
 
                   <View style={styles.formActions}>
-                    <TouchableOpacity
-                      style={styles.submitButton}
-                      onPress={submitMedicalRecord}
-                    >
+                    <TouchableOpacity style={styles.submitButton} onPress={submitMedicalRecord}>
                       <Text style={styles.buttonText}>إرسال السجل الطبي</Text>
                     </TouchableOpacity>
                   </View>
@@ -1476,28 +1271,14 @@ export default function ClinicSystemScreen() {
             style={[styles.tab, activeTab === "overview" && styles.activeTab]}
             onPress={() => setActiveTab("overview")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "overview" && styles.activeTabText,
-              ]}
-            >
-              نظرة عامة
-            </Text>
+            <Text style={[styles.tabText, activeTab === "overview" && styles.activeTabText]}>نظرة عامة</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.tab, activeTab === "register" && styles.activeTab]}
             onPress={() => setActiveTab("register")}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "register" && styles.activeTabText,
-              ]}
-            >
-              التسجيل
-            </Text>
+            <Text style={[styles.tabText, activeTab === "register" && styles.activeTabText]}>التسجيل</Text>
           </TouchableOpacity>
         </View>
 

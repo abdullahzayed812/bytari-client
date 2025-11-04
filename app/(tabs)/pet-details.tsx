@@ -26,15 +26,13 @@ export default function PetDetailsScreen() {
   const { t } = useI18n();
   const { userMode, user } = useApp();
   const router = useRouter();
-  const { id, clinicAccess } = useLocalSearchParams<{
-    id: string;
+  const { petId, clinicAccess } = useLocalSearchParams<{
+    petId: string;
     clinicAccess?: string;
   }>();
   const { showToast } = useToastContext();
 
-  const [activeTab, setActiveTab] = useState<
-    "info" | "medical" | "vaccinations" | "reminders"
-  >("info");
+  const [activeTab, setActiveTab] = useState<"info" | "medical" | "vaccinations" | "reminders">("info");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -57,10 +55,8 @@ export default function PetDetailsScreen() {
   // Fetch pet details based on user mode
   const petQuery = useQuery({
     ...trpc.admin.pets.getProfile.queryOptions({
-      petId: Number(id),
-      // adminId: Number(user?.id) || 0,
+      petId: Number(petId),
     }),
-    // enabled: !!id && !!user?.id && isAdmin,
   });
 
   // Fallback to regular pet query for non-admin users
@@ -75,24 +71,16 @@ export default function PetDetailsScreen() {
   const pet = petQuery.data;
   const isLoading = petQuery.isLoading;
 
-  const createApprovalMutation = useMutation(
-    trpc.pets.createApprovalRequest.mutationOptions({})
-  );
+  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
   // Update pet mutation for admin
-  const updatePetMutation = useMutation(
-    trpc.admin.updatePetProfile.mutationOptions({})
-  );
+  const updatePetMutation = useMutation(trpc.admin.updatePetProfile.mutationOptions({}));
 
   // Delete pet mutation for admin
-  const deletePetMutation = useMutation(
-    trpc.admin.deletePet.mutationOptions({})
-  );
+  const deletePetMutation = useMutation(trpc.admin.deletePet.mutationOptions({}));
 
   // Regular update for pet owners
-  const updatePetOwnerMutation = useMutation(
-    trpc.pets.update.mutationOptions({})
-  );
+  const updatePetOwnerMutation = useMutation(trpc.pets.update.mutationOptions({}));
 
   // Initialize edit form when pet data is loaded
   useEffect(() => {
@@ -124,8 +112,7 @@ export default function PetDetailsScreen() {
 
   const handlePetImageUpload = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
         return;
@@ -232,57 +219,49 @@ export default function PetDetailsScreen() {
   const handleDeletePet = () => {
     if (!pet || !user || !isAdmin) return;
 
-    Alert.alert(
-      "حذف الحيوان",
-      "هل أنت متأكد من حذف هذا الحيوان؟ هذا الإجراء لا يمكن التراجع عنه.",
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "حذف",
-          style: "destructive",
-          onPress: () => {
-            deletePetMutation.mutate(
-              {
-                petId: pet.id,
-                adminId: user.id,
-                reason: "Admin deletion",
+    Alert.alert("حذف الحيوان", "هل أنت متأكد من حذف هذا الحيوان؟ هذا الإجراء لا يمكن التراجع عنه.", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deletePetMutation.mutate(
+            {
+              petId: pet.id,
+              adminId: user.id,
+              reason: "Admin deletion",
+            },
+            {
+              onSuccess: () => {
+                showToast({
+                  message: "تم حذف الحيوان بنجاح",
+                  type: "success",
+                });
+                router.back();
               },
-              {
-                onSuccess: () => {
-                  showToast({
-                    message: "تم حذف الحيوان بنجاح",
-                    type: "success",
-                  });
-                  router.back();
-                },
-                onError: (error) => {
-                  showToast({
-                    message: error.message || "حدث خطأ أثناء حذف الحيوان",
-                    type: "error",
-                  });
-                },
-              }
-            );
-          },
+              onError: (error) => {
+                showToast({
+                  message: error.message || "حدث خطأ أثناء حذف الحيوان",
+                  type: "error",
+                });
+              },
+            }
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleCancelFollowUp = () => {
-    Alert.alert(
-      "إلغاء المتابعات",
-      "هل تريد إلغاء جميع طلبات المتابعة المعلقة لهذا الحيوان؟",
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "نعم",
-          onPress: () => {
-            Alert.alert("تم", "تم إلغاء جميع طلبات المتابعة المعلقة");
-          },
+    Alert.alert("إلغاء المتابعات", "هل تريد إلغاء جميع طلبات المتابعة المعلقة لهذا الحيوان؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "نعم",
+        onPress: () => {
+          Alert.alert("تم", "تم إلغاء جميع طلبات المتابعة المعلقة");
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleAdoptionBreeding = (type: string) => {
@@ -358,9 +337,7 @@ export default function PetDetailsScreen() {
               onSuccess: (data) => {
                 showToast({
                   type: "success",
-                  message:
-                    data?.message ||
-                    "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
+                  message: data?.message || "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
                 });
                 // trpc.pets.getApproved.invalidate();
               },
@@ -406,9 +383,7 @@ export default function PetDetailsScreen() {
           alignItems: "center",
         }}
       >
-        {createApprovalMutation.isPending ? (
-          <ActivityIndicator size="large" />
-        ) : null}
+        {createApprovalMutation.isPending ? <ActivityIndicator size="large" /> : null}
       </View>
       <View style={styles.header}>
         <Image source={{ uri: pet.image }} style={styles.petImage} />
@@ -431,9 +406,7 @@ export default function PetDetailsScreen() {
 
             <View style={styles.petDetailItem}>
               <Text style={styles.petDetailLabel}>{t("الجنس")}</Text>
-              <Text style={styles.petDetailValue}>
-                {pet.gender === "male" ? t("`ذكر`") : t("انثى")}
-              </Text>
+              <Text style={styles.petDetailValue}>{pet.gender === "male" ? t("`ذكر`") : t("انثى")}</Text>
             </View>
 
             {pet.weight && (
@@ -451,56 +424,28 @@ export default function PetDetailsScreen() {
           style={[styles.tab, activeTab === "info" && styles.activeTab]}
           onPress={() => setActiveTab("info")}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "info" && styles.activeTabText,
-            ]}
-          >
-            معلومات
-          </Text>
+          <Text style={[styles.tabText, activeTab === "info" && styles.activeTabText]}>معلومات</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === "medical" && styles.activeTab]}
           onPress={() => setActiveTab("medical")}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "medical" && styles.activeTabText,
-            ]}
-          >
-            السجل الطبي
-          </Text>
+          <Text style={[styles.tabText, activeTab === "medical" && styles.activeTabText]}>السجل الطبي</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]}
           onPress={() => setActiveTab("vaccinations")}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "vaccinations" && styles.activeTabText,
-            ]}
-          >
-            التطعيمات
-          </Text>
+          <Text style={[styles.tabText, activeTab === "vaccinations" && styles.activeTabText]}>التطعيمات</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === "reminders" && styles.activeTab]}
           onPress={() => setActiveTab("reminders")}
         >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "reminders" && styles.activeTabText,
-            ]}
-          >
-            التذكيرات
-          </Text>
+          <Text style={[styles.tabText, activeTab === "reminders" && styles.activeTabText]}>التذكيرات</Text>
         </TouchableOpacity>
       </View>
 
@@ -530,9 +475,7 @@ export default function PetDetailsScreen() {
               {/* Show owner info for admin */}
               {isAdmin && "ownerName" in pet && (
                 <>
-                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-                    معلومات المالك
-                  </Text>
+                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>معلومات المالك</Text>
                   <View style={styles.infoItem}>
                     <Text style={styles.infoLabel}>الاسم</Text>
                     <Text style={styles.infoValue}>{pet.ownerName}</Text>
@@ -547,9 +490,7 @@ export default function PetDetailsScreen() {
               {/* Medical History - Admin only */}
               {isAdmin && pet.medicalHistory && (
                 <>
-                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
-                    التاريخ الطبي
-                  </Text>
+                  <Text style={[styles.sectionTitle, { marginTop: 20 }]}>التاريخ الطبي</Text>
                   <View style={styles.infoItem}>
                     <Text style={styles.infoValue}>{pet.medicalHistory}</Text>
                   </View>
@@ -620,9 +561,7 @@ export default function PetDetailsScreen() {
             </View>
 
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                لا يوجد سجلات طبية متاحة
-              </Text>
+              <Text style={styles.emptyStateText}>لا يوجد سجلات طبية متاحة</Text>
             </View>
           </View>
         )}
@@ -659,11 +598,7 @@ export default function PetDetailsScreen() {
       </View>
 
       {/* Edit Pet Modal */}
-      <Modal
-        visible={showEditModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
+      <Modal visible={showEditModal} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setShowEditModal(false)}>
@@ -672,14 +607,10 @@ export default function PetDetailsScreen() {
             <Text style={styles.modalTitle}>تعديل معلومات الحيوان</Text>
             <TouchableOpacity
               onPress={submitEditPet}
-              disabled={
-                updatePetMutation.isPending || updatePetOwnerMutation.isPending
-              }
+              disabled={updatePetMutation.isPending || updatePetOwnerMutation.isPending}
             >
               <Text style={styles.saveButton}>
-                {updatePetMutation.isPending || updatePetOwnerMutation.isPending
-                  ? "جاري الحفظ..."
-                  : "حفظ"}
+                {updatePetMutation.isPending || updatePetOwnerMutation.isPending ? "جاري الحفظ..." : "حفظ"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -688,29 +619,19 @@ export default function PetDetailsScreen() {
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>صورة الحيوان</Text>
               <View style={styles.imageUploadContainer}>
-                <TouchableOpacity
-                  onPress={handlePetImageUpload}
-                  style={styles.imageUploadButton}
-                >
+                <TouchableOpacity onPress={handlePetImageUpload} style={styles.imageUploadButton}>
                   {editForm.image ? (
-                    <Image
-                      source={{ uri: editForm.image }}
-                      style={styles.uploadedImage}
-                    />
+                    <Image source={{ uri: editForm.image }} style={styles.uploadedImage} />
                   ) : (
                     <View style={styles.imagePlaceholder}>
                       <Camera size={32} color={COLORS.darkGray} />
-                      <Text style={styles.imagePlaceholderText}>
-                        اضغط لاختيار صورة
-                      </Text>
+                      <Text style={styles.imagePlaceholderText}>اضغط لاختيار صورة</Text>
                     </View>
                   )}
                 </TouchableOpacity>
                 {editForm.image && (
                   <TouchableOpacity
-                    onPress={() =>
-                      setEditForm((prev) => ({ ...prev, image: "" }))
-                    }
+                    onPress={() => setEditForm((prev) => ({ ...prev, image: "" }))}
                     style={styles.removeImageButton}
                   >
                     <X size={16} color={COLORS.white} />
@@ -724,9 +645,7 @@ export default function PetDetailsScreen() {
               <TextInput
                 style={styles.formInput}
                 value={editForm.name}
-                onChangeText={(text) =>
-                  setEditForm((prev) => ({ ...prev, name: text }))
-                }
+                onChangeText={(text) => setEditForm((prev) => ({ ...prev, name: text }))}
                 placeholder="أدخل اسم الحيوان"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -738,18 +657,10 @@ export default function PetDetailsScreen() {
                 {["dog", "cat", "rabbit", "bird", "other"].map((type) => (
                   <TouchableOpacity
                     key={type}
-                    style={[
-                      styles.typeOption,
-                      editForm.type === type && styles.selectedTypeOption,
-                    ]}
+                    style={[styles.typeOption, editForm.type === type && styles.selectedTypeOption]}
                     onPress={() => setEditForm((prev) => ({ ...prev, type }))}
                   >
-                    <Text
-                      style={[
-                        styles.typeOptionText,
-                        editForm.type === type && styles.selectedTypeOptionText,
-                      ]}
-                    >
+                    <Text style={[styles.typeOptionText, editForm.type === type && styles.selectedTypeOptionText]}>
                       {type === "dog"
                         ? "كلب"
                         : type === "cat"
@@ -770,9 +681,7 @@ export default function PetDetailsScreen() {
               <TextInput
                 style={styles.formInput}
                 value={editForm.breed}
-                onChangeText={(text) =>
-                  setEditForm((prev) => ({ ...prev, breed: text }))
-                }
+                onChangeText={(text) => setEditForm((prev) => ({ ...prev, breed: text }))}
                 placeholder="أدخل السلالة"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -784,9 +693,7 @@ export default function PetDetailsScreen() {
                 <TextInput
                   style={styles.formInput}
                   value={editForm.age}
-                  onChangeText={(text) =>
-                    setEditForm((prev) => ({ ...prev, age: text }))
-                  }
+                  onChangeText={(text) => setEditForm((prev) => ({ ...prev, age: text }))}
                   placeholder="العمر"
                   placeholderTextColor={COLORS.darkGray}
                   keyboardType="numeric"
@@ -798,9 +705,7 @@ export default function PetDetailsScreen() {
                 <TextInput
                   style={styles.formInput}
                   value={editForm.weight}
-                  onChangeText={(text) =>
-                    setEditForm((prev) => ({ ...prev, weight: text }))
-                  }
+                  onChangeText={(text) => setEditForm((prev) => ({ ...prev, weight: text }))}
                   placeholder="الوزن"
                   placeholderTextColor={COLORS.darkGray}
                   keyboardType="numeric"
@@ -812,40 +717,22 @@ export default function PetDetailsScreen() {
               <Text style={styles.formLabel}>الجنس</Text>
               <View style={styles.genderSelector}>
                 <TouchableOpacity
-                  style={[
-                    styles.genderOption,
-                    editForm.gender === "male" && styles.selectedGenderOption,
-                  ]}
-                  onPress={() =>
-                    setEditForm((prev) => ({ ...prev, gender: "male" }))
-                  }
+                  style={[styles.genderOption, editForm.gender === "male" && styles.selectedGenderOption]}
+                  onPress={() => setEditForm((prev) => ({ ...prev, gender: "male" }))}
                 >
                   <Text
-                    style={[
-                      styles.genderOptionText,
-                      editForm.gender === "male" &&
-                        styles.selectedGenderOptionText,
-                    ]}
+                    style={[styles.genderOptionText, editForm.gender === "male" && styles.selectedGenderOptionText]}
                   >
                     ذكر
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[
-                    styles.genderOption,
-                    editForm.gender === "female" && styles.selectedGenderOption,
-                  ]}
-                  onPress={() =>
-                    setEditForm((prev) => ({ ...prev, gender: "female" }))
-                  }
+                  style={[styles.genderOption, editForm.gender === "female" && styles.selectedGenderOption]}
+                  onPress={() => setEditForm((prev) => ({ ...prev, gender: "female" }))}
                 >
                   <Text
-                    style={[
-                      styles.genderOptionText,
-                      editForm.gender === "female" &&
-                        styles.selectedGenderOptionText,
-                    ]}
+                    style={[styles.genderOptionText, editForm.gender === "female" && styles.selectedGenderOptionText]}
                   >
                     أنثى
                   </Text>
@@ -858,9 +745,7 @@ export default function PetDetailsScreen() {
               <TextInput
                 style={styles.formInput}
                 value={editForm.color}
-                onChangeText={(text) =>
-                  setEditForm((prev) => ({ ...prev, color: text }))
-                }
+                onChangeText={(text) => setEditForm((prev) => ({ ...prev, color: text }))}
                 placeholder="أدخل لون الحيوان"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -874,9 +759,7 @@ export default function PetDetailsScreen() {
                   <TextInput
                     style={[styles.formInput, styles.textArea]}
                     value={editForm.medicalHistory}
-                    onChangeText={(text) =>
-                      setEditForm((prev) => ({ ...prev, medicalHistory: text }))
-                    }
+                    onChangeText={(text) => setEditForm((prev) => ({ ...prev, medicalHistory: text }))}
                     placeholder="أدخل التاريخ الطبي"
                     placeholderTextColor={COLORS.darkGray}
                     multiline
@@ -889,9 +772,7 @@ export default function PetDetailsScreen() {
                   <TextInput
                     style={[styles.formInput, styles.textArea]}
                     value={editForm.vaccinations}
-                    onChangeText={(text) =>
-                      setEditForm((prev) => ({ ...prev, vaccinations: text }))
-                    }
+                    onChangeText={(text) => setEditForm((prev) => ({ ...prev, vaccinations: text }))}
                     placeholder="أدخل التطعيمات"
                     placeholderTextColor={COLORS.darkGray}
                     multiline
@@ -902,10 +783,7 @@ export default function PetDetailsScreen() {
                 <View style={styles.formGroup}>
                   <View style={styles.checkboxContainer}>
                     <TouchableOpacity
-                      style={[
-                        styles.checkbox,
-                        editForm.isLost && styles.checkboxChecked,
-                      ]}
+                      style={[styles.checkbox, editForm.isLost && styles.checkboxChecked]}
                       onPress={() =>
                         setEditForm((prev) => ({
                           ...prev,
@@ -913,9 +791,7 @@ export default function PetDetailsScreen() {
                         }))
                       }
                     >
-                      {editForm.isLost && (
-                        <Text style={styles.checkmark}>✓</Text>
-                      )}
+                      {editForm.isLost && <Text style={styles.checkmark}>✓</Text>}
                     </TouchableOpacity>
                     <Text style={styles.checkboxLabel}>الحيوان مفقود</Text>
                   </View>

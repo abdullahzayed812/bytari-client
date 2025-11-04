@@ -18,18 +18,7 @@ import Button from "../../components/Button";
 import SectionHeader from "../../components/SectionHeader";
 import Card from "../../components/Card";
 import { trpc } from "../../lib/trpc";
-import {
-  Bell,
-  Calendar,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Star,
-  Search,
-  Heart,
-  Download,
-  User,
-} from "lucide-react-native";
+import { Bell, Calendar, MapPin, MessageCircle, Phone, Star, Search, Heart, Download, User } from "lucide-react-native";
 import { UserModeToggle } from "../../components/UserModeToggle";
 import AutoScrollView from "../../components/AutoScrollView";
 import { useQuery } from "@tanstack/react-query";
@@ -54,16 +43,9 @@ export default function HomeScreen() {
     isLoading: heroImagesLoading,
     error: heroError,
   } = useQuery(trpc.admin.ads.getAll.queryOptions({ adminId: 1 }));
-  const heroImages = useMemo(
-    () => (heroImagesData as any)?.ads,
-    [heroImagesData]
-  );
+  const heroImages = useMemo(() => (heroImagesData as any)?.ads, [heroImagesData]);
 
-  const {
-    data,
-    isLoading: clinicsLoading,
-    error,
-  } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
+  const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
   // Real backend data for clinics that should be shown on home screen
   const clinics = useMemo(() => (data as any)?.clinics, [data]);
 
@@ -74,45 +56,27 @@ export default function HomeScreen() {
     })
   );
 
-  const vetStores = useMemo(
-    () => (rawVetStores as any)?.stores,
-    [rawVetStores]
-  );
+  const vetStores = useMemo(() => (rawVetStores as any)?.stores, [rawVetStores]);
 
   const { data: inquiriesData, isLoading: inquiriesLoading } = useQuery(
     trpc.inquiries.listForUser.queryOptions({ userId: user?.id })
   );
-  const inquiries = useMemo(
-    () => (inquiriesData as any)?.inquiries,
-    [inquiriesData]
-  );
+  const inquiries = useMemo(() => (inquiriesData as any)?.inquiries, [inquiriesData]);
 
-  const { data: consultationsData, isLoading: consultationsLoading } = useQuery(
-    {
-      ...trpc.consultations.listForUser.queryOptions({ userId: user?.id }),
-    }
-  );
-  const consultations = useMemo(
-    () => (consultationsData as any)?.consultations,
-    [consultationsData]
-  );
+  const { data: consultationsData, isLoading: consultationsLoading } = useQuery({
+    ...trpc.consultations.listForUser.queryOptions({ userId: user?.id }),
+  });
+  const consultations = useMemo(() => (consultationsData as any)?.consultations, [consultationsData]);
 
-  const { data: tipsData, isLoading: tipsLoading } = useQuery(
-    trpc.content.listTips.queryOptions()
-  );
+  const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions());
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
 
   const { data: articlesData, isLoading: articlesLoading } = useQuery(
     trpc.content.listMagazineArticles.queryOptions({})
   );
-  const articles = useMemo(
-    () => (articlesData as any)?.articles,
-    [articlesData]
-  );
+  const articles = useMemo(() => (articlesData as any)?.articles, [articlesData]);
 
-  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(
-    trpc.content.listVetBooks.queryOptions()
-  );
+  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(trpc.content.listVetBooks.queryOptions());
   const vetBooks = useMemo(() => (vetBooksData as any)?.books, [vetBooksData]);
 
   const { data: lostPetsData, isLoading: lostPetsLoading } = useQuery(
@@ -123,24 +87,17 @@ export default function HomeScreen() {
   const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(
     trpc.pets.getApproved.queryOptions({ requestType: "adoption" })
   );
-  const adoptionPets = useMemo(
-    () => (adoptionPetsData as any)?.pets,
-    [adoptionPetsData]
-  );
+  const adoptionPets = useMemo(() => (adoptionPetsData as any)?.pets, [adoptionPetsData]);
 
   // Simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
       // Randomly update counts to simulate real-time data
       if (Math.random() > 0.7) {
-        setNotificationsCount((prev) =>
-          Math.max(0, prev + Math.floor(Math.random() * 3) - 1)
-        );
+        setNotificationsCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
       }
       if (Math.random() > 0.7) {
-        setMessagesCount((prev) =>
-          Math.max(0, prev + Math.floor(Math.random() * 3) - 1)
-        );
+        setMessagesCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
       }
     }, 15000); // Update every 15 seconds
 
@@ -195,11 +152,7 @@ export default function HomeScreen() {
   const handleAdScroll = (event: any) => {
     const { contentOffset } = event.nativeEvent;
     const newIndex = Math.round(contentOffset.x / screenWidth);
-    if (
-      newIndex !== currentImageIndex &&
-      newIndex >= 0 &&
-      newIndex < heroImages?.length
-    ) {
+    if (newIndex !== currentImageIndex && newIndex >= 0 && newIndex < heroImages?.length) {
       setCurrentImageIndex(newIndex);
     }
   };
@@ -274,10 +227,7 @@ export default function HomeScreen() {
       <View style={[styles.header, { flexDirection: "row" }]}>
         {/* Left side - User info */}
         <View style={[styles.userInfoContainer, { flexDirection: "row" }]}>
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => router.push("/(tabs)/profile")}
-          >
+          <TouchableOpacity style={styles.profileButton} onPress={() => router.push("/(tabs)/profile")}>
             <Image
               source={{
                 uri: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
@@ -286,15 +236,8 @@ export default function HomeScreen() {
             />
           </TouchableOpacity>
 
-          <View
-            style={[
-              styles.userTextContainer,
-              { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 },
-            ]}
-          >
-            <Text style={[styles.greetingText]}>
-              {userMode === "veterinarian" ? "مرحباً دكتور" : "مرحباً"}
-            </Text>
+          <View style={[styles.userTextContainer, { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 }]}>
+            <Text style={[styles.greetingText]}>{userMode === "veterinarian" ? "مرحباً دكتور" : "مرحباً"}</Text>
             <Text style={[styles.userNameText]}>{user?.name || "Unkown"}</Text>
           </View>
         </View>
@@ -331,11 +274,7 @@ export default function HomeScreen() {
             <Bell size={22} color={COLORS.black} />
             {notificationsCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {notificationsCount > 99
-                    ? "99+"
-                    : notificationsCount.toString()}
-                </Text>
+                <Text style={styles.badgeText}>{notificationsCount > 99 ? "99+" : notificationsCount.toString()}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -355,9 +294,7 @@ export default function HomeScreen() {
             <MessageCircle size={22} color={COLORS.black} />
             {messagesCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {messagesCount > 99 ? "99+" : messagesCount.toString()}
-                </Text>
+                <Text style={styles.badgeText}>{messagesCount > 99 ? "99+" : messagesCount.toString()}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -366,11 +303,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
         {/* New Advertisement Section */}
         <View style={styles.advertisementSection}>
           {isSuperAdmin ? (
@@ -418,11 +351,7 @@ export default function HomeScreen() {
                     }}
                     activeOpacity={0.9}
                   >
-                    <Image
-                      source={{ uri: ad.imageUrl }}
-                      style={styles.adImage}
-                      resizeMode="cover"
-                    />
+                    <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
                     {/* Ad Text Overlay - Direct on image without background */}
                     <View style={styles.adTextOverlay}>
                       <Text style={styles.adTitle}>{ad.title}</Text>
@@ -440,9 +369,7 @@ export default function HomeScreen() {
                     key={index}
                     style={[
                       styles.paginationDot,
-                      index === currentImageIndex
-                        ? styles.paginationDotActive
-                        : styles.paginationDotInactive,
+                      index === currentImageIndex ? styles.paginationDotActive : styles.paginationDotInactive,
                     ]}
                     onPress={() => {
                       setCurrentImageIndex(index);
@@ -454,8 +381,7 @@ export default function HomeScreen() {
                         });
                       }
                       // Restart auto slide after a longer delay to avoid interference
-                      const restartDelay =
-                        Platform.OS === "android" ? 4000 : 2000;
+                      const restartDelay = Platform.OS === "android" ? 4000 : 2000;
                       setTimeout(() => startAutoSlide(), restartDelay);
                     }}
                   />
@@ -469,16 +395,10 @@ export default function HomeScreen() {
         <View style={styles.consultationSection}>
           <View style={styles.consultationCard}>
             <Text style={[styles.consultationText, { textAlign: "center" }]}>
-              {userMode === "veterinarian"
-                ? t("home.consultationVet")
-                : t("home.consultation")}
+              {userMode === "veterinarian" ? t("home.consultationVet") : t("home.consultation")}
             </Text>
             <Button
-              title={
-                userMode === "veterinarian"
-                  ? "ارسل استفسارك"
-                  : t("home.sendConsultation")
-              }
+              title={userMode === "veterinarian" ? "ارسل استفسارك" : t("home.sendConsultation")}
               onPress={handleSendConsultation}
               type="primary"
               size="medium"
@@ -490,26 +410,17 @@ export default function HomeScreen() {
         {/* Previous Consultations/Inquiries Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={
-              userMode === "veterinarian"
-                ? "استفساراتك السابقة"
-                : "استشاراتك السابقة"
-            }
+            title={userMode === "veterinarian" ? "استفساراتك السابقة" : "استشاراتك السابقة"}
             isRTL={isRTL}
             showSeeAll={true}
             onSeeAll={() =>
-              userMode === "veterinarian"
-                ? router.navigate("/")
-                : router.navigate("/consultations-list")
+              userMode === "veterinarian" ? router.navigate("/") : router.navigate("/consultations-list")
             }
           />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[
-              styles.horizontalScrollContent,
-              { flexDirection: isRTL ? "row" : "row-reverse" },
-            ]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
           >
             {inquiriesLoading ? (
               <ActivityIndicator size="large" color={COLORS.primary} />
@@ -517,10 +428,7 @@ export default function HomeScreen() {
               inquiries?.slice(0, 3).map((inquiry) => (
                 <TouchableOpacity
                   key={inquiry.id}
-                  style={[
-                    styles.consultationHistoryCard,
-                    { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 },
-                  ]}
+                  style={[styles.consultationHistoryCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() => {
                     if (userMode === "veterinarian") {
                       router.push("/vet-inquiries");
@@ -529,19 +437,9 @@ export default function HomeScreen() {
                     }
                   }}
                 >
-                  <View
-                    style={[
-                      styles.consultationHistoryContent,
-                      { flexDirection: isRTL ? "row" : "row-reverse" },
-                    ]}
-                  >
+                  <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                     {/* Status Badge */}
-                    <View
-                      style={[
-                        styles.statusContainer,
-                        { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                      ]}
-                    >
+                    <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                       <View
                         style={[
                           styles.statusIndicator,
@@ -564,45 +462,27 @@ export default function HomeScreen() {
                     {/* Consultation Info */}
                     <View style={styles.consultationHistoryDetails}>
                       <Text
-                        style={[
-                          styles.consultationHistoryTitle,
-                          { textAlign: isRTL ? "left" : "right" },
-                        ]}
+                        style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={2}
                       >
                         {inquiry.title}
                       </Text>
 
                       {inquiry.petName && (
-                        <Text
-                          style={[
-                            styles.consultationHistoryPet,
-                            { textAlign: isRTL ? "left" : "right" },
-                          ]}
-                        >
+                        <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
                           الحيوان: {inquiry.petName}
                         </Text>
                       )}
 
                       <Text
-                        style={[
-                          styles.consultationHistoryDescription,
-                          { textAlign: isRTL ? "left" : "right" },
-                        ]}
+                        style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={3}
                       >
                         {inquiry.content}
                       </Text>
 
-                      <Text
-                        style={[
-                          styles.consultationHistoryDate,
-                          { textAlign: isRTL ? "left" : "right" },
-                        ]}
-                      >
-                        {new Date(inquiry.createdAt).toLocaleDateString(
-                          "ar-SA"
-                        )}
+                      <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
+                        {new Date(inquiry.createdAt).toLocaleDateString("ar-SA")}
                       </Text>
                     </View>
                   </View>
@@ -612,10 +492,7 @@ export default function HomeScreen() {
               consultations.slice(0, 3).map((con) => (
                 <TouchableOpacity
                   key={con.id}
-                  style={[
-                    styles.consultationHistoryCard,
-                    { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 },
-                  ]}
+                  style={[styles.consultationHistoryCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() => {
                     router.push({
                       pathname: "/consultation-details",
@@ -623,19 +500,9 @@ export default function HomeScreen() {
                     });
                   }}
                 >
-                  <View
-                    style={[
-                      styles.consultationHistoryContent,
-                      { flexDirection: isRTL ? "row" : "row-reverse" },
-                    ]}
-                  >
+                  <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                     {/* 🔵 Status Badge */}
-                    <View
-                      style={[
-                        styles.statusContainer,
-                        { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                      ]}
-                    >
+                    <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                       <View
                         style={[
                           styles.statusIndicator,
@@ -647,11 +514,7 @@ export default function HomeScreen() {
                         ]}
                       />
                       <Text style={styles.statusText}>
-                        {con.status === "pending"
-                          ? "قيد المراجعة"
-                          : con.status === "answered"
-                          ? "تم الرد"
-                          : "مغلق"}
+                        {con.status === "pending" ? "قيد المراجعة" : con.status === "answered" ? "تم الرد" : "مغلق"}
                       </Text>
                     </View>
 
@@ -659,10 +522,7 @@ export default function HomeScreen() {
                     <View style={styles.consultationHistoryDetails}>
                       {/* Title */}
                       <Text
-                        style={[
-                          styles.consultationHistoryTitle,
-                          { textAlign: isRTL ? "left" : "right" },
-                        ]}
+                        style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={2}
                       >
                         {con.title}
@@ -670,22 +530,14 @@ export default function HomeScreen() {
 
                       {/* Category / Pet Type */}
                       {con.category && (
-                        <Text
-                          style={[
-                            styles.consultationHistoryPet,
-                            { textAlign: isRTL ? "left" : "right" },
-                          ]}
-                        >
+                        <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
                           النوع: {con.category}
                         </Text>
                       )}
 
                       {/* Description */}
                       <Text
-                        style={[
-                          styles.consultationHistoryDescription,
-                          { textAlign: isRTL ? "left" : "right" },
-                        ]}
+                        style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={3}
                       >
                         {con.description}
@@ -717,12 +569,7 @@ export default function HomeScreen() {
                       </Text>
 
                       {/* Date */}
-                      <Text
-                        style={[
-                          styles.consultationHistoryDate,
-                          { textAlign: isRTL ? "left" : "right" },
-                        ]}
-                      >
+                      <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
                         {new Date(con.createdAt).toLocaleDateString("ar-SA")}
                       </Text>
                     </View>
@@ -730,11 +577,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               ))
             ) : (
-              <Text>
-                {userMode === "veterinarian"
-                  ? "لا توجد استفسارات"
-                  : "لا توجد استفسارات"}
-              </Text>
+              <Text>{userMode === "veterinarian" ? "لا توجد استفسارات" : "لا توجد استفسارات"}</Text>
             )}
           </ScrollView>
         </View>
@@ -742,11 +585,7 @@ export default function HomeScreen() {
         {/* Available Clinics / Veterinary Stores Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={
-              userMode === "veterinarian"
-                ? "المذاخر البيطرية"
-                : t("home.availableClinics")
-            }
+            title={userMode === "veterinarian" ? "المذاخر البيطرية" : t("home.availableClinics")}
             onSeeAll={handleViewClinics}
             isRTL={isRTL}
             showEditButton={isSuperAdmin}
@@ -761,10 +600,7 @@ export default function HomeScreen() {
           <AutoScrollView
             itemWidth={336}
             autoScrollInterval={5000}
-            contentContainerStyle={[
-              styles.horizontalScrollContent,
-              { flexDirection: isRTL ? "row-reverse" : "row" },
-            ]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian"
               ? vetStores?.map((store) => (
@@ -784,12 +620,7 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View
-                      style={[
-                        styles.clinicCardContent,
-                        { flexDirection: isRTL ? "row-reverse" : "row" },
-                      ]}
-                    >
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Store Info */}
                       <View
                         style={[
@@ -804,39 +635,20 @@ export default function HomeScreen() {
                         {/* Active Badge */}
                         {store.isActive && (
                           <View
-                            style={[
-                              styles.premiumBadgeContainer,
-                              { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                            ]}
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                           >
                             <View style={styles.premiumBadge}>
-                              <Star
-                                size={12}
-                                color={COLORS.white}
-                                fill={COLORS.white}
-                              />
+                              <Star size={12} color={COLORS.white} fill={COLORS.white} />
                               <Text style={styles.premiumBadgeText}>نشط</Text>
                             </View>
                           </View>
                         )}
 
                         {/* Store Name */}
-                        <Text
-                          style={[
-                            styles.clinicName,
-                            { textAlign: isRTL ? "right" : "left" },
-                          ]}
-                        >
-                          {store.name}
-                        </Text>
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{store.name}</Text>
 
                         {/* Location */}
-                        <View
-                          style={[
-                            styles.clinicInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -852,12 +664,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View
-                          style={[
-                            styles.clinicInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -873,12 +680,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        <View
-                          style={[
-                            styles.clinicRatingRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -895,37 +697,19 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Store Image */}
-                      <Image
-                        source={{ uri: store.images[0] }}
-                        style={styles.clinicImage}
-                      />
+                      <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />
                     </View>
 
                     {/* Action Buttons */}
-                    <View
-                      style={[
-                        styles.clinicActions,
-                        { flexDirection: isRTL ? "row-reverse" : "row" },
-                      ]}
-                    >
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <TouchableOpacity
-                        style={[
-                          styles.clinicActionButton,
-                          styles.primaryClinicActionButton,
-                        ]}
+                        style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
                           console.log(`Call store ${store.id}: ${store.phone}`);
                           // TODO: Implement phone call functionality
                         }}
                       >
-                        <Text
-                          style={[
-                            styles.clinicActionButtonText,
-                            styles.primaryClinicActionButtonText,
-                          ]}
-                        >
-                          اتصال
-                        </Text>
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.clinicActionButton}
@@ -937,9 +721,7 @@ export default function HomeScreen() {
                           });
                         }}
                       >
-                        <Text style={styles.clinicActionButtonText}>
-                          المنتجات
-                        </Text>
+                        <Text style={styles.clinicActionButtonText}>المنتجات</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -961,12 +743,7 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View
-                      style={[
-                        styles.clinicCardContent,
-                        { flexDirection: isRTL ? "row-reverse" : "row" },
-                      ]}
-                    >
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Clinic Info */}
                       <View
                         style={[
@@ -981,39 +758,20 @@ export default function HomeScreen() {
                         {/* Premium Badge */}
                         {clinic.isPremium && (
                           <View
-                            style={[
-                              styles.premiumBadgeContainer,
-                              { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                            ]}
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                           >
                             <View style={styles.premiumBadge}>
-                              <Star
-                                size={12}
-                                color={COLORS.white}
-                                fill={COLORS.white}
-                              />
+                              <Star size={12} color={COLORS.white} fill={COLORS.white} />
                               <Text style={styles.premiumBadgeText}>مميز</Text>
                             </View>
                           </View>
                         )}
 
                         {/* Clinic Name */}
-                        <Text
-                          style={[
-                            styles.clinicName,
-                            { textAlign: isRTL ? "right" : "left" },
-                          ]}
-                        >
-                          {clinic.name}
-                        </Text>
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{clinic.name}</Text>
 
                         {/* Location */}
-                        <View
-                          style={[
-                            styles.clinicInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -1029,12 +787,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View
-                          style={[
-                            styles.clinicInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -1050,12 +803,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        <View
-                          style={[
-                            styles.clinicRatingRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -1072,39 +820,19 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Clinic Image */}
-                      <Image
-                        source={{ uri: clinic.images[0] }}
-                        style={styles.clinicImage}
-                      />
+                      <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
                     </View>
 
                     {/* Action Buttons */}
-                    <View
-                      style={[
-                        styles.clinicActions,
-                        { flexDirection: isRTL ? "row-reverse" : "row" },
-                      ]}
-                    >
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <TouchableOpacity
-                        style={[
-                          styles.clinicActionButton,
-                          styles.primaryClinicActionButton,
-                        ]}
+                        style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
-                          console.log(
-                            `Call clinic ${clinic.id}: ${clinic.phone}`
-                          );
+                          console.log(`Call clinic ${clinic.id}: ${clinic.phone}`);
                           // TODO: Implement phone call functionality
                         }}
                       >
-                        <Text
-                          style={[
-                            styles.clinicActionButtonText,
-                            styles.primaryClinicActionButtonText,
-                          ]}
-                        >
-                          اتصال
-                        </Text>
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.clinicActionButton}
@@ -1113,9 +841,7 @@ export default function HomeScreen() {
                           // TODO: Implement map functionality
                         }}
                       >
-                        <Text style={styles.clinicActionButtonText}>
-                          الخريطة
-                        </Text>
+                        <Text style={styles.clinicActionButtonText}>الخريطة</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -1126,11 +852,7 @@ export default function HomeScreen() {
         {/* Best Tips / Veterinary Magazine Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={
-              userMode === "veterinarian"
-                ? t("home.vetMagazine")
-                : t("home.bestTips")
-            }
+            title={userMode === "veterinarian" ? t("home.vetMagazine") : t("home.bestTips")}
             onSeeAll={handleViewTips}
             isRTL={isRTL}
             showEditButton={isSuperAdmin}
@@ -1145,10 +867,7 @@ export default function HomeScreen() {
           <AutoScrollView
             itemWidth={280}
             autoScrollInterval={6000}
-            contentContainerStyle={[
-              styles.horizontalScrollContent,
-              { flexDirection: isRTL ? "row-reverse" : "row" },
-            ]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian" ? (
               articlesLoading ? (
@@ -1168,35 +887,18 @@ export default function HomeScreen() {
                       router.push(`/article-details?id=${article.id}`);
                     }}
                   >
-                    <Image
-                      source={{ uri: article.coverImage }}
-                      style={styles.articleImage}
-                    />
+                    <Image source={{ uri: article.coverImage }} style={styles.articleImage} />
                     <View style={styles.articleContent}>
-                      <Text
-                        style={[
-                          styles.articleTitle,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
-                        numberOfLines={2}
-                      >
+                      <Text style={[styles.articleTitle, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                         {article.title}
                       </Text>
                       <Text
-                        style={[
-                          styles.articleDescription,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
+                        style={[styles.articleDescription, { textAlign: isRTL ? "right" : "left" }]}
                         numberOfLines={2}
                       >
                         {article.description}
                       </Text>
-                      <View
-                        style={[
-                          styles.articleAuthor,
-                          { flexDirection: isRTL ? "row-reverse" : "row" },
-                        ]}
-                      >
+                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <User size={14} color={COLORS.darkGray} />
                         <Text
                           style={[
@@ -1211,26 +913,13 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                       <Text
-                        style={[
-                          styles.articleAuthorTitle,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
+                        style={[styles.articleAuthorTitle, { textAlign: isRTL ? "right" : "left" }]}
                         numberOfLines={1}
                       >
                         {article.authorTitle}
                       </Text>
-                      <View
-                        style={[
-                          styles.articleStats,
-                          { flexDirection: isRTL ? "row-reverse" : "row" },
-                        ]}
-                      >
-                        <View
-                          style={[
-                            styles.articleStat,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Heart size={14} color="#EF4444" />
                           <Text
                             style={[
@@ -1244,12 +933,7 @@ export default function HomeScreen() {
                             {article.likes}
                           </Text>
                         </View>
-                        <View
-                          style={[
-                            styles.articleStat,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MessageCircle size={14} color={COLORS.darkGray} />
                           <Text
                             style={[
@@ -1276,21 +960,12 @@ export default function HomeScreen() {
                   key={tip.id}
                   title={tip.title}
                   image={tip.images[0]}
-                  style={[
-                    styles.tipCard,
-                    { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 },
-                  ]}
+                  style={[styles.tipCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() => {
                     router.push(`/tip-details?id=${tip.id}`);
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.tipContent,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                    numberOfLines={2}
-                  >
+                  <Text style={[styles.tipContent, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                     {tip.content}
                   </Text>
                 </Card>
@@ -1310,10 +985,7 @@ export default function HomeScreen() {
             <AutoScrollView
               itemWidth={316}
               autoScrollInterval={7000}
-              contentContainerStyle={[
-                styles.horizontalScrollContent,
-                { flexDirection: isRTL ? "row-reverse" : "row" },
-              ]}
+              contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
             >
               {adoptionPetsLoading ? (
                 <ActivityIndicator />
@@ -1335,17 +1007,9 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View
-                      style={[
-                        styles.adoptionPetCardContent,
-                        { flexDirection: isRTL ? "row-reverse" : "row" },
-                      ]}
-                    >
+                    <View style={[styles.adoptionPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Pet Image */}
-                      <Image
-                        source={{ uri: pet.images[0] }}
-                        style={styles.adoptionPetImage}
-                      />
+                      <Image source={{ uri: pet.images[0] }} style={styles.adoptionPetImage} />
 
                       {/* Pet Info */}
                       <View
@@ -1359,42 +1023,22 @@ export default function HomeScreen() {
                         ]}
                       >
                         {/* Status Badge */}
-                        <View
-                          style={[
-                            styles.adoptionBadgeContainer,
-                            { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                          ]}
-                        >
+                        <View style={[styles.adoptionBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                           <View style={styles.adoptionBadge}>
                             <Text style={styles.adoptionBadgeText}>للتبني</Text>
                           </View>
                         </View>
 
                         {/* Pet Name and Type */}
-                        <Text
-                          style={[
-                            styles.adoptionPetName,
-                            { textAlign: isRTL ? "right" : "left" },
-                          ]}
-                        >
+                        <Text style={[styles.adoptionPetName, { textAlign: isRTL ? "right" : "left" }]}>
                           {pet.name}
                         </Text>
-                        <Text
-                          style={[
-                            styles.adoptionPetType,
-                            { textAlign: isRTL ? "right" : "left" },
-                          ]}
-                        >
+                        <Text style={[styles.adoptionPetType, { textAlign: isRTL ? "right" : "left" }]}>
                           {t(`pets.types.${pet.type}`)}
                         </Text>
 
                         {/* Age */}
-                        <View
-                          style={[
-                            styles.adoptionPetInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Calendar size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1410,12 +1054,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Location */}
-                        <View
-                          style={[
-                            styles.adoptionPetInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MapPin size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1431,12 +1070,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View
-                          style={[
-                            styles.adoptionPetInfoRow,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1455,56 +1089,34 @@ export default function HomeScreen() {
 
                     {/* Description */}
                     <Text
-                      style={[
-                        styles.adoptionPetDescription,
-                        { textAlign: isRTL ? "right" : "left" },
-                      ]}
+                      style={[styles.adoptionPetDescription, { textAlign: isRTL ? "right" : "left" }]}
                       numberOfLines={2}
                     >
                       حيوان أليف ودود ومدرب، يحتاج إلى منزل محب ورعاية جيدة.
                     </Text>
 
                     {/* Action Buttons */}
-                    <View
-                      style={[
-                        styles.adoptionPetActions,
-                        { flexDirection: isRTL ? "row-reverse" : "row" },
-                      ]}
-                    >
+                    <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <TouchableOpacity
                         style={styles.adoptionActionButton}
                         onPress={() => {
-                          console.log(
-                            `View details for adoption pet ${pet.id}`
-                          );
+                          console.log(`View details for adoption pet ${pet.id}`);
                           router.push({
                             pathname: "/adoption-pet-details",
                             params: { id: pet.id, type: "adoption" },
                           });
                         }}
                       >
-                        <Text style={styles.adoptionActionButtonText}>
-                          التفاصيل
-                        </Text>
+                        <Text style={styles.adoptionActionButtonText}>التفاصيل</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[
-                          styles.adoptionActionButton,
-                          styles.primaryAdoptionActionButton,
-                        ]}
+                        style={[styles.adoptionActionButton, styles.primaryAdoptionActionButton]}
                         onPress={() => {
-                          console.log(
-                            `Contact owner for adoption pet ${pet.id}`
-                          );
+                          console.log(`Contact owner for adoption pet ${pet.id}`);
                           // TODO: Implement contact owner functionality
                         }}
                       >
-                        <Text
-                          style={[
-                            styles.adoptionActionButtonText,
-                            styles.primaryAdoptionActionButtonText,
-                          ]}
-                        >
+                        <Text style={[styles.adoptionActionButtonText, styles.primaryAdoptionActionButtonText]}>
                           اتصال
                         </Text>
                       </TouchableOpacity>
@@ -1519,11 +1131,7 @@ export default function HomeScreen() {
         {/* Lost Pets / Veterinary Books Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={
-              userMode === "veterinarian"
-                ? t("home.vetBooks")
-                : t("home.lostPets")
-            }
+            title={userMode === "veterinarian" ? t("home.vetBooks") : t("home.lostPets")}
             onSeeAll={handleViewLostPets}
             isRTL={isRTL}
             showEditButton={isSuperAdmin && userMode === "veterinarian"}
@@ -1532,10 +1140,7 @@ export default function HomeScreen() {
           <AutoScrollView
             itemWidth={280}
             autoScrollInterval={8000}
-            contentContainerStyle={[
-              styles.horizontalScrollContent,
-              { flexDirection: isRTL ? "row-reverse" : "row" },
-            ]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian" ? (
               vetBooksLoading ? (
@@ -1555,50 +1160,19 @@ export default function HomeScreen() {
                       router.push(`/book-details?id=${book.id}`);
                     }}
                   >
-                    <Image
-                      source={{ uri: book.coverImage }}
-                      style={styles.bookImage}
-                    />
+                    <Image source={{ uri: book.coverImage }} style={styles.bookImage} />
                     <View style={styles.bookContent}>
-                      <Text
-                        style={[
-                          styles.bookTitle,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
-                        numberOfLines={2}
-                      >
+                      <Text style={[styles.bookTitle, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                         {book.title}
                       </Text>
-                      <Text
-                        style={[
-                          styles.bookAuthor,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
-                        numberOfLines={1}
-                      >
+                      <Text style={[styles.bookAuthor, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={1}>
                         {book.author}
                       </Text>
-                      <Text
-                        style={[
-                          styles.bookDescription,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
-                        numberOfLines={2}
-                      >
+                      <Text style={[styles.bookDescription, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                         {book.description}
                       </Text>
-                      <View
-                        style={[
-                          styles.bookStats,
-                          { flexDirection: isRTL ? "row-reverse" : "row" },
-                        ]}
-                      >
-                        <View
-                          style={[
-                            styles.bookStat,
-                            { flexDirection: isRTL ? "row-reverse" : "row" },
-                          ]}
-                        >
+                      <View style={[styles.bookStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.bookStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Download size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1630,14 +1204,11 @@ export default function HomeScreen() {
               )
             ) : lostPetsLoading ? (
               <ActivityIndicator />
-            ) : lostPets.length > 0 ? (
+            ) : lostPets?.length > 0 ? (
               lostPets?.map((pet) => (
                 <TouchableOpacity
                   key={pet.id}
-                  style={[
-                    styles.lostPetCardNew,
-                    { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 },
-                  ]}
+                  style={[styles.lostPetCardNew, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() =>
                     router.push({
                       pathname: "/lost-pet",
@@ -1645,17 +1216,9 @@ export default function HomeScreen() {
                     })
                   }
                 >
-                  <View
-                    style={[
-                      styles.lostPetCardContent,
-                      { flexDirection: isRTL ? "row-reverse" : "row" },
-                    ]}
-                  >
+                  <View style={[styles.lostPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                     {/* Pet Image */}
-                    <Image
-                      source={{ uri: pet.images[0] }}
-                      style={styles.lostPetImage}
-                    />
+                    <Image source={{ uri: pet.images[0] }} style={styles.lostPetImage} />
 
                     {/* Pet Info */}
                     <View
@@ -1669,42 +1232,20 @@ export default function HomeScreen() {
                       ]}
                     >
                       {/* Status Badge */}
-                      <View
-                        style={[
-                          styles.statusBadgeContainer,
-                          { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                        ]}
-                      >
+                      <View style={[styles.statusBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                         <View style={styles.statusBadge}>
                           <Text style={styles.statusBadgeText}>مفقود</Text>
                         </View>
                       </View>
 
                       {/* Pet Name and Type */}
-                      <Text
-                        style={[
-                          styles.lostPetName,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
-                      >
-                        {pet.name}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.lostPetType,
-                          { textAlign: isRTL ? "right" : "left" },
-                        ]}
-                      >
+                      <Text style={[styles.lostPetName, { textAlign: isRTL ? "right" : "left" }]}>{pet.name}</Text>
+                      <Text style={[styles.lostPetType, { textAlign: isRTL ? "right" : "left" }]}>
                         {t(`pets.types.${pet.type}`)}
                       </Text>
 
                       {/* Location */}
-                      <View
-                        style={[
-                          styles.lostPetInfoRow,
-                          { flexDirection: isRTL ? "row-reverse" : "row" },
-                        ]}
-                      >
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <MapPin size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1720,12 +1261,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Date */}
-                      <View
-                        style={[
-                          styles.lostPetInfoRow,
-                          { flexDirection: isRTL ? "row-reverse" : "row" },
-                        ]}
-                      >
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <Calendar size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1736,19 +1272,12 @@ export default function HomeScreen() {
                             },
                           ]}
                         >
-                          {new Date(pet?.lastSeen?.date).toLocaleDateString(
-                            "ar-SA"
-                          )}
+                          {new Date(pet?.lastSeen?.date).toLocaleDateString("ar-SA")}
                         </Text>
                       </View>
 
                       {/* Phone */}
-                      <View
-                        style={[
-                          styles.lostPetInfoRow,
-                          { flexDirection: isRTL ? "row-reverse" : "row" },
-                        ]}
-                      >
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <Phone size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1766,23 +1295,12 @@ export default function HomeScreen() {
                   </View>
 
                   {/* Description */}
-                  <Text
-                    style={[
-                      styles.lostPetDescription,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                    numberOfLines={2}
-                  >
+                  <Text style={[styles.lostPetDescription, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                     {pet.description}
                   </Text>
 
                   {/* Action Buttons */}
-                  <View
-                    style={[
-                      styles.lostPetActions,
-                      { flexDirection: isRTL ? "row-reverse" : "row" },
-                    ]}
-                  >
+                  <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() => {
@@ -1808,14 +1326,7 @@ export default function HomeScreen() {
                         // TODO: Implement contact owner functionality
                       }}
                     >
-                      <Text
-                        style={[
-                          styles.actionButtonText,
-                          styles.primaryActionButtonText,
-                        ]}
-                      >
-                        اتصال
-                      </Text>
+                      <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>اتصال</Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>

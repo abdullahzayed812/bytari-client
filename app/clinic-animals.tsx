@@ -4,35 +4,21 @@ import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Search, Users, Phone } from 'lucide-react-native';
-import { mockPets } from "../mocks/data";
+import { useQuery } from '@tanstack/react-query';
+import { trpc } from '@/lib/trpc';
 
 export default function ClinicAnimals() {
   const router = useRouter();
   const { clinicId, clinicName } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Mock clinic animals data - in real app this would come from API based on clinicId
-  const clinicAnimals = mockPets.map(pet => ({
-    id: pet.id,
-    name: pet.name,
-    type: pet.type === 'cat' ? 'قط' : pet.type === 'dog' ? 'كلب' : pet.type === 'rabbit' ? 'أرنب' : pet.type === 'bird' ? 'طائر' : 'حيوان أليف',
-    breed: pet.breed,
-    age: `${pet.age} ${pet.age === 1 ? 'سنة' : 'سنوات'}`,
-    owner: 'محمد أحمد',
-    ownerPhone: '+964 770 123 4567',
-    lastVisit: '10-06-2024',
-    nextAppointment: '15-06-2024',
-    status: Math.random() > 0.5 ? 'تحت العلاج' : Math.random() > 0.5 ? 'متعافي' : 'فحص دوري',
-    image: pet.image,
-    petData: pet,
-    medicalHistory: [
-      { date: '10-06-2024', diagnosis: 'فحص دوري', treatment: 'تطعيم سنوي' },
-      { date: '05-05-2024', diagnosis: 'التهاب أذن', treatment: 'مضاد حيوي' }
-    ]
-  }));
+  const { data, isLoading } = useQuery({
+    ...trpc.clinics.getClinicAnimals.queryOptions({ clinicId: Number(clinicId) }),
+    enabled: !!clinicId,
+  });
+
+  const clinicAnimals = data?.animals || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -45,40 +31,31 @@ export default function ClinicAnimals() {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    if (query.trim() === '') {
-      setFilteredAnimals([]);
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
-    const results = clinicAnimals.filter(animal => 
-      animal.id.toLowerCase().includes(query.toLowerCase()) ||
-      animal.name.toLowerCase().includes(query.toLowerCase()) ||
-      animal.owner.toLowerCase().includes(query.toLowerCase()) ||
-      animal.type.toLowerCase().includes(query.toLowerCase()) ||
-      (animal.breed && animal.breed.toLowerCase().includes(query.toLowerCase()))
-    );
-    setFilteredAnimals(results);
   };
 
   const clearSearch = () => {
     setSearchQuery('');
-    setFilteredAnimals([]);
-    setIsSearching(false);
   };
 
   const filterByStatus = (status: string) => {
     setFilterStatus(status);
-    if (status === 'all') {
-      setFilteredAnimals([]);
-      setIsSearching(false);
-    } else {
-      const filtered = clinicAnimals.filter(animal => animal.status === status);
-      setFilteredAnimals(filtered);
-      setIsSearching(true);
-    }
   };
+
+  const filteredData = clinicAnimals
+    .filter((animal) => {
+      if (filterStatus === 'all') return true;
+      return animal.status === filterStatus;
+    })
+    .filter((animal) => {
+      if (!searchQuery) return true;
+      return (
+        animal.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        animal.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        animal.owner.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        animal.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (animal.breed && animal.breed.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    });
 
   const handleAnimalPress = (animal: any) => {
     router.push({
@@ -123,13 +100,14 @@ export default function ClinicAnimals() {
     </TouchableOpacity>
   );
 
-  const displayData = isSearching ? filteredAnimals : clinicAnimals;
   const statusCounts = {
     all: clinicAnimals.length,
     'تحت العلاج': clinicAnimals.filter(a => a.status === 'تحت العلاج').length,
     'متعافي': clinicAnimals.filter(a => a.status === 'متعافي').length,
     'فحص دوري': clinicAnimals.filter(a => a.status === 'فحص دوري').length
   };
+
+  const displayData = filteredData;
 
   return (
     <View style={styles.container}>
@@ -146,6 +124,12 @@ export default function ClinicAnimals() {
           </View>
           <View style={styles.headerSpacer} />
         </View>
+
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>جاري تحميل بيانات الحيوانات...</Text>
+          </View>
+        ) : (
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Stats Summary */}
@@ -223,12 +207,12 @@ export default function ClinicAnimals() {
           <View style={styles.resultsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {isSearching ? 
-                  (searchQuery ? `نتائج البحث (${displayData.length})` : `تصفية: ${filterStatus} (${displayData.length})`) : 
+                {searchQuery || filterStatus !== 'all' ? 
+                  `نتائج البحث (${displayData.length})` : 
                   `جميع الحيوانات (${displayData.length})`
                 }
               </Text>
-              {(isSearching || searchQuery) && (
+              {(searchQuery || filterStatus !== 'all') && (
                 <TouchableOpacity onPress={clearSearch}>
                   <Text style={styles.clearText}>مسح</Text>
                 </TouchableOpacity>
@@ -244,13 +228,14 @@ export default function ClinicAnimals() {
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Text style={styles.emptyText}>
-                    {isSearching ? 'لا توجد نتائج للبحث' : 'لا توجد حيوانات مسجلة'}
+                    {searchQuery || filterStatus !== 'all' ? 'لا توجد نتائج للبحث' : 'لا توجد حيوانات مسجلة'}
                   </Text>
                 </View>
               }
             />
           </View>
         </ScrollView>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -263,6 +248,15 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: COLORS.darkGray,
   },
   header: {
     flexDirection: 'row',

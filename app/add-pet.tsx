@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -43,10 +34,7 @@ export default function AddPetScreen() {
     weight: "",
     color: "",
     birthDate: "",
-    image:
-      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
-    medicalHistory: "",
-    vaccinations: "",
+    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
   });
 
   const createPetMutation = useMutation(trpc.pets.create.mutationOptions({}));
@@ -59,8 +47,7 @@ export default function AddPetScreen() {
   /** 🖼️ Handle Image Upload **/
   const handleImageUpload = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         showToast({
           message: "نحتاج إلى إذن للوصول إلى الصور",
@@ -131,8 +118,6 @@ export default function AddPetScreen() {
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         color: formData.color.trim() || undefined,
         image: formData.image,
-        medicalHistory: formData.medicalHistory.trim() || undefined,
-        vaccinations: formData.vaccinations.trim() || undefined,
       },
       {
         onSuccess: () => {
@@ -140,6 +125,7 @@ export default function AddPetScreen() {
             message: "تم إضافة الحيوان بنجاح",
             type: "success",
           });
+          trpc.pets.getUserPets.invalidate();
           router.navigate("(tabs)/pets");
         },
         onError: (error) => {
@@ -157,18 +143,10 @@ export default function AddPetScreen() {
       {PET_TYPES.map((type) => (
         <TouchableOpacity
           key={type}
-          style={[
-            styles.typeButton,
-            formData.type === type && styles.typeButtonActive,
-          ]}
+          style={[styles.typeButton, formData.type === type && styles.typeButtonActive]}
           onPress={() => handleInputChange("type", type)}
         >
-          <Text
-            style={[
-              styles.typeButtonText,
-              formData.type === type && styles.typeButtonTextActive,
-            ]}
-          >
+          <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>
             {`${type}`}
           </Text>
         </TouchableOpacity>
@@ -181,18 +159,10 @@ export default function AddPetScreen() {
       {GENDERS.map((gender) => (
         <TouchableOpacity
           key={gender}
-          style={[
-            styles.genderButton,
-            formData.gender === gender && styles.genderButtonActive,
-          ]}
+          style={[styles.genderButton, formData.gender === gender && styles.genderButtonActive]}
           onPress={() => handleInputChange("gender", gender)}
         >
-          <Text
-            style={[
-              styles.genderButtonText,
-              formData.gender === gender && styles.genderButtonTextActive,
-            ]}
-          >
+          <Text style={[styles.genderButtonText, formData.gender === gender && styles.genderButtonTextActive]}>
             {gender === "male" ? "ذكر" : "أنثى"}
           </Text>
         </TouchableOpacity>
@@ -212,17 +182,11 @@ export default function AddPetScreen() {
         }}
       />
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-      >
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         {/* Pet Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: formData.image }} style={styles.petImage} />
-          <TouchableOpacity
-            style={styles.cameraButton}
-            onPress={handleImageUpload}
-          >
+          <TouchableOpacity style={styles.cameraButton} onPress={handleImageUpload}>
             <Camera size={20} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -307,12 +271,7 @@ export default function AddPetScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>تاريخ الميلاد</Text>
           <TouchableOpacity style={styles.dateInput}>
-            <Text
-              style={[
-                styles.dateText,
-                !formData.birthDate && styles.placeholder,
-              ]}
-            >
+            <Text style={[styles.dateText, !formData.birthDate && styles.placeholder]}>
               {formData.birthDate || "اختر تاريخ الميلاد (اختياري)"}
             </Text>
             <Calendar size={20} color={COLORS.lightGray} />

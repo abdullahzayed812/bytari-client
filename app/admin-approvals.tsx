@@ -1,14 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  TextInput,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { trpc } from "../lib/trpc";
@@ -40,12 +31,7 @@ import { useToastContext } from "@/providers/ToastProvider";
 
 interface ApprovalRequest {
   id: number;
-  requestType:
-    | "vet_registration"
-    | "clinic_activation"
-    | "store_activation"
-    | "clinic_renewal"
-    | "store_renewal";
+  requestType: "vet_registration" | "clinic_activation" | "store_activation" | "clinic_renewal" | "store_renewal";
   requesterId: number;
   resourceId: number;
   title: string;
@@ -82,14 +68,13 @@ export default function AdminApprovalsScreen() {
     | "breeding_pets"
     | "pet_management"
   >("all");
-  const [selectedRequest, setSelectedRequest] =
-    useState<ApprovalRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<ApprovalRequest | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [activationStartDate, setActivationStartDate] = useState("");
-  const [activationEndDate, setActivationEndDate] = useState("");
+  const [activationStartDate, setActivationStartDate] = useState("1/1/2024");
+  const [activationEndDate, setActivationEndDate] = useState("1/1/2025");
 
   const { showToast } = useToastContext();
 
@@ -103,9 +88,7 @@ export default function AdminApprovalsScreen() {
     ...trpc.admin.approvals.getPending.queryOptions({
       adminId: user?.id,
       type:
-        selectedType === "lost_pets" ||
-        selectedType === "breeding_pets" ||
-        selectedType === "pet_management"
+        selectedType === "lost_pets" || selectedType === "breeding_pets" || selectedType === "pet_management"
           ? "all"
           : selectedType,
     }),
@@ -115,10 +98,7 @@ export default function AdminApprovalsScreen() {
     refetchInterval: false,
   });
 
-  const approvals = useMemo(
-    () => (approvalsData as any)?.approvals,
-    [approvalsData]
-  );
+  const approvals = useMemo(() => (approvalsData as any)?.approvals, [approvalsData]);
 
   // // Use mock data if server request fails with memoization
   // const effectiveApprovals = useMemo(() => {
@@ -376,14 +356,10 @@ export default function AdminApprovalsScreen() {
   // });
 
   // Approve mutation
-  const approveMutation = useMutation(
-    trpc.admin.approvals.approve.mutationOptions()
-  );
+  const approveMutation = useMutation(trpc.admin.approvals.approve.mutationOptions());
 
   // Reject mutation
-  const rejectMutation = useMutation(
-    trpc.admin.approvals.reject.mutationOptions()
-  );
+  const rejectMutation = useMutation(trpc.admin.approvals.reject.mutationOptions());
 
   const getRequestTypeIcon = (type: string) => {
     switch (type) {
@@ -644,9 +620,7 @@ export default function AdminApprovalsScreen() {
               placeholder="YYYY-MM-DD"
             />
 
-            <Text style={[styles.rejectLabel, { marginTop: 16 }]}>
-              تاريخ انتهاء التفعيل:
-            </Text>
+            <Text style={[styles.rejectLabel, { marginTop: 16 }]}>تاريخ انتهاء التفعيل:</Text>
             <TextInput
               style={styles.dateInput}
               value={activationEndDate}
@@ -655,11 +629,8 @@ export default function AdminApprovalsScreen() {
             />
 
             <Text style={styles.dateNote}>
-              ملاحظة: سيتم تفعيل{" "}
-              {selectedRequest?.requestType?.includes("clinic")
-                ? "العيادة"
-                : "المتجر"}{" "}
-              من التاريخ المحدد وحتى تاريخ الانتهاء
+              ملاحظة: سيتم تفعيل {selectedRequest?.requestType?.includes("clinic") ? "العيادة" : "المتجر"} من التاريخ
+              المحدد وحتى تاريخ الانتهاء
             </Text>
           </View>
 
@@ -678,11 +649,7 @@ export default function AdminApprovalsScreen() {
             <TouchableOpacity
               style={[styles.actionButton, styles.approveButton]}
               onPress={confirmApprovalWithDates}
-              disabled={
-                approveMutation.isPending ||
-                !activationStartDate ||
-                !activationEndDate
-              }
+              disabled={approveMutation.isPending || !activationStartDate || !activationEndDate}
             >
               <CheckCircle size={20} color={COLORS.white} />
               <Text style={styles.actionButtonText}>موافقة</Text>
@@ -754,10 +721,7 @@ export default function AdminApprovalsScreen() {
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>تفاصيل الطلب</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowDetailsModal(false)}
-            >
+            <TouchableOpacity style={styles.closeButton} onPress={() => setShowDetailsModal(false)}>
               <XCircle size={24} color={COLORS.gray} />
             </TouchableOpacity>
           </View>
@@ -769,29 +733,21 @@ export default function AdminApprovalsScreen() {
                   <Text style={styles.sectionTitle}>معلومات الطلب</Text>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>النوع:</Text>
-                    <Text style={styles.detailValue}>
-                      {getRequestTypeText(selectedRequest!.requestType)}
-                    </Text>
+                    <Text style={styles.detailValue}>{getRequestTypeText(selectedRequest!.requestType)}</Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>العنوان:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedRequest!.title}
-                    </Text>
+                    <Text style={styles.detailValue}>{selectedRequest!.title}</Text>
                   </View>
                   {selectedRequest!.description && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>الوصف:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedRequest!.description}
-                      </Text>
+                      <Text style={styles.detailValue}>{selectedRequest!.description}</Text>
                     </View>
                   )}
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>تاريخ التقديم:</Text>
-                    <Text style={styles.detailValue}>
-                      {formatDate(selectedRequest!.createdAt)}
-                    </Text>
+                    <Text style={styles.detailValue}>{formatDate(selectedRequest!.createdAt)}</Text>
                   </View>
                 </View>
 
@@ -799,22 +755,16 @@ export default function AdminApprovalsScreen() {
                   <Text style={styles.sectionTitle}>معلومات مقدم الطلب</Text>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>الاسم:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedRequest!.requesterName}
-                    </Text>
+                    <Text style={styles.detailValue}>{selectedRequest!.requesterName}</Text>
                   </View>
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>البريد الإلكتروني:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedRequest!.requesterEmail}
-                    </Text>
+                    <Text style={styles.detailValue}>{selectedRequest!.requesterEmail}</Text>
                   </View>
                   {selectedRequest.requesterPhone && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>الهاتف:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedRequest.requesterPhone}
-                      </Text>
+                      <Text style={styles.detailValue}>{selectedRequest.requesterPhone}</Text>
                     </View>
                   )}
                 </View>
@@ -828,9 +778,7 @@ export default function AdminApprovalsScreen() {
                       style={[
                         styles.paymentMainStatusBadge,
                         {
-                          backgroundColor: getPaymentStatusColor(
-                            selectedRequest!.paymentStatus
-                          ),
+                          backgroundColor: getPaymentStatusColor(selectedRequest!.paymentStatus),
                         },
                       ]}
                     >
@@ -850,8 +798,7 @@ export default function AdminApprovalsScreen() {
                             <CreditCard size={18} color={COLORS.white} />
                           </View>
                           <Text style={styles.paymentRequirementTitle}>
-                            {selectedRequest!.requestType ===
-                            "clinic_activation"
+                            {selectedRequest!.requestType === "clinic_activation"
                               ? "رسوم تفعيل العيادة"
                               : "رسوم تفعيل المتجر"}
                           </Text>
@@ -859,12 +806,9 @@ export default function AdminApprovalsScreen() {
 
                         <View style={styles.paymentRequirementDetails}>
                           <View style={styles.paymentRequirementRow}>
-                            <Text style={styles.paymentRequirementLabel}>
-                              المبلغ المطلوب:
-                            </Text>
+                            <Text style={styles.paymentRequirementLabel}>المبلغ المطلوب:</Text>
                             <Text style={styles.paymentRequirementAmount}>
-                              {selectedRequest!.paymentAmount || "غير محدد"}{" "}
-                              ريال
+                              {selectedRequest!.paymentAmount || "غير محدد"} ريال
                             </Text>
                           </View>
 
@@ -874,11 +818,9 @@ export default function AdminApprovalsScreen() {
                                 styles.paymentStatusDot,
                                 {
                                   backgroundColor:
-                                    selectedRequest!.paymentStatus ===
-                                    "completed"
+                                    selectedRequest!.paymentStatus === "completed"
                                       ? COLORS.success
-                                      : selectedRequest!.paymentStatus ===
-                                        "pending"
+                                      : selectedRequest!.paymentStatus === "pending"
                                       ? COLORS.warning
                                       : COLORS.error,
                                 },
@@ -889,11 +831,9 @@ export default function AdminApprovalsScreen() {
                                 styles.paymentStatusIndicatorText,
                                 {
                                   color:
-                                    selectedRequest!.paymentStatus ===
-                                    "completed"
+                                    selectedRequest!.paymentStatus === "completed"
                                       ? COLORS.success
-                                      : selectedRequest!.paymentStatus ===
-                                        "pending"
+                                      : selectedRequest!.paymentStatus === "pending"
                                       ? COLORS.warning
                                       : COLORS.error,
                                 },
@@ -915,34 +855,21 @@ export default function AdminApprovalsScreen() {
                     {/* Payment Details */}
                     {selectedRequest!.paymentStatus !== "not_required" && (
                       <View style={styles.paymentDetailsCard}>
-                        <Text style={styles.paymentDetailsTitle}>
-                          تفاصيل الدفع
-                        </Text>
+                        <Text style={styles.paymentDetailsTitle}>تفاصيل الدفع</Text>
 
                         {selectedRequest!.paymentMethod && (
                           <View style={styles.paymentDetailRow}>
                             <CreditCard size={16} color={COLORS.gray} />
-                            <Text style={styles.paymentDetailLabel}>
-                              طريقة الدفع:
-                            </Text>
-                            <Text style={styles.paymentDetailValue}>
-                              {selectedRequest!.paymentMethod}
-                            </Text>
+                            <Text style={styles.paymentDetailLabel}>طريقة الدفع:</Text>
+                            <Text style={styles.paymentDetailValue}>{selectedRequest!.paymentMethod}</Text>
                           </View>
                         )}
 
                         {selectedRequest!.paymentTransactionId && (
                           <View style={styles.paymentDetailRow}>
                             <Receipt size={16} color={COLORS.gray} />
-                            <Text style={styles.paymentDetailLabel}>
-                              رقم المعاملة:
-                            </Text>
-                            <Text
-                              style={[
-                                styles.paymentDetailValue,
-                                styles.transactionId,
-                              ]}
-                            >
+                            <Text style={styles.paymentDetailLabel}>رقم المعاملة:</Text>
+                            <Text style={[styles.paymentDetailValue, styles.transactionId]}>
                               {selectedRequest!.paymentTransactionId}
                             </Text>
                           </View>
@@ -951,9 +878,7 @@ export default function AdminApprovalsScreen() {
                         {selectedRequest!.paymentCompletedAt && (
                           <View style={styles.paymentDetailRow}>
                             <Clock size={16} color={COLORS.gray} />
-                            <Text style={styles.paymentDetailLabel}>
-                              تاريخ الدفع:
-                            </Text>
+                            <Text style={styles.paymentDetailLabel}>تاريخ الدفع:</Text>
                             <Text style={styles.paymentDetailValue}>
                               {formatDate(selectedRequest!.paymentCompletedAt!)}
                             </Text>
@@ -963,9 +888,7 @@ export default function AdminApprovalsScreen() {
                         {selectedRequest!.paymentReceipt && (
                           <TouchableOpacity style={styles.paymentReceiptButton}>
                             <Receipt size={18} color={COLORS.primary} />
-                            <Text style={styles.paymentReceiptButtonText}>
-                              عرض إيصال الدفع
-                            </Text>
+                            <Text style={styles.paymentReceiptButtonText}>عرض إيصال الدفع</Text>
                             <Eye size={16} color={COLORS.primary} />
                           </TouchableOpacity>
                         )}
@@ -973,23 +896,20 @@ export default function AdminApprovalsScreen() {
                     )}
 
                     {/* Payment Status Messages */}
-                    {selectedRequest!.paymentStatus === "pending" &&
-                      selectedRequest!.paymentAmount && (
-                        <View style={styles.paymentAlert}>
-                          <View style={styles.paymentAlertIcon}>
-                            <AlertTriangle size={20} color={COLORS.warning} />
-                          </View>
-                          <View style={styles.paymentAlertContent}>
-                            <Text style={styles.paymentAlertTitle}>
-                              في انتظار دفع الرسوم
-                            </Text>
-                            <Text style={styles.paymentAlertText}>
-                              لم يتم دفع رسوم التفعيل المطلوبة بعد. يجب على
-                              المتقدم إكمال عملية الدفع قبل الموافقة على الطلب.
-                            </Text>
-                          </View>
+                    {selectedRequest!.paymentStatus === "pending" && selectedRequest!.paymentAmount && (
+                      <View style={styles.paymentAlert}>
+                        <View style={styles.paymentAlertIcon}>
+                          <AlertTriangle size={20} color={COLORS.warning} />
                         </View>
-                      )}
+                        <View style={styles.paymentAlertContent}>
+                          <Text style={styles.paymentAlertTitle}>في انتظار دفع الرسوم</Text>
+                          <Text style={styles.paymentAlertText}>
+                            لم يتم دفع رسوم التفعيل المطلوبة بعد. يجب على المتقدم إكمال عملية الدفع قبل الموافقة على
+                            الطلب.
+                          </Text>
+                        </View>
+                      </View>
+                    )}
 
                     {selectedRequest!.paymentStatus === "completed" && (
                       <View
@@ -1005,22 +925,9 @@ export default function AdminApprovalsScreen() {
                           <CheckCircle size={20} color={COLORS.success} />
                         </View>
                         <View style={styles.paymentAlertContent}>
-                          <Text
-                            style={[
-                              styles.paymentAlertTitle,
-                              { color: COLORS.success },
-                            ]}
-                          >
-                            تم دفع الرسوم بنجاح
-                          </Text>
-                          <Text
-                            style={[
-                              styles.paymentAlertText,
-                              { color: "#155724" },
-                            ]}
-                          >
-                            تم دفع جميع الرسوم المطلوبة بنجاح. يمكن الآن
-                            الموافقة على الطلب.
+                          <Text style={[styles.paymentAlertTitle, { color: COLORS.success }]}>تم دفع الرسوم بنجاح</Text>
+                          <Text style={[styles.paymentAlertText, { color: "#155724" }]}>
+                            تم دفع جميع الرسوم المطلوبة بنجاح. يمكن الآن الموافقة على الطلب.
                           </Text>
                         </View>
                       </View>
@@ -1040,22 +947,9 @@ export default function AdminApprovalsScreen() {
                           <XCircle size={20} color={COLORS.error} />
                         </View>
                         <View style={styles.paymentAlertContent}>
-                          <Text
-                            style={[
-                              styles.paymentAlertTitle,
-                              { color: COLORS.error },
-                            ]}
-                          >
-                            فشل في دفع الرسوم
-                          </Text>
-                          <Text
-                            style={[
-                              styles.paymentAlertText,
-                              { color: "#721C24" },
-                            ]}
-                          >
-                            فشلت عملية دفع الرسوم. يجب على المتقدم إعادة
-                            المحاولة أو استخدام طريقة دفع أخرى.
+                          <Text style={[styles.paymentAlertTitle, { color: COLORS.error }]}>فشل في دفع الرسوم</Text>
+                          <Text style={[styles.paymentAlertText, { color: "#721C24" }]}>
+                            فشلت عملية دفع الرسوم. يجب على المتقدم إعادة المحاولة أو استخدام طريقة دفع أخرى.
                           </Text>
                         </View>
                       </View>
@@ -1070,9 +964,7 @@ export default function AdminApprovalsScreen() {
                   <View style={styles.detailSection}>
                     <View style={styles.sectionHeaderWithIcon}>
                       <Shield size={20} color={COLORS.primary} />
-                      <Text style={styles.sectionTitle}>
-                        الأوراق الرسمية والمستندات
-                      </Text>
+                      <Text style={styles.sectionTitle}>الأوراق الرسمية والمستندات</Text>
                       <View style={styles.documentsStatusBadge}>
                         <Text style={styles.documentsStatusText}>مرفقة</Text>
                       </View>
@@ -1086,69 +978,42 @@ export default function AdminApprovalsScreen() {
                             <User size={18} color={COLORS.white} />
                           </View>
                           <View style={styles.documentTitleContainer}>
-                            <Text style={styles.documentTitle}>
-                              صور الهوية الشخصية
-                            </Text>
-                            <Text style={styles.documentSubtitle}>
-                              هوية المتقدم الرسمية
-                            </Text>
+                            <Text style={styles.documentTitle}>صور الهوية الشخصية</Text>
+                            <Text style={styles.documentSubtitle}>هوية المتقدم الرسمية</Text>
                           </View>
-                          <View
-                            style={[
-                              styles.documentBadge,
-                              { backgroundColor: "#E67E22" },
-                            ]}
-                          >
+                          <View style={[styles.documentBadge, { backgroundColor: "#E67E22" }]}>
                             <Text style={styles.documentBadgeText}>هوية</Text>
                           </View>
                         </View>
 
                         <View style={styles.documentPreviewContainer}>
                           <Text style={styles.documentCount}>
-                            {
-                              JSON.parse(selectedRequest!.identityImages!)
-                                .length
-                            }{" "}
-                            صورة مرفقة
+                            {JSON.parse(selectedRequest!.identityImages!).length} صورة مرفقة
                           </Text>
                           <View style={styles.documentImageGrid}>
-                            {JSON.parse(selectedRequest!.identityImages!).map(
-                              (doc: string, index: number) => (
-                                <TouchableOpacity
-                                  key={index}
-                                  style={styles.documentImageItem}
-                                >
-                                  <View style={styles.documentImageContainer}>
-                                    <Image size={24} color={COLORS.primary} />
-                                    <Text style={styles.documentImageLabel}>
-                                      صورة {index + 1}
-                                    </Text>
-                                  </View>
-                                  <View style={styles.documentImageInfo}>
-                                    <Text style={styles.documentImageName}>
-                                      {doc}
-                                    </Text>
-                                    <Text style={styles.documentImageType}>
-                                      {doc.includes("student") ||
-                                      doc.includes("طالب")
-                                        ? "هوية طالب"
-                                        : doc.includes("doctor") ||
-                                          doc.includes("طبيب")
-                                        ? "هوية طبيب"
-                                        : doc.includes("national") ||
-                                          doc.includes("وطنية")
-                                        ? "هوية وطنية"
-                                        : "هوية شخصية"}
-                                    </Text>
-                                  </View>
-                                  <TouchableOpacity
-                                    style={styles.viewImageButton}
-                                  >
-                                    <Eye size={16} color={COLORS.white} />
-                                  </TouchableOpacity>
+                            {JSON.parse(selectedRequest!.identityImages!).map((doc: string, index: number) => (
+                              <TouchableOpacity key={index} style={styles.documentImageItem}>
+                                <View style={styles.documentImageContainer}>
+                                  <Image size={24} color={COLORS.primary} />
+                                  <Text style={styles.documentImageLabel}>صورة {index + 1}</Text>
+                                </View>
+                                <View style={styles.documentImageInfo}>
+                                  <Text style={styles.documentImageName}>{doc}</Text>
+                                  <Text style={styles.documentImageType}>
+                                    {doc.includes("student") || doc.includes("طالب")
+                                      ? "هوية طالب"
+                                      : doc.includes("doctor") || doc.includes("طبيب")
+                                      ? "هوية طبيب"
+                                      : doc.includes("national") || doc.includes("وطنية")
+                                      ? "هوية وطنية"
+                                      : "هوية شخصية"}
+                                  </Text>
+                                </View>
+                                <TouchableOpacity style={styles.viewImageButton}>
+                                  <Eye size={16} color={COLORS.white} />
                                 </TouchableOpacity>
-                              )
-                            )}
+                              </TouchableOpacity>
+                            ))}
                           </View>
                         </View>
                       </View>
@@ -1158,69 +1023,38 @@ export default function AdminApprovalsScreen() {
                     {selectedRequest!.licenseImages && (
                       <View style={styles.documentGroup}>
                         <View style={styles.documentHeader}>
-                          <View
-                            style={[
-                              styles.documentIconContainer,
-                              { backgroundColor: COLORS.info },
-                            ]}
-                          >
+                          <View style={[styles.documentIconContainer, { backgroundColor: COLORS.info }]}>
                             <Shield size={18} color={COLORS.white} />
                           </View>
                           <View style={styles.documentTitleContainer}>
-                            <Text style={styles.documentTitle}>
-                              صور التراخيص المهنية
-                            </Text>
-                            <Text style={styles.documentSubtitle}>
-                              تراخيص مزاولة المهنة
-                            </Text>
+                            <Text style={styles.documentTitle}>صور التراخيص المهنية</Text>
+                            <Text style={styles.documentSubtitle}>تراخيص مزاولة المهنة</Text>
                           </View>
-                          <View
-                            style={[
-                              styles.documentBadge,
-                              { backgroundColor: COLORS.info },
-                            ]}
-                          >
+                          <View style={[styles.documentBadge, { backgroundColor: COLORS.info }]}>
                             <Text style={styles.documentBadgeText}>ترخيص</Text>
                           </View>
                         </View>
 
                         <View style={styles.documentPreviewContainer}>
                           <Text style={styles.documentCount}>
-                            {JSON.parse(selectedRequest!.licenseImages!).length}{" "}
-                            صورة مرفقة
+                            {JSON.parse(selectedRequest!.licenseImages!).length} صورة مرفقة
                           </Text>
                           <View style={styles.documentImageGrid}>
-                            {JSON.parse(selectedRequest!.licenseImages!).map(
-                              (doc: string, index: number) => (
-                                <TouchableOpacity
-                                  key={index}
-                                  style={styles.documentImageItem}
-                                >
-                                  <View style={styles.documentImageContainer}>
-                                    <Image size={24} color={COLORS.info} />
-                                    <Text style={styles.documentImageLabel}>
-                                      ترخيص {index + 1}
-                                    </Text>
-                                  </View>
-                                  <View style={styles.documentImageInfo}>
-                                    <Text style={styles.documentImageName}>
-                                      {doc}
-                                    </Text>
-                                    <Text style={styles.documentImageType}>
-                                      ترخيص مهني
-                                    </Text>
-                                  </View>
-                                  <TouchableOpacity
-                                    style={[
-                                      styles.viewImageButton,
-                                      { backgroundColor: COLORS.info },
-                                    ]}
-                                  >
-                                    <Eye size={16} color={COLORS.white} />
-                                  </TouchableOpacity>
+                            {JSON.parse(selectedRequest!.licenseImages!).map((doc: string, index: number) => (
+                              <TouchableOpacity key={index} style={styles.documentImageItem}>
+                                <View style={styles.documentImageContainer}>
+                                  <Image size={24} color={COLORS.info} />
+                                  <Text style={styles.documentImageLabel}>ترخيص {index + 1}</Text>
+                                </View>
+                                <View style={styles.documentImageInfo}>
+                                  <Text style={styles.documentImageName}>{doc}</Text>
+                                  <Text style={styles.documentImageType}>ترخيص مهني</Text>
+                                </View>
+                                <TouchableOpacity style={[styles.viewImageButton, { backgroundColor: COLORS.info }]}>
+                                  <Eye size={16} color={COLORS.white} />
                                 </TouchableOpacity>
-                              )
-                            )}
+                              </TouchableOpacity>
+                            ))}
                           </View>
                         </View>
                       </View>
@@ -1230,90 +1064,47 @@ export default function AdminApprovalsScreen() {
                     {selectedRequest!.officialDocuments && (
                       <View style={styles.documentGroup}>
                         <View style={styles.documentHeader}>
-                          <View
-                            style={[
-                              styles.documentIconContainer,
-                              { backgroundColor: COLORS.success },
-                            ]}
-                          >
+                          <View style={[styles.documentIconContainer, { backgroundColor: COLORS.success }]}>
                             <FileText size={18} color={COLORS.white} />
                           </View>
                           <View style={styles.documentTitleContainer}>
-                            <Text style={styles.documentTitle}>
-                              المستندات الرسمية
-                            </Text>
-                            <Text style={styles.documentSubtitle}>
-                              شهادات ومستندات إضافية
-                            </Text>
+                            <Text style={styles.documentTitle}>المستندات الرسمية</Text>
+                            <Text style={styles.documentSubtitle}>شهادات ومستندات إضافية</Text>
                           </View>
-                          <View
-                            style={[
-                              styles.documentBadge,
-                              { backgroundColor: COLORS.success },
-                            ]}
-                          >
-                            <Text style={styles.documentBadgeText}>
-                              مستندات
-                            </Text>
+                          <View style={[styles.documentBadge, { backgroundColor: COLORS.success }]}>
+                            <Text style={styles.documentBadgeText}>مستندات</Text>
                           </View>
                         </View>
 
                         <View style={styles.documentPreviewContainer}>
                           <Text style={styles.documentCount}>
-                            {
-                              JSON.parse(selectedRequest!.officialDocuments!)
-                                .length
-                            }{" "}
-                            مستند مرفق
+                            {JSON.parse(selectedRequest!.officialDocuments!).length} مستند مرفق
                           </Text>
                           <View style={styles.documentList}>
-                            {JSON.parse(
-                              selectedRequest!.officialDocuments!
-                            ).map((doc: string, index: number) => (
-                              <TouchableOpacity
-                                key={index}
-                                style={styles.documentFileItem}
-                              >
-                                <View
-                                  style={[
-                                    styles.documentFileIcon,
-                                    { backgroundColor: COLORS.success },
-                                  ]}
-                                >
+                            {JSON.parse(selectedRequest!.officialDocuments!).map((doc: string, index: number) => (
+                              <TouchableOpacity key={index} style={styles.documentFileItem}>
+                                <View style={[styles.documentFileIcon, { backgroundColor: COLORS.success }]}>
                                   <FileText size={16} color={COLORS.white} />
                                 </View>
                                 <View style={styles.documentFileInfo}>
-                                  <Text style={styles.documentFileName}>
-                                    {doc}
-                                  </Text>
+                                  <Text style={styles.documentFileName}>{doc}</Text>
                                   <Text style={styles.documentFileType}>
-                                    {doc.includes("license") ||
-                                    doc.includes("إجازة")
+                                    {doc.includes("license") || doc.includes("إجازة")
                                       ? "إجازة مهنية"
-                                      : doc.includes("cert") ||
-                                        doc.includes("شهادة")
+                                      : doc.includes("cert") || doc.includes("شهادة")
                                       ? "شهادة"
-                                      : doc.includes("commercial") ||
-                                        doc.includes("تجاري")
+                                      : doc.includes("commercial") || doc.includes("تجاري")
                                       ? "سجل تجاري"
-                                      : doc.includes("tax") ||
-                                        doc.includes("ضريبي")
+                                      : doc.includes("tax") || doc.includes("ضريبي")
                                       ? "شهادة ضريبية"
                                       : "مستند رسمي"}
                                   </Text>
                                 </View>
                                 <View style={styles.documentFileActions}>
-                                  <TouchableOpacity
-                                    style={styles.downloadButton}
-                                  >
-                                    <Download
-                                      size={14}
-                                      color={COLORS.primary}
-                                    />
+                                  <TouchableOpacity style={styles.downloadButton}>
+                                    <Download size={14} color={COLORS.primary} />
                                   </TouchableOpacity>
-                                  <TouchableOpacity
-                                    style={styles.viewFileButton}
-                                  >
+                                  <TouchableOpacity style={styles.viewFileButton}>
                                     <Eye size={14} color={COLORS.success} />
                                   </TouchableOpacity>
                                 </View>
@@ -1336,21 +1127,13 @@ export default function AdminApprovalsScreen() {
                         <>
                           <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>رقم الترخيص:</Text>
-                            <Text style={styles.detailValue}>
-                              {selectedRequest.resourceDetails.licenseNumber}
-                            </Text>
+                            <Text style={styles.detailValue}>{selectedRequest.resourceDetails.licenseNumber}</Text>
                           </View>
-                          {"specialization" in
-                            selectedRequest.resourceDetails &&
+                          {"specialization" in selectedRequest.resourceDetails &&
                             selectedRequest.resourceDetails.specialization && (
                               <View style={styles.detailRow}>
                                 <Text style={styles.detailLabel}>التخصص:</Text>
-                                <Text style={styles.detailValue}>
-                                  {
-                                    selectedRequest.resourceDetails
-                                      .specialization
-                                  }
-                                </Text>
+                                <Text style={styles.detailValue}>{selectedRequest.resourceDetails.specialization}</Text>
                               </View>
                             )}
                         </>
@@ -1362,27 +1145,20 @@ export default function AdminApprovalsScreen() {
                         <>
                           <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>الاسم:</Text>
-                            <Text style={styles.detailValue}>
-                              {selectedRequest.resourceDetails.name}
-                            </Text>
+                            <Text style={styles.detailValue}>{selectedRequest.resourceDetails.name}</Text>
                           </View>
                           {"address" in selectedRequest.resourceDetails && (
                             <View style={styles.detailRow}>
                               <Text style={styles.detailLabel}>العنوان:</Text>
-                              <Text style={styles.detailValue}>
-                                {selectedRequest.resourceDetails.address}
-                              </Text>
+                              <Text style={styles.detailValue}>{selectedRequest.resourceDetails.address}</Text>
                             </View>
                           )}
-                          {"phone" in selectedRequest.resourceDetails &&
-                            selectedRequest.resourceDetails.phone && (
-                              <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>الهاتف:</Text>
-                                <Text style={styles.detailValue}>
-                                  {selectedRequest.resourceDetails.phone}
-                                </Text>
-                              </View>
-                            )}
+                          {"phone" in selectedRequest.resourceDetails && selectedRequest.resourceDetails.phone && (
+                            <View style={styles.detailRow}>
+                              <Text style={styles.detailLabel}>الهاتف:</Text>
+                              <Text style={styles.detailValue}>{selectedRequest.resourceDetails.phone}</Text>
+                            </View>
+                          )}
                         </>
                       )}
                   </View>
@@ -1450,211 +1226,88 @@ export default function AdminApprovalsScreen() {
       <View style={styles.filterContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "all" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "all" && styles.activeFilterTab]}
             onPress={() => setSelectedType("all")}
           >
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "all" && styles.activeFilterTabText,
-              ]}
-            >
-              الكل
-            </Text>
+            <Text style={[styles.filterTabText, selectedType === "all" && styles.activeFilterTabText]}>الكل</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "vet_registration" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "vet_registration" && styles.activeFilterTab]}
             onPress={() => setSelectedType("vet_registration")}
           >
-            <User
-              size={16}
-              color={
-                selectedType === "vet_registration"
-                  ? COLORS.white
-                  : COLORS.primary
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "vet_registration" &&
-                  styles.activeFilterTabText,
-              ]}
-            >
+            <User size={16} color={selectedType === "vet_registration" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.filterTabText, selectedType === "vet_registration" && styles.activeFilterTabText]}>
               الأطباء
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "clinic_activation" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "clinic_activation" && styles.activeFilterTab]}
             onPress={() => setSelectedType("clinic_activation")}
           >
-            <Building
-              size={16}
-              color={
-                selectedType === "clinic_activation"
-                  ? COLORS.white
-                  : COLORS.primary
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "clinic_activation" &&
-                  styles.activeFilterTabText,
-              ]}
-            >
+            <Building size={16} color={selectedType === "clinic_activation" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.filterTabText, selectedType === "clinic_activation" && styles.activeFilterTabText]}>
               العيادات
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "store_activation" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "store_activation" && styles.activeFilterTab]}
             onPress={() => setSelectedType("store_activation")}
           >
-            <Store
-              size={16}
-              color={
-                selectedType === "store_activation"
-                  ? COLORS.white
-                  : COLORS.primary
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "store_activation" &&
-                  styles.activeFilterTabText,
-              ]}
-            >
+            <Store size={16} color={selectedType === "store_activation" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.filterTabText, selectedType === "store_activation" && styles.activeFilterTabText]}>
               المتاجر
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "clinic_renewal" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "clinic_renewal" && styles.activeFilterTab]}
             onPress={() => setSelectedType("clinic_renewal")}
           >
-            <Building
-              size={16}
-              color={
-                selectedType === "clinic_renewal"
-                  ? COLORS.white
-                  : COLORS.primary
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "clinic_renewal" && styles.activeFilterTabText,
-              ]}
-            >
+            <Building size={16} color={selectedType === "clinic_renewal" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.filterTabText, selectedType === "clinic_renewal" && styles.activeFilterTabText]}>
               تجديد عيادات
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "store_renewal" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "store_renewal" && styles.activeFilterTab]}
             onPress={() => setSelectedType("store_renewal")}
           >
-            <Store
-              size={16}
-              color={
-                selectedType === "store_renewal" ? COLORS.white : COLORS.success
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "store_renewal" && styles.activeFilterTabText,
-              ]}
-            >
+            <Store size={16} color={selectedType === "store_renewal" ? COLORS.white : COLORS.success} />
+            <Text style={[styles.filterTabText, selectedType === "store_renewal" && styles.activeFilterTabText]}>
               تجديد متاجر
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "lost_pets" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "lost_pets" && styles.activeFilterTab]}
             onPress={() => setSelectedType("lost_pets")}
           >
-            <AlertTriangle
-              size={16}
-              color={selectedType === "lost_pets" ? COLORS.white : "#E74C3C"}
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "lost_pets" && styles.activeFilterTabText,
-              ]}
-            >
+            <AlertTriangle size={16} color={selectedType === "lost_pets" ? COLORS.white : "#E74C3C"} />
+            <Text style={[styles.filterTabText, selectedType === "lost_pets" && styles.activeFilterTabText]}>
               مفقودة
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "breeding_pets" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "breeding_pets" && styles.activeFilterTab]}
             onPress={() => setSelectedType("breeding_pets")}
           >
-            <Heart
-              size={16}
-              color={
-                selectedType === "breeding_pets" ? COLORS.white : "#9B59B6"
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "breeding_pets" && styles.activeFilterTabText,
-              ]}
-            >
+            <Heart size={16} color={selectedType === "breeding_pets" ? COLORS.white : "#9B59B6"} />
+            <Text style={[styles.filterTabText, selectedType === "breeding_pets" && styles.activeFilterTabText]}>
               تزاوج
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.filterTab,
-              selectedType === "pet_management" && styles.activeFilterTab,
-            ]}
+            style={[styles.filterTab, selectedType === "pet_management" && styles.activeFilterTab]}
             onPress={() => setSelectedType("pet_management")}
           >
-            <UserCheck
-              size={16}
-              color={
-                selectedType === "pet_management" ? COLORS.white : "#3498DB"
-              }
-            />
-            <Text
-              style={[
-                styles.filterTabText,
-                selectedType === "pet_management" && styles.activeFilterTabText,
-              ]}
-            >
+            <UserCheck size={16} color={selectedType === "pet_management" ? COLORS.white : "#3498DB"} />
+            <Text style={[styles.filterTabText, selectedType === "pet_management" && styles.activeFilterTabText]}>
               إدارة الحيوانات
             </Text>
           </TouchableOpacity>
@@ -1670,19 +1323,12 @@ export default function AdminApprovalsScreen() {
                   {getRequestTypeIcon(request.requestType)}
                   <View style={styles.requestContent}>
                     <Text style={styles.requestTitle}>{request.title}</Text>
-                    <Text style={styles.requestType}>
-                      {getRequestTypeText(request.requestType)}
-                    </Text>
+                    <Text style={styles.requestType}>{getRequestTypeText(request.requestType)}</Text>
                   </View>
                 </View>
 
                 <View style={styles.requestMeta}>
-                  <View
-                    style={[
-                      styles.priorityBadge,
-                      { backgroundColor: getPriorityColor(request.priority) },
-                    ]}
-                  >
+                  <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(request.priority) }]}>
                     <Text style={styles.priorityText}>{request.priority}</Text>
                   </View>
                 </View>
@@ -1696,16 +1342,12 @@ export default function AdminApprovalsScreen() {
 
                 <View style={styles.detailItem}>
                   <Mail size={14} color={COLORS.gray} />
-                  <Text style={styles.detailText}>
-                    {request.requesterEmail}
-                  </Text>
+                  <Text style={styles.detailText}>{request.requesterEmail}</Text>
                 </View>
 
                 <View style={styles.detailItem}>
                   <Calendar size={14} color={COLORS.gray} />
-                  <Text style={styles.detailText}>
-                    {formatDate(request.createdAt)}
-                  </Text>
+                  <Text style={styles.detailText}>{formatDate(request.createdAt)}</Text>
                 </View>
               </View>
 
@@ -1723,10 +1365,7 @@ export default function AdminApprovalsScreen() {
 
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
-                    style={[
-                      styles.quickApproveButton,
-                      approveMutation.isPending && { opacity: 0.6 },
-                    ]}
+                    style={[styles.quickApproveButton, approveMutation.isPending && { opacity: 0.6 }]}
                     onPress={() => handleApprove(request as ApprovalRequest)}
                     disabled={approveMutation.isPending}
                   >
@@ -1735,10 +1374,7 @@ export default function AdminApprovalsScreen() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[
-                      styles.quickRejectButton,
-                      rejectMutation.isPending && { opacity: 0.6 },
-                    ]}
+                    style={[styles.quickRejectButton, rejectMutation.isPending && { opacity: 0.6 }]}
                     onPress={() => handleReject(request as ApprovalRequest)}
                     disabled={rejectMutation.isPending}
                   >
