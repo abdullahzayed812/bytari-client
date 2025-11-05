@@ -87,6 +87,7 @@ export interface PoultryFarm {
   location: string;
   totalBirds: number;
   batches: PoultryBatch[];
+  address: string;
 }
 
 export interface PoultryBatch {
@@ -98,6 +99,105 @@ export interface PoultryBatch {
   currentCount: number;
   dateStarted: string;
   expectedHarvestDate?: string;
+}
+
+export interface PoultryWeek {
+  id: string;
+  batchId: string;
+  weekNumber: number; // رقم الأسبوع (1, 2, 3, ...)
+  startDate: string;
+  endDate: string;
+
+  // Aggregated data from daily records
+  days: PoultryDay[]; // الأيام المسجلة في هذا الأسبوع (1-7)
+
+  // Summary statistics
+  totalFeedConsumption: number; // إجمالي استهلاك العلف (كيلو)
+  totalFeedCost: number; // إجمالي تكلفة العلف
+  averageWeight: number; // متوسط الوزن للأسبوع (جرام)
+  totalMortality: number; // إجمالي النفوق
+  estimatedProfit: number; // الربح المقدر للأسبوع
+
+  // Health summary
+  healthStatus?: "excellent" | "good" | "fair" | "poor"; // الحالة الصحية العامة
+
+  notes?: string; // ملاحظات الأسبوع
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// ============== POULTRY DAY TYPES ==============
+
+export interface PoultryDay {
+  id: string;
+  batchId: string;
+  dayNumber: number; // رقم اليوم في الدفعة (1, 2, 3, ...)
+  weekNumber?: number; // رقم الأسبوع (محسوب: Math.ceil(dayNumber / 7))
+  date: string;
+
+  // Feed consumption
+  feedConsumption: number; // استهلاك العلف (كيلو)
+  feedCost: number; // تكلفة العلف (دينار)
+  feedType?: string; // نوع العلف
+
+  // Weight tracking
+  averageWeight: number; // متوسط الوزن (جرام)
+  weightGain?: number; // الزيادة في الوزن عن اليوم السابق (جرام)
+
+  // Mortality tracking
+  mortality: number; // عدد النفوق
+  mortalityRate?: number; // معدل النفوق (%)
+  mortalityReasons: string[]; // أسباب النفوق
+
+  // Health and treatments
+  treatments: Treatment[]; // العلاجات المستخدمة
+  vaccinations: Vaccination[]; // التطعيمات
+  healthObservations?: string[]; // ملاحظات صحية
+
+  // Environmental conditions
+  temperature?: TemperatureReading; // درجة الحرارة
+  humidity?: number; // الرطوبة (%)
+  ventilation?: "poor" | "fair" | "good" | "excellent"; // التهوية
+
+  // Financial
+  estimatedProfit: number; // الربح المقدر لليوم
+  dailyCosts?: number; // التكاليف اليومية الإضافية
+
+  // General notes
+  notes?: string; // ملاحظات اليوم
+  recordedBy?: string; // من قام بالتسجيل (owner, supervisor, vet)
+
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface TemperatureReading {
+  morning?: number; // درجة الحرارة صباحاً (°C)
+  afternoon?: number; // درجة الحرارة ظهراً (°C)
+  evening?: number; // درجة الحرارة مساءً (°C)
+  average?: number; // المتوسط (°C)
+  min?: number; // الحد الأدنى (°C)
+  max?: number; // الحد الأقصى (°C)
+}
+
+export interface Treatment {
+  id: string;
+  dayId: string;
+  batchId: string;
+  treatmentType: "medication" | "vitamin" | "vaccine" | "disinfectant" | "supplement" | "other";
+  name: string; // اسم العلاج
+  dosage: string; // الجرعة
+  frequency: string; // التكرار (مرة واحدة، مرتين يومياً، إلخ)
+  duration: number; // المدة (بالأيام)
+  administeredBy: "owner" | "vet" | "supervisor" | "technician";
+  administeredAt?: string; // وقت الإعطاء
+  date: string;
+  cost: number; // التكلفة
+  reason: string; // السبب (علاج، وقاية، إلخ)
+  effectiveness?: "excellent" | "good" | "fair" | "poor" | "none"; // الفعالية
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface PoultryFinancial {

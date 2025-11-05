@@ -1,12 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -33,10 +25,8 @@ import {
   User,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "../lib/hooks";
+import { useMutation } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
-import DatePicker from "react-native-date-picker";
 import { useToastContext } from "@/providers/ToastProvider";
 
 type FarmType = "broiler" | "layer" | "breeder" | "mixed";
@@ -49,41 +39,31 @@ export default function AddPoultryFarmScreen() {
   const { showToast } = useToastContext();
 
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
+    name: "حقل دواجن جيدي",
+    location: "بغداد العراق",
     farmType: "broiler" as FarmType,
-    capacity: "",
-    currentPopulation: "",
-    establishedDate: "",
-    licenseNumber: "",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    facilities: "",
+    capacity: "1000",
+    currentPopulation: "800",
+    establishedDate: "12/12/2000",
+    licenseNumber: "LIC123123123",
+    contactPerson: "Mohamed ali",
+    phone: "01080028800",
+    email: "mohamed@ali.com",
+    facilities: "kkk",
     healthStatus: "healthy" as HealthStatus,
-    lastInspection: "",
-    description: "",
-    address: "",
-    latitude: "",
-    longitude: "",
-    licenseImage: "",
+    lastInspection: "some last",
+    description: "this is the poultry farm description",
+    address: "شارع النحاس بغداد البرصرة",
+    latitude: "122.1",
+    longitude: "33.2",
+    licenseImage: "Licence image test",
     images: [] as string[],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showEstablishedDatePicker, setShowEstablishedDatePicker] =
-    useState(false);
-  const [showLastInspectionPicker, setShowLastInspectionPicker] =
-    useState(false);
-  const [tempEstablishedDate, setTempEstablishedDate] = useState(new Date());
-  const [tempLastInspectionDate, setTempLastInspectionDate] = useState(
-    new Date()
-  );
 
   // Create farm mutation
-  const createFarmMutation = useMutation(
-    trpc.poultryFarms.create.mutationOptions()
-  );
+  const createFarmMutation = useMutation(trpc.poultryFarms.create.mutationOptions());
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -114,17 +94,13 @@ export default function AddPoultryFarmScreen() {
       newErrors.email = "البريد الإلكتروني غير صحيح";
     }
 
-    if (
-      formData.capacity &&
-      (isNaN(Number(formData.capacity)) || Number(formData.capacity) <= 0)
-    ) {
+    if (formData.capacity && (isNaN(Number(formData.capacity)) || Number(formData.capacity) <= 0)) {
       newErrors.capacity = "السعة يجب أن تكون رقم موجب";
     }
 
     if (
       formData.currentPopulation &&
-      (isNaN(Number(formData.currentPopulation)) ||
-        Number(formData.currentPopulation) < 0)
+      (isNaN(Number(formData.currentPopulation)) || Number(formData.currentPopulation) < 0)
     ) {
       newErrors.currentPopulation = "العدد الحالي يجب أن يكون رقم غير سالب";
     }
@@ -213,9 +189,7 @@ export default function AddPoultryFarmScreen() {
         location: formData.location.trim(),
         farmType: formData.farmType,
         capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
-        currentPopulation: formData.currentPopulation
-          ? parseInt(formData.currentPopulation)
-          : undefined,
+        currentPopulation: formData.currentPopulation ? parseInt(formData.currentPopulation) : undefined,
         establishedDate: formData.establishedDate || undefined,
         licenseNumber: formData.licenseNumber.trim() || undefined,
         contactPerson: formData.contactPerson.trim() || undefined,
@@ -228,9 +202,7 @@ export default function AddPoultryFarmScreen() {
         description: formData.description.trim() || undefined,
         address: formData.address.trim() || undefined,
         latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-        longitude: formData.longitude
-          ? parseFloat(formData.longitude)
-          : undefined,
+        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
         licenseImage: formData.licenseImage || undefined,
         images: formData.images.length > 0 ? formData.images : undefined,
       };
@@ -242,7 +214,6 @@ export default function AddPoultryFarmScreen() {
             message: data.message || "تم إنشاء حقل الدواجن بنجاح",
           });
           router.navigate("(tabs)/pets");
-          trpc.pets.getUserFarms.invalidate();
         },
         onError: (error: any) => {
           showToast({
@@ -282,15 +253,8 @@ export default function AddPoultryFarmScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft
-            size={24}
-            color={COLORS.black}
-            style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }}
-          />
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <ArrowLeft size={24} color={COLORS.black} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
         </TouchableOpacity>
         <Text style={styles.title}>إضافة حقل دواجن جديد</Text>
         <View style={styles.placeholder} />
@@ -318,9 +282,7 @@ export default function AddPoultryFarmScreen() {
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
               />
-              {errors.name && (
-                <Text style={styles.errorText}>{errors.name}</Text>
-              )}
+              {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
@@ -336,9 +298,7 @@ export default function AddPoultryFarmScreen() {
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
               />
-              {errors.location && (
-                <Text style={styles.errorText}>{errors.location}</Text>
-              )}
+              {errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
@@ -349,9 +309,7 @@ export default function AddPoultryFarmScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(value) =>
-                  handleInputChange("description", value)
-                }
+                onChangeText={(value) => handleInputChange("description", value)}
                 placeholder="وصف تفصيلي عن حقل الدواجن..."
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
@@ -402,9 +360,7 @@ export default function AddPoultryFarmScreen() {
                 <TextInput
                   style={styles.input}
                   value={formData.longitude}
-                  onChangeText={(value) =>
-                    handleInputChange("longitude", value)
-                  }
+                  onChangeText={(value) => handleInputChange("longitude", value)}
                   placeholder="44.3661"
                   placeholderTextColor={COLORS.darkGray}
                   textAlign={isRTL ? "right" : "left"}
@@ -425,28 +381,19 @@ export default function AddPoultryFarmScreen() {
               {farmTypes.map((type) => (
                 <TouchableOpacity
                   key={type.value}
-                  style={[
-                    styles.farmTypeCard,
-                    formData.farmType === type.value &&
-                      styles.farmTypeCardSelected,
-                  ]}
+                  style={[styles.farmTypeCard, formData.farmType === type.value && styles.farmTypeCardSelected]}
                   onPress={() => handleInputChange("farmType", type.value)}
                 >
                   <Text style={styles.farmTypeIcon}>{type.icon}</Text>
                   <Text
-                    style={[
-                      styles.farmTypeLabel,
-                      formData.farmType === type.value &&
-                        styles.farmTypeLabelSelected,
-                    ]}
+                    style={[styles.farmTypeLabel, formData.farmType === type.value && styles.farmTypeLabelSelected]}
                   >
                     {type.label}
                   </Text>
                   <Text
                     style={[
                       styles.farmTypeDescription,
-                      formData.farmType === type.value &&
-                        styles.farmTypeDescriptionSelected,
+                      formData.farmType === type.value && styles.farmTypeDescriptionSelected,
                     ]}
                   >
                     {type.description}
@@ -477,35 +424,24 @@ export default function AddPoultryFarmScreen() {
                 textAlign={isRTL ? "right" : "left"}
                 keyboardType="numeric"
               />
-              {errors.capacity && (
-                <Text style={styles.errorText}>{errors.capacity}</Text>
-              )}
+              {errors.capacity && <Text style={styles.errorText}>{errors.capacity}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
               <View style={styles.inputHeader}>
                 <Activity size={20} color={COLORS.primary} />
-                <Text style={styles.inputLabel}>
-                  التعداد الحالي (عدد الطيور)
-                </Text>
+                <Text style={styles.inputLabel}>التعداد الحالي (عدد الطيور)</Text>
               </View>
               <TextInput
-                style={[
-                  styles.input,
-                  errors.currentPopulation && styles.inputError,
-                ]}
+                style={[styles.input, errors.currentPopulation && styles.inputError]}
                 value={formData.currentPopulation}
-                onChangeText={(value) =>
-                  handleInputChange("currentPopulation", value)
-                }
+                onChangeText={(value) => handleInputChange("currentPopulation", value)}
                 placeholder="مثال: 8500"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
                 keyboardType="numeric"
               />
-              {errors.currentPopulation && (
-                <Text style={styles.errorText}>{errors.currentPopulation}</Text>
-              )}
+              {errors.currentPopulation && <Text style={styles.errorText}>{errors.currentPopulation}</Text>}
             </View>
           </View>
 
@@ -524,9 +460,7 @@ export default function AddPoultryFarmScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.contactPerson}
-                onChangeText={(value) =>
-                  handleInputChange("contactPerson", value)
-                }
+                onChangeText={(value) => handleInputChange("contactPerson", value)}
                 placeholder="اسم المسؤول عن الحقل"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
@@ -564,9 +498,7 @@ export default function AddPoultryFarmScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
-              {errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             </View>
           </View>
 
@@ -586,9 +518,7 @@ export default function AddPoultryFarmScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.establishedDate}
-                onChangeText={(value) =>
-                  handleInputChange("establishedDate", value)
-                }
+                onChangeText={(value) => handleInputChange("establishedDate", value)}
                 placeholder="أدخل تاريخ التأسيس"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign="right"
@@ -604,9 +534,7 @@ export default function AddPoultryFarmScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.lastInspection}
-                onChangeText={(value) =>
-                  handleInputChange("lastInspection", value)
-                }
+                onChangeText={(value) => handleInputChange("lastInspection", value)}
                 placeholder="أدخل تاريخ آخر فحص"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign="right"
@@ -622,9 +550,7 @@ export default function AddPoultryFarmScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.licenseNumber}
-                onChangeText={(value) =>
-                  handleInputChange("licenseNumber", value)
-                }
+                onChangeText={(value) => handleInputChange("licenseNumber", value)}
                 placeholder="أدخل رقم الترخيص"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign="right"
@@ -655,15 +581,12 @@ export default function AddPoultryFarmScreen() {
                         { backgroundColor: status.color },
                       ],
                     ]}
-                    onPress={() =>
-                      handleInputChange("healthStatus", status.value)
-                    }
+                    onPress={() => handleInputChange("healthStatus", status.value)}
                   >
                     <Text
                       style={[
                         styles.optionButtonText,
-                        formData.healthStatus === status.value &&
-                          styles.optionButtonTextSelected,
+                        formData.healthStatus === status.value && styles.optionButtonTextSelected,
                       ]}
                     >
                       {status.label}
@@ -707,9 +630,7 @@ export default function AddPoultryFarmScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.licenseNumber}
-                onChangeText={(value) =>
-                  handleInputChange("licenseNumber", value)
-                }
+                onChangeText={(value) => handleInputChange("licenseNumber", value)}
                 placeholder="أدخل رقم الترخيص"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
@@ -724,26 +645,15 @@ export default function AddPoultryFarmScreen() {
 
               {formData.licenseImage ? (
                 <View style={styles.licenseImageContainer}>
-                  <Image
-                    source={{ uri: formData.licenseImage }}
-                    style={styles.licenseImage}
-                  />
-                  <TouchableOpacity
-                    style={styles.removeImageButton}
-                    onPress={removeLicenseImage}
-                  >
+                  <Image source={{ uri: formData.licenseImage }} style={styles.licenseImage} />
+                  <TouchableOpacity style={styles.removeImageButton} onPress={removeLicenseImage}>
                     <X size={20} color={COLORS.white} />
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TouchableOpacity
-                  style={styles.uploadButton}
-                  onPress={() => pickImage("license")}
-                >
+                <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage("license")}>
                   <Upload size={24} color={COLORS.primary} />
-                  <Text style={styles.uploadButtonText}>
-                    اضغط لرفع صورة الترخيص
-                  </Text>
+                  <Text style={styles.uploadButtonText}>اضغط لرفع صورة الترخيص</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -760,20 +670,14 @@ export default function AddPoultryFarmScreen() {
               {formData.images.map((image, index) => (
                 <View key={index} style={styles.imageContainer}>
                   <Image source={{ uri: image }} style={styles.farmImage} />
-                  <TouchableOpacity
-                    style={styles.removeImageButtonSmall}
-                    onPress={() => removeImage(index)}
-                  >
+                  <TouchableOpacity style={styles.removeImageButtonSmall} onPress={() => removeImage(index)}>
                     <X size={16} color={COLORS.white} />
                   </TouchableOpacity>
                 </View>
               ))}
 
               {formData.images.length < 5 && (
-                <TouchableOpacity
-                  style={styles.addImageButton}
-                  onPress={() => pickImage("farm")}
-                >
+                <TouchableOpacity style={styles.addImageButton} onPress={() => pickImage("farm")}>
                   <Upload size={32} color={COLORS.primary} />
                   <Text style={styles.addImageText}>إضافة صورة</Text>
                 </TouchableOpacity>
@@ -782,12 +686,8 @@ export default function AddPoultryFarmScreen() {
           </View>
 
           <View style={styles.noteContainer}>
-            <Text style={styles.noteText}>
-              * الحقول المطلوبة: اسم الحقل، الموقع، ونوع الإنتاج
-            </Text>
-            <Text style={styles.noteText}>
-              سيتم مراجعة الحقل من قبل الإدارة قبل التفعيل
-            </Text>
+            <Text style={styles.noteText}>* الحقول المطلوبة: اسم الحقل، الموقع، ونوع الإنتاج</Text>
+            <Text style={styles.noteText}>سيتم مراجعة الحقل من قبل الإدارة قبل التفعيل</Text>
           </View>
         </View>
       </ScrollView>

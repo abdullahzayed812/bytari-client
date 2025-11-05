@@ -292,20 +292,6 @@ export default function PetDetailsScreen() {
             });
             return;
           }
-          // if (!pet?.location?.trim()) {
-          //   showToast({
-          //     type: "error",
-          //     message: "يرجى إدخال الموقع",
-          //   });
-          //   return;
-          // }
-          // if (!pet?.description?.trim()) {
-          //   showToast({
-          //     type: "error",
-          //     message: "يرجى إدخال وصف الحيوان",
-          //   });
-          //   return;
-          // }
           if (!user) {
             showToast({
               type: "error",

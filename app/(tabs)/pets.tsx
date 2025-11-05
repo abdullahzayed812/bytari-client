@@ -45,39 +45,17 @@ export default function PetsScreen() {
     useState(false);
 
   // Fetch user's own pets
-  const userPetsQuery = useQuery({
-    ...trpc.pets.getUserPets.queryOptions(
+  const userPetsQuery = useQuery(trpc.pets.getUserPets.queryOptions(
       { userId: Number(user?.id) || 0 }
-      // { enabled: !!user?.id && userMode !== "veterinarian" }
     ),
-    // enabled: !!user?.id && userMode !== "veterinarian",
-  });
+  );
 
   // Fetch user's own farms
   const userFarmsQuery = useQuery(
     trpc.poultryFarms.list.queryOptions(
       { ownerId: Number(user?.id) || 0 },
-      // {
-      //   enabled: !!user?.id && userMode !== "veterinarian",
-      // }
     )
   );
-
-  // Fetch all pets for admin
-  // const allPetsQuery = useQuery(
-  //   trpc.pets.getAllForAdmin.queryOptions(
-  //     { adminId: Number(user?.id) || 0 },
-  //     { enabled: !!user?.id && (hasAdminAccess || isSuperAdmin || isModerator) }
-  //   )
-  // );
-
-  // // Fetch all farms for admin
-  // const allFarmsQuery = useQuery(
-  //   trpc.pets.getAllFarmsForAdmin.queryOptions(
-  //     { adminId: Number(user?.id) || 0 },
-  //     { enabled: !!user?.id && (hasAdminAccess || isSuperAdmin || isModerator) }
-  //   )
-  // );
 
   // Fetch user's approved clinics (for veterinarians)
   const userClinicsQuery = useQuery(
@@ -135,7 +113,7 @@ export default function PetsScreen() {
   const handlePetPress = (pet: any) => {
     router.push({
       pathname: "/pet-details",
-      params: { id: pet.id },
+      params: { petId: pet.id },
     });
   };
 
@@ -442,7 +420,7 @@ export default function PetsScreen() {
         <View style={styles.petInfo}>
           <Text style={styles.petName}>{item.name}</Text>
           <Text style={styles.petType}>
-            {t(`pets.types.${item.type}`)} {item.breed ? `- ${item.breed}` : ""}
+            {t(`${item.type}`)} {item.breed ? `- ${item.breed}` : ""}
           </Text>
 
           {/* Show owner info for admins */}

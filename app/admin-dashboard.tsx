@@ -123,7 +123,7 @@ export default function AdminDashboard() {
 
   const { data: rawDetailedStats, isLoading: detailedStatsLoading } = useQuery({
     ...trpc.admin.stats.getDetailedStats.queryOptions({
-        adminId: user?.id ? Number(user.id) : 0,
+      adminId: user?.id ? Number(user.id) : 0,
       category: selectedCategory as "users" | "pets" | "inquiries" | "consultations" | "stores",
     }),
     enabled: !!selectedCategory,
@@ -685,26 +685,6 @@ export default function AdminDashboard() {
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-orders-management")}>
               <Package size={24} color="#FF5722" />
               <Text style={styles.actionText}>إدارة الطلبات</Text>
-            </TouchableOpacity>
-          )}
-
-          {hasPermission("manage_field_assignments") && (
-            <TouchableOpacity
-              style={[styles.actionCard, styles.actionCardWithBadge]}
-              onPress={() => {
-                console.log("Navigating to field-assignments-management");
-                router.push("/field-assignments-management");
-              }}
-            >
-              <View style={styles.actionCardContent}>
-                <UserCog size={24} color="#3F51B5" />
-                <Text style={styles.actionText}>إدارة التعيين والإشراف</Text>
-                {(approvalCounts?.pendingFieldAssignments || 0) > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{approvalCounts?.pendingFieldAssignments}</Text>
-                  </View>
-                )}
-              </View>
             </TouchableOpacity>
           )}
 
