@@ -94,6 +94,7 @@ export default function PoultryFarmDetailsScreen() {
   const addBatchMutation = useMutation(trpc.poultryBatches.add.mutationOptions());
   const addDailyDataMutation = useMutation(trpc.poultryBatches.addDailyData.mutationOptions());
   const sellBatchMutation = useMutation(trpc.poultryBatches.sell.mutationOptions());
+
   const requestVetMutation = useMutation(trpc.assignmentRequests.requestVet.mutationOptions());
   const requestSupervisorMutation = useMutation(trpc.assignmentRequests.requestSupervisor.mutationOptions());
   const requestRemovalMutation = useMutation(trpc.assignmentRequests.requestRemoval.mutationOptions());
@@ -434,7 +435,7 @@ export default function PoultryFarmDetailsScreen() {
       {
         farmId: Number(id),
         requestedBy: user?.id,
-        requestType: "vet",
+        requestType: "removeVet",
         targetUserId: Number(farm.assignedVet!.id),
       },
       {
@@ -491,7 +492,7 @@ export default function PoultryFarmDetailsScreen() {
       {
         farmId: Number(id),
         requestedBy: user?.id,
-        requestType: "supervisor",
+        requestType: "removeSupervisor",
         targetUserId: Number(farm.assignedSupervisor!.id),
       },
       {

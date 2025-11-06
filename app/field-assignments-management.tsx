@@ -5,15 +5,9 @@ import { Stack, useRouter } from "expo-router";
 import { trpc } from "../lib/trpc";
 import {
   ArrowLeft,
-  Users,
-  MapPin,
   Phone,
   Mail,
-  UserCheck,
-  UserX,
-  Plus,
   Search,
-  Filter,
   CheckCircle,
   AlertCircle,
   Clock,
@@ -21,7 +15,6 @@ import {
   Stethoscope,
   Building2,
   X,
-  GraduationCap,
 } from "lucide-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -63,8 +56,8 @@ export default function FieldAssignmentsManagement() {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<"assignments" | "requests">("assignments");
   const [showAssignModal, setShowAssignModal] = useState(false);
-  const [assignmentType, setAssignmentType] = useState<"vet" | "supervisor">("vet");
-  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [selectedAssignee, setSelectedAssignee] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "assigned" | "unassigned">("all");
 
@@ -87,27 +80,68 @@ export default function FieldAssignmentsManagement() {
 
   const rejectMutation = useMutation(trpc.assignmentRequests.reject.mutationOptions());
 
-  const handleApproveRequest = (requestId: number) => {
-    Alert.alert("تأكيد الموافقة", "هل أنت متأكد من الموافقة على هذا الطلب؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "تأكيد",
-        style: "destructive",
-        onPress: () =>
-          approveMutation.mutate(
-            { assignmentRequestId: requestId },
-            {
-              onSuccess: () => {
-                Alert.alert("نجح", "تمت الموافقة على الطلب");
-                refetchRequests();
-              },
-              onError: (error) => {
-                Alert.alert("خطأ", error.message);
-              },
-            }
-          ),
+  const handleApproveRequest = (request: any) => {
+    if (request.isRemovalRequest) {
+      const mutationInput: any = {
+        assignmentRequestId: selectedRequest.id,
+      };
+
+      if (selectedRequest.requestType === "vet") {
+        mutationInput.vetId = selectedAssignee;
+      } else if (selectedRequest.requestType === "supervisor") {
+        mutationInput.supervisorId = selectedAssignee;
+      }
+
+      approveMutation.mutate(mutationInput, {
+        onSuccess: () => {
+          Alert.alert("نجح", "تمت الموافقة على الطلب");
+          setShowAssignModal(false);
+          setSelectedRequest(null);
+          setSelectedAssignee(null);
+          refetchRequests();
+          refetchAssignments();
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message);
+        },
+      });
+      return;
+    }
+
+    setSelectedRequest(request);
+    setSelectedAssignee(null);
+    setShowAssignModal(true);
+  };
+
+  const handleConfirmAssignment = () => {
+    if (!selectedAssignee || !selectedRequest) {
+      Alert.alert("خطأ", "الرجاء اختيار طبيب بيطري أو مشرف");
+      return;
+    }
+
+    const mutationInput: any = {
+      assignmentRequestId: selectedRequest.id,
+    };
+
+    if (selectedRequest.requestType === "vet") {
+      mutationInput.vetId = selectedAssignee;
+    } else if (selectedRequest.requestType === "supervisor") {
+      mutationInput.supervisorId = selectedAssignee;
+    }
+
+    approveMutation.mutate(mutationInput, {
+      onSuccess: () => {
+        Alert.alert("نجح", "تمت الموافقة على الطلب وتم التعيين بنجاح");
+        setShowAssignModal(false);
+        setSelectedRequest(null);
+        setSelectedAssignee(null);
+        refetchRequests();
+        refetchAssignments();
       },
-    ]);
+      onError: (error) => {
+        Alert.alert("خطأ", error.message);
+      },
+    });
   };
 
   const handleRejectRequest = (requestId: number) => {
@@ -117,18 +151,15 @@ export default function FieldAssignmentsManagement() {
         text: "تأكيد",
         style: "destructive",
         onPress: () =>
-          rejectMutation.mutate(
-            { assignmentRequestId: requestId },
-            {
-              onSuccess: () => {
-                Alert.alert("نجح", "تم رفض الطلب");
-                refetchRequests();
-              },
-              onError: (error) => {
-                Alert.alert("خطأ", error.message);
-              },
-            }
-          ),
+          rejectMutation.mutate({ assignmentRequestId: requestId } as any, {
+            onSuccess: () => {
+              Alert.alert("نجح", "تم رفض الطلب");
+              refetchRequests();
+            },
+            onError: (error) => {
+              Alert.alert("خطأ", error.message);
+            },
+          }),
       },
     ]);
   };
@@ -220,12 +251,16 @@ export default function FieldAssignmentsManagement() {
 
   const getRequestTypeText = (type: string) => {
     switch (type) {
-      case "supervision":
+      case "supervisor":
         return "طلب إشراف";
-      case "vet_assignment":
+      case "vet":
         return "طلب تعيين طبيب بيطري";
       case "both":
         return "طلب إشراف وتعيين طبيب";
+      case "removeVet":
+        return "طلب ازالة الطبيب";
+      case "removeSupervisor":
+        return "طلب ازالة الاشراف";
       default:
         return "طلب عام";
     }
@@ -233,12 +268,16 @@ export default function FieldAssignmentsManagement() {
 
   const getRequestTypeColor = (type: string) => {
     switch (type) {
-      case "supervision":
+      case "supervisor":
         return "#96CEB4";
-      case "vet_assignment":
+      case "vet":
         return "#4ECDC4";
       case "both":
         return "#6f42c1";
+      case "removeVet":
+        return "#8F28D1";
+      case "removeSupervisor":
+        return "#F2CD2B";
       default:
         return "#666";
     }
@@ -249,7 +288,7 @@ export default function FieldAssignmentsManagement() {
       <View style={styles.requestHeader}>
         <View style={styles.requestInfo}>
           <Text style={styles.requestName}>{item.farmName}</Text>
-          <Text style={styles.requestLocation}>{item.requestedBy}</Text>
+          <Text style={styles.requestLocation}>{item.ownerName}</Text>
           <View style={[styles.requestTypeBadge, { backgroundColor: getRequestTypeColor(item.requestType) }]}>
             <Text style={styles.requestTypeText}>{getRequestTypeText(item.requestType)}</Text>
           </View>
@@ -259,16 +298,16 @@ export default function FieldAssignmentsManagement() {
         </View>
       </View>
 
-      <View style={styles.requestDetails}>
+      {/* <View style={styles.requestDetails}>
         <View style={styles.requestDetailRow}>
           <Mail size={14} color="#666" />
           <Text style={styles.requestDetailText}>{item.notes}</Text>
         </View>
-      </View>
+      </View> */}
 
       {item.status === "pending" && (
         <View style={styles.requestActions}>
-          <TouchableOpacity style={styles.approveButton} onPress={() => handleApproveRequest(item.id)}>
+          <TouchableOpacity style={styles.approveButton} onPress={() => handleApproveRequest(item)}>
             <CheckCircle size={16} color="#fff" />
             <Text style={styles.approveButtonText}>موافقة</Text>
           </TouchableOpacity>
@@ -399,6 +438,124 @@ export default function FieldAssignmentsManagement() {
           />
         </View>
       )}
+
+      {/* Assignment Modal */}
+      <Modal visible={showAssignModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {selectedRequest?.requestType === "vet" ? "اختيار طبيب بيطري" : "اختيار مشرف"}
+              </Text>
+              <TouchableOpacity onPress={() => setShowAssignModal(false)} style={styles.closeButton}>
+                <X size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            {selectedRequest && (
+              <View style={styles.farmDetails}>
+                <Text style={styles.farmDetailsTitle}>تفاصيل المزرعة</Text>
+                <Text style={styles.farmDetailsText}>اسم المزرعة: {selectedRequest.farmName}</Text>
+                <Text style={styles.farmDetailsText}>المالك: {selectedRequest.ownerName}</Text>
+                {selectedRequest.notes && <Text style={styles.farmDetailsText}>ملاحظات: {selectedRequest.notes}</Text>}
+              </View>
+            )}
+
+            <ScrollView style={styles.modalScroll}>
+              {selectedRequest?.requestType === "vet" ? (
+                availableVets && availableVets.length > 0 ? (
+                  availableVets.map((vet) => (
+                    <TouchableOpacity
+                      key={vet.id}
+                      style={[styles.personCard, selectedAssignee === vet.id && styles.selectedPersonCard]}
+                      onPress={() => setSelectedAssignee(vet.id)}
+                    >
+                      <View style={styles.personInfo}>
+                        <View style={[styles.personAvatar, selectedAssignee === vet.id && styles.selectedPersonAvatar]}>
+                          <Stethoscope size={24} color={selectedAssignee === vet.id ? "#fff" : "#4ECDC4"} />
+                        </View>
+                        <View style={styles.personDetails}>
+                          <Text style={styles.personName}>{vet.name}</Text>
+                          {vet.specialization && (
+                            <Text style={styles.personSpecialization}>التخصص: {vet.specialization}</Text>
+                          )}
+                          <View style={styles.personContactRow}>
+                            <Phone size={12} color="#666" />
+                            <Text style={styles.personContact}>{vet.phone}</Text>
+                          </View>
+                          <View style={styles.personContactRow}>
+                            <Mail size={12} color="#666" />
+                            <Text style={styles.personContact}>{vet.email}</Text>
+                          </View>
+                        </View>
+                      </View>
+                      {selectedAssignee === vet.id && <CheckCircle size={24} color="#4CAF50" />}
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.emptyState}>
+                    <AlertCircle size={48} color="#999" />
+                    <Text style={styles.emptyStateText}>لا يوجد أطباء بيطريون متاحون</Text>
+                  </View>
+                )
+              ) : availableSupervisors && availableSupervisors.length > 0 ? (
+                availableSupervisors.map((supervisor) => (
+                  <TouchableOpacity
+                    key={supervisor.id}
+                    style={[styles.personCard, selectedAssignee === supervisor.id && styles.selectedPersonCard]}
+                    onPress={() => setSelectedAssignee(supervisor.id)}
+                  >
+                    <View style={styles.personInfo}>
+                      <View
+                        style={[styles.personAvatar, selectedAssignee === supervisor.id && styles.selectedPersonAvatar]}
+                      >
+                        <Shield size={24} color={selectedAssignee === supervisor.id ? "#fff" : "#96CEB4"} />
+                      </View>
+                      <View style={styles.personDetails}>
+                        <Text style={styles.personName}>{supervisor.name}</Text>
+                        <View style={styles.personContactRow}>
+                          <Phone size={12} color="#666" />
+                          <Text style={styles.personContact}>{supervisor.phone}</Text>
+                        </View>
+                        <View style={styles.personContactRow}>
+                          <Mail size={12} color="#666" />
+                          <Text style={styles.personContact}>{supervisor.email}</Text>
+                        </View>
+                      </View>
+                    </View>
+                    {selectedAssignee === supervisor.id && <CheckCircle size={24} color="#4CAF50" />}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyState}>
+                  <AlertCircle size={48} color="#999" />
+                  <Text style={styles.emptyStateText}>لا يوجد مشرفون متاحون</Text>
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.confirmButton, !selectedAssignee && styles.confirmButtonDisabled]}
+                onPress={handleConfirmAssignment}
+                disabled={!selectedAssignee || approveMutation.isPending}
+              >
+                <CheckCircle size={20} color="#fff" />
+                <Text style={styles.confirmButtonText}>
+                  {approveMutation.isPending ? "جاري التعيين..." : "تأكيد التعيين"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setShowAssignModal(false)}
+                disabled={approveMutation.isPending}
+              >
+                <Text style={styles.cancelButtonText}>إلغاء</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -557,28 +714,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  removeButton: {
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: "#fff2f2",
-  },
-  assignButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f0f8ff",
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderStyle: "dashed",
-    gap: 8,
-  },
-  assignButtonText: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
-  },
   statsContainer: {
     flexDirection: "row",
     gap: 12,
@@ -661,16 +796,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  experienceText: {
-    fontSize: 14,
-    color: "#333",
-    marginBottom: 12,
-    lineHeight: 20,
-  },
   requestActions: {
     flexDirection: "row",
     gap: 12,
-    marginBottom: 12,
   },
   approveButton: {
     flex: 1,
@@ -701,11 +829,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
-  },
-  submittedDate: {
-    fontSize: 12,
-    color: "#999",
-    textAlign: "right",
   },
   modalOverlay: {
     flex: 1,
@@ -764,6 +887,26 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  selectedPersonCard: {
+    backgroundColor: "#f0f8ff",
+    borderColor: "#4CAF50",
+  },
+  personAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#eee",
+  },
+  selectedPersonAvatar: {
+    backgroundColor: "#4CAF50",
+    borderColor: "#4CAF50",
   },
   personInfo: {
     flexDirection: "row",
@@ -783,11 +926,65 @@ const styles = StyleSheet.create({
   personSpecialization: {
     fontSize: 14,
     color: "#666",
+    marginBottom: 4,
+  },
+  personContactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     marginBottom: 2,
   },
   personContact: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#666",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#999",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  modalFooter: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    gap: 12,
+  },
+  confirmButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 14,
+    borderRadius: 8,
+    gap: 8,
+  },
+  confirmButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  confirmButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  cancelButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f8f9fa",
+    paddingVertical: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
   },
   requestTypeBadge: {
     paddingHorizontal: 8,
@@ -800,27 +997,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#fff",
     fontWeight: "bold",
-  },
-  farmInfoSection: {
-    backgroundColor: "#f8f9fa",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  farmInfoTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
-  farmInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  farmInfoText: {
-    fontSize: 14,
-    color: "#666",
   },
 });
