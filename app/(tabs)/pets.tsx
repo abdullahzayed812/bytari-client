@@ -1,12 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, ScrollView } from "react-native";
 import React, { useRef, useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
@@ -27,8 +19,6 @@ import {
   CheckCircle,
   Package,
   AlertCircle,
-  UserPlus,
-  UserCheck,
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -36,39 +26,29 @@ import { useQuery } from "@tanstack/react-query";
 export default function PetsScreen() {
   const router = useRouter();
   const { t } = useI18n();
-  const { userMode, user, hasAdminAccess, isSuperAdmin, isModerator } =
-    useApp();
+  const { userMode, user, hasAdminAccess, isSuperAdmin, isModerator } = useApp();
   const flatListRef = useRef<FlatList>(null);
 
-  const [showAssignVetModal, setShowAssignVetModal] = useState(false);
-  const [showAssignSupervisorModal, setShowAssignSupervisorModal] =
-    useState(false);
-
   // Fetch user's own pets
-  const userPetsQuery = useQuery(trpc.pets.getUserPets.queryOptions(
-      { userId: Number(user?.id) || 0 }
-    ),
-  );
+  const userPetsQuery = useQuery(trpc.pets.getUserPets.queryOptions({ userId: Number(user?.id) || 0 }));
 
   // Fetch user's own farms
-  const userFarmsQuery = useQuery(
-    trpc.poultryFarms.list.queryOptions(
-      { ownerId: Number(user?.id) || 0 },
-    )
-  );
+  const userFarmsQuery = useQuery(trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) || 0 }));
 
   // Fetch user's approved clinics (for veterinarians)
-  const userClinicsQuery = useQuery(
-    {
-      ...trpc.clinics.getUserApprovedClinics.queryOptions({userId: Number(user?.id)}),       
-    enabled: !!user?.id && userMode === "veterinarian", }
-  );
+  const userClinicsQuery = useQuery({
+    ...trpc.clinics.getUserApprovedClinics.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user?.id && userMode === "veterinarian",
+  });
 
   // Fetch user's approved warehouses (for veterinarians)
   const userWarehousesQuery = useQuery(
-    trpc.warehouses.getUserApprovedWarehouses.queryOptions({ userId: Number(user?.id)}, {
-      enabled: !!user?.id && userMode === "veterinarian",
-    })
+    trpc.warehouses.getUserApprovedWarehouses.queryOptions(
+      { userId: Number(user?.id) },
+      {
+        enabled: !!user?.id && userMode === "veterinarian",
+      }
+    )
   );
 
   // Get approved clinics and warehouses
@@ -161,7 +141,7 @@ export default function PetsScreen() {
   };
 
   const handleAddPet = () => {
-    router.push('/add-pet');
+    router.push("/add-pet");
   };
 
   // If user is veterinarian, show clinic interface
@@ -191,29 +171,20 @@ export default function PetsScreen() {
                 >
                   <Image
                     source={{
-                      uri:
-                        clinic.image ||
-                        "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
+                      uri: clinic.image || "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
                     }}
                     style={styles.clinicImage}
                   />
                   <View style={styles.clinicInfo}>
                     <View style={styles.clinicHeader}>
                       <Text style={styles.clinicName}>{clinic.name}</Text>
-                      <View
-                        style={[
-                          styles.statusBadge,
-                          { backgroundColor: COLORS.success },
-                        ]}
-                      >
+                      <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
                         <Text style={styles.statusText}>مفعل</Text>
                       </View>
                     </View>
                     <View style={styles.clinicInfoRow}>
                       <MapPin size={14} color={COLORS.darkGray} />
-                      <Text style={styles.clinicInfoText}>
-                        {clinic.address}
-                      </Text>
+                      <Text style={styles.clinicInfoText}>{clinic.address}</Text>
                     </View>
                     <View style={styles.clinicInfoRow}>
                       <Phone size={14} color={COLORS.darkGray} />
@@ -224,9 +195,7 @@ export default function PetsScreen() {
                       <Text style={styles.clinicInfoText}>
                         صالح حتى:{" "}
                         {clinic.activationEndDate
-                          ? new Date(
-                              clinic.activationEndDate
-                            ).toLocaleDateString("ar-SA")
+                          ? new Date(clinic.activationEndDate).toLocaleDateString("ar-SA")
                           : "غير محدد"}
                       </Text>
                     </View>
@@ -271,44 +240,31 @@ export default function PetsScreen() {
                 >
                   <Image
                     source={{
-                      uri:
-                        warehouse.image ||
-                        "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
+                      uri: warehouse.image || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
                     }}
                     style={styles.warehouseImage}
                   />
                   <View style={styles.warehouseInfo}>
                     <View style={styles.warehouseHeader}>
                       <Text style={styles.warehouseName}>{warehouse.name}</Text>
-                      <View
-                        style={[
-                          styles.statusBadge,
-                          { backgroundColor: COLORS.success },
-                        ]}
-                      >
+                      <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
                         <Text style={styles.statusText}>مفعل</Text>
                       </View>
                     </View>
                     <View style={styles.warehouseInfoRow}>
                       <MapPin size={14} color={COLORS.darkGray} />
-                      <Text style={styles.warehouseInfoText}>
-                        {warehouse.address}
-                      </Text>
+                      <Text style={styles.warehouseInfoText}>{warehouse.address}</Text>
                     </View>
                     <View style={styles.warehouseInfoRow}>
                       <Phone size={14} color={COLORS.darkGray} />
-                      <Text style={styles.warehouseInfoText}>
-                        {warehouse.phone}
-                      </Text>
+                      <Text style={styles.warehouseInfoText}>{warehouse.phone}</Text>
                     </View>
                     <View style={styles.warehouseInfoRow}>
                       <Calendar size={14} color={COLORS.primary} />
                       <Text style={styles.warehouseInfoText}>
                         صالح حتى:{" "}
                         {warehouse.activationEndDate
-                          ? new Date(
-                              warehouse.activationEndDate
-                            ).toLocaleDateString("ar-SA")
+                          ? new Date(warehouse.activationEndDate).toLocaleDateString("ar-SA")
                           : "غير محدد"}
                       </Text>
                     </View>
@@ -316,23 +272,17 @@ export default function PetsScreen() {
                   <View style={styles.warehouseStats}>
                     <View style={styles.warehouseStat}>
                       <Package size={16} color={COLORS.primary} />
-                      <Text style={styles.warehouseStatValue}>
-                        {warehouse.totalProducts || 45}
-                      </Text>
+                      <Text style={styles.warehouseStatValue}>{warehouse.totalProducts || 45}</Text>
                       <Text style={styles.warehouseStatLabel}>منتج</Text>
                     </View>
                     <View style={styles.warehouseStat}>
                       <DollarSign size={16} color={COLORS.success} />
-                      <Text style={styles.warehouseStatValue}>
-                        {warehouse.totalSales || 1247}
-                      </Text>
+                      <Text style={styles.warehouseStatValue}>{warehouse.totalSales || 1247}</Text>
                       <Text style={styles.warehouseStatLabel}>مبيعات</Text>
                     </View>
                     <View style={styles.warehouseStat}>
                       <Users size={16} color={COLORS.warning} />
-                      <Text style={styles.warehouseStatValue}>
-                        {warehouse.followers || 892}
-                      </Text>
+                      <Text style={styles.warehouseStatValue}>{warehouse.followers || 892}</Text>
                       <Text style={styles.warehouseStatLabel}>متابع</Text>
                     </View>
                   </View>
@@ -345,12 +295,8 @@ export default function PetsScreen() {
           {approvedClinics.length === 0 && approvedWarehouses.length === 0 && (
             <View style={styles.emptyStateContainer}>
               <Stethoscope size={64} color={COLORS.lightGray} />
-              <Text style={styles.emptyStateText}>
-                لا توجد عيادات أو مخازن مفعلة
-              </Text>
-              <Text style={styles.emptyStateSubtext}>
-                بعد الموافقة على طلباتك ستظهر لوحات التحكم هنا
-              </Text>
+              <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
+              <Text style={styles.emptyStateSubtext}>بعد الموافقة على طلباتك ستظهر لوحات التحكم هنا</Text>
             </View>
           )}
 
@@ -373,7 +319,7 @@ export default function PetsScreen() {
               style={[styles.actionButton, styles.storeButton]}
             />
 
-            {hasAdminAccess && (
+            {/* {hasAdminAccess && (
               <>
                 <Button
                   title="تعيين طبيب بيطري"
@@ -393,7 +339,7 @@ export default function PetsScreen() {
                   style={[styles.actionButton, styles.assignSupervisorButton]}
                 />
               </>
-            )}
+            )} */}
           </View>
         </ScrollView>
       </View>
@@ -404,16 +350,10 @@ export default function PetsScreen() {
     const isAdmin = hasAdminAccess || isSuperAdmin || isModerator;
 
     return (
-      <TouchableOpacity
-        style={styles.petCard}
-        onPress={() => handlePetPress(item)}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity style={styles.petCard} onPress={() => handlePetPress(item)} activeOpacity={0.8}>
         <Image
           source={{
-            uri:
-              item.image ||
-              "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
+            uri: item.image || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
           }}
           style={styles.petImage}
         />
@@ -454,9 +394,7 @@ export default function PetsScreen() {
           <View>
             <View style={styles.header}>
               <Text style={styles.title}>
-                {hasAdminAccess || isSuperAdmin || isModerator
-                  ? "إدارة الحيوانات والمزارع"
-                  : "حيواناتي"}
+                {hasAdminAccess || isSuperAdmin || isModerator ? "إدارة الحيوانات والمزارع" : "حيواناتي"}
               </Text>
             </View>
 
@@ -482,9 +420,7 @@ export default function PetsScreen() {
 
             {/* Poultry Farms Section */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                حقول الدواجن ({displayFarms.length})
-              </Text>
+              <Text style={styles.sectionTitle}>حقول الدواجن ({displayFarms.length})</Text>
             </View>
 
             {displayFarms.length > 0 ? (
@@ -507,50 +443,29 @@ export default function PetsScreen() {
                       </View>
 
                       {/* Show owner info for admins */}
-                      {(hasAdminAccess || isSuperAdmin || isModerator) &&
-                        farm.ownerName && (
-                          <View style={styles.ownerInfo}>
-                            <Users size={14} color={COLORS.primary} />
-                            <Text style={styles.ownerText}>
-                              المالك: {farm.ownerName}
-                            </Text>
-                          </View>
-                        )}
+                      {(hasAdminAccess || isSuperAdmin || isModerator) && farm.ownerName && (
+                        <View style={styles.ownerInfo}>
+                          <Users size={14} color={COLORS.primary} />
+                          <Text style={styles.ownerText}>المالك: {farm.ownerName}</Text>
+                        </View>
+                      )}
 
                       <View style={styles.farmBadges}>
                         <View
                           style={[
                             styles.statusBadge,
                             {
-                              backgroundColor: getStatusColor(
-                                farm.healthStatus || "healthy"
-                              ),
+                              backgroundColor: getStatusColor(farm.healthStatus || "healthy"),
                             },
                           ]}
                         >
-                          <Text style={styles.statusText}>
-                            {getHealthStatusLabel(
-                              farm.healthStatus || "healthy"
-                            )}
-                          </Text>
+                          <Text style={styles.statusText}>{getHealthStatusLabel(farm.healthStatus || "healthy")}</Text>
                         </View>
-                        <View
-                          style={[
-                            styles.typeBadge,
-                            { backgroundColor: COLORS.primary },
-                          ]}
-                        >
-                          <Text style={styles.typeBadgeText}>
-                            {getFarmTypeLabel(farm.farmType)}
-                          </Text>
+                        <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
+                          <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
                         </View>
                         {farm.isVerified && (
-                          <View
-                            style={[
-                              styles.verifiedBadge,
-                              { backgroundColor: COLORS.success },
-                            ]}
-                          >
+                          <View style={[styles.verifiedBadge, { backgroundColor: COLORS.success }]}>
                             <CheckCircle size={12} color={COLORS.white} />
                             <Text style={styles.verifiedBadgeText}>موثق</Text>
                           </View>
@@ -563,24 +478,18 @@ export default function PetsScreen() {
                     <View style={styles.detailItem}>
                       <Users size={16} color={COLORS.primary} />
                       <Text style={styles.detailLabel}>السعة:</Text>
-                      <Text style={styles.detailValue}>
-                        {farm.capacity || 0} طائر
-                      </Text>
+                      <Text style={styles.detailValue}>{farm.capacity || 0} طائر</Text>
                     </View>
                     <View style={styles.detailItem}>
                       <Activity size={16} color={COLORS.success} />
                       <Text style={styles.detailLabel}>الحالي:</Text>
-                      <Text style={styles.detailValue}>
-                        {farm.currentPopulation || 0} طائر
-                      </Text>
+                      <Text style={styles.detailValue}>{farm.currentPopulation || 0} طائر</Text>
                     </View>
                   </View>
 
                   {farm.licenseNumber && (
                     <View style={styles.licenseInfo}>
-                      <Text style={styles.licenseText}>
-                        رقم الترخيص: {farm.licenseNumber}
-                      </Text>
+                      <Text style={styles.licenseText}>رقم الترخيص: {farm.licenseNumber}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -588,17 +497,13 @@ export default function PetsScreen() {
             ) : (
               <View style={styles.emptyPoultryContainer}>
                 <Feather size={48} color={COLORS.lightGray} />
-                <Text style={styles.emptyPoultryText}>
-                  لا يوجد حقول دواجن مسجلة
-                </Text>
+                <Text style={styles.emptyPoultryText}>لا يوجد حقول دواجن مسجلة</Text>
               </View>
             )}
 
             {/* Pets Section Header */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                الحيوانات الأليفة ({displayPets.length})
-              </Text>
+              <Text style={styles.sectionTitle}>الحيوانات الأليفة ({displayPets.length})</Text>
             </View>
           </View>
         }
@@ -606,7 +511,7 @@ export default function PetsScreen() {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>لا يوجد حيوانات مسجلة</Text>
             <Button
-              title={t('إضافة حيوان')}
+              title={t("إضافة حيوان")}
               onPress={handleAddPet}
               type="primary"
               size="medium"
@@ -614,8 +519,8 @@ export default function PetsScreen() {
               style={styles.emptyButton}
             />
             <Button
-              title={t('إضافة حقل')}
-              onPress={() => router.push('/add-poultry-farm')}
+              title={t("إضافة حقل")}
+              onPress={() => router.push("/add-poultry-farm")}
               type="secondary"
               size="medium"
               icon={<Feather size={16} color={COLORS.primary} />}
@@ -623,7 +528,6 @@ export default function PetsScreen() {
             />
           </View>
         }
-      />
       />
     </View>
   );
@@ -753,7 +657,7 @@ const styles = StyleSheet.create({
   },
   poultryButton: {
     marginTop: 12,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: COLORS.primary,
   },

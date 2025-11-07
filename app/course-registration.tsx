@@ -6,6 +6,7 @@ import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { useApp } from "@/providers/AppProvider";
 
 interface RegistrationFormData {
   participantName: string;
@@ -15,7 +16,8 @@ interface RegistrationFormData {
 }
 
 export default function CourseRegistrationScreen() {
-  const { t, isRTL } = useI18n();
+  const { user } = useApp();
+  const { isRTL } = useI18n();
   const router = useRouter();
   const params = useLocalSearchParams();
 
@@ -29,32 +31,13 @@ export default function CourseRegistrationScreen() {
   const courseOrganizer = params.courseOrganizer as string;
 
   const [formData, setFormData] = useState<RegistrationFormData>({
-    participantName: "",
-    participantEmail: "",
-    participantPhone: "",
-    specialRequests: "",
+    participantName: "Mohamed ali",
+    participantEmail: "mohameali@mail.com",
+    participantPhone: "01008877666",
+    specialRequests: "Some text to test register in course/seminar",
   });
 
-  const submitRegistrationMutation = useMutation(
-    trpc.courses.register.mutationOptions({
-      onSuccess: (data) => {
-        if (data.success) {
-          Alert.alert("تم التسجيل بنجاح", data.message, [
-            {
-              text: "موافق",
-              onPress: () => router.back(),
-            },
-          ]);
-        } else {
-          Alert.alert("خطأ", data.message);
-        }
-      },
-      onError: (error) => {
-        console.error("Registration error:", error);
-        Alert.alert("خطأ", "حدث خطأ أثناء إرسال طلب التسجيل");
-      },
-    })
-  );
+  const submitRegistrationMutation = useMutation(trpc.courses.register.mutationOptions());
 
   const handleSubmit = () => {
     if (!formData.participantName.trim()) {
@@ -80,14 +63,35 @@ export default function CourseRegistrationScreen() {
     }
 
     // Fire mutation
-    submitRegistrationMutation.mutate({
-      courseId,
-      courseName,
-      participantName: formData.participantName,
-      participantEmail: formData.participantEmail,
-      participantPhone: formData.participantPhone,
-      specialRequests: formData.specialRequests,
-    });
+    submitRegistrationMutation.mutate(
+      {
+        userId: Number(user?.id),
+        courseId: Number(courseId),
+        courseName,
+        participantName: formData.participantName,
+        participantEmail: formData.participantEmail,
+        participantPhone: formData.participantPhone,
+        specialRequests: formData.specialRequests,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.success) {
+            Alert.alert("تم التسجيل بنجاح", data.message, [
+              {
+                text: "موافق",
+                onPress: () => router.back(),
+              },
+            ]);
+          } else {
+            Alert.alert("خطأ", data.message);
+          }
+        },
+        onError: (error) => {
+          console.error("Registration error:", error);
+          Alert.alert("خطأ", error?.message || "حدث خطأ أثناء إرسال طلب التسجيل");
+        },
+      }
+    );
   };
 
   return (

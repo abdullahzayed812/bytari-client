@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
+import React from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
+import { Activity, ArrowRight, BarChart3, Calendar, FileText, TrendingUp, Users } from "lucide-react-native";
 
 export default function HospitalsAnalyticsScreen() {
   const { isRTL } = useI18n();
@@ -14,43 +15,43 @@ export default function HospitalsAnalyticsScreen() {
 
   const analyticsData = [
     {
-      title: 'إجمالي المستشفيات',
-      value: data?.totalHospitals.value || '0',
-      change: data?.totalHospitals.change || '+0',
-      changeType: data?.totalHospitals.changeType || 'increase',
+      title: "إجمالي المستشفيات",
+      value: data?.totalHospitals.value || "0",
+      change: data?.totalHospitals.change || "+0",
+      changeType: data?.totalHospitals.changeType || "increase",
       icon: BarChart3,
-      color: '#0EA5E9'
+      color: "#0EA5E9",
     },
     {
-      title: 'إجمالي المتابعين',
-      value: data?.totalFollowers.value || '0',
-      change: data?.totalFollowers.change || '+0',
-      changeType: data?.totalFollowers.changeType || 'increase',
+      title: "إجمالي المتابعين",
+      value: data?.totalFollowers.value || "0",
+      change: data?.totalFollowers.change || "+0",
+      changeType: data?.totalFollowers.changeType || "increase",
       icon: Users,
-      color: '#10B981'
+      color: "#10B981",
     },
     {
-      title: 'الإعلانات الشهرية',
-      value: data?.monthlyAnnouncements.value || '0',
-      change: data?.monthlyAnnouncements.change || '+0',
-      changeType: data?.monthlyAnnouncements.changeType || 'increase',
+      title: "الإعلانات الشهرية",
+      value: data?.monthlyAnnouncements.value || "0",
+      change: data?.monthlyAnnouncements.change || "+0",
+      changeType: data?.monthlyAnnouncements.changeType || "increase",
       icon: FileText,
-      color: '#F59E0B'
+      color: "#F59E0B",
     },
     {
-      title: 'معدل النشاط',
-      value: data?.activityRate.value || '0%',
-      change: data?.activityRate.change || '+0%',
-      changeType: data?.activityRate.changeType || 'increase',
+      title: "معدل النشاط",
+      value: data?.activityRate.value || "0%",
+      change: data?.activityRate.change || "+0%",
+      changeType: data?.activityRate.changeType || "increase",
       icon: Activity,
-      color: '#8B5CF6'
-    }
+      color: "#8B5CF6",
+    },
   ];
 
   const recentActivity = data?.recentActivity || [];
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowRight size={24} color={COLORS.white} />
@@ -61,7 +62,7 @@ export default function HospitalsAnalyticsScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>الإحصائيات العامة</Text>
-        
+
         <View style={styles.statsGrid}>
           {analyticsData.map((stat, index) => {
             const IconComponent = stat.icon;
@@ -71,14 +72,17 @@ export default function HospitalsAnalyticsScreen() {
                   <View style={[styles.statIcon, { backgroundColor: stat.color }]}>
                     <IconComponent size={20} color={COLORS.white} />
                   </View>
-                  <View style={[styles.changeIndicator, 
-                    { backgroundColor: stat.changeType === 'increase' ? '#10B981' : '#EF4444' }
-                  ]}>
+                  <View
+                    style={[
+                      styles.changeIndicator,
+                      { backgroundColor: stat.changeType === "increase" ? "#10B981" : "#EF4444" },
+                    ]}
+                  >
                     <TrendingUp size={12} color={COLORS.white} />
                     <Text style={styles.changeText}>{stat.change}</Text>
                   </View>
                 </View>
-                
+
                 <Text style={styles.statValue}>{stat.value}</Text>
                 <Text style={styles.statTitle}>{stat.title}</Text>
               </View>
@@ -87,14 +91,14 @@ export default function HospitalsAnalyticsScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>النشاط الأخير</Text>
-        
+
         <View style={styles.activityList}>
           {recentActivity.map((activity) => (
             <View key={activity.id} style={styles.activityCard}>
               <View style={styles.activityIcon}>
                 <Calendar size={20} color="#0EA5E9" />
               </View>
-              
+
               <View style={styles.activityInfo}>
                 <Text style={styles.activityTitle}>{activity.title}</Text>
                 <Text style={styles.activityDescription}>{activity.description}</Text>
@@ -117,13 +121,13 @@ export default function HospitalsAnalyticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0EA5E9',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#0EA5E9",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -132,10 +136,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -146,45 +150,45 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
     marginBottom: 24,
   },
   statCard: {
-    width: '47%',
+    width: "47%",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   statHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   statIcon: {
     width: 36,
     height: 36,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   changeIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -192,32 +196,32 @@ const styles = StyleSheet.create({
   },
   changeText: {
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.white,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   statTitle: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   activityList: {
     gap: 12,
     marginBottom: 24,
   },
   activityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -227,9 +231,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#E0F2FE',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#E0F2FE",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   activityInfo: {
@@ -237,28 +241,28 @@ const styles = StyleSheet.create({
   },
   activityTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   activityDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   activityTime: {
     fontSize: 12,
     color: COLORS.lightGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   chartPlaceholder: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 40,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -266,7 +270,7 @@ const styles = StyleSheet.create({
   },
   chartPlaceholderText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.darkGray,
     marginTop: 16,
     marginBottom: 8,
@@ -274,6 +278,6 @@ const styles = StyleSheet.create({
   chartPlaceholderSubtext: {
     fontSize: 14,
     color: COLORS.lightGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

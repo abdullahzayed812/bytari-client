@@ -40,7 +40,6 @@ interface Hospital {
 export default function VetHospitalsScreen() {
   const router = useRouter();
   const { isSuperAdmin, isAuthenticated, isModerator, moderatorPermissions } = useApp();
-  // const { canAccessHospital } = usePermissions();
   const [showProvinceHospitals, setShowProvinceHospitals] = useState<boolean>(false);
   const [followedHospitals, setFollowedHospitals] = useState<string[]>([]);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);

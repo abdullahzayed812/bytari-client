@@ -37,21 +37,37 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 
 // Interface for content items
-interface ContentItem {
-  id: string;
+type ContentItem = {
+  // Existing fields (keep these)
+  id?: number;
   title: string;
+  author?: string;
   description?: string;
-  content?: string;
+  category?: string;
   image?: string;
   fileUrl?: string;
   fileName?: string;
-  fileType?: string;
-  author?: string;
-  category?: string;
+  content?: string;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
-}
+  fileType?: string;
+
+  // 👇 Added course-related fields
+  organizer?: string; // اسم المنظم
+  date?: string; // تاريخ الدورة
+  location?: string; // مكان الدورة
+  type?: "course" | "seminar"; // نوع الدورة
+  duration?: string; // مدة الدورة
+  capacity?: number; // عدد المقاعد
+  price?: string; // سعر الدورة
+  registrationType?: "link" | "internal"; // نوع التسجيل
+  courseUrl?: string; // رابط الدورة
+  status?: "active" | "inactive" | "completed"; // حالة الدورة
+  thumbnailImage?: string; // صورة الغلاف
+  images?: string[]; // صور إضافية
+  tags?: string[]; // وسوم الدورة
+};
 
 // Content type configuration
 type ContentTypeKey = "articles" | "ads" | "courses" | "clinics" | "stores" | "books" | "tips" | "pets";
@@ -147,11 +163,41 @@ export default function AdminContentManagerScreen() {
   const [contentType, setContentType] = useState<string>((params.type as string) || "articles");
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
-  const [formData, setFormData] = useState<Partial<ContentItem>>({});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [_, setSelectedFile] = useState<{ uri: string; name: string; type: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [formData, setFormData] = useState<Partial<ContentItem>>({
+    // Existing fields
+    id: 1,
+    title: "دورة متقدمة في جراحة الحيوانات الصغيرة",
+    author: "د. محمد عبدالله",
+    description: "دورة متخصصة في جراحات الحيوانات الصغيرة تشمل التقنيات الحديثة والممارسات الآمنة",
+    category: "الجراحة البيطرية",
+    image: "https://example.com/vet-surgery-course.jpg",
+    fileUrl: "https://example.com/vet-course-material.pdf",
+    fileName: "مادة_دورة_الجراحة.pdf",
+    content: "محتويات الدورة تشمل أساسيات التخدير، تقنيات الجراحة، الرعاية ما بعد الجراحة...",
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    fileType: "pdf",
+
+    // Course-related fields
+    organizer: "الجمعية البيطرية السعودية",
+    date: "2024-03-15",
+    location: "مستشفى الحيوانات - الرياض",
+    type: "course",
+    duration: "5",
+    capacity: 25,
+    price: "1500",
+    registrationType: "internal",
+    courseUrl: "",
+    status: "active",
+    thumbnailImage: "https://example.com/vet-course-thumb.jpg",
+    images: ["https://example.com/vet-course1.jpg", "https://example.com/vet-course2.jpg"],
+    tags: ["جراحة", "حيوانات صغيرة", "بيطرة", "تطوير مهني"],
+  });
 
   // Optimized queries with proper enabled flags
   const magazinesQuery = useQuery({
@@ -368,7 +414,7 @@ export default function AdminContentManagerScreen() {
   // Handlers
   const handleAdd = useCallback(() => {
     setEditingItem(null);
-    setFormData({});
+    // setFormData({});
     setSelectedImage(null);
     setSelectedFile(null);
     setIsModalVisible(true);
@@ -457,11 +503,38 @@ export default function AdminContentManagerScreen() {
     },
     [contentType, mutations, refetchCurrentQuery]
   );
-
   const handleSave = useCallback(() => {
     if (!formData.title?.trim()) {
       Alert.alert("خطأ", "يرجى إدخال العنوان");
       return;
+    }
+
+    // ✅ Add additional required course validation
+    if (contentType === "courses") {
+      const requiredFields = [
+        { key: "organizer", label: "اسم المنظم" },
+        { key: "date", label: "تاريخ الدورة" },
+        { key: "location", label: "مكان الدورة" },
+        { key: "duration", label: "مدة الدورة" },
+        { key: "capacity", label: "عدد المقاعد" },
+        { key: "price", label: "سعر الدورة" },
+        { key: "category", label: "التصنيف" },
+        { key: "description", label: "وصف الدورة" },
+        { key: "registrationType", label: "نوع التسجيل" },
+      ];
+
+      for (let field of requiredFields) {
+        if (!formData[field.key]) {
+          Alert.alert("خطأ", `يرجى إدخال ${field.label}`);
+          return;
+        }
+      }
+
+      // If registrationType is 'link', make sure courseUrl is provided
+      if (formData.registrationType === "link" && !formData.courseUrl?.trim()) {
+        Alert.alert("خطأ", "يرجى إدخال رابط الدورة");
+        return;
+      }
     }
 
     const saveParams =
@@ -704,6 +777,198 @@ export default function AdminContentManagerScreen() {
   const keyExtractor = useCallback((item: ContentItem) => item.id, []);
 
   const renderFormFields = useCallback(() => {
+    // Handle Courses Form
+    if (contentType === "courses") {
+      return (
+        <View style={styles.formContainer}>
+          {/* Course Title */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>عنوان الدورة *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.title || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, title: text }))}
+              placeholder="أدخل عنوان الدورة"
+            />
+          </View>
+
+          {/* Organizer */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>اسم المنظم *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.organizer || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, organizer: text }))}
+              placeholder="أدخل اسم المنظم"
+            />
+          </View>
+
+          {/* Date */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>تاريخ الدورة *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.date || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, date: text }))}
+              placeholder="YYYY-MM-DD"
+            />
+          </View>
+
+          {/* Location */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>مكان الدورة *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.location || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, location: text }))}
+              placeholder="أدخل مكان الدورة"
+            />
+          </View>
+
+          {/* Type */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>نوع النشاط *</Text>
+            <View style={styles.radioGroup}>
+              {[
+                { key: "course", label: "دورة تدريبية" },
+                { key: "seminar", label: "ندوة" },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={styles.radioOption}
+                  onPress={() => setFormData((prev) => ({ ...prev, type: option.key }))}
+                >
+                  <View style={[styles.radioCircle, formData.type === option.key && styles.radioSelected]} />
+                  <Text style={styles.radioText}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Duration */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>مدة الدورة *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.duration || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, duration: text }))}
+              placeholder="مثال: 3 أيام / أسبوع"
+            />
+          </View>
+
+          {/* Capacity */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>عدد المقاعد *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.capacity?.toString() || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, capacity: Number(text) || 0 }))}
+              placeholder="أدخل عدد المقاعد"
+              keyboardType="numeric"
+            />
+          </View>
+
+          {/* Price */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>سعر الدورة *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.price || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
+              placeholder="مثال: 100 ريال"
+            />
+          </View>
+
+          {/* Category */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>التصنيف *</Text>
+            <TextInput
+              style={styles.textInput}
+              value={formData.category || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, category: text }))}
+              placeholder="أدخل تصنيف الدورة"
+            />
+          </View>
+
+          {/* Registration Type */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>نوع التسجيل *</Text>
+            <View style={styles.radioGroup}>
+              {[
+                { key: "internal", label: "تسجيل داخلي (يصل للإدارة)" },
+                { key: "link", label: "رابط خارجي" },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={styles.radioOption}
+                  onPress={() => setFormData((prev) => ({ ...prev, registrationType: option.key }))}
+                >
+                  <View
+                    style={[styles.radioCircle, formData.registrationType === option.key && styles.radioSelected]}
+                  />
+                  <Text style={styles.radioText}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* External Course Link */}
+          {formData.registrationType === "link" && (
+            <View style={styles.formField}>
+              <Text style={styles.fieldLabel}>رابط التسجيل الخارجي</Text>
+              <TextInput
+                style={styles.textInput}
+                value={formData.courseUrl || ""}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, courseUrl: text }))}
+                placeholder="https://example.com"
+                keyboardType="url"
+              />
+            </View>
+          )}
+
+          {/* Description */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>وصف الدورة *</Text>
+            <TextInput
+              style={[styles.textInput, styles.textArea]}
+              value={formData.description || ""}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
+              placeholder="أدخل وصف الدورة"
+              multiline
+              numberOfLines={4}
+            />
+          </View>
+
+          {/* Thumbnail Image */}
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>صورة الغلاف</Text>
+            {selectedImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                <View style={styles.imageActions}>
+                  <TouchableOpacity style={styles.changeImageButton} onPress={pickImage}>
+                    <Camera size={16} color={COLORS.white} />
+                    <Text style={styles.imageActionText}>تغيير</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                    <X size={16} color={COLORS.white} />
+                    <Text style={styles.imageActionText}>حذف</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                <Upload size={24} color={COLORS.primary} />
+                <Text style={styles.uploadButtonText}>اختيار صورة</Text>
+                <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط صورة جديدة</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      );
+    }
+
+    // Default Form (for other content types)
     return (
       <View style={styles.formContainer}>
         <View style={styles.formField}>
@@ -769,62 +1034,13 @@ export default function AdminContentManagerScreen() {
             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Upload size={24} color={COLORS.primary} />
               <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-              <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط صورة جديدة</Text>
+              <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط جديدة</Text>
             </TouchableOpacity>
           )}
         </View>
-
-        {contentType === "courses" ? (
-          <>
-            <View style={styles.formField}>
-              <Text style={styles.fieldLabel}>نوع التسجيل</Text>
-              <View style={styles.radioGroup}>
-                <TouchableOpacity
-                  style={styles.radioOption}
-                  onPress={() => setFormData((prev) => ({ ...prev, content: "internal" }))}
-                >
-                  <View style={[styles.radioCircle, formData.content === "internal" && styles.radioSelected]} />
-                  <Text style={styles.radioText}>تسجيل داخلي (يصل للإدارة)</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.radioOption}
-                  onPress={() => setFormData((prev) => ({ ...prev, content: "link" }))}
-                >
-                  <View style={[styles.radioCircle, formData.content === "link" && styles.radioSelected]} />
-                  <Text style={styles.radioText}>رابط خارجي</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {formData.content === "link" && (
-              <View style={styles.formField}>
-                <Text style={styles.fieldLabel}>رابط الدورة *</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={formData.fileUrl || ""}
-                  onChangeText={(text) => setFormData((prev) => ({ ...prev, fileUrl: text, fileName: "رابط الدورة" }))}
-                  placeholder="https://example.com/course"
-                  keyboardType="url"
-                />
-              </View>
-            )}
-          </>
-        ) : (
-          <View style={styles.formField}>
-            <Text style={styles.fieldLabel}>المحتوى التفصيلي</Text>
-            <TextInput
-              style={[styles.textInput, styles.textArea]}
-              value={formData.content || ""}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, content: text }))}
-              placeholder="أدخل المحتوى التفصيلي"
-              multiline
-              numberOfLines={6}
-            />
-          </View>
-        )}
       </View>
     );
-  }, [formData, selectedImage, contentType, pickImage, removeImage]);
+  }, [formData, contentType, selectedImage, pickImage, removeImage]);
 
   if (!isSuperAdmin) {
     return null;
@@ -1200,6 +1416,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     gap: 16,
+    paddingBottom: 100,
   },
   formField: {
     gap: 8,

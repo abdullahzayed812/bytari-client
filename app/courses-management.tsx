@@ -81,34 +81,14 @@ export default function CoursesManagementScreen() {
     data: rawRegistrations,
     isLoading: registrationsLoading,
     refetch: refetchRegistrations,
-  } = useQuery(trpc.admin.courses.getRegistrations.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
+  } = useQuery(trpc.admin.courses.getAllCoursesRegistrations.queryOptions({ status: "all" }));
 
   const courses = useMemo(() => (rawCourses as any)?.courses, [rawCourses]);
-  const registrations = useMemo(() => (rawRegistrations as any)?.courses, [rawRegistrations]);
+  const registrations = useMemo(() => (rawRegistrations as any)?.registrations, [rawRegistrations]);
 
-  const deleteCourseMutation = useMutation(
-    trpc.courses.delete.mutationOptions({
-      onSuccess: () => {
-        refetchCourses();
-        Alert.alert("تم الحذف", "تم حذف الدورة بنجاح");
-      },
-      onError: () => {
-        Alert.alert("خطأ", "حدث خطأ أثناء حذف الدورة");
-      },
-    })
-  );
+  const deleteCourseMutation = useMutation(trpc.courses.delete.mutationOptions());
 
-  const updateRegistrationStatusMutation = useMutation(
-    trpc.courses.updateRegistrationStatus.mutationOptions({
-      onSuccess: () => {
-        refetchRegistrations();
-        Alert.alert("تم التحديث", "تم تحديث حالة التسجيل بنجاح");
-      },
-      onError: () => {
-        Alert.alert("خطأ", "تعذر تحديث حالة التسجيل");
-      },
-    })
-  );
+  const updateRegistrationStatusMutation = useMutation(trpc.admin.courses.updateRegistrationStatus.mutationOptions());
 
   const handleBack = () => {
     router.back();
@@ -129,14 +109,33 @@ export default function CoursesManagementScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          deleteCourseMutation.mutate(courseId);
+          deleteCourseMutation.mutate(courseId, {
+            onSuccess: () => {
+              refetchCourses();
+              Alert.alert("تم الحذف", "تم حذف الدورة بنجاح");
+            },
+            onError: () => {
+              Alert.alert("خطأ", "حدث خطأ أثناء حذف الدورة");
+            },
+          });
         },
       },
     ]);
   };
 
-  const handleRegistrationAction = (registrationId: string, action: "approve" | "reject") => {
-    updateRegistrationStatusMutation.mutate({ id: registrationId, status: action });
+  const handleRegistrationAction = (registrationId: string, action: "approved" | "rejected") => {
+    updateRegistrationStatusMutation.mutate(
+      { registrationId: Number(registrationId), status: action },
+      {
+        onSuccess: () => {
+          refetchRegistrations();
+          Alert.alert("تم التحديث", "تم تحديث حالة التسجيل بنجاح");
+        },
+        onError: () => {
+          Alert.alert("خطأ", "تعذر تحديث حالة التسجيل");
+        },
+      }
+    );
   };
 
   const filteredCourses = courses?.filter((course: any) => {
@@ -190,6 +189,18 @@ export default function CoursesManagementScreen() {
       default:
         return status;
     }
+  };
+
+  const formatDate = (date: string | Date) => {
+    if (!date) return "";
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return dateObj.toLocaleDateString("ar-EG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const renderCourseCard = (course: Course) => {
@@ -292,7 +303,7 @@ export default function CoursesManagementScreen() {
         <View style={styles.registrationDetails}>
           <Text style={styles.detailText}>البريد الإلكتروني: {registration.participantEmail}</Text>
           <Text style={styles.detailText}>رقم الهاتف: {registration.participantPhone}</Text>
-          <Text style={styles.detailText}>تاريخ التسجيل: {registration.registrationDate}</Text>
+          <Text style={styles.detailText}>تاريخ التسجيل: {formatDate(registration.registrationDate)}</Text>
         </View>
 
         {registration.status === "pending" && (
@@ -300,7 +311,7 @@ export default function CoursesManagementScreen() {
             <TouchableOpacity
               disabled={updateRegistrationStatusMutation.isPending}
               style={[styles.actionButton, styles.approveButton]}
-              onPress={() => handleRegistrationAction(registration.id, "approve")}
+              onPress={() => handleRegistrationAction(registration.id, "approved")}
             >
               <UserCheck size={16} color={COLORS.white} />
               <Text style={styles.actionButtonText}>{updateRegistrationStatusMutation.isPending ? "..." : "قبول"}</Text>
@@ -308,7 +319,7 @@ export default function CoursesManagementScreen() {
             <TouchableOpacity
               disabled={updateRegistrationStatusMutation.isPending}
               style={[styles.actionButton, styles.rejectButton]}
-              onPress={() => handleRegistrationAction(registration.id, "reject")}
+              onPress={() => handleRegistrationAction(registration.id, "rejected")}
             >
               <Trash2 size={16} color={COLORS.white} />
               <Text style={styles.actionButtonText}>{updateRegistrationStatusMutation.isPending ? "..." : "رفض"}</Text>

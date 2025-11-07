@@ -95,16 +95,16 @@ export default function ClinicSystemScreen() {
   const { hasAdminAccess, isSuperAdmin } = useApp();
   const [activeTab, setActiveTab] = useState<"overview" | "register" | "subscription">("overview");
   const [registrationData, setRegistrationData] = useState<ClinicRegistration>({
-    name: "",
-    description: "",
-    address: "",
-    phone: "",
-    email: "",
-    workingHours: "",
-    licenseNumber: "",
-    licenseImages: [],
-    identityImages: [],
-    images: [],
+    name: "عيادة جيدة",
+    description: "وصف العيادة الجيدة",
+    address: "الموصل، العراق",
+    phone: "07288892222",
+    email: "zuhair@mail.com",
+    workingHours: "8",
+    licenseNumber: "CLI_LIC322111",
+    licenseImages: ["http://bytari/media/img1.png"],
+    identityImages: ["http://bytari/media/img1.png"],
+    images: ["http://bytari/media/img1.png"],
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);

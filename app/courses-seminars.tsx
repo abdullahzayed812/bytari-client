@@ -22,76 +22,17 @@ interface CourseSeminar {
   description: string;
   courseUrl?: string;
   registrationType: "link" | "internal";
+  userRegistrationStatus?: string;
 }
 
-const mockCoursesSeminars: CourseSeminar[] = [
-  {
-    id: "1",
-    title: "دورة الطب البيطري الحديث",
-    organizer: "الجمعية السعودية للأطباء البيطريين",
-    date: "15 أغسطس 2024",
-    location: "الرياض - مركز المؤتمرات",
-    type: "course",
-    duration: "3 أيام",
-    capacity: 50,
-    registered: 35,
-    price: "1500 ريال",
-    description: "دورة شاملة تغطي أحدث التطورات في مجال الطب البيطري والتقنيات الحديثة",
-    courseUrl: "https://vetcourse.com/modern-veterinary",
-    registrationType: "link",
-  },
-  {
-    id: "2",
-    title: "ندوة: مستقبل الطب البيطري في المملكة",
-    organizer: "وزارة البيئة والمياه والزراعة",
-    date: "22 أغسطس 2024",
-    location: "جدة - فندق الريتز كارلتون",
-    type: "seminar",
-    duration: "يوم واحد",
-    capacity: 100,
-    registered: 78,
-    price: "مجاني",
-    description: "ندوة تناقش التحديات والفرص في مجال الطب البيطري ودوره في التنمية المستدامة",
-    registrationType: "internal",
-  },
-  {
-    id: "3",
-    title: "دورة الجراحة البيطرية المتقدمة",
-    organizer: "مستشفى الحيوانات التخصصي",
-    date: "5 سبتمبر 2024",
-    location: "الدمام - المركز الطبي",
-    type: "course",
-    duration: "5 أيام",
-    capacity: 25,
-    registered: 20,
-    price: "2500 ريال",
-    description: "دورة متخصصة في تقنيات الجراحة البيطرية المتقدمة مع التدريب العملي",
-    courseUrl: "https://vetcourse.com/advanced-surgery",
-    registrationType: "link",
-  },
-  {
-    id: "4",
-    title: "ندوة: الأمن الغذائي والصحة الحيوانية",
-    organizer: "جامعة الملك سعود",
-    date: "12 سبتمبر 2024",
-    location: "الرياض - الجامعة",
-    type: "seminar",
-    duration: "نصف يوم",
-    capacity: 80,
-    registered: 45,
-    price: "مجاني",
-    description: "ندوة علمية حول العلاقة بين الصحة الحيوانية والأمن الغذائي",
-    registrationType: "internal",
-  },
-];
-
 export default function CoursesSeminarsScreen() {
-  const { t, isRTL } = useI18n();
-  const { isSuperAdmin } = useApp();
+  const { user, isSuperAdmin } = useApp();
   const router = useRouter();
-  const { data, isLoading, error } = useQuery(trpc.courses.getList.queryOptions());
+  const { data, isLoading, error } = useQuery(trpc.courses.getList.queryOptions({ userId: user?.id }));
 
   const courses = useMemo(() => (data as any)?.courses, [data]);
+
+  console.log(courses?.map((c: any) => c?.userRegistrationStatus));
 
   const handleRegistration = async (course: CourseSeminar) => {
     if (course.registrationType === "link") {
@@ -131,6 +72,23 @@ export default function CoursesSeminarsScreen() {
   const renderEventCard = (item: CourseSeminar) => {
     const availableSpots = item.capacity - item.registered;
     const isAlmostFull = availableSpots <= 5;
+
+    // Determine button text based on registration status
+    const getButtonText = () => {
+      switch (item?.userRegistrationStatus) {
+        case "pending":
+          return "جاري القبول";
+        case "approved":
+          return "تم القبول";
+        case "rejected":
+          return "تم الرفض";
+        default:
+          return "سجل الآن";
+      }
+    };
+
+    // Determine if button should be disabled
+    const isButtonDisabled = item?.userRegistrationStatus && item.userRegistrationStatus !== "rejected";
 
     return (
       <TouchableOpacity key={item.id} style={styles.eventCard} activeOpacity={0.8}>
@@ -181,9 +139,22 @@ export default function CoursesSeminarsScreen() {
             {availableSpots > 0 ? (
               <>
                 {isAlmostFull && <Text style={styles.almostFullText}>{availableSpots} مقاعد متبقية</Text>}
-                <TouchableOpacity style={styles.registerButton} onPress={() => handleRegistration(item)}>
-                  <Text style={styles.registerButtonText}>سجل الآن</Text>
-                  {item.registrationType === "link" && (
+                {item?.userRegistrationStatus ? (
+                  <Text style={styles.registrationStatusText}>
+                    {item.userRegistrationStatus === "pending" && "جاري مراجعة طلبك"}
+                    {item.userRegistrationStatus === "approved" && "تم قبول طلبك"}
+                    {item.userRegistrationStatus === "rejected" && "تم رفض طلبك"}
+                  </Text>
+                ) : null}
+                <TouchableOpacity
+                  style={[styles.registerButton, isButtonDisabled && styles.disabledButton]}
+                  onPress={() => handleRegistration(item)}
+                  disabled={isButtonDisabled || false}
+                >
+                  <Text style={[styles.registerButtonText, isButtonDisabled && styles.disabledButtonText]}>
+                    {getButtonText()}
+                  </Text>
+                  {item.registrationType === "link" && !isButtonDisabled && (
                     <ExternalLink size={14} color={COLORS.white} style={styles.externalLinkIcon} />
                   )}
                 </TouchableOpacity>
@@ -376,6 +347,18 @@ const styles = StyleSheet.create({
   },
   registrationContainer: {
     alignItems: "flex-end",
+  },
+  registrationStatusText: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  disabledButton: {
+    backgroundColor: COLORS.lightGray,
+  },
+  disabledButtonText: {
+    color: COLORS.darkGray,
   },
   almostFullText: {
     fontSize: 12,
