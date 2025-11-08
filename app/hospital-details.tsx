@@ -1,12 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
 
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { 
-  MapPin, 
-  Phone, 
-  Clock, 
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import {
+  MapPin,
+  Phone,
+  Clock,
   Star,
   Building2,
   Users,
@@ -17,10 +17,12 @@ import {
   Calendar,
   FileText,
   Megaphone,
-  Plus
-} from 'lucide-react-native';
+  Plus,
+} from "lucide-react-native";
 import { useApp } from "../providers/AppProvider";
 import { usePermissions } from "../lib/permissions";
+import { trpc } from "../lib/trpc";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface Hospital {
   id: string;
@@ -39,229 +41,263 @@ interface Hospital {
 }
 
 export default function HospitalDetailsScreen() {
-
-  const { isSuperAdmin, isModerator } = useApp();
-  const { canAccessHospital } = usePermissions();
+  const { isSuperAdmin, isModerator, isAuthenticated } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [isFollowed, setIsFollowed] = useState(false);
 
-  // Mock hospital data
-  const hospital: Hospital = {
-    id: id as string,
-    name: 'المستشفى البيطري المركزي - بغداد',
-    location: 'بغداد - الكرادة',
-    phone: '+964 770 123 4567',
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400',
-    isMain: true,
-    specialties: ['جراحة', 'طب داخلي', 'أشعة', 'مختبرات', 'طوارئ'],
-    workingHours: '24 ساعة',
-    description: 'المستشفى البيطري المركزي الرئيسي في العراق، يقدم خدمات طبية متكاملة للحيوانات مع فريق من أمهر الأطباء البيطريين وأحدث التقنيات الطبية.',
-    followersCount: 1250,
-    announcementsCount: 15
-  };
+  const { data: hospital, isLoading, error } = useQuery(trpc.hospitals.getById.queryOptions({ id: Number(id) }));
+  const { data: announcements, isLoading: announcementsLoading } = useQuery(
+    trpc.announcements.getForHospital.queryOptions({ hospitalId: Number(id) })
+  );
 
-  const handleFollow = () => {
-    setIsFollowed(!isFollowed);
+  const { data: followedHospitalsData, refetch: refetchFollowedHospitals } = useQuery(
+    trpc.hospitals.getFollowedHospitals.queryOptions(undefined, {
+      enabled: isAuthenticated,
+    })
+  );
+
+  const followMutation = useMutation(trpc.hospitals.follow.mutationOptions());
+  const unfollowMutation = useMutation(trpc.hospitals.unfollow.mutationOptions());
+
+  useEffect(() => {
+    if (followedHospitalsData && hospital) {
+      setIsFollowed(followedHospitalsData.some((h) => h.id === hospital.id));
+    }
+  }, [followedHospitalsData, hospital]);
+
+  const handleFollow = async () => {
+    if (!isAuthenticated) {
+      router.push("/auth");
+      return;
+    }
+    if (!hospital) return;
+
+    try {
+      if (isFollowed) {
+        await unfollowMutation.mutateAsync({ hospitalId: hospital.id });
+        Alert.alert("تم", "تم إلغاء المتابعة بنجاح");
+      } else {
+        await followMutation.mutateAsync({ hospitalId: hospital.id });
+        Alert.alert("تم", "تم متابعة المستشفى بنجاح.");
+      }
+      refetchFollowedHospitals();
+    } catch (error) {
+      Alert.alert("خطأ", "حدث خطأ أثناء عملية المتابعة");
+    }
   };
 
   const handleEdit = () => {
+    if (!hospital) return;
     router.push(`/edit-hospital?id=${hospital.id}`);
   };
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error || !hospital) {
+    return (
+      <View style={styles.container}>
+        <Text>Error loading hospital details.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'تفاصيل المستشفى',
-          headerStyle: { backgroundColor: '#0EA5E9' },
+          title: "تفاصيل المستشفى",
+          headerStyle: { backgroundColor: "#0EA5E9" },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: { fontWeight: "bold" },
           headerRight: () => {
-            // Only super admin or hospital-specific moderator can edit
             const canManageHospital = isSuperAdmin || (isModerator && canAccessHospital(hospital.id));
-            
+
             return canManageHospital ? (
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => {
                   router.push(`/edit-hospital?id=${hospital.id}`);
-                }} 
+                }}
                 style={styles.headerButton}
               >
                 <Edit size={20} color={COLORS.white} />
               </TouchableOpacity>
             ) : null;
           },
-        }} 
+        }}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hospital Announcements - Moved to top */}
-        <View style={styles.announcementsSection}>
-          <View style={styles.announcementHeader}>
-            <Text style={styles.sectionTitle}>إعلانات المستشفى</Text>
-            {(isSuperAdmin || (isModerator && canAccessHospital(hospital.id))) && (
-              <TouchableOpacity 
-                onPress={() => {
-                  router.push(`/add-hospital-announcement?hospitalId=${hospital.id}`);
-                }}
-                style={styles.addAnnouncementButton}
-              >
-                <Plus size={16} color={COLORS.white} />
-                <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.announcementBox}>
-            <View style={styles.announcementIcon}>
-              <Megaphone size={24} color='#0EA5E9' />
-            </View>
-            <View style={styles.announcementContent}>
-              <Text style={styles.announcementTitle}>إعلان مهم من المستشفى</Text>
-              <Text style={styles.announcementText}>
-                {hospital.isMain 
-                  ? 'تعلن المستشفى البيطري المركزي عن إطلاق حملة تطعيم مجانية لجميع الحيوانات الأليفة خلال شهر مارس الحالي مع فحص شامل مجاني.'
-                  : `تعلن ${hospital.name} عن توفر خدمات طبية متطورة وفحوصات شاملة للحيوانات الأليفة بأسعار مدعومة.`
-                }
-              </Text>
-              <Text style={styles.announcementDate}>تاريخ النشر: 2024-03-01</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.hospitalCard, hospital.isMain && styles.mainHospitalCard]}>
-          <Image source={{ uri: hospital.image }} style={styles.hospitalImage} />
-          
-          <View style={styles.hospitalInfo}>
-            <View style={styles.hospitalHeader}>
-              <Text style={[styles.hospitalName, hospital.isMain && styles.mainHospitalName]}>
-                {hospital.name}
-              </Text>
-              {hospital.isMain && (
-                <View style={styles.mainBadge}>
-                  <Award size={16} color={COLORS.white} />
-                  <Text style={styles.mainBadgeText}>رئيسي</Text>
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.hospitalDetails}>
-              <View style={styles.detailRow}>
-                <MapPin size={18} color="#0EA5E9" />
-                <Text style={styles.detailText}>{hospital.location}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Phone size={18} color="#0EA5E9" />
-                <Text style={styles.detailText}>{hospital.phone}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Clock size={18} color="#0EA5E9" />
-                <Text style={styles.detailText}>{hospital.workingHours}</Text>
-              </View>
-              
-              <View style={styles.detailRow}>
-                <Star size={18} color="#F59E0B" />
-                <Text style={styles.detailText}>{hospital.rating} ⭐</Text>
-              </View>
-            </View>
-            
-            <Text style={styles.hospitalDescription}>{hospital.description}</Text>
-            
-            <View style={styles.specialtiesContainer}>
-              <Text style={styles.specialtiesTitle}>التخصصات:</Text>
-              <View style={styles.specialtiesList}>
-                {hospital.specialties.map((specialty, index) => (
-                  <View key={index} style={styles.specialtyBadge}>
-                    <Text style={styles.specialtyText}>{specialty}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.statsContainer}>
-              <View style={styles.statItem}>
-                <Users size={20} color="#10B981" />
-                <Text style={styles.statNumber}>{hospital.followersCount}</Text>
-                <Text style={styles.statLabel}>متابع</Text>
-              </View>
-              
-              <View style={styles.statItem}>
-                <FileText size={20} color="#0EA5E9" />
-                <Text style={styles.statNumber}>{hospital.announcementsCount}</Text>
-                <Text style={styles.statLabel}>إعلان</Text>
-              </View>
-              
-              <View style={styles.statItem}>
-                <Calendar size={20} color="#F59E0B" />
-                <Text style={styles.statNumber}>24/7</Text>
-                <Text style={styles.statLabel}>خدمة</Text>
-              </View>
-            </View>
-            
-            <View style={styles.hospitalActions}>
-              <TouchableOpacity 
-                style={[styles.followButton, isFollowed && styles.followedButton]}
-                onPress={handleFollow}
-              >
-                <Heart size={18} color={isFollowed ? "#0EA5E9" : COLORS.white} fill={isFollowed ? "#0EA5E9" : "none"} />
-                <Text style={[styles.followButtonText, isFollowed && styles.followedButtonText]}>
-                  {isFollowed ? 'متابع' : 'متابعة'}
-                </Text>
-              </TouchableOpacity>
-              
-              {(isSuperAdmin || (isModerator && canAccessHospital(hospital.id))) && (
-                <TouchableOpacity 
-                  style={styles.editButton}
-                  onPress={handleEdit}
+        <View style={{ paddingBottom: 120 }}>
+          {/* Hospital Announcements - Moved to top */}
+          <View style={styles.announcementsSection}>
+            <View style={styles.announcementHeader}>
+              <Text style={styles.sectionTitle}>إعلانات المستشفى</Text>
+              {isSuperAdmin && (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push(`/add-hospital-announcement?hospitalId=${hospital.id}`);
+                  }}
+                  style={styles.addAnnouncementButton}
                 >
-                  <Edit size={18} color={COLORS.white} />
-                  <Text style={styles.editButtonText}>تعديل</Text>
+                  <Plus size={16} color={COLORS.white} />
+                  <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
                 </TouchableOpacity>
               )}
-              
-              <TouchableOpacity style={styles.notificationButton}>
-                <Bell size={18} color={COLORS.white} />
-                <Text style={styles.notificationButtonText}>إشعارات</Text>
-              </TouchableOpacity>
+            </View>
+            {announcementsLoading ? (
+              <ActivityIndicator />
+            ) : announcements && announcements.length > 0 ? (
+              announcements.map((announcement) => (
+                <View style={styles.announcementBox} key={announcement.id}>
+                  <View style={styles.announcementIcon}>
+                    <Megaphone size={24} color="#0EA5E9" />
+                  </View>
+                  <View style={styles.announcementContent}>
+                    <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                    <Text style={styles.announcementText}>{announcement.content}</Text>
+                    <Text style={styles.announcementDate}>
+                      تاريخ النشر: {new Date(announcement.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text>لا توجد اعلانات حاليا</Text>
+            )}
+          </View>
+
+          <View style={[styles.hospitalCard, hospital.isMain && styles.mainHospitalCard]}>
+            <Image source={{ uri: hospital.image }} style={styles.hospitalImage} />
+
+            <View style={styles.hospitalInfo}>
+              <View style={styles.hospitalHeader}>
+                <Text style={[styles.hospitalName, hospital.isMain && styles.mainHospitalName]}>{hospital.name}</Text>
+                {hospital.isMain && (
+                  <View style={styles.mainBadge}>
+                    <Award size={16} color={COLORS.white} />
+                    <Text style={styles.mainBadgeText}>رئيسي</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.hospitalDetails}>
+                <View style={styles.detailRow}>
+                  <MapPin size={18} color="#0EA5E9" />
+                  <Text style={styles.detailText}>{hospital.location}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Phone size={18} color="#0EA5E9" />
+                  <Text style={styles.detailText}>{hospital.phone}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Clock size={18} color="#0EA5E9" />
+                  <Text style={styles.detailText}>{hospital.workingHours}</Text>
+                </View>
+
+                <View style={styles.detailRow}>
+                  <Star size={18} color="#F59E0B" />
+                  <Text style={styles.detailText}>{hospital.rating} ⭐</Text>
+                </View>
+              </View>
+
+              <Text style={styles.hospitalDescription}>{hospital.description}</Text>
+
+              <View style={styles.specialtiesContainer}>
+                <Text style={styles.specialtiesTitle}>التخصصات:</Text>
+                <View style={styles.specialtiesList}>
+                  {hospital.specialties.map((specialty, index) => (
+                    <View key={index} style={styles.specialtyBadge}>
+                      <Text style={styles.specialtyText}>{specialty}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Users size={20} color="#10B981" />
+                  <Text style={styles.statNumber}>{hospital.followersCount}</Text>
+                  <Text style={styles.statLabel}>متابع</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <FileText size={20} color="#0EA5E9" />
+                  <Text style={styles.statNumber}>{hospital.announcementsCount}</Text>
+                  <Text style={styles.statLabel}>إعلان</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <Calendar size={20} color="#F59E0B" />
+                  <Text style={styles.statNumber}>24/7</Text>
+                  <Text style={styles.statLabel}>خدمة</Text>
+                </View>
+              </View>
+
+              <View style={styles.hospitalActions}>
+                <TouchableOpacity
+                  style={[styles.followButton, isFollowed && styles.followedButton]}
+                  onPress={handleFollow}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                >
+                  <Heart
+                    size={18}
+                    color={isFollowed ? "#0EA5E9" : COLORS.white}
+                    fill={isFollowed ? "#0EA5E9" : "none"}
+                  />
+                  <Text style={[styles.followButtonText, isFollowed && styles.followedButtonText]}>
+                    {isFollowed ? "متابع" : "متابعة"}
+                  </Text>
+                </TouchableOpacity>
+
+                {isSuperAdmin && (
+                  <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                    <Edit size={18} color={COLORS.white} />
+                    <Text style={styles.editButtonText}>تعديل</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity style={styles.notificationButton}>
+                  <Bell size={18} color={COLORS.white} />
+                  <Text style={styles.notificationButtonText}>إشعارات</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
 
+          <View style={styles.additionalInfo}>
+            <Text style={styles.sectionTitle}>معلومات إضافية</Text>
 
-
-        <View style={styles.additionalInfo}>
-          <Text style={styles.sectionTitle}>معلومات إضافية</Text>
-          
-          <View style={styles.infoCard}>
-            <Building2 size={24} color="#0EA5E9" />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>نوع المستشفى</Text>
-              <Text style={styles.infoDescription}>
-                {hospital.isMain ? 'مستشفى مركزي رئيسي' : 'مستشفى محافظة'}
-              </Text>
+            <View style={styles.infoCard}>
+              <Building2 size={24} color="#0EA5E9" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoTitle}>نوع المستشفى</Text>
+                <Text style={styles.infoDescription}>{hospital.isMain ? "مستشفى مركزي رئيسي" : "مستشفى محافظة"}</Text>
+              </View>
             </View>
-          </View>
-          
-          <View style={styles.infoCard}>
-            <Users size={24} color="#10B981" />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>الفريق الطبي</Text>
-              <Text style={styles.infoDescription}>
-                فريق من الأطباء البيطريين المتخصصين والمساعدين المدربين
-              </Text>
+
+            <View style={styles.infoCard}>
+              <Users size={24} color="#10B981" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoTitle}>الفريق الطبي</Text>
+                <Text style={styles.infoDescription}>فريق من الأطباء البيطريين المتخصصين والمساعدين المدربين</Text>
+              </View>
             </View>
-          </View>
-          
-          <View style={styles.infoCard}>
-            <Star size={24} color="#F59E0B" />
-            <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>التقييم</Text>
-              <Text style={styles.infoDescription}>
-                تقييم ممتاز من المراجعين ({hospital.rating}/5.0)
-              </Text>
+
+            <View style={styles.infoCard}>
+              <Star size={24} color="#F59E0B" />
+              <View style={styles.infoContent}>
+                <Text style={styles.infoTitle}>التقييم</Text>
+                <Text style={styles.infoDescription}>تقييم ممتاز من المراجعين ({hospital.rating}/5.0)</Text>
+              </View>
             </View>
           </View>
         </View>
@@ -273,14 +309,14 @@ export default function HospitalDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   headerButton: {
     padding: 8,
     borderRadius: 6,
     minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   content: {
     flex: 1,
@@ -291,45 +327,45 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 20,
     marginHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   mainHospitalCard: {
     borderWidth: 2,
-    borderColor: '#0EA5E9',
+    borderColor: "#0EA5E9",
   },
   hospitalImage: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   hospitalInfo: {
     padding: 20,
   },
   hospitalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   hospitalName: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   mainHospitalName: {
-    color: '#0EA5E9',
+    color: "#0EA5E9",
   },
   mainBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0EA5E9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0EA5E9",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
@@ -338,14 +374,14 @@ const styles = StyleSheet.create({
   mainBadgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   hospitalDetails: {
     marginBottom: 16,
   },
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
     gap: 10,
   },
@@ -353,56 +389,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   hospitalDescription: {
     fontSize: 16,
     color: COLORS.darkGray,
     lineHeight: 24,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   specialtiesContainer: {
     marginBottom: 20,
   },
   specialtiesTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   specialtiesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   specialtyBadge: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: "#E0F2FE",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
   },
   specialtyText: {
-    color: '#0EA5E9',
+    color: "#0EA5E9",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginBottom: 20,
     paddingVertical: 16,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
     borderRadius: 12,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   statNumber: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   statLabel: {
@@ -410,37 +446,37 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   hospitalActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   followButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0EA5E9',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0EA5E9",
     paddingVertical: 12,
     borderRadius: 10,
     gap: 8,
   },
   followedButton: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: "#E0F2FE",
     borderWidth: 1,
-    borderColor: '#0EA5E9',
+    borderColor: "#0EA5E9",
   },
   followButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   followedButtonText: {
-    color: '#0EA5E9',
+    color: "#0EA5E9",
   },
   editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F59E0B',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F59E0B",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
@@ -449,13 +485,13 @@ const styles = StyleSheet.create({
   editButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   notificationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10B981',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#10B981",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 10,
@@ -464,7 +500,7 @@ const styles = StyleSheet.create({
   notificationButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   additionalInfo: {
     gap: 12,
@@ -472,19 +508,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 12,
     gap: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -495,30 +531,30 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   infoDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementsSection: {
     padding: 16,
     paddingBottom: 0,
   },
   announcementHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   addAnnouncementButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0EA5E9',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0EA5E9",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -527,16 +563,16 @@ const styles = StyleSheet.create({
   addAnnouncementText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   announcementBox: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: "#EFF6FF",
     borderRadius: 12,
     padding: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
     borderLeftWidth: 4,
-    borderLeftColor: '#0EA5E9',
-    shadowColor: '#000',
+    borderLeftColor: "#0EA5E9",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -551,22 +587,22 @@ const styles = StyleSheet.create({
   },
   announcementTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementText: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
   },
   announcementDate: {
     fontSize: 12,
-    color: '#0EA5E9',
-    fontWeight: '600',
-    textAlign: 'right',
+    color: "#0EA5E9",
+    fontWeight: "600",
+    textAlign: "right",
   },
 });

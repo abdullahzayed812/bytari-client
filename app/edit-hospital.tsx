@@ -1,29 +1,47 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert, Image } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowRight, Save, Camera, X, MapPin, Phone, Clock, Star } from 'lucide-react-native';
+import { ArrowRight, Save, Camera, X, MapPin, Phone, Clock } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import { trpc } from '../lib/trpc';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 export default function EditHospitalScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   
+  const { data: initialData, isLoading: isFetching, error } = useQuery(trpc.hospitals.getById.queryOptions({ id: id as string }));
+  const updateMutation = useMutation(trpc.hospitals.update.mutationOptions());
+
   const [hospitalData, setHospitalData] = useState({
-    name: id === 'main' ? 'المستشفى البيطري المركزي - بغداد' : 'مستشفى البصرة البيطري',
-    location: id === 'main' ? 'بغداد - الكرادة' : 'البصرة - المركز',
-    phone: '+964 770 123 4567',
-    workingHours: id === 'main' ? '24 ساعة' : '8:00 ص - 8:00 م',
-    description: 'وصف المستشفى البيطري وخدماته المتاحة',
-    specialties: ['جراحة', 'طب داخلي', 'أشعة'],
-    image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400'
+    name: '',
+    location: '',
+    phone: '',
+    workingHours: '',
+    description: '',
+    specialties: [] as string[],
+    image: ''
   });
   
   const [newSpecialty, setNewSpecialty] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialData) {
+      setHospitalData({
+        name: initialData.name,
+        location: initialData.location,
+        phone: initialData.phone || '',
+        workingHours: initialData.workingHours || '',
+        description: initialData.description || '',
+        specialties: initialData.specialties || [],
+        image: initialData.image || ''
+      });
+    }
+  }, [initialData]);
 
   const handleImagePicker = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -67,11 +85,8 @@ export default function EditHospitalScreen() {
       return;
     }
 
-    setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await updateMutation.mutateAsync({ id: id as string, ...hospitalData });
       
       Alert.alert('نجح', 'تم حفظ التعديلات بنجاح', [
         {
@@ -81,10 +96,24 @@ export default function EditHospitalScreen() {
       ]);
     } catch (error) {
       Alert.alert('خطأ', 'حدث خطأ أثناء حفظ التعديلات');
-    } finally {
-      setIsLoading(false);
     }
   };
+
+  if (isFetching) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Text>Error loading data.</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -94,9 +123,9 @@ export default function EditHospitalScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>تعديل المستشفى</Text>
         <TouchableOpacity 
-          style={[styles.saveButton, isLoading && styles.saveButtonDisabled]}
+          style={[styles.saveButton, updateMutation.isPending && styles.saveButtonDisabled]}
           onPress={handleSave}
-          disabled={isLoading}
+          disabled={updateMutation.isPending}
         >
           <Save size={20} color={COLORS.white} />
         </TouchableOpacity>
@@ -226,13 +255,13 @@ export default function EditHospitalScreen() {
 
         {/* Save Button */}
         <TouchableOpacity 
-          style={[styles.saveButtonLarge, isLoading && styles.saveButtonDisabled]}
+          style={[styles.saveButtonLarge, updateMutation.isPending && styles.saveButtonDisabled]}
           onPress={handleSave}
-          disabled={isLoading}
+          disabled={updateMutation.isPending}
         >
           <Save size={20} color={COLORS.white} />
           <Text style={styles.saveButtonText}>
-            {isLoading ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+            {updateMutation.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

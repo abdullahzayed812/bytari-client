@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image } from "react-native";
-import React, { useState } from "react";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack } from "expo-router";
 import {
@@ -21,136 +21,103 @@ import {
 } from "lucide-react-native";
 
 import { useApp } from "../providers/AppProvider";
-import { usePermissions } from "../lib/permissions";
+import { trpc } from "../lib/trpc";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface Hospital {
-  id: string;
+  id: number;
   name: string;
   location: string;
+  province: string;
   phone: string;
-  rating: number;
-  image: string;
-  isMain?: boolean;
-  province?: string;
-  specialties: string[];
   workingHours: string;
   description: string;
+  specialties: string[];
+  image: string;
+  rating: number;
+  isMain: boolean;
+  status: string;
+  followersCount: number;
+  announcementsCount: number;
+}
+
+interface Announcement {
+  id: number;
+  hospitalId: number;
+  title: string;
+  content: string;
+  type: "news" | "announcement" | "event";
+  image?: string;
+  scheduledDate?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function VetHospitalsScreen() {
   const router = useRouter();
   const { isSuperAdmin, isAuthenticated, isModerator, moderatorPermissions } = useApp();
   const [showProvinceHospitals, setShowProvinceHospitals] = useState<boolean>(false);
-  const [followedHospitals, setFollowedHospitals] = useState<string[]>([]);
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [followedHospitals, setFollowedHospitals] = useState<number[]>([]);
 
-  // Mock data for hospitals
-  const mainHospital: Hospital = {
-    id: "main",
-    name: "المستشفى البيطري المركزي - بغداد",
-    location: "بغداد - الكرادة",
-    phone: "+964 770 123 4567",
-    rating: 4.8,
-    image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-    isMain: true,
-    specialties: ["جراحة", "طب داخلي", "أشعة", "مختبرات", "طوارئ"],
-    workingHours: "24 ساعة",
-    description: "المستشفى البيطري المركزي الرئيسي في العراق، يقدم خدمات طبية متكاملة للحيوانات",
-  };
+  // tRPC queries and mutations
+  const { data: mainHospitalData, isLoading: mainHospitalLoading } = useQuery(
+    trpc.hospitals.getMainHospital.queryOptions({})
+  );
+  const { data: provinceHospitalsData, isLoading: provinceHospitalsLoading } = useQuery(
+    trpc.hospitals.getAll.queryOptions({
+      isMain: false,
+      status: "active",
+      limit: 50,
+    })
+  );
+  const { data: followedHospitalsData, refetch: refetchFollowedHospitals } = useQuery(
+    trpc.hospitals.getFollowedHospitals.queryOptions(undefined, {
+      enabled: isAuthenticated,
+    })
+  );
+  const { data: latestAnnouncements, isLoading: announcementsLoading } = useQuery(
+    trpc.announcements.getLatest.queryOptions({
+      limit: 3,
+    })
+  );
 
-  const provinceHospitals: Hospital[] = [
-    {
-      id: "basra",
-      name: "مستشفى البصرة البيطري",
-      location: "البصرة - المركز",
-      phone: "+964 771 234 5678",
-      rating: 4.5,
-      image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-      province: "البصرة",
-      specialties: ["طب عام", "جراحة", "تطعيمات"],
-      workingHours: "8:00 ص - 8:00 م",
-      description: "مستشفى بيطري متخصص في محافظة البصرة",
-    },
-    {
-      id: "mosul",
-      name: "مستشفى الموصل البيطري",
-      location: "نينوى - الموصل",
-      phone: "+964 772 345 6789",
-      rating: 4.3,
-      image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-      province: "نينوى",
-      specialties: ["طب عام", "طوارئ", "تشخيص"],
-      workingHours: "7:00 ص - 7:00 م",
-      description: "مستشفى بيطري يخدم محافظة نينوى والمناطق المجاورة",
-    },
-    {
-      id: "erbil",
-      name: "مستشفى أربيل البيطري",
-      location: "أربيل - المركز",
-      phone: "+964 773 456 7890",
-      rating: 4.6,
-      image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-      province: "أربيل",
-      specialties: ["جراحة متقدمة", "طب داخلي", "أشعة"],
-      workingHours: "8:00 ص - 10:00 م",
-      description: "مستشفى بيطري حديث في إقليم كردستان",
-    },
-    {
-      id: "najaf",
-      name: "مستشفى النجف البيطري",
-      location: "النجف - المركز",
-      phone: "+964 774 567 8901",
-      rating: 4.4,
-      image: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-      province: "النجف",
-      specialties: ["طب عام", "تطعيمات", "فحوصات"],
-      workingHours: "8:00 ص - 6:00 م",
-      description: "مستشفى بيطري يخدم محافظة النجف الأشرف",
-    },
-  ];
+  const followMutation = useMutation(trpc.hospitals.follow.mutationOptions());
+  const unfollowMutation = useMutation(trpc.hospitals.unfollow.mutationOptions());
 
-  // Mock announcements data
-  // const announcements: Announcement[] = [
-  //   {
-  //     id: '1',
-  //     title: 'حملة تطعيم مجانية للحيوانات الأليفة',
-  //     content: 'تعلن المستشفيات البيطرية العراقية عن إطلاق حملة تطعيم مجانية لجميع الحيوانات الأليفة خلال شهر مارس',
-  //     date: '2024-03-01',
-  //     type: 'announcement',
-  //     hospitalId: 'main'
-  //   },
-  //   {
-  //     id: '2',
-  //     title: 'افتتاح قسم الجراحة المتقدمة',
-  //     content: 'تم افتتاح قسم جديد للجراحة المتقدمة مجهز بأحدث التقنيات الطبية',
-  //     date: '2024-02-28',
-  //     type: 'news',
-  //     hospitalId: 'main'
-  //   },
-  //   {
-  //     id: '3',
-  //     title: 'ورشة عمل حول الرعاية البيطرية',
-  //     content: 'ورشة عمل تدريبية للأطباء البيطريين حول أحدث طرق الرعاية والعلاج',
-  //     date: '2024-02-25',
-  //     type: 'event'
-  //   }
-  // ];
+  // Update followed hospitals list
+  useEffect(() => {
+    if (followedHospitalsData) {
+      setFollowedHospitals(followedHospitalsData.map((hospital) => hospital.id));
+    }
+  }, [followedHospitalsData]);
 
-  const handleFollowHospital = (hospitalId: string) => {
-    if (followedHospitals.includes(hospitalId)) {
-      setFollowedHospitals((prev) => prev.filter((id) => id !== hospitalId));
-      Alert.alert("تم", "تم إلغاء المتابعة بنجاح");
-    } else {
-      setFollowedHospitals((prev) => [...prev, hospitalId]);
-      Alert.alert("تم", "تم متابعة المستشفى بنجاح. ستصلك الإشعارات عند نشر أخبار جديدة.");
+  const handleFollowHospital = async (hospitalId: number) => {
+    if (!isAuthenticated) {
+      router.push("/auth");
+      return;
+    }
+
+    try {
+      if (followedHospitals.includes(hospitalId)) {
+        await unfollowMutation.mutateAsync({ hospitalId });
+        setFollowedHospitals((prev) => prev.filter((id) => id !== hospitalId));
+        Alert.alert("تم", "تم إلغاء المتابعة بنجاح");
+      } else {
+        await followMutation.mutateAsync({ hospitalId });
+        setFollowedHospitals((prev) => [...prev, hospitalId]);
+        Alert.alert("تم", "تم متابعة المستشفى بنجاح. ستصلك الإشعارات عند نشر أخبار جديدة.");
+      }
+      refetchFollowedHospitals();
+    } catch (error) {
+      Alert.alert("خطأ", "حدث خطأ أثناء عملية المتابعة");
     }
   };
 
-  const handleEditHospital = (hospitalId: string) => {
+  const handleEditHospital = (hospitalId: number) => {
     router.push(`/edit-hospital?id=${hospitalId}`);
   };
 
-  const handleAddAnnouncement = (hospitalId?: string) => {
+  const handleAddAnnouncement = (hospitalId?: number) => {
     router.push(`/add-hospital-announcement${hospitalId ? `?hospitalId=${hospitalId}` : ""}`);
   };
 
@@ -160,13 +127,15 @@ export default function VetHospitalsScreen() {
 
   const renderHospitalCard = (hospital: Hospital) => {
     const isFollowed = followedHospitals.includes(hospital.id);
-
-    // Check if current user can manage this specific hospital
     const canManageHospital = isSuperAdmin || isModerator;
 
     return (
       <View key={hospital.id} style={[styles.hospitalCard, hospital.isMain && styles.mainHospitalCard]}>
-        <Image source={{ uri: hospital.image }} style={styles.hospitalImage} />
+        <Image
+          source={{ uri: hospital.image || "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400" }}
+          style={styles.hospitalImage}
+          defaultSource={{ uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400" }}
+        />
 
         <View style={styles.hospitalInfo}>
           <View style={styles.hospitalHeader}>
@@ -197,14 +166,16 @@ export default function VetHospitalsScreen() {
 
             <View style={styles.detailRow}>
               <Star size={16} color="#F59E0B" />
-              <Text style={styles.detailText}>{hospital.rating} ⭐</Text>
+              <Text style={styles.detailText}>
+                {hospital.rating} ⭐ ({hospital.followersCount} متابع)
+              </Text>
             </View>
           </View>
 
           <Text style={styles.cardHospitalDescription}>{hospital.description}</Text>
 
           <View style={styles.specialtiesContainer}>
-            {hospital.specialties.map((specialty, index) => (
+            {hospital.specialties?.map((specialty, index) => (
               <View key={index} style={styles.specialtyBadge}>
                 <Text style={styles.specialtyText}>{specialty}</Text>
               </View>
@@ -215,6 +186,7 @@ export default function VetHospitalsScreen() {
             <TouchableOpacity
               style={[styles.cardFollowButton, isFollowed && styles.followedButton]}
               onPress={() => handleFollowHospital(hospital.id)}
+              disabled={followMutation.isPending || unfollowMutation.isPending}
             >
               <Heart size={16} color={isFollowed ? "#0EA5E9" : COLORS.white} fill={isFollowed ? "#0EA5E9" : "none"} />
               <Text style={[styles.cardFollowButtonText, isFollowed && styles.followedButtonText]}>
@@ -244,53 +216,58 @@ export default function VetHospitalsScreen() {
     );
   };
 
-  // const renderAnnouncement = (announcement: Announcement) => {
-  //   const getTypeColor = (type: string) => {
-  //     switch (type) {
-  //       case 'news': return '#0EA5E9';
-  //       case 'announcement': return '#10B981';
-  //       case 'event': return '#F59E0B';
-  //       default: return '#6B7280';
-  //     }
-  //   };
+  const renderAnnouncement = (announcement: Announcement & { hospital?: Hospital }) => {
+    const getTypeColor = (type: string) => {
+      switch (type) {
+        case "news":
+          return "#0EA5E9";
+        case "announcement":
+          return "#10B981";
+        case "event":
+          return "#F59E0B";
+        default:
+          return "#6B7280";
+      }
+    };
 
-  //   const getTypeText = (type: string) => {
-  //     switch (type) {
-  //       case 'news': return 'خبر';
-  //       case 'announcement': return 'إعلان';
-  //       case 'event': return 'فعالية';
-  //       default: return 'عام';
-  //     }
-  //   };
+    const getTypeText = (type: string) => {
+      switch (type) {
+        case "news":
+          return "خبر";
+        case "announcement":
+          return "إعلان";
+        case "event":
+          return "فعالية";
+        default:
+          return "عام";
+      }
+    };
 
-  //   return (
-  //     <View key={announcement.id} style={styles.announcementCard}>
-  //       <View style={styles.announcementHeader}>
-  //         <View style={[styles.typeBadge, { backgroundColor: getTypeColor(announcement.type) }]}>
-  //           <Text style={styles.typeBadgeText}>{getTypeText(announcement.type)}</Text>
-  //         </View>
-  //         <Text style={styles.announcementDate}>{announcement.date}</Text>
-  //       </View>
+    return (
+      <View key={announcement.id} style={styles.announcementCard}>
+        <View style={styles.announcementHeader}>
+          <View style={[styles.typeBadge, { backgroundColor: getTypeColor(announcement.type) }]}>
+            <Text style={styles.typeBadgeText}>{getTypeText(announcement.type)}</Text>
+          </View>
+          <Text style={styles.announcementDate}>{new Date(announcement.createdAt).toLocaleDateString("ar-SA")}</Text>
+        </View>
 
-  //       <Text style={styles.announcementTitle}>{announcement.title}</Text>
-  //       <Text style={styles.announcementContent}>{announcement.content}</Text>
+        <Text style={styles.announcementTitle}>{announcement.title}</Text>
+        <Text style={styles.announcementContent}>{announcement.content}</Text>
 
-  //       <TouchableOpacity style={styles.readMoreButton}>
-  //         <Eye size={16} color="#0EA5E9" />
-  //         <Text style={styles.readMoreText}>قراءة المزيد</Text>
-  //       </TouchableOpacity>
-  //     </View>
-  //   );
-  // };
-
-  const handleFollowPress = () => {
-    if (!isAuthenticated) {
-      router.push("/auth");
-      return;
-    }
-    setIsFollowing(!isFollowing);
-    Alert.alert("تم", isFollowing ? "تم إلغاء متابعة المستشفيات" : "تم متابعة المستشفيات بنجاح");
+        {announcement.hospital && <Text style={styles.hospitalNameText}>من: {announcement.hospital.name}</Text>}
+      </View>
+    );
   };
+
+  if (mainHospitalLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0EA5E9" />
+        <Text style={styles.loadingText}>جاري تحميل بيانات المستشفيات...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -301,7 +278,6 @@ export default function VetHospitalsScreen() {
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" },
           headerRight: () => {
-            // Only super admin or users with hospital management permissions can see these buttons
             const canManageHospitals =
               isSuperAdmin || (isModerator && moderatorPermissions?.sections?.includes("hospitals"));
 
@@ -337,8 +313,11 @@ export default function VetHospitalsScreen() {
             <View style={styles.hospitalInfoSection}>
               <View style={styles.logoContainer}>
                 <Image
-                  source={{ uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=200" }}
+                  source={{
+                    uri: mainHospitalData?.image || "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=200",
+                  }}
                   style={styles.hospitalLogo}
+                  defaultSource={{ uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=200" }}
                 />
               </View>
               <Text style={styles.hospitalTitle}>المستشفيات البيطرية العراقية</Text>
@@ -351,12 +330,16 @@ export default function VetHospitalsScreen() {
 
               {/* Follow Button */}
               <TouchableOpacity
-                style={[styles.mainFollowButton, isFollowing && styles.followingButton]}
-                onPress={handleFollowPress}
+                style={[
+                  styles.mainFollowButton,
+                  followedHospitals.includes(mainHospitalData?.id!) && styles.followingButton,
+                ]}
+                onPress={() => mainHospitalData && handleFollowHospital(mainHospitalData.id)}
                 activeOpacity={0.8}
+                disabled={followMutation.isPaused || unfollowMutation.isPaused}
               >
                 <View style={styles.followButtonContent}>
-                  {isFollowing ? (
+                  {followedHospitals.includes(mainHospitalData?.id!) ? (
                     <>
                       <Bell size={20} color={COLORS.white} />
                       <Text style={styles.mainFollowButtonText}>متابع</Text>
@@ -371,38 +354,34 @@ export default function VetHospitalsScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Hospital Announcements */}
+            {/* Latest Announcements */}
             <View style={styles.announcementsSection}>
               <View style={styles.announcementHeader}>
-                <Text style={styles.sectionTitle}>إعلانات المستشفيات</Text>
-                {(isSuperAdmin || isModerator) && (
+                <Text style={styles.sectionTitle}>آخر الإعلانات</Text>
+                {/* {(isSuperAdmin || isModerator) && (
                   <TouchableOpacity
-                    onPress={() => {
-                      router.push("/add-hospital-announcement?hospitalId=main");
-                    }}
+                    onPress={() => handleAddAnnouncement(mainHospitalData?.id)}
                     style={styles.addAnnouncementButton}
                   >
                     <Plus size={16} color={COLORS.white} />
                     <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
                   </TouchableOpacity>
-                )}
+                )} */}
               </View>
-              <View style={styles.announcementBox}>
-                <View style={styles.announcementIcon}>
-                  <Megaphone size={24} color="#0EA5E9" />
+
+              {announcementsLoading ? (
+                <ActivityIndicator size="small" color="#0EA5E9" />
+              ) : latestAnnouncements && latestAnnouncements.length > 0 ? (
+                latestAnnouncements.map((item) => renderAnnouncement(item.announcement))
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Megaphone size={32} color="#6B7280" />
+                  <Text style={styles.noDataText}>لا توجد إعلانات حالياً</Text>
                 </View>
-                <View style={styles.announcementContent}>
-                  <Text style={styles.announcementTitle}>إعلان مهم من المستشفى المركزي</Text>
-                  <Text style={styles.announcementText}>
-                    تعلن المستشفيات البيطرية العراقية عن إطلاق حملة تطعيم مجانية لجميع الحيوانات الأليفة خلال شهر مارس
-                    الحالي في جميع فروع المستشفيات بالمحافظات.
-                  </Text>
-                  <Text style={styles.announcementDate}>تاريخ النشر: 2024-03-01</Text>
-                </View>
-              </View>
+              )}
             </View>
 
-            {/* Services */}
+            {/* Services Section (Keep as static content) */}
             <View style={styles.servicesSection}>
               <Text style={styles.sectionTitle}>الخدمات</Text>
               <View style={styles.servicesGrid}>
@@ -443,10 +422,14 @@ export default function VetHospitalsScreen() {
             </View>
 
             {/* Main Hospital Card */}
-            <View style={styles.hospitalsSection}>
-              <Text style={styles.sectionTitle}>المستشفى البيطري المركزي</Text>
-              {renderHospitalCard(mainHospital)}
-            </View>
+            {mainHospitalData && (
+              <View style={styles.hospitalsSection}>
+                <Text style={styles.sectionTitle}>المستشفى البيطري المركزي</Text>
+                <TouchableOpacity onPress={() => handleHospitalPress(mainHospitalData)}>
+                  {renderHospitalCard(mainHospitalData)}
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Button to show province hospitals */}
             <View style={styles.branchesSection}>
@@ -465,7 +448,10 @@ export default function VetHospitalsScreen() {
                     تصفح جميع المستشفيات البيطرية في المحافظات العراقية المتخصصة في الرعاية البيطرية
                   </Text>
                   <View style={styles.branchesStats}>
-                    <Text style={styles.branchesStatsText}>18 محافظة • 25 مستشفى</Text>
+                    <Text style={styles.branchesStatsText}>
+                      {provinceHospitalsData?.totalCount || 0} مستشفى • {provinceHospitalsData?.hospitals.length || 0}{" "}
+                      محافظة
+                    </Text>
                   </View>
                 </View>
                 <ExternalLink size={20} color={COLORS.white} />
@@ -475,14 +461,22 @@ export default function VetHospitalsScreen() {
         ) : (
           // Province Hospitals View
           <>
-            {/* Province Hospitals */}
             <View style={styles.hospitalsSection}>
               <Text style={styles.sectionTitle}>مستشفيات المحافظات</Text>
-              {provinceHospitals.map((hospital) => (
-                <TouchableOpacity key={hospital.id} onPress={() => handleHospitalPress(hospital)}>
-                  {renderHospitalCard(hospital)}
-                </TouchableOpacity>
-              ))}
+              {provinceHospitalsLoading ? (
+                <ActivityIndicator size="large" color="#0EA5E9" />
+              ) : provinceHospitalsData?.hospitals && provinceHospitalsData?.hospitals?.length > 0 ? (
+                provinceHospitalsData?.hospitals?.map((hospital) => (
+                  <TouchableOpacity key={hospital.id} onPress={() => handleHospitalPress(hospital)}>
+                    {renderHospitalCard(hospital)}
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.noDataContainer}>
+                  <Building2 size={32} color="#6B7280" />
+                  <Text style={styles.noDataText}>لا توجد مستشفيات في المحافظات حالياً</Text>
+                </View>
+              )}
             </View>
           </>
         )}
@@ -492,6 +486,59 @@ export default function VetHospitalsScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.darkGray,
+    textAlign: "center",
+  },
+  noDataContainer: {
+    alignItems: "center",
+    padding: 32,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    marginVertical: 8,
+  },
+  noDataText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: COLORS.darkGray,
+    textAlign: "center",
+  },
+  announcementCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  hospitalNameText: {
+    fontSize: 12,
+    color: "#0EA5E9",
+    fontWeight: "600",
+    marginTop: 8,
+    textAlign: "right",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",

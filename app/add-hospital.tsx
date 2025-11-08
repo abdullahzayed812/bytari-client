@@ -1,60 +1,132 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
-import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { useRouter } from 'expo-router';
-import { ArrowRight, Save, MapPin, Phone, Clock, Building2 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from "expo-router";
+import { ArrowRight, Save, MapPin, Phone, Clock, Building2 } from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { trpc } from "../lib/trpc";
+import { useMutation } from "@tanstack/react-query";
 
 export default function AddHospitalScreen() {
-  const { isRTL } = useI18n();
   const router = useRouter();
+  const { t } = useI18n();
+
+  // tRPC mutation for creating hospital
+  const createHospitalMutation = useMutation(trpc.hospitals.create.mutationOptions());
+
   const [formData, setFormData] = useState({
-    name: '',
-    location: '',
-    phone: '',
-    workingHours: '',
-    description: '',
-    specialties: '',
-    province: ''
+    name: "مستشفى السلام الملكي",
+    location: "بغداد العراق",
+    phone: "07882288229",
+    workingHours: "24",
+    description: "مستشفى السلام الملكي اكبر مستشفى في الشرق الاوسط لعلاج الحيوانات الاليفة وغير الاليفة",
+    specialties: "متخصصة في العلاج بالاعشاب",
+    province: "بغداد",
+    image: "", // Optional image URL
+    isMain: false, // Default to false for new hospitals
   });
 
   const handleSave = () => {
     if (!formData.name || !formData.location || !formData.phone) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
+    Alert.alert("تأكيد الحفظ", "هل أنت متأكد من إضافة هذا المستشفى؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حفظ",
+        onPress: () => {
+          // Convert specialties string to array
+          const specialtiesArray = formData.specialties
+            .split(/[،,]/)
+            .map((spec) => spec.trim())
+            .filter((spec) => spec.length > 0);
+
+          // Call tRPC mutation
+          createHospitalMutation.mutate(
+            {
+              name: formData.name,
+              location: formData.location,
+              province: formData.province,
+              phone: formData.phone,
+              workingHours: formData.workingHours,
+              description: formData.description,
+              specialties: specialtiesArray,
+              image: formData.image || undefined,
+              isMain: formData.isMain,
+            },
+            {
+              onSuccess: () => {
+                Alert.alert("تم", "تم إضافة المستشفى بنجاح");
+                router.back();
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", error.message || "حدث خطأ أثناء إضافة المستشفى");
+              },
+            }
+          );
+        },
+      },
+    ]);
+  };
+
+  const handleSetAsMain = () => {
     Alert.alert(
-      'تأكيد الحفظ',
-      'هل أنت متأكد من إضافة هذا المستشفى؟',
+      "تعيين كمستشفى رئيسي",
+      "هل تريد تعيين هذا المستشفى كمستشفى رئيسي؟ هذا سيؤدي إلى إلغاء تعيين أي مستشفى رئيسي آخر.",
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: "إلغاء", style: "cancel" },
         {
-          text: 'حفظ',
+          text: "تأكيد",
           onPress: () => {
-            Alert.alert('تم', 'تم إضافة المستشفى بنجاح');
-            router.back();
-          }
-        }
+            setFormData((prev) => ({ ...prev, isMain: true }));
+          },
+        },
       ]
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowRight size={24} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>إضافة مستشفى جديد</Text>
-        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-          <Save size={24} color={COLORS.white} />
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={createHospitalMutation.isLoading}>
+          {createHospitalMutation.isLoading ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <Save size={24} color={COLORS.white} />
+          )}
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
+          {/* Main Hospital Toggle */}
+          <View style={styles.inputGroup}>
+            <TouchableOpacity
+              style={[styles.mainHospitalToggle, formData.isMain && styles.mainHospitalToggleActive]}
+              onPress={handleSetAsMain}
+            >
+              <Text style={[styles.mainHospitalToggleText, formData.isMain && styles.mainHospitalToggleTextActive]}>
+                {formData.isMain ? "✓ المستشفى الرئيسي" : "تعيين كمستشفى رئيسي"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>اسم المستشفى *</Text>
             <View style={styles.inputContainer}>
@@ -62,7 +134,7 @@ export default function AddHospitalScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
                 placeholder="أدخل اسم المستشفى"
                 placeholderTextColor={COLORS.lightGray}
                 textAlign="right"
@@ -77,7 +149,7 @@ export default function AddHospitalScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.location}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, location: text }))}
                 placeholder="أدخل موقع المستشفى"
                 placeholderTextColor={COLORS.lightGray}
                 textAlign="right"
@@ -92,7 +164,7 @@ export default function AddHospitalScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.province}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, province: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, province: text }))}
                 placeholder="أدخل اسم المحافظة"
                 placeholderTextColor={COLORS.lightGray}
                 textAlign="right"
@@ -107,7 +179,7 @@ export default function AddHospitalScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.phone}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, phone: text }))}
                 placeholder="أدخل رقم الهاتف"
                 placeholderTextColor={COLORS.lightGray}
                 textAlign="right"
@@ -123,7 +195,7 @@ export default function AddHospitalScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.workingHours}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, workingHours: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, workingHours: text }))}
                 placeholder="مثال: 8:00 ص - 8:00 م"
                 placeholderTextColor={COLORS.lightGray}
                 textAlign="right"
@@ -136,7 +208,7 @@ export default function AddHospitalScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.specialties}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, specialties: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, specialties: text }))}
               placeholder="أدخل التخصصات مفصولة بفاصلة (مثال: جراحة، طب داخلي، أشعة)"
               placeholderTextColor={COLORS.lightGray}
               textAlign="right"
@@ -150,7 +222,7 @@ export default function AddHospitalScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
               placeholder="أدخل وصف المستشفى"
               placeholderTextColor={COLORS.lightGray}
               textAlign="right"
@@ -158,7 +230,32 @@ export default function AddHospitalScreen() {
               numberOfLines={4}
             />
           </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>رابط الصورة (اختياري)</Text>
+            <TextInput
+              style={[styles.input, styles.textInput]}
+              value={formData.image}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, image: text }))}
+              placeholder="أدخل رابط صورة المستشفى"
+              placeholderTextColor={COLORS.lightGray}
+              textAlign="right"
+            />
+          </View>
         </View>
+
+        {/* Save Button at bottom
+        <TouchableOpacity
+          style={[styles.saveBottomButton, createHospitalMutation.isLoading && styles.saveButtonDisabled]}
+          onPress={handleSave}
+          disabled={createHospitalMutation.isLoading}
+        >
+          {createHospitalMutation.isLoading ? (
+            <ActivityIndicator size="small" color={COLORS.white} />
+          ) : (
+            <Text style={styles.saveBottomButtonText}>حفظ المستشفى</Text>
+          )}
+        </TouchableOpacity> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -167,13 +264,13 @@ export default function AddHospitalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#0EA5E9',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#0EA5E9",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -182,10 +279,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   saveButton: {
     padding: 8,
@@ -196,25 +293,26 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 20,
+    paddingBottom: 120,
   },
   inputGroup: {
     gap: 8,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -224,19 +322,76 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   textArea: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
+  },
+  textInput: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  mainHospitalToggle: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#E5E7EB",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  mainHospitalToggleActive: {
+    backgroundColor: "#0EA5E9",
+    borderColor: "#0EA5E9",
+  },
+  mainHospitalToggleText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.darkGray,
+  },
+  mainHospitalToggleTextActive: {
+    color: COLORS.white,
+  },
+  saveBottomButton: {
+    backgroundColor: "#0EA5E9",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  saveButtonDisabled: {
+    backgroundColor: "#9CA3AF",
+  },
+  saveBottomButtonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });

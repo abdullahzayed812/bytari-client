@@ -1,37 +1,39 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert, Image } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert, Image } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Send, Camera, X, Calendar, FileText, Megaphone } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import { Send, Camera, X, Calendar, FileText, Megaphone } from "lucide-react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
+import { trpc } from "../lib/trpc";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export default function AddHospitalAnnouncementScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
   const { hospitalId } = useLocalSearchParams();
-  
-  const [announcementData, setAnnouncementData] = useState({
-    title: '',
-    content: '',
-    type: 'announcement' as 'news' | 'announcement' | 'event',
-    image: null as string | null,
-    scheduledDate: '',
-  });
-  
-  const [isLoading, setIsLoading] = useState(false);
 
+  const { data: hospital } = useQuery(trpc.hospitals.getById.queryOptions({ id: Number(hospitalId) }));
+  const createAnnouncementMutation = useMutation(trpc.announcements.create.mutationOptions());
+  const [announcementData, setAnnouncementData] = useState({
+    title: "حملة تطعيم مجانية للحيوانات الأليفة",
+    content:
+      "تعلن المستشفيات البيطرية عن إطلاق حملة تطعيم مجانية لجميع الحيوانات الأليفة خلال الأسبوع القادم. يرجى حجز موعد مسبق.",
+    type: "announcement" as "news" | "announcement" | "event",
+    image: null as string | null,
+    scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // Three days from now
+  });
   const announcementTypes = [
-    { id: 'announcement', label: 'إعلان', color: '#10B981', icon: <Megaphone size={16} color={COLORS.white} /> },
-    { id: 'news', label: 'خبر', color: '#0EA5E9', icon: <FileText size={16} color={COLORS.white} /> },
-    { id: 'event', label: 'فعالية', color: '#F59E0B', icon: <Calendar size={16} color={COLORS.white} /> },
+    { id: "announcement", label: "إعلان", color: "#10B981", icon: <Megaphone size={16} color={COLORS.white} /> },
+    { id: "news", label: "خبر", color: "#0EA5E9", icon: <FileText size={16} color={COLORS.white} /> },
+    { id: "event", label: "فعالية", color: "#F59E0B", icon: <Calendar size={16} color={COLORS.white} /> },
   ];
 
   const handleImagePicker = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('خطأ', 'نحتاج إلى إذن للوصول إلى الصور');
+    if (status !== "granted") {
+      Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
       return;
     }
 
@@ -43,205 +45,201 @@ export default function AddHospitalAnnouncementScreen() {
     });
 
     if (!result.canceled) {
-      setAnnouncementData(prev => ({ ...prev, image: result.assets[0].uri }));
+      setAnnouncementData((prev) => ({ ...prev, image: result.assets[0].uri }));
     }
   };
 
   const removeImage = () => {
-    setAnnouncementData(prev => ({ ...prev, image: null }));
+    setAnnouncementData((prev) => ({ ...prev, image: null }));
   };
 
   const handlePublish = async () => {
     if (!announcementData.title.trim() || !announcementData.content.trim()) {
-      Alert.alert('خطأ', 'يرجى ملء العنوان والمحتوى');
+      Alert.alert("خطأ", "يرجى ملء العنوان والمحتوى");
       return;
     }
 
-    setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      Alert.alert('نجح', 'تم نشر الإعلان بنجاح', [
+      await createAnnouncementMutation.mutateAsync(
         {
-          text: 'موافق',
-          onPress: () => router.back()
+          ...announcementData,
+          hospitalId: Number(hospitalId),
+          scheduledDate: announcementData?.scheduledDate || undefined,
+          image: announcementData.image || undefined,
+        } as any,
+        {
+          onSuccess: () => {
+            Alert.alert("نجح", "تم نشر الإعلان بنجاح", [
+              {
+                text: "موافق",
+                onPress: () => router.back(),
+              },
+            ]);
+          },
+          onError: (error) => {
+            Alert.alert("خطأ", error.message || "حدث خطأ أثناء نشر الإعلان");
+          },
         }
-      ]);
+      );
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء نشر الإعلان');
-    } finally {
-      setIsLoading(false);
+      Alert.alert("خطأ", "حدث خطأ أثناء نشر الإعلان");
     }
-  };
-
-  const getHospitalName = () => {
-    if (hospitalId === 'main') return 'المستشفى البيطري المركزي';
-    if (hospitalId === 'basra') return 'مستشفى البصرة البيطري';
-    if (hospitalId === 'mosul') return 'مستشفى الموصل البيطري';
-    if (hospitalId === 'erbil') return 'مستشفى أربيل البيطري';
-    if (hospitalId === 'najaf') return 'مستشفى النجف البيطري';
-    return 'المستشفيات البيطرية العراقية';
   };
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'إضافة إعلان مستشفى',
+          title: "إضافة إعلان مستشفى",
           headerStyle: {
-            backgroundColor: '#0EA5E9',
+            backgroundColor: "#0EA5E9",
           },
-          headerTintColor: '#fff',
+          headerTintColor: "#fff",
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontWeight: "bold",
           },
-        }} 
+        }}
       />
-      <SafeAreaView style={styles.container} edges={['bottom']}>
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Hospital Info */}
-        <View style={styles.hospitalInfo}>
-          <Text style={styles.hospitalLabel}>نشر في:</Text>
-          <Text style={styles.hospitalName}>{getHospitalName()}</Text>
-        </View>
-
-        {/* Announcement Type */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>نوع الإعلان</Text>
-          <View style={styles.typeContainer}>
-            {announcementTypes.map((type) => (
-              <TouchableOpacity
-                key={type.id}
-                style={[
-                  styles.typeButton,
-                  { backgroundColor: announcementData.type === type.id ? type.color : '#F3F4F6' }
-                ]}
-                onPress={() => setAnnouncementData(prev => ({ ...prev, type: type.id as any }))}
-              >
-                {announcementData.type === type.id && type.icon}
-                <Text style={[
-                  styles.typeButtonText,
-                  { color: announcementData.type === type.id ? COLORS.white : COLORS.black }
-                ]}>
-                  {type.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          {/* Hospital Info */}
+          <View style={styles.hospitalInfo}>
+            <Text style={styles.hospitalLabel}>نشر في:</Text>
+            <Text style={styles.hospitalName}>{hospital?.name || "..."}</Text>
           </View>
-        </View>
 
-        {/* Title */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>العنوان *</Text>
-          <TextInput
-            style={styles.textInput}
-            value={announcementData.title}
-            onChangeText={(text) => setAnnouncementData(prev => ({ ...prev, title: text }))}
-            placeholder="أدخل عنوان الإعلان"
-            placeholderTextColor={COLORS.darkGray}
-            textAlign={isRTL ? 'right' : 'left'}
-          />
-        </View>
-
-        {/* Content */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>المحتوى *</Text>
-          <TextInput
-            style={[styles.textInput, styles.textArea]}
-            value={announcementData.content}
-            onChangeText={(text) => setAnnouncementData(prev => ({ ...prev, content: text }))}
-            placeholder="أدخل محتوى الإعلان..."
-            placeholderTextColor={COLORS.darkGray}
-            multiline
-            numberOfLines={6}
-            textAlign={isRTL ? 'right' : 'left'}
-            textAlignVertical="top"
-          />
-        </View>
-
-        {/* Image */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>صورة الإعلان (اختياري)</Text>
-          
-          {announcementData.image ? (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: announcementData.image }} style={styles.announcementImage} />
-              <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
-                <X size={16} color={COLORS.white} />
-              </TouchableOpacity>
+          {/* Announcement Type */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>نوع الإعلان</Text>
+            <View style={styles.typeContainer}>
+              {announcementTypes.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={[
+                    styles.typeButton,
+                    { backgroundColor: announcementData.type === type.id ? type.color : "#F3F4F6" },
+                  ]}
+                  onPress={() => setAnnouncementData((prev) => ({ ...prev, type: type.id as any }))}
+                >
+                  {announcementData.type === type.id && type.icon}
+                  <Text
+                    style={[
+                      styles.typeButtonText,
+                      { color: announcementData.type === type.id ? COLORS.white : COLORS.black },
+                    ]}
+                  >
+                    {type.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          ) : (
-            <TouchableOpacity style={styles.uploadButton} onPress={handleImagePicker}>
-              <Camera size={24} color="#0EA5E9" />
-              <Text style={styles.uploadButtonText}>اختر صورة</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+          </View>
 
-        {/* Scheduled Date */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>تاريخ النشر (اختياري)</Text>
-          <View style={styles.inputWithIcon}>
-            <Calendar size={20} color="#0EA5E9" />
+          {/* Title */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>العنوان *</Text>
             <TextInput
-              style={[styles.textInput, styles.textInputWithIcon]}
-              value={announcementData.scheduledDate}
-              onChangeText={(text) => setAnnouncementData(prev => ({ ...prev, scheduledDate: text }))}
-              placeholder="YYYY-MM-DD (اتركه فارغاً للنشر الفوري)"
+              style={styles.textInput}
+              value={announcementData.title}
+              onChangeText={(text) => setAnnouncementData((prev) => ({ ...prev, title: text }))}
+              placeholder="أدخل عنوان الإعلان"
               placeholderTextColor={COLORS.darkGray}
-              textAlign={isRTL ? 'right' : 'left'}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
-          <Text style={styles.helperText}>
-            اتركه فارغاً للنشر الفوري، أو أدخل تاريخ للنشر المجدول
-          </Text>
-        </View>
 
-        {/* Preview */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>معاينة الإعلان</Text>
-          <View style={styles.previewCard}>
-            <View style={styles.previewHeader}>
-              <View style={[
-                styles.previewTypeBadge, 
-                { backgroundColor: announcementTypes.find(t => t.id === announcementData.type)?.color || '#6B7280' }
-              ]}>
-                <Text style={styles.previewTypeBadgeText}>
-                  {announcementTypes.find(t => t.id === announcementData.type)?.label || 'عام'}
-                </Text>
+          {/* Content */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>المحتوى *</Text>
+            <TextInput
+              style={[styles.textInput, styles.textArea]}
+              value={announcementData.content}
+              onChangeText={(text) => setAnnouncementData((prev) => ({ ...prev, content: text }))}
+              placeholder="أدخل محتوى الإعلان..."
+              placeholderTextColor={COLORS.darkGray}
+              multiline
+              numberOfLines={6}
+              textAlign={isRTL ? "right" : "left"}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Image */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>صورة الإعلان (اختياري)</Text>
+
+            {announcementData.image ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: announcementData.image }} style={styles.announcementImage} />
+                <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                  <X size={16} color={COLORS.white} />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.previewDate}>
-                {announcementData.scheduledDate || new Date().toISOString().split('T')[0]}
-              </Text>
-            </View>
-            
-            <Text style={styles.previewTitle}>
-              {announcementData.title || 'عنوان الإعلان'}
-            </Text>
-            
-            <Text style={styles.previewContent}>
-              {announcementData.content || 'محتوى الإعلان سيظهر هنا...'}
-            </Text>
-            
-            {announcementData.image && (
-              <Image source={{ uri: announcementData.image }} style={styles.previewImage} />
+            ) : (
+              <TouchableOpacity style={styles.uploadButton} onPress={handleImagePicker}>
+                <Camera size={24} color="#0EA5E9" />
+                <Text style={styles.uploadButtonText}>اختر صورة</Text>
+              </TouchableOpacity>
             )}
           </View>
-        </View>
 
-        {/* Publish Button */}
-        <TouchableOpacity 
-          style={[styles.publishButtonLarge, isLoading && styles.publishButtonDisabled]}
-          onPress={handlePublish}
-          disabled={isLoading}
-        >
-          <Send size={20} color={COLORS.white} />
-          <Text style={styles.publishButtonText}>
-            {isLoading ? 'جاري النشر...' : 'نشر الإعلان'}
-          </Text>
-        </TouchableOpacity>
+          {/* Scheduled Date */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>تاريخ النشر (اختياري)</Text>
+            <View style={styles.inputWithIcon}>
+              <Calendar size={20} color="#0EA5E9" />
+              <TextInput
+                style={[styles.textInput, styles.textInputWithIcon]}
+                value={announcementData.scheduledDate}
+                onChangeText={(text) => setAnnouncementData((prev) => ({ ...prev, scheduledDate: text }))}
+                placeholder="YYYY-MM-DD (اتركه فارغاً للنشر الفوري)"
+                placeholderTextColor={COLORS.darkGray}
+                textAlign={isRTL ? "right" : "left"}
+              />
+            </View>
+            <Text style={styles.helperText}>اتركه فارغاً للنشر الفوري، أو أدخل تاريخ للنشر المجدول</Text>
+          </View>
+
+          {/* Preview */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>معاينة الإعلان</Text>
+            <View style={styles.previewCard}>
+              <View style={styles.previewHeader}>
+                <View
+                  style={[
+                    styles.previewTypeBadge,
+                    {
+                      backgroundColor:
+                        announcementTypes.find((t) => t.id === announcementData.type)?.color || "#6B7280",
+                    },
+                  ]}
+                >
+                  <Text style={styles.previewTypeBadgeText}>
+                    {announcementTypes.find((t) => t.id === announcementData.type)?.label || "عام"}
+                  </Text>
+                </View>
+                <Text style={styles.previewDate}>{announcementData.scheduledDate}</Text>
+              </View>
+
+              <Text style={styles.previewTitle}>{announcementData.title || "عنوان الإعلان"}</Text>
+
+              <Text style={styles.previewContent}>{announcementData.content || "محتوى الإعلان سيظهر هنا..."}</Text>
+
+              {announcementData.image && <Image source={{ uri: announcementData.image }} style={styles.previewImage} />}
+            </View>
+          </View>
+
+          {/* Publish Button */}
+          <TouchableOpacity
+            style={[styles.publishButtonLarge, createAnnouncementMutation.isPending && styles.publishButtonDisabled]}
+            onPress={handlePublish}
+            disabled={createAnnouncementMutation.isPending}
+          >
+            <Send size={20} color={COLORS.white} />
+            <Text style={styles.publishButtonText}>
+              {createAnnouncementMutation.isPending ? "جاري النشر..." : "نشر الإعلان"}
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </>
@@ -251,7 +249,7 @@ export default function AddHospitalAnnouncementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   publishButtonDisabled: {
     opacity: 0.6,
@@ -261,31 +259,31 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   hospitalInfo: {
-    backgroundColor: '#E0F2FE',
+    backgroundColor: "#E0F2FE",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#0EA5E9',
+    borderLeftColor: "#0EA5E9",
   },
   hospitalLabel: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   hospitalName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#0EA5E9',
-    textAlign: 'right',
+    fontWeight: "bold",
+    color: "#0EA5E9",
+    textAlign: "right",
   },
   section: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -293,20 +291,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   typeContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   typeButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -314,11 +312,11 @@ const styles = StyleSheet.create({
   },
   typeButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -327,13 +325,13 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 120,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: COLORS.white,
@@ -347,57 +345,57 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
-    borderColor: '#0EA5E9',
-    borderStyle: 'dashed',
+    borderColor: "#0EA5E9",
+    borderStyle: "dashed",
     borderRadius: 8,
     padding: 24,
     gap: 8,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   uploadButtonText: {
     fontSize: 14,
-    color: '#0EA5E9',
-    fontWeight: '600',
+    color: "#0EA5E9",
+    fontWeight: "600",
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   announcementImage: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   removeImageButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.9)',
+    backgroundColor: "rgba(239, 68, 68, 0.9)",
     borderRadius: 12,
     width: 24,
     height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   previewCard: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 8,
     padding: 12,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: "#F9FAFB",
   },
   previewHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   previewTypeBadge: {
@@ -408,7 +406,7 @@ const styles = StyleSheet.create({
   previewTypeBadgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   previewDate: {
     fontSize: 12,
@@ -416,29 +414,29 @@ const styles = StyleSheet.create({
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   previewContent: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    textAlign: 'right',
+    textAlign: "right",
   },
   previewImage: {
-    width: '100%',
+    width: "100%",
     height: 120,
     borderRadius: 6,
     marginTop: 8,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   publishButtonLarge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0EA5E9',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0EA5E9",
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 8,
@@ -448,6 +446,6 @@ const styles = StyleSheet.create({
   publishButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

@@ -28,28 +28,28 @@ export default function ManageHospitalAnnouncementsScreen() {
   const currentHospitalId = (hospitalId as string) || "1";
 
   // التحقق من صلاحيات إدارة الإعلانات
-  useEffect(() => {
-    const checkPermissions = () => {
-      // التحقق من إمكانية الوصول للمستشفى
-      if (!permissions.canAccessHospital(currentHospitalId)) {
-        setCanManage(false);
-        setAccessDeniedReason("ليس لديك صلاحية للوصول إلى هذا المستشفى");
-        return;
-      }
+  // useEffect(() => {
+  //   const checkPermissions = () => {
+  //     // التحقق من إمكانية الوصول للمستشفى
+  //     if (!permissions.canAccessHospital(currentHospitalId)) {
+  //       setCanManage(false);
+  //       setAccessDeniedReason("ليس لديك صلاحية للوصول إلى هذا المستشفى");
+  //       return;
+  //     }
 
-      // التحقق من صلاحية إدارة الإعلانات
-      const validation = validateHospitalOperation("hospital_manage_announcements", currentHospitalId);
-      if (!validation.allowed) {
-        setCanManage(false);
-        setAccessDeniedReason(validation.reason || "ليس لديك صلاحية لإدارة إعلانات هذا المستشفى");
-        return;
-      }
+  //     // التحقق من صلاحية إدارة الإعلانات
+  //     const validation = validateHospitalOperation("hospital_manage_announcements", currentHospitalId);
+  //     if (!validation.allowed) {
+  //       setCanManage(false);
+  //       setAccessDeniedReason(validation.reason || "ليس لديك صلاحية لإدارة إعلانات هذا المستشفى");
+  //       return;
+  //     }
 
-      setCanManage(true);
-    };
+  //     setCanManage(true);
+  //   };
 
-    checkPermissions();
-  }, [permissions, currentHospitalId]);
+  //   checkPermissions();
+  // }, [permissions, currentHospitalId]);
 
   // Mock announcements data
   const announcements: Announcement[] = [
