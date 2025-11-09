@@ -15,7 +15,7 @@ import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import {
   ArrowLeft,
@@ -38,7 +38,6 @@ import * as DocumentPicker from "expo-document-picker";
 
 // Interface for content items
 type ContentItem = {
-  // Existing fields (keep these)
   id?: number;
   title: string;
   author?: string;
@@ -52,6 +51,14 @@ type ContentItem = {
   createdAt?: string;
   updatedAt?: string;
   fileType?: string;
+  publishDate?: string;
+  coverImage?: string;
+  isbn?: string;
+  publisher?: string;
+  publishYear?: string;
+  pages?: string;
+  language?: string;
+  issueNumber?: string;
 
   // 👇 Added course-related fields
   organizer?: string; // اسم المنظم
@@ -138,6 +145,8 @@ const normalizeContentItem = (item: any, contentType: string): ContentItem => {
     normalized.fileUrl = item.filePath;
   } else if (item.videoUrl) {
     normalized.fileUrl = item.videoUrl;
+  } else if (item.pdfUrl) {
+    normalized.fileUrl = item.pdfUrl;
   }
 
   if (item.fileName) {
@@ -151,6 +160,35 @@ const normalizeContentItem = (item: any, contentType: string): ContentItem => {
   // Add timestamps for display
   normalized.createdAt = item.createdAt;
   normalized.updatedAt = item.updatedAt;
+
+  // ⭐ CRITICAL FIX: Parse tags from JSON string to array
+  if (item.tags) {
+    try {
+      normalized.tags = typeof item.tags === "string" ? JSON.parse(item.tags) : item.tags;
+    } catch (e) {
+      normalized.tags = [];
+    }
+  }
+
+  // ⭐ Handle book-specific fields that might be null
+  if (contentType === "books") {
+    normalized.isbn = item.isbn || "";
+    normalized.publisher = item.publisher || "";
+    normalized.publishYear = item.publishYear || undefined;
+    normalized.pages = item.pages || undefined;
+    normalized.language = item.language || "ar";
+  }
+
+  // ⭐ Handle magazine-specific fields
+  if (contentType === "articles") {
+    normalized.issueNumber = item.issueNumber?.toString() || "";
+    // Keep publishDate as string for the form, backend will convert it
+    normalized.publishDate = item.publishDate
+      ? typeof item.publishDate === "string"
+        ? item.publishDate
+        : item.publishDate.toISOString().split("T")[0]
+      : "";
+  }
 
   return normalized;
 };
@@ -168,7 +206,6 @@ export default function AdminContentManagerScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [formData, setFormData] = useState<Partial<ContentItem>>({
-    // Existing fields
     id: 1,
     title: "دورة متقدمة في جراحة الحيوانات الصغيرة",
     author: "د. محمد عبدالله",
@@ -182,6 +219,7 @@ export default function AdminContentManagerScreen() {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     fileType: "pdf",
+    coverImage: "sss",
 
     // Course-related fields
     organizer: "الجمعية البيطرية السعودية",
@@ -199,6 +237,8 @@ export default function AdminContentManagerScreen() {
     tags: ["جراحة", "حيوانات صغيرة", "بيطرة", "تطوير مهني"],
   });
 
+  const adminId = useMemo(() => user?.id, [user]);
+
   // Optimized queries with proper enabled flags
   const magazinesQuery = useQuery({
     ...trpc.content.listMagazineArticles.queryOptions(),
@@ -206,7 +246,7 @@ export default function AdminContentManagerScreen() {
   });
 
   const adsQuery = useQuery({
-    ...trpc.admin.ads.getAll.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
+    ...trpc.admin.ads.getAll.queryOptions({ adminId }),
     enabled: contentType === "ads" && !!user?.id,
   });
 
@@ -240,27 +280,42 @@ export default function AdminContentManagerScreen() {
     enabled: contentType === "pets",
   });
 
-  // Mutations
+  // Updated mutations with proper query invalidation
   const mutations = {
+    // Articles
     createMagazine: useMutation(trpc.admin.content.createMagazine.mutationOptions()),
     updateMagazine: useMutation(trpc.admin.content.updateMagazine.mutationOptions()),
-    deleteMagazine: useMutation(trpc.content.deleteArticle.mutationOptions()),
+    deleteMagazine: useMutation(trpc.admin.content.deleteMagazine.mutationOptions()),
+
+    // Ads
     createAd: useMutation(trpc.admin.ads.create.mutationOptions()),
     updateAd: useMutation(trpc.admin.ads.update.mutationOptions()),
     deleteAd: useMutation(trpc.admin.ads.delete.mutationOptions()),
+
+    // Courses
     createCourse: useMutation(trpc.admin.courses.create.mutationOptions()),
     updateCourse: useMutation(trpc.admin.courses.update.mutationOptions()),
     deleteCourse: useMutation(trpc.admin.courses.delete.mutationOptions()),
+
+    // Clinics
     createClinic: useMutation(trpc.clinics.create.mutationOptions()),
     updateClinicActivation: useMutation(trpc.clinics.updateActivation.mutationOptions()),
+
+    // Stores
     createStore: useMutation(trpc.stores.create.mutationOptions()),
     updateStoreHomeVisibility: useMutation(trpc.admin.content.updateStoreHomeVisibility.mutationOptions()),
+
+    // Books
     createBook: useMutation(trpc.admin.content.createBook.mutationOptions()),
     updateBook: useMutation(trpc.admin.content.updateBook.mutationOptions()),
     deleteBook: useMutation(trpc.admin.content.deleteBook.mutationOptions()),
+
+    // Tips
     createTip: useMutation(trpc.admin.content.createTip.mutationOptions()),
     updateTip: useMutation(trpc.admin.content.updateTip.mutationOptions()),
     deleteTip: useMutation(trpc.content.deleteTip.mutationOptions()),
+
+    // Pets
     createPet: useMutation(trpc.pets.create.mutationOptions()),
     updatePet: useMutation(trpc.admin.pets.updateProfile.mutationOptions()),
     deletePet: useMutation(trpc.admin.pets.delete.mutationOptions()),
@@ -420,17 +475,42 @@ export default function AdminContentManagerScreen() {
     setIsModalVisible(true);
   }, []);
 
-  const handleEdit = useCallback((item: ContentItem) => {
-    setEditingItem(item);
-    setFormData(item);
-    setSelectedImage(item.image || null);
-    setSelectedFile(
-      item.fileUrl
-        ? { uri: item.fileUrl, name: item.fileName || "file", type: item.fileType || "application/pdf" }
-        : null
-    );
-    setIsModalVisible(true);
-  }, []);
+  const handleEdit = useCallback(
+    (item: ContentItem) => {
+      console.log("Editing item:", item);
+
+      // ⭐ Normalize the item first to ensure proper data structure
+      const normalizedItem = normalizeContentItem(item, contentType);
+
+      setEditingItem(normalizedItem);
+
+      // ⭐ Prepare form data with proper parsing
+      const preparedFormData: Partial<ContentItem> = {
+        ...normalizedItem,
+        // Ensure tags is an array
+        tags: normalizedItem.tags || [],
+        // Ensure optional fields have proper defaults
+        isbn: normalizedItem.isbn || "",
+        publisher: normalizedItem.publisher || "",
+        publishYear: normalizedItem.publishYear || undefined,
+        pages: normalizedItem.pages || undefined,
+      };
+
+      setFormData(preparedFormData);
+      setSelectedImage(normalizedItem.image || null);
+      setSelectedFile(
+        normalizedItem.fileUrl
+          ? {
+              uri: normalizedItem.fileUrl,
+              name: normalizedItem.fileName || "file",
+              type: normalizedItem.fileType || "application/pdf",
+            }
+          : null
+      );
+      setIsModalVisible(true);
+    },
+    [contentType]
+  );
 
   const handleDelete = useCallback(
     (item: ContentItem) => {
@@ -449,16 +529,18 @@ export default function AdminContentManagerScreen() {
           onPress: () => {
             const deleteParams =
               contentType === "clinics"
-                ? { clinicId: item.id, isActive: false }
+                ? { adminId: adminId, clinicId: item.id, isActive: false }
                 : contentType === "stores"
-                ? { storeId: item.id, showOnVetHome: false }
+                ? { adminId: adminId, storeId: item.id, showOnVetHome: false }
+                : contentType === "articles"
+                ? { adminId: adminId, magazineId: item.id }
                 : contentType === "books"
-                ? { bookId: item.id }
+                ? { adminId: adminId, bookId: item.id }
                 : contentType === "tips"
-                ? { tipId: item.id }
+                ? { adminId: adminId, tipId: item.id }
                 : contentType === "pets"
-                ? { petId: item.id }
-                : { id: item.id };
+                ? { adminId: adminId, petId: item.id }
+                : { adminId: adminId, id: item.id };
 
             const mutationKey =
               contentType === "articles"
@@ -537,14 +619,18 @@ export default function AdminContentManagerScreen() {
       }
     }
 
+    console.log("------------------", formData.publishDate);
+
     const saveParams =
       contentType === "books"
-        ? { ...formData, bookId: editingItem?.id }
+        ? { ...formData, adminId, bookId: Number(editingItem?.id) }
         : contentType === "tips"
-        ? { ...formData, tipId: editingItem?.id }
+        ? { ...formData, adminId, tipId: Number(editingItem?.id) }
         : contentType === "pets"
-        ? { ...formData, petId: editingItem?.id }
-        : { ...formData, id: editingItem?.id };
+        ? { ...formData, adminId, petId: Number(editingItem?.id) }
+        : contentType === "articles"
+        ? { ...formData, adminId, magazineId: Number(editingItem?.id) }
+        : { ...formData, adminId, id: Number(editingItem?.id) };
 
     if (editingItem) {
       if (contentType === "clinics" || contentType === "stores") {
@@ -568,7 +654,7 @@ export default function AdminContentManagerScreen() {
           : null;
 
       if (updateKey && mutations[updateKey]) {
-        mutations[updateKey].mutate(saveParams, {
+        mutations[updateKey].mutate(saveParams as any, {
           onSuccess: () => {
             Alert.alert("تم", `تم تحديث ${getContentTypeTitle(contentType).slice(0, -1)} بنجاح`);
             setIsModalVisible(false);

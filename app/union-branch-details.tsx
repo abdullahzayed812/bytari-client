@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react';
 import { COLORS } from "../constants/colors";
-
 import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Building2, MapPin, Phone, Mail, Users, Star, Edit3, Plus, Calendar, MessageSquare, ExternalLink, Bell, BellOff, Link } from 'lucide-react-native';
+import { trpc } from '../lib/trpc';
+import { useQuery } from '@tanstack/react-query';
 
 interface UnionBranch {
   id: string;
@@ -45,317 +46,7 @@ export default function UnionBranchDetailsScreen() {
   const { id } = useLocalSearchParams();
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
-  // Mock data - in real app, fetch based on id
-  const getBranchData = (branchId: string): UnionBranch => {
-    const branches: { [key: string]: UnionBranch } = {
-      '1': {
-        id: '1',
-        name: 'نقابة الأطباء البيطريين - بغداد',
-        governorate: 'بغداد',
-        region: 'central',
-        address: 'الكرادة الشرقية - شارع أبو نواس - مجمع النقابات المهنية - الطابق الثالث',
-        phone: '+964 780 123 4567',
-        email: 'baghdad@iraqvetunion.org',
-        president: 'د. محمد جاسم العبيدي',
-        membersCount: 1850,
-        isFollowing: true,
-        rating: 4.9,
-        description: 'نقابة الأطباء البيطريين في بغداد هي النقابة الرئيسية والأكبر في العراق، تأسست عام 1959 وتضم أكثر من 1850 طبيب بيطري. تقود النقابة جهود تطوير مهنة الطب البيطري في العراق وتعمل على حماية حقوق الأطباء البيطريين وتقديم أفضل الخدمات للمجتمع.',
-        establishedYear: 1959,
-        services: [
-          'تسجيل وترخيص الأطباء البيطريين',
-          'برامج التطوير المهني والتدريب المستمر',
-          'الاستشارات القانونية والمهنية',
-          'برامج التأمين الصحي والاجتماعي',
-          'تنظيم المؤتمرات والندوات العلمية',
-          'البحوث والدراسات البيطرية',
-          'برامج التعاون الدولي',
-          'مراقبة جودة الخدمات البيطرية'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'اجتماع الجمعية العمومية السنوي 2025',
-            content: 'يسر نقابة الأطباء البيطريين في بغداد دعوة جميع الأعضاء لحضور اجتماع الجمعية العمومية السنوي المقرر عقده يوم الخميس الموافق 30/1/2025 في قاعة المؤتمرات بمقر النقابة. سيتم مناقشة التقرير السنوي والخطط المستقبلية.',
-            date: '2025-01-15',
-            type: 'meeting',
-            isImportant: true,
-            image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400',
-            link: 'https://baghdadvetunion.org/meeting-2025',
-            linkText: 'رابط التسجيل للاجتماع',
-            author: 'إدارة النقابة',
-            views: 245
-          },
-          {
-            id: '2',
-            title: 'مؤتمر الطب البيطري الدولي 2025',
-            content: 'تنظم النقابة مؤتمرها الدولي السنوي للطب البيطري بمشاركة خبراء من العراق والعالم. التسجيل مفتوح لجميع الأطباء البيطريين.',
-            date: '2025-01-10',
-            type: 'event',
-            isImportant: true,
-            image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400',
-            link: 'https://vetconference2025.org',
-            linkText: 'موقع المؤتمر والتسجيل',
-            author: 'لجنة المؤتمرات',
-            views: 189
-          },
-          {
-            id: '3',
-            title: 'برنامج التدريب المتقدم في جراحة الحيوانات',
-            content: 'يبدأ برنامج التدريب المتقدم في جراحة الحيوانات الأليفة بالتعاون مع جامعة بغداد. البرنامج يشمل تدريب عملي ونظري.',
-            date: '2025-01-08',
-            type: 'event',
-            isImportant: false,
-            author: 'قسم التدريب',
-            views: 156
-          }
-        ]
-      },
-      '2': {
-        id: '2',
-        name: 'نقابة الأطباء البيطريين - البصرة',
-        governorate: 'البصرة',
-        region: 'southern',
-        address: 'العشار - شارع الكورنيش - مبنى النقابات المهنية - الطابق الثاني',
-        phone: '+964 770 234 5678',
-        email: 'basra@iraqvetunion.org',
-        president: 'د. سارة أحمد الجبوري',
-        membersCount: 680,
-        isFollowing: false,
-        rating: 4.7,
-        description: 'نقابة الأطباء البيطريين في البصرة تخدم محافظة البصرة والمناطق الجنوبية، تأسست عام 1968 وتضم 680 طبيب بيطري. تركز على تطوير الثروة الحيوانية والسمكية في المنطقة وتعتبر من أهم النقابات في الجنوب.',
-        establishedYear: 1968,
-        services: [
-          'تسجيل وترخيص الأطباء البيطريين',
-          'الإشراف على المسالخ ومعامل اللحوم',
-          'مراقبة وتطوير الثروة السمكية',
-          'برامج التدريب المتخصص',
-          'الاستشارات البيطرية والفنية',
-          'مراقبة صحة الحيوانات المستوردة'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'مؤتمر الثروة السمكية 2025',
-            content: 'تنظم النقابة مؤتمرها السنوي حول تطوير الثروة السمكية في العراق بمشاركة خبراء محليين ودوليين.',
-            date: '2025-01-20',
-            type: 'event',
-            isImportant: true
-          },
-          {
-            id: '2',
-            title: 'برنامج تدريبي في أمراض الأسماك',
-            content: 'يبدأ برنامج تدريبي متخصص في تشخيص وعلاج أمراض الأسماك بالتعاون مع جامعة البصرة.',
-            date: '2025-01-12',
-            type: 'event',
-            isImportant: false
-          }
-        ]
-      },
-      '3': {
-        id: '3',
-        name: 'نقابة الأطباء البيطريين - أربيل',
-        governorate: 'أربيل',
-        region: 'kurdistan',
-        address: 'منطقة عنكاوا - شارع الجامعة - مجمع النقابات',
-        phone: '+964 66 789 0123',
-        email: 'erbil@iraqvetunion.org',
-        president: 'د. كاوه أحمد محمد',
-        membersCount: 320,
-        isFollowing: false,
-        rating: 4.7,
-        description: 'نقابة الأطباء البيطريين في أربيل تخدم إقليم كردستان العراق، تأسست عام 1995 وتضم 320 طبيب بيطري. تعمل على تطوير الخدمات البيطرية في الإقليم.',
-        establishedYear: 1995,
-        services: [
-          'تسجيل الأطباء البيطريين',
-          'إصدار التراخيص المهنية',
-          'التدريب والتأهيل',
-          'مراقبة الصحة الحيوانية',
-          'الاستشارات الفنية',
-          'التعاون الدولي'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'مؤتمر الطب البيطري الكردستاني',
-            content: 'يسر النقابة دعوتكم لحضور المؤتمر السنوي للطب البيطري في إقليم كردستان بمشاركة خبراء من تركيا وإيران.',
-            date: '2024-12-15',
-            type: 'event',
-            isImportant: true
-          }
-        ]
-      },
-      '4': {
-        id: '4',
-        name: 'نقابة الأطباء البيطريين - الموصل',
-        governorate: 'نينوى',
-        region: 'northern',
-        address: 'الجانب الأيمن - حي الزهراء - مجمع النقابات المهنية',
-        phone: '+964 60 456 7890',
-        email: 'mosul@iraqvetunion.org',
-        president: 'د. عمر يوسف الحديدي',
-        membersCount: 280,
-        isFollowing: false,
-        rating: 4.4,
-        description: 'نقابة الأطباء البيطريين في الموصل تخدم محافظة نينوى والمناطق الشمالية، تأسست عام 1978 وتم إعادة تأهيلها عام 2018. تعمل على إعادة بناء الخدمات البيطرية في المحافظة.',
-        establishedYear: 1978,
-        services: [
-          'تسجيل الأطباء البيطريين',
-          'إصدار التراخيص',
-          'إعادة التأهيل المهني',
-          'مراقبة الثروة الحيوانية',
-          'التدريب التخصصي',
-          'الدعم الفني'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'برنامج إعادة التأهيل المهني',
-            content: 'تعلن النقابة عن بدء برنامج إعادة التأهيل المهني للأطباء البيطريين بالتعاون مع منظمات دولية لتطوير القدرات المهنية.',
-            date: '2024-12-08',
-            type: 'general',
-            isImportant: true
-          }
-        ]
-      },
-      '5': {
-        id: '5',
-        name: 'نقابة الأطباء البيطريين - النجف',
-        governorate: 'النجف',
-        region: 'central',
-        address: 'حي الأمير - شارع الكوفة - مبنى النقابات',
-        phone: '+964 33 234 5678',
-        email: 'najaf@iraqvetunion.org',
-        president: 'د. علي حسين الموسوي',
-        membersCount: 180,
-        isFollowing: false,
-        rating: 4.5,
-        description: 'نقابة الأطباء البيطريين في النجف تخدم محافظة النجف الأشرف، تأسست عام 1985 وتضم 180 طبيب بيطري. تركز على خدمة المجتمع المحلي والحجاج.',
-        establishedYear: 1985,
-        services: [
-          'تسجيل الأطباء البيطريين',
-          'إصدار التراخيص',
-          'الخدمات البيطرية للحجاج',
-          'مراقبة الأغذية',
-          'التدريب المهني',
-          'الاستشارات البيطرية'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'خدمات بيطرية خاصة لموسم الحج',
-            content: 'تعلن النقابة عن تفعيل الخدمات البيطرية الخاصة لموسم زيارة الأربعين لضمان سلامة الأغذية والصحة العامة.',
-            date: '2024-12-05',
-            type: 'general',
-            isImportant: false
-          }
-        ]
-      },
-      '6': {
-        id: '6',
-        name: 'نقابة الأطباء البيطريين - كربلاء',
-        governorate: 'كربلاء',
-        region: 'central',
-        address: 'حي الحسين - شارع الإمام علي - مجمع النقابات',
-        phone: '+964 32 345 6789',
-        email: 'karbala@iraqvetunion.org',
-        president: 'د. محمد جواد الكربلائي',
-        membersCount: 150,
-        isFollowing: false,
-        rating: 4.6,
-        description: 'نقابة الأطباء البيطريين في كربلاء المقدسة تخدم محافظة كربلاء، تأسست عام 1988 وتضم 150 طبيب بيطري. تقدم خدمات متميزة للزوار والمجتمع المحلي.',
-        establishedYear: 1988,
-        services: [
-          'تسجيل الأطباء البيطريين',
-          'إصدار التراخيص',
-          'خدمات الزوار والحجاج',
-          'مراقبة سلامة الأغذية',
-          'التدريب المتخصص',
-          'الاستشارات البيطرية'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'استعدادات خاصة لزيارة الأربعين',
-            content: 'تستعد النقابة لتقديم خدمات بيطرية متميزة خلال زيارة الأربعين من خلال فرق متخصصة لمراقبة سلامة الأغذية.',
-            date: '2024-12-07',
-            type: 'event',
-            isImportant: true
-          }
-        ]
-      },
-      '8': {
-        id: '8',
-        name: 'نقابة الأطباء البيطريين - دهوك',
-        governorate: 'دهوك',
-        region: 'kurdistan',
-        address: 'مركز المدينة - شارع زاخو - مبنى النقابات المهنية',
-        phone: '+964 62 567 8901',
-        email: 'duhok@iraqvetunion.org',
-        president: 'د. شيرين أحمد حسن',
-        membersCount: 120,
-        isFollowing: false,
-        rating: 4.3,
-        description: 'نقابة الأطباء البيطريين في دهوك تخدم محافظة دهوك في إقليم كردستان، تأسست عام 2000 وتضم 120 طبيب بيطري. تركز على الخدمات الحدودية والتعاون الإقليمي.',
-        establishedYear: 2000,
-        services: [
-          'تسجيل الأطباء البيطريين',
-          'إصدار التراخيص',
-          'الخدمات الحدودية',
-          'مراقبة الاستيراد والتصدير',
-          'التدريب المهني',
-          'التعاون الإقليمي'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'ورشة عمل حول الحجر البيطري',
-            content: 'تنظم النقابة ورشة عمل متخصصة حول إجراءات الحجر البيطري للحيوانات المستوردة بالتعاون مع السلطات الحدودية.',
-            date: '2024-12-09',
-            type: 'event',
-            isImportant: false
-          }
-        ]
-      },
-      '7': {
-        id: '7',
-        name: 'نقابة الأطباء البيطريين - السليمانية',
-        governorate: 'السليمانية',
-        region: 'kurdistan',
-        address: 'حي سالم - شارع الجامعة - مجمع النقابات المهنية',
-        phone: '+964 53 678 9012',
-        email: 'sulaymaniyah@iraqvetunion.org',
-        president: 'د. رزان عمر قادر',
-        membersCount: 200,
-        isFollowing: false,
-        rating: 4.5,
-        description: 'نقابة الأطباء البيطريين في السليمانية تخدم محافظة السليمانية، تأسست عام 1998 وتضم 200 طبيب بيطري. تتميز بالتعاون الأكاديمي والبحث العلمي.',
-        establishedYear: 1998,
-        services: [
-          'تسجيل الأطباء البيطريين',
-          'إصدار التراخيص المهنية',
-          'البحث العلمي',
-          'التعاون الأكاديمي',
-          'التدريب المتقدم',
-          'الاستشارات التخصصية'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'مشروع بحثي مشترك مع الجامعة',
-            content: 'تعلن النقابة عن بدء مشروع بحثي مشترك مع جامعة السليمانية حول أمراض الحيوانات المحلية وطرق الوقاية منها.',
-            date: '2024-12-06',
-            type: 'general',
-            isImportant: false
-          }
-        ]
-      }
-    };
-    
-    return branches[branchId as string] || branches['1'];
-  };
-  
-  const branch = getBranchData(id as string);
+  const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
 
   const handleFollowToggle = async () => {
     const newFollowingState = !isFollowing;
@@ -425,6 +116,22 @@ export default function UnionBranchDetailsScreen() {
     
     return stars;
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error || !branch) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

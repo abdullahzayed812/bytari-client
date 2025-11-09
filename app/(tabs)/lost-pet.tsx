@@ -1,42 +1,20 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  ScrollView,
-  Linking,
-  Alert,
-  TouchableOpacity,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View, Image, ScrollView, Linking, Alert, TouchableOpacity } from "react-native";
 import { COLORS } from "../../constants/colors";
-import { useI18n } from "../../providers/I18nProvider";
 import { useLocalSearchParams } from "expo-router";
-import Button from "../../components/Button";
-import {
-  Calendar,
-  MapPin,
-  Phone,
-  Mail,
-  AlertTriangle,
-} from "lucide-react-native";
-import { LostPet } from "../../types";
-import { mockLostPets } from "../../mocks/data";
+import { MapPin, Phone, Mail, AlertTriangle } from "lucide-react-native";
+import { trpc } from "../../lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 export default function LostPetScreen() {
-  const { t } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  const [pet, setPet] = useState<LostPet | null>(null);
+  const { data, isLoading, error } = useQuery(
+    trpc.pets.getLostPetDetails.queryOptions({
+      id: parseInt(id || "0"),
+    })
+  );
 
-  useEffect(() => {
-    if (id) {
-      const foundPet = mockLostPets.find((p) => p.id === id);
-      if (foundPet) {
-        setPet(foundPet);
-      }
-    }
-  }, [id]);
+  const pet = data?.pet;
 
   const handleCall = () => {
     if (pet && pet.contactInfo.phone) {
@@ -51,17 +29,21 @@ export default function LostPetScreen() {
   };
 
   const handleReportSighting = () => {
-    Alert.alert(
-      "الإبلاغ عن مشاهدة",
-      "هل شاهدت هذا الحيوان؟ سيتم التواصل مع صاحبه.",
-      [
-        { text: "إلغاء", style: "cancel" },
-        { text: "نعم، أبلغ", onPress: () => console.log("Report sighting") },
-      ]
-    );
+    Alert.alert("الإبلاغ عن مشاهدة", "هل شاهدت هذا الحيوان؟ سيتم التواصل مع صاحبه.", [
+      { text: "إلغاء", style: "cancel" },
+      { text: "نعم، أبلغ", onPress: () => console.log("Report sighting") },
+    ]);
   };
 
-  if (!pet) {
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>جاري التحميل...</Text>
+      </View>
+    );
+  }
+
+  if (error || !pet) {
     return (
       <View style={styles.container}>
         <Text style={styles.notFoundText}>الحيوان غير موجود</Text>
@@ -73,7 +55,7 @@ export default function LostPetScreen() {
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: pet.image }} style={styles.petImage} />
+          {pet?.images[0] && <Image source={{ uri: pet.image || pet.images?.[0] }} style={styles.petImage} />}
           <View style={styles.lostBadge}>
             <AlertTriangle size={16} color={COLORS.white} />
             <Text style={styles.lostBadgeText}>مفقود</Text>
@@ -99,9 +81,7 @@ export default function LostPetScreen() {
 
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>التاريخ</Text>
-              <Text style={styles.infoValue}>
-                {new Date(pet.lastSeen.date).toLocaleDateString("ar-SA")}
-              </Text>
+              <Text style={styles.infoValue}>{new Date(pet.lastSeen.date).toLocaleDateString("ar-SA")}</Text>
             </View>
           </View>
 
@@ -113,7 +93,7 @@ export default function LostPetScreen() {
 
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>الاسم</Text>
-              <Text style={styles.infoValue}>{pet.contactInfo.name}</Text>
+              <Text style={styles.infoValue}>{pet.contactInfo.name || pet.ownerName}</Text>
             </View>
 
             <View style={styles.infoItem}>
@@ -139,6 +119,28 @@ export default function LostPetScreen() {
               <Text style={styles.description}>{pet.description}</Text>
             </View>
           )}
+
+          {pet.specialRequirements && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <AlertTriangle size={20} color={COLORS.warning} />
+                <Text style={styles.sectionTitle}>ملاحظات خاصة</Text>
+              </View>
+
+              <Text style={styles.description}>{pet.specialRequirements}</Text>
+            </View>
+          )}
+
+          {pet.reward && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <AlertTriangle size={20} color={COLORS.success} />
+                <Text style={styles.sectionTitle}>مكافأة</Text>
+              </View>
+
+              <Text style={styles.rewardText}>مكافأة: {pet.reward} ريال</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -149,16 +151,15 @@ export default function LostPetScreen() {
             <Text style={styles.callButtonText}>اتصال بالمالك</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.emailButton} onPress={handleEmail}>
-            <Mail size={20} color={COLORS.primary} />
-            <Text style={styles.emailButtonText}>إرسال بريد</Text>
-          </TouchableOpacity>
+          {pet.contactInfo.email && (
+            <TouchableOpacity style={styles.emailButton} onPress={handleEmail}>
+              <Mail size={20} color={COLORS.primary} />
+              <Text style={styles.emailButtonText}>إرسال بريد</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        <TouchableOpacity
-          style={styles.reportButton}
-          onPress={handleReportSighting}
-        >
+        <TouchableOpacity style={styles.reportButton} onPress={handleReportSighting}>
           <Text style={styles.reportButtonText}>الإبلاغ عن مشاهدة</Text>
         </TouchableOpacity>
       </View>
@@ -324,5 +325,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 24,
     color: COLORS.darkGray,
+  },
+  loadingText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 24,
+    color: COLORS.darkGray,
+  },
+  rewardText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.success,
+    textAlign: "right",
   },
 });

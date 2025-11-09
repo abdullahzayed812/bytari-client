@@ -1,9 +1,19 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
-import React, { useState } from 'react';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, UserPlus, User, Mail, Phone, MapPin, GraduationCap, FileText, Send } from 'lucide-react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState } from "react";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { ArrowLeft, UserPlus, User, Mail, Phone, MapPin, GraduationCap, FileText, Send } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { trpc } from "../lib/trpc";
+import { useMutation } from "@tanstack/react-query";
 
 interface JobApplicationFormData {
   applicantName: string;
@@ -21,128 +31,127 @@ interface JobApplicationFormData {
 export default function JobApplicationScreen() {
   const router = useRouter();
   const { jobId, jobTitle } = useLocalSearchParams<{ jobId?: string; jobTitle?: string }>();
-  
+
   const [formData, setFormData] = useState<JobApplicationFormData>({
-    applicantName: '',
-    applicantEmail: '',
-    applicantPhone: '',
-    location: '',
-    desiredPosition: '',
-    skills: '',
-    expectedSalary: '',
-    coverLetter: '',
-    experience: '',
-    education: ''
+    applicantName: "",
+    applicantEmail: "",
+    applicantPhone: "",
+    location: "",
+    desiredPosition: "",
+    skills: "",
+    expectedSalary: "",
+    coverLetter: "",
+    experience: "",
+    education: "",
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
-  const submitApplicationMutation = trpc.admin.jobs.submitJobApplication.useMutation({
-    onSuccess: (data) => {
-      if (data.success) {
-        Alert.alert(
-          'تم التقديم بنجاح',
-          data.message,
-          [
-            {
-              text: 'موافق',
-              onPress: () => router.back()
-            }
-          ]
-        );
-      } else {
-        Alert.alert('خطأ', data.message);
-      }
-      setIsSubmitting(false);
-    },
-    onError: (error) => {
-      console.error('Error submitting application:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.');
-      setIsSubmitting(false);
-    }
-  });
+
+  const submitApplicationMutation = useMutation(trpc.admin.jobs.submitJobApplication.mutationOptions());
 
   const handleSubmit = () => {
     // Validate form
     if (!formData.applicantName.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال الاسم الكامل');
+      Alert.alert("خطأ", "يرجى إدخال الاسم الكامل");
       return;
     }
-    
+
     if (!formData.applicantEmail.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال البريد الإلكتروني');
+      Alert.alert("خطأ", "يرجى إدخال البريد الإلكتروني");
       return;
     }
-    
+
     if (!formData.applicantPhone.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال رقم الهاتف');
+      Alert.alert("خطأ", "يرجى إدخال رقم الهاتف");
       return;
     }
-    
+
     if (!formData.coverLetter.trim()) {
-      Alert.alert('خطأ', 'يرجى كتابة رسالة تعريفية');
+      Alert.alert("خطأ", "يرجى كتابة رسالة تعريفية");
       return;
     }
-    
+
     if (!formData.experience.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال معلومات الخبرة');
+      Alert.alert("خطأ", "يرجى إدخال معلومات الخبرة");
       return;
     }
-    
+
     if (!formData.education.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال المؤهل التعليمي');
+      Alert.alert("خطأ", "يرجى إدخال المؤهل التعليمي");
       return;
     }
-    
+
     if (!formData.location.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال الموقع');
+      Alert.alert("خطأ", "يرجى إدخال الموقع");
       return;
     }
-    
+
     if (!formData.desiredPosition.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال المنصب المرغوب');
+      Alert.alert("خطأ", "يرجى إدخال المنصب المرغوب");
       return;
     }
-    
+
     if (!formData.skills.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال المهارات');
+      Alert.alert("خطأ", "يرجى إدخال المهارات");
       return;
     }
-    
+
     if (!jobId) {
-      Alert.alert('خطأ', 'معرف الوظيفة غير صحيح');
+      Alert.alert("خطأ", "معرف الوظيفة غير صحيح");
       return;
     }
-    
+
     setIsSubmitting(true);
-    
-    submitApplicationMutation.mutate({
-      jobId,
-      ...formData
-    });
+
+    submitApplicationMutation.mutate(
+      {
+        jobId,
+        ...formData,
+      },
+      {
+        onSuccess: (data) => {
+          if (data.success) {
+            Alert.alert("تم التقديم بنجاح", data.message, [
+              {
+                text: "موافق",
+                onPress: () => router.back(),
+              },
+            ]);
+          } else {
+            Alert.alert("خطأ", data.message);
+          }
+          setIsSubmitting(false);
+        },
+        onError: (error) => {
+          console.error("Error submitting application:", error);
+          Alert.alert("خطأ", "حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.");
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
-  
+
   const updateFormData = (field: keyof JobApplicationFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'تقديم طلب توظيف',
+          title: "تقديم طلب توظيف",
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
-        }} 
+        }}
       />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -154,7 +163,7 @@ export default function JobApplicationScreen() {
           <Text style={styles.headerTitle}>تقديم طلب توظيف</Text>
           <Text style={styles.headerSubtitle}>أضف معلوماتك الشخصية والمهنية</Text>
         </View>
-        
+
         <View style={styles.form}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>الاسم الكامل *</Text>
@@ -163,13 +172,13 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.applicantName}
-                onChangeText={(text) => updateFormData('applicantName', text)}
+                onChangeText={(text) => updateFormData("applicantName", text)}
                 placeholder="الاسم الأول والأخير"
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>البريد الإلكتروني *</Text>
             <View style={styles.inputWithIcon}>
@@ -177,14 +186,14 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.applicantEmail}
-                onChangeText={(text) => updateFormData('applicantEmail', text)}
+                onChangeText={(text) => updateFormData("applicantEmail", text)}
                 placeholder="example@email.com"
                 placeholderTextColor={COLORS.lightGray}
                 keyboardType="email-address"
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>رقم الهاتف *</Text>
             <View style={styles.inputWithIcon}>
@@ -192,14 +201,14 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.applicantPhone}
-                onChangeText={(text) => updateFormData('applicantPhone', text)}
+                onChangeText={(text) => updateFormData("applicantPhone", text)}
                 placeholder="05xxxxxxxx"
                 placeholderTextColor={COLORS.lightGray}
                 keyboardType="phone-pad"
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>الموقع *</Text>
             <View style={styles.inputWithIcon}>
@@ -207,13 +216,13 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.location}
-                onChangeText={(text) => updateFormData('location', text)}
+                onChangeText={(text) => updateFormData("location", text)}
                 placeholder="المدينة، المنطقة"
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>المنصب المرغوب *</Text>
             <View style={styles.inputWithIcon}>
@@ -221,13 +230,13 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.desiredPosition}
-                onChangeText={(text) => updateFormData('desiredPosition', text)}
+                onChangeText={(text) => updateFormData("desiredPosition", text)}
                 placeholder="طبيب بيطري، مساعد طبيب، إداري..."
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>المؤهل التعليمي *</Text>
             <View style={styles.inputWithIcon}>
@@ -235,19 +244,19 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.education}
-                onChangeText={(text) => updateFormData('education', text)}
+                onChangeText={(text) => updateFormData("education", text)}
                 placeholder="بكالوريوس الطب البيطري، ماجستير، دكتوراه..."
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>الخبرة المهنية *</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.experience}
-              onChangeText={(text) => updateFormData('experience', text)}
+              onChangeText={(text) => updateFormData("experience", text)}
               placeholder="اذكر خبراتك المهنية السابقة وسنوات الخبرة..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -255,13 +264,13 @@ export default function JobApplicationScreen() {
               textAlignVertical="top"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>المهارات *</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.skills}
-              onChangeText={(text) => updateFormData('skills', text)}
+              onChangeText={(text) => updateFormData("skills", text)}
               placeholder="اذكر مهاراتك التقنية والشخصية..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -269,7 +278,7 @@ export default function JobApplicationScreen() {
               textAlignVertical="top"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>الراتب المتوقع</Text>
             <View style={styles.inputWithIcon}>
@@ -277,20 +286,20 @@ export default function JobApplicationScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.expectedSalary}
-                onChangeText={(text) => updateFormData('expectedSalary', text)}
+                onChangeText={(text) => updateFormData("expectedSalary", text)}
                 placeholder="5000"
                 placeholderTextColor={COLORS.lightGray}
                 keyboardType="numeric"
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>رسالة تعريفية *</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.coverLetter}
-              onChangeText={(text) => updateFormData('coverLetter', text)}
+              onChangeText={(text) => updateFormData("coverLetter", text)}
               placeholder="اكتب رسالة تعريفية عن نفسك ولماذا تريد العمل في هذا المجال..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -299,12 +308,12 @@ export default function JobApplicationScreen() {
             />
           </View>
         </View>
-        
+
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <FileText size={20} color={COLORS.white} />
           <Text style={styles.submitButtonText}>إرسال الطلب</Text>
         </TouchableOpacity>
-        
+
         <Text style={styles.note}>
           * سيتم مراجعة طلب التوظيف من قبل الإدارة وسيتم التواصل معك في حالة توفر فرصة مناسبة
         </Text>
@@ -316,7 +325,7 @@ export default function JobApplicationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   backButton: {
     padding: 8,
@@ -328,29 +337,29 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   iconContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#28a745',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#28a745",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   form: {
     marginBottom: 24,
@@ -360,7 +369,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -371,16 +380,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: "#E5E5E5",
   },
   inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 8,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: "#E5E5E5",
     gap: 8,
   },
   inputText: {
@@ -393,31 +402,31 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   submitButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 8,
     marginBottom: 16,
   },
   submitButtonText: {
     color: COLORS.white,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   note: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: "center",
+    fontStyle: "italic",
     lineHeight: 20,
   },
   currencySymbol: {
     fontSize: 16,
     color: COLORS.darkGray,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

@@ -8,22 +8,15 @@ import {
   Image,
   Dimensions,
   Alert,
+  ActivityIndicator,
+  Linking,
 } from "react-native";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
-import {
-  ArrowLeft,
-  Calendar,
-  MapPin,
-  Phone,
-  Heart,
-  User,
-  Palette,
-  Weight,
-  Ruler,
-} from "lucide-react-native";
+import { ArrowLeft, Calendar, MapPin, Phone, Heart, User, Palette, Weight, Award } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { mockLostPets } from "../mocks/data";
+import { trpc } from "../lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -36,38 +29,65 @@ export default function AdoptionPetDetailsScreen() {
   }>();
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Find the pet by ID
-  const pet = mockLostPets.find((p) => p.id === id);
+  const { data, isLoading, error } = useQuery(
+    trpc.pets.getAdoptionBreedingPetDetails.queryOptions({
+      id: parseInt(id || "0"),
+      type: type as "adoption" | "breeding",
+    })
+  );
 
-  if (!pet) {
-    return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: "Pet Not Found" }} />
-        <Text>Pet not found</Text>
-      </View>
-    );
-  }
+  const pet = data?.pet;
 
   const handleContact = () => {
+    if (!pet) return;
+
     const actionType = type === "adoption" ? "التبني" : "التزاوج";
-    Alert.alert(
-      "اتصال بالمالك",
-      `هل تريد الاتصال بمالك ${pet.name} لـ${actionType}؟`,
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "اتصال",
-          onPress: () => console.log(`Contacting owner for ${actionType}`),
+    Alert.alert("اتصال بالمالك", `هل تريد الاتصال بمالك ${pet.name} لـ${actionType}؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "اتصال",
+        onPress: () => {
+          if (pet.contactInfo.phone) {
+            Linking.openURL(`tel:${pet.contactInfo.phone}`);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
-    console.log(
-      `${isFavorite ? "Removed from" : "Added to"} favorites: ${pet.name}`
+    console.log(`${isFavorite ? "Removed from" : "Added to"} favorites: ${pet?.name}`);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ title: "جاري التحميل..." }} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.loadingText}>جاري تحميل البيانات...</Text>
+        </View>
+      </View>
     );
+  }
+
+  if (error || !pet) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ title: "خطأ" }} />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>الحيوان غير موجود</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>العودة</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  const getGenderText = (gender: string) => {
+    return gender === "male" ? "ذكر" : gender === "female" ? "أنثى" : "غير محدد";
   };
 
   return (
@@ -83,18 +103,12 @@ export default function AdoptionPetDetailsScreen() {
             fontWeight: "bold",
           },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity
-              onPress={handleFavorite}
-              style={styles.favoriteHeaderButton}
-            >
+            <TouchableOpacity onPress={handleFavorite} style={styles.favoriteHeaderButton}>
               <Heart
                 size={24}
                 color={isFavorite ? "#EF4444" : COLORS.darkGray}
@@ -105,107 +119,140 @@ export default function AdoptionPetDetailsScreen() {
         }}
       />
 
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Pet Image */}
         <View style={styles.imageContainer}>
-          <Image source={{ uri: pet.image }} style={styles.petImage} />
+          {pet.images?.[0] && <Image source={{ uri: pet.image || pet.images?.[0] }} style={styles.petImage} />}
 
           {/* Status Badge */}
           <View style={styles.badgeContainer}>
-            <View
-              style={[
-                styles.badge,
-                type === "adoption"
-                  ? styles.adoptionBadge
-                  : styles.breedingBadge,
-              ]}
-            >
-              <Text style={styles.badgeText}>
-                {type === "adoption" ? "للتبني" : "للتزاوج"}
-              </Text>
+            <View style={[styles.badge, type === "adoption" ? styles.adoptionBadge : styles.breedingBadge]}>
+              <Text style={styles.badgeText}>{type === "adoption" ? "للتبني" : "للتزاوج"}</Text>
             </View>
           </View>
+
+          {/* Price Badge */}
+          {pet.price && pet.price > 0 && (
+            <View style={styles.priceBadgeContainer}>
+              <View style={styles.priceBadge}>
+                <Award size={14} color={COLORS.white} />
+                <Text style={styles.priceBadgeText}>{pet.price} ريال</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Pet Basic Info */}
         <View style={styles.section}>
           <Text style={styles.petName}>{pet.name}</Text>
-          <Text style={styles.petType}>{t(`pets.types.${pet.type}`)}</Text>
+          <Text style={styles.petType}>
+            {t(`pets.types.${pet.type}`)} {pet.breed ? `- ${pet.breed}` : ""}
+          </Text>
         </View>
 
         {/* Pet Details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات الحيوان</Text>
 
-          <View style={styles.detailRow}>
-            <View style={styles.detailIcon}>
-              <Calendar size={20} color="#10B981" />
+          {pet.age && (
+            <View style={styles.detailRow}>
+              <View style={styles.detailIcon}>
+                <Calendar size={20} color="#10B981" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>العمر</Text>
+                <Text style={styles.detailValue}>{pet.age} سنة</Text>
+              </View>
             </View>
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>العمر</Text>
-              <Text style={styles.detailValue}>
-                {Math.floor(Math.random() * 5) + 1} سنوات
-              </Text>
-            </View>
-          </View>
+          )}
 
-          <View style={styles.detailRow}>
-            <View style={styles.detailIcon}>
-              <User size={20} color="#10B981" />
+          {pet.gender && (
+            <View style={styles.detailRow}>
+              <View style={styles.detailIcon}>
+                <User size={20} color="#10B981" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>الجنس</Text>
+                <Text style={styles.detailValue}>{getGenderText(pet.gender)}</Text>
+              </View>
             </View>
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>الجنس</Text>
-              <Text style={styles.detailValue}>
-                {Math.random() > 0.5 ? "ذكر" : "أنثى"}
-              </Text>
-            </View>
-          </View>
+          )}
 
-          <View style={styles.detailRow}>
-            <View style={styles.detailIcon}>
-              <Palette size={20} color="#10B981" />
+          {pet.color && (
+            <View style={styles.detailRow}>
+              <View style={styles.detailIcon}>
+                <Palette size={20} color="#10B981" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>اللون</Text>
+                <Text style={styles.detailValue}>{pet.color}</Text>
+              </View>
             </View>
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>اللون</Text>
-              <Text style={styles.detailValue}>{pet.color}</Text>
-            </View>
-          </View>
+          )}
 
-          <View style={styles.detailRow}>
-            <View style={styles.detailIcon}>
-              <Weight size={20} color="#10B981" />
+          {pet.weight && (
+            <View style={styles.detailRow}>
+              <View style={styles.detailIcon}>
+                <Weight size={20} color="#10B981" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>الوزن</Text>
+                <Text style={styles.detailValue}>{pet.weight} كيلو</Text>
+              </View>
             </View>
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>الوزن</Text>
-              <Text style={styles.detailValue}>
-                {Math.floor(Math.random() * 20) + 5} كيلو
-              </Text>
-            </View>
-          </View>
+          )}
 
-          <View style={styles.detailRow}>
-            <View style={styles.detailIcon}>
-              <MapPin size={20} color="#10B981" />
+          {pet.location && (
+            <View style={styles.detailRow}>
+              <View style={styles.detailIcon}>
+                <MapPin size={20} color="#10B981" />
+              </View>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>الموقع</Text>
+                <Text style={styles.detailValue}>{pet.location}</Text>
+              </View>
             </View>
-            <View style={styles.detailContent}>
-              <Text style={styles.detailLabel}>الموقع</Text>
-              <Text style={styles.detailValue}>{pet.lastSeen.location}</Text>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>الوصف</Text>
-          <Text style={styles.description}>
-            {type === "adoption"
-              ? `${pet.name} حيوان أليف محبوب ومدرب جيداً، يبحث عن عائلة محبة لتوفير له بيت دافئ وملئ بالحب والرعاية.`
-              : `${pet.name} حيوان أص��ل وصحي، مناسب للتزاوج. يتمتع بصحة ممتازة وسلالة نقية.`}
-          </Text>
-        </View>
+        {pet.description && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>الوصف</Text>
+            <Text style={styles.description}>{pet.description}</Text>
+          </View>
+        )}
+
+        {/* Breeding Specific Info */}
+        {type === "breeding" && (
+          <>
+            {pet.pedigree && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>السلالة</Text>
+                <Text style={styles.description}>{pet.pedigree}</Text>
+              </View>
+            )}
+
+            {pet.healthCertificates && pet.healthCertificates.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>الشهادات الصحية</Text>
+                {pet.healthCertificates.map((cert: string, index: number) => (
+                  <Text key={index} style={styles.certificateText}>
+                    • {cert}
+                  </Text>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Special Requirements */}
+        {pet.specialRequirements && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>متطلبات خاصة</Text>
+            <Text style={styles.description}>{pet.specialRequirements}</Text>
+          </View>
+        )}
 
         {/* Owner Info */}
         <View style={styles.section}>
@@ -216,13 +263,10 @@ export default function AdoptionPetDetailsScreen() {
               <User size={24} color={COLORS.white} />
             </View>
             <View style={styles.ownerInfo}>
-              <Text style={styles.ownerName}>{pet.contactInfo.name}</Text>
-              <Text style={styles.ownerLocation}>{pet.lastSeen.location}</Text>
+              <Text style={styles.ownerName}>{pet.contactInfo.name || pet.ownerName}</Text>
+              <Text style={styles.ownerLocation}>{pet.location}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.contactButton}
-              onPress={handleContact}
-            >
+            <TouchableOpacity style={styles.contactButton} onPress={handleContact}>
               <Phone size={16} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -234,14 +278,9 @@ export default function AdoptionPetDetailsScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        <TouchableOpacity
-          style={styles.contactActionButton}
-          onPress={handleContact}
-        >
+        <TouchableOpacity style={styles.contactActionButton} onPress={handleContact}>
           <Phone size={20} color={COLORS.white} />
-          <Text style={styles.contactActionText}>
-            {type === "adoption" ? "اتصال للتبني" : "اتصال للتزاوج"}
-          </Text>
+          <Text style={styles.contactActionText}>{type === "adoption" ? "اتصال للتبني" : "اتصال للتزاوج"}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -253,10 +292,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.gray,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: 8,
-  },
+
   favoriteHeaderButton: {
     padding: 8,
     marginRight: 8,
@@ -420,5 +456,62 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.darkGray,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    color: COLORS.darkGray,
+    marginBottom: 20,
+  },
+  backButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  priceBadgeContainer: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+  },
+  priceBadge: {
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  priceBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  certificateText: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    marginBottom: 4,
+    textAlign: "right",
   },
 });

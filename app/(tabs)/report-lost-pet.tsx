@@ -1,64 +1,60 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  I18nManager,
-  Alert,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../../constants/colors";
-import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import Button from "../../components/Button";
-import {
-  Calendar,
-  Clipboard,
-  Droplet,
-  Heart,
-  MapPin,
-  Plus,
-  User,
-  X,
-} from "lucide-react-native";
+import { MapPin, Plus, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Pet } from "../../types";
 import { trpc } from "../../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/lib/hooks";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
 
 export default function ReportLostPetScreen() {
   const { user } = useApp();
   const router = useRouter();
-
-  const [name, setName] = useState("");
-  const [type, setType] = useState("");
-  const [breed, setBreed] = useState("");
-  const [color, setColor] = useState("");
-  const [age, setAge] = useState("");
-  const [weight, setWeight] = useState("");
-  const [gender, setGender] = useState("");
-  const [medicalHistory, setMedicalHistory] = useState("");
-  const [vaccinations, setVaccinations] = useState("");
-  const [location, setLocation] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [description, setDescription] = useState("");
-  const [contactName, setContactName] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [image, setImage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const { showToast } = useToastContext();
+  const queryClient = useQueryClient();
 
-  const createApprovalMutation = useMutation(
-    trpc.pets.createApprovalRequest.mutationOptions({})
+  // Pet Information
+  const [name, setName] = useState("Buddy");
+  const [type, setType] = useState("Dog");
+  const [breed, setBreed] = useState("Golden Retriever");
+  const [color, setColor] = useState("Golden");
+  const [age, setAge] = useState("3");
+  const [weight, setWeight] = useState("25"); // in kg
+  const [gender, setGender] = useState("Male");
+  const [image, setImage] = useState<string | null>("https://example.com/images/buddy-main.jpg");
+  const [additionalImages, setAdditionalImages] = useState<string[]>([
+    "https://example.com/images/buddy-1.jpg",
+    "https://example.com/images/buddy-2.jpg",
+  ]);
+
+  // Lost Pet Specific (REQUIRED)
+  const [lastSeenLocation, setLastSeenLocation] = useState("Central Park, New York");
+  const [lastSeenDate, setLastSeenDate] = useState(new Date().toISOString().split("T")[0]);
+  const [latitude, setLatitude] = useState<number | undefined>(40.785091);
+  const [longitude, setLongitude] = useState<number | undefined>(-73.968285);
+  const [reward, setReward] = useState("100");
+
+  // Additional Information
+  const [description, setDescription] = useState(
+    "Friendly and playful. Responds to the name Buddy. Has a blue collar."
   );
+  const [specialRequirements, setSpecialRequirements] = useState("Needs daily medication for allergies.");
+
+  // Contact Information
+  const [contactName, setContactName] = useState("John Doe");
+  const [contactPhone, setContactPhone] = useState("+1 555-123-4567");
+  const [contactEmail, setContactEmail] = useState("johndoe@example.com");
+
+  // Documents
+  const [ownershipProof, setOwnershipProof] = useState<string | null>("https://example.com/docs/ownership-proof.pdf");
+  const [veterinaryCertificate, setVeterinaryCertificate] = useState<string | null>(
+    "https://example.com/docs/vet-certificate.pdf"
+  );
+
+  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
   const handleAddImage = async () => {
     try {
@@ -77,11 +73,62 @@ export default function ReportLostPetScreen() {
     }
   };
 
-  const handleRemoveImage = () => {
-    setImage(null);
+  const handleAddAdditionalImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setAdditionalImages([...additionalImages, result.assets[0].uri]);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+    }
+  };
+
+  const handleRemoveAdditionalImage = (index: number) => {
+    setAdditionalImages(additionalImages.filter((_, i) => i !== index));
+  };
+
+  const handleAddOwnershipProof = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setOwnershipProof(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+    }
+  };
+
+  const handleAddVeterinaryCertificate = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setVeterinaryCertificate(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+    }
   };
 
   const handleSelectLocation = () => {
+    // Navigate to map to select location
+    // When returning from map, set latitude and longitude
     router.push({
       pathname: "/map-location",
       params: { returnTo: "report-lost-pet" },
@@ -89,8 +136,20 @@ export default function ReportLostPetScreen() {
   };
 
   const handleSubmit = () => {
-    if (!name || !type || !location || !contactName || !contactPhone) {
-      showToast({ type: "error", message: "يرجى ملء جميع الحقول المطلوبة" });
+    // Validation
+    if (!name || !type || !lastSeenLocation || !lastSeenDate) {
+      showToast({
+        type: "error",
+        message: "يرجى ملء جميع الحقول المطلوبة (الاسم، النوع، آخر مكان، التاريخ)",
+      });
+      return;
+    }
+
+    if (!contactName || !contactPhone) {
+      showToast({
+        type: "error",
+        message: "يرجى إدخال معلومات الاتصال (الاسم ورقم الهاتف)",
+      });
       return;
     }
 
@@ -99,10 +158,18 @@ export default function ReportLostPetScreen() {
       return;
     }
 
-    setIsSubmitting(true);
+    // Prepare images array (main image + additional images)
+    const allImages = [image, ...additionalImages].filter(Boolean) as string[];
+
+    // Prepare contact info string
+    const contactInfo = `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`;
+
+    // Parse date to Date object
+    const parsedDate = new Date(lastSeenDate);
 
     createApprovalMutation.mutate(
       {
+        // Pet basic info
         name: name.trim(),
         type: type.trim(),
         breed: breed.trim() || undefined,
@@ -110,36 +177,46 @@ export default function ReportLostPetScreen() {
         weight: weight ? parseFloat(weight) : undefined,
         color: color.trim() || undefined,
         gender: gender.trim() || undefined,
-        image:
-          image ||
-          "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
-        medicalHistory: medicalHistory.trim() || undefined,
-        vaccinations: vaccinations.trim() || undefined,
+        image: image || undefined,
+
+        // Documents
+        ownershipProof: ownershipProof || undefined,
+        veterinaryCertificate: veterinaryCertificate || undefined,
+
+        // Owner
         ownerId: parseInt(user.id.toString()),
+
+        // Request type
         requestType: "lost_pet",
-        description: `${description}\n\n📅 تاريخ الفقدان: ${date}\n👤 اسم المبلغ: ${contactName}\n📞 رقم الهاتف: ${contactPhone}${
-          contactEmail ? `\n✉️ البريد الإلكتروني: ${contactEmail}` : ""
-        }`,
-        images: image ? [image] : [],
-        contactInfo: `${contactName} - ${contactPhone}${
-          contactEmail ? ` - ${contactEmail}` : ""
-        }`,
-        location: location.trim(),
+
+        // Lost pet specific (REQUIRED)
+        lastSeenLocation: lastSeenLocation.trim(),
+        lastSeenDate: parsedDate,
+        latitude: latitude,
+        longitude: longitude,
+
+        // Additional info
+        description: description.trim() || undefined,
+        images: allImages.length > 0 ? allImages : undefined,
+        contactInfo: contactInfo,
+        location: lastSeenLocation.trim(), // Use lastSeenLocation as location
+        reward: reward ? parseFloat(reward) : undefined,
+        specialRequirements: specialRequirements.trim() || undefined,
       },
       {
         onSuccess: (data) => {
           showToast({
             type: "success",
-            message:
-              data?.message || "تم إرسال البلاغ بنجاح وهو الآن قيد المراجعة.",
+            message: data?.message || "تم إرسال البلاغ بنجاح وهو الآن قيد المراجعة.",
           });
           router.navigate("(tabs)/");
+          // queryClient.invalidateQueries(trpc.pets.getApproved.queryKey);
         },
         onError: (error: any) => {
+          console.error("Error submitting lost pet report:", error);
           showToast({
             type: "error",
-            message:
-              error?.message || "حدث خطأ أثناء إرسال البلاغ. حاول مرة أخرى.",
+            message: error?.message || "حدث خطأ أثناء إرسال البلاغ. حاول مرة أخرى.",
           });
         },
       }
@@ -158,192 +235,175 @@ export default function ReportLostPetScreen() {
         }}
       />
 
-      <ScrollView
-        style={[styles.container, { direction: "rtl" }]}
-        contentContainerStyle={styles.contentContainer}
-      >
+      <ScrollView style={[styles.container, { direction: "rtl" }]} contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>تقرير حيوان مفقود</Text>
 
-        {/* Image */}
+        {/* Main Image */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>صورة الحيوان</Text>
+          <Text style={styles.label}>صورة الحيوان الرئيسية</Text>
           {image ? (
             <View style={styles.imageContainer}>
               <Image source={{ uri: image }} style={styles.image} />
-              <TouchableOpacity
-                style={styles.removeImageButton}
-                onPress={handleRemoveImage}
-              >
+              <TouchableOpacity style={styles.removeImageButton} onPress={() => setImage(null)}>
                 <X size={16} color={COLORS.white} />
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity
-              style={styles.addImageButton}
-              onPress={handleAddImage}
-            >
+            <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
               <Plus size={24} color={COLORS.primary} />
               <Text style={styles.addImageText}>إضافة صورة</Text>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Basic Info */}
+        {/* Additional Images */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>اسم الحيوان</Text>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="أدخل اسم الحيوان"
-            placeholderTextColor={COLORS.darkGray}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>نوع الحيوان</Text>
-          <TextInput
-            style={styles.input}
-            value={type}
-            onChangeText={setType}
-            placeholder="مثال: كلب، قطة، أرنب"
-            placeholderTextColor={COLORS.darkGray}
-          />
-        </View>
-
-        {/* Optional Details with icons */}
-        <View style={styles.row}>
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>
-              <User size={14} /> السلالة (اختياري)
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={breed}
-              onChangeText={setBreed}
-              placeholder="السلالة"
-              placeholderTextColor={COLORS.darkGray}
-            />
-          </View>
-
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>
-              <Droplet size={14} /> اللون (اختياري)
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={color}
-              onChangeText={setColor}
-              placeholder="اللون"
-              placeholderTextColor={COLORS.darkGray}
-            />
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>
-              <Calendar size={14} /> العمر (اختياري)
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={age}
-              onChangeText={setAge}
-              placeholder="عدد السنوات"
-              placeholderTextColor={COLORS.darkGray}
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>
-              <Heart size={14} /> الوزن (اختياري)
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={weight}
-              onChangeText={setWeight}
-              placeholder="بالكيلوجرام"
-              placeholderTextColor={COLORS.darkGray}
-              keyboardType="numeric"
-            />
-          </View>
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>
-            <User size={14} /> الجنس (اختياري)
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={gender}
-            onChangeText={setGender}
-            placeholder="ذكر / أنثى"
-            placeholderTextColor={COLORS.darkGray}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>
-            <Clipboard size={14} /> التاريخ الطبي (اختياري)
-          </Text>
-          <TextInput
-            style={styles.textArea}
-            value={medicalHistory}
-            onChangeText={setMedicalHistory}
-            placeholder="أي معلومات طبية مهمة"
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            placeholderTextColor={COLORS.darkGray}
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>
-            <Clipboard size={14} /> التطعيمات (اختياري)
-          </Text>
-          <TextInput
-            style={styles.textArea}
-            value={vaccinations}
-            onChangeText={setVaccinations}
-            placeholder="التطعيمات التي تلقاها الحيوان"
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-            placeholderTextColor={COLORS.darkGray}
-          />
-        </View>
-
-        {/* Location */}
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>آخر مكان شوهد فيه</Text>
-          <View style={styles.locationContainer}>
-            <TextInput
-              style={styles.locationInput}
-              value={location}
-              onChangeText={setLocation}
-              placeholder="أدخل الموقع"
-              placeholderTextColor={COLORS.darkGray}
-            />
-            <TouchableOpacity
-              style={styles.mapButton}
-              onPress={handleSelectLocation}
-            >
-              <MapPin size={20} color={COLORS.white} />
+          <Text style={styles.label}>صور إضافية (اختياري)</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {additionalImages.map((img, index) => (
+              <View key={index} style={styles.additionalImageContainer}>
+                <Image source={{ uri: img }} style={styles.additionalImage} />
+                <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveAdditionalImage(index)}>
+                  <X size={12} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.addAdditionalImageButton} onPress={handleAddAdditionalImage}>
+              <Plus size={20} color={COLORS.primary} />
             </TouchableOpacity>
+          </ScrollView>
+        </View>
+
+        {/* Basic Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>معلومات الحيوان الأساسية</Text>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>اسم الحيوان *</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder="أدخل اسم الحيوان"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>نوع الحيوان *</Text>
+            <TextInput
+              style={styles.input}
+              value={type}
+              onChangeText={setType}
+              placeholder="مثال: كلب، قطة، أرنب"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>السلالة (اختياري)</Text>
+              <TextInput
+                style={styles.input}
+                value={breed}
+                onChangeText={setBreed}
+                placeholder="السلالة"
+                placeholderTextColor={COLORS.darkGray}
+              />
+            </View>
+
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>اللون (اختياري)</Text>
+              <TextInput
+                style={styles.input}
+                value={color}
+                onChangeText={setColor}
+                placeholder="اللون"
+                placeholderTextColor={COLORS.darkGray}
+              />
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>العمر (اختياري)</Text>
+              <TextInput
+                style={styles.input}
+                value={age}
+                onChangeText={setAge}
+                placeholder="السنوات"
+                placeholderTextColor={COLORS.darkGray}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={[styles.formGroup, styles.halfWidth]}>
+              <Text style={styles.label}>الوزن (كجم)</Text>
+              <TextInput
+                style={styles.input}
+                value={weight}
+                onChangeText={setWeight}
+                placeholder="الوزن"
+                placeholderTextColor={COLORS.darkGray}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>الجنس (اختياري)</Text>
+            <TextInput
+              style={styles.input}
+              value={gender}
+              onChangeText={setGender}
+              placeholder="ذكر / أنثى"
+              placeholderTextColor={COLORS.darkGray}
+            />
           </View>
         </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>تاريخ الفقدان</Text>
-          <TextInput
-            style={styles.input}
-            value={date}
-            onChangeText={setDate}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={COLORS.darkGray}
-          />
+        {/* Lost Pet Details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>تفاصيل الفقدان</Text>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>آخر مكان شوهد فيه *</Text>
+            <View style={styles.locationContainer}>
+              <TextInput
+                style={styles.locationInput}
+                value={lastSeenLocation}
+                onChangeText={setLastSeenLocation}
+                placeholder="أدخل آخر مكان شوهد فيه"
+                placeholderTextColor={COLORS.darkGray}
+              />
+              <TouchableOpacity style={styles.mapButton} onPress={handleSelectLocation}>
+                <MapPin size={20} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>تاريخ آخر مشاهدة *</Text>
+            <TextInput
+              style={styles.input}
+              value={lastSeenDate}
+              onChangeText={setLastSeenDate}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>المكافأة (اختياري)</Text>
+            <TextInput
+              style={styles.input}
+              value={reward}
+              onChangeText={setReward}
+              placeholder="المكافأة بالدينار"
+              placeholderTextColor={COLORS.darkGray}
+              keyboardType="numeric"
+            />
+          </View>
         </View>
 
         {/* Description */}
@@ -361,12 +421,26 @@ export default function ReportLostPetScreen() {
           />
         </View>
 
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>متطلبات خاصة (اختياري)</Text>
+          <TextInput
+            style={styles.textArea}
+            value={specialRequirements}
+            onChangeText={setSpecialRequirements}
+            placeholder="أي متطلبات أو احتياطات خاصة"
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            placeholderTextColor={COLORS.darkGray}
+          />
+        </View>
+
         {/* Contact Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>الاسم</Text>
+            <Text style={styles.label}>الاسم *</Text>
             <TextInput
               style={styles.input}
               value={contactName}
@@ -377,7 +451,7 @@ export default function ReportLostPetScreen() {
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>رقم الهاتف</Text>
+            <Text style={styles.label}>رقم الهاتف *</Text>
             <TextInput
               style={styles.input}
               value={contactPhone}
@@ -402,28 +476,66 @@ export default function ReportLostPetScreen() {
           </View>
         </View>
 
+        {/* Documents */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>المستندات (اختياري)</Text>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>إثبات الملكية</Text>
+            {ownershipProof ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: ownershipProof }} style={styles.image} />
+                <TouchableOpacity style={styles.removeImageButton} onPress={() => setOwnershipProof(null)}>
+                  <X size={16} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.addImageButton} onPress={handleAddOwnershipProof}>
+                <Plus size={24} color={COLORS.primary} />
+                <Text style={styles.addImageText}>إضافة إثبات ملكية</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>شهادة بيطرية</Text>
+            {veterinaryCertificate ? (
+              <View style={styles.imageContainer}>
+                <Image source={{ uri: veterinaryCertificate }} style={styles.image} />
+                <TouchableOpacity style={styles.removeImageButton} onPress={() => setVeterinaryCertificate(null)}>
+                  <X size={16} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.addImageButton} onPress={handleAddVeterinaryCertificate}>
+                <Plus size={24} color={COLORS.primary} />
+                <Text style={styles.addImageText}>إضافة شهادة بيطرية</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
         <Button
           title="إرسال البلاغ"
           onPress={handleSubmit}
           type="primary"
           size="large"
           style={styles.submitButton}
-          loading={isSubmitting}
+          loading={createApprovalMutation.isPending}
           disabled={
             !name ||
             !type ||
-            !location ||
+            !lastSeenLocation ||
+            !lastSeenDate ||
             !contactName ||
             !contactPhone ||
-            isSubmitting ||
             createApprovalMutation.isPending
           }
         />
 
         <View style={styles.noticeContainer}>
           <Text style={styles.noticeText}>
-            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك
-            عند الموافقة على البلاغ.
+            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك عند الموافقة على البلاغ.
           </Text>
         </View>
       </ScrollView>
@@ -443,6 +555,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 24,
+    color: COLORS.black,
+    textAlign: "right",
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
     color: COLORS.black,
     textAlign: "right",
   },
@@ -520,6 +642,28 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
   },
+  additionalImageContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginRight: 8,
+    position: "relative",
+  },
+  additionalImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+  },
+  addAdditionalImageButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   locationContainer: {
     flexDirection: "row-reverse",
   },
@@ -542,16 +686,6 @@ const styles = StyleSheet.create({
     width: 50,
     borderTopLeftRadius: 8,
     borderBottomLeftRadius: 8,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: COLORS.black,
-    textAlign: "right",
   },
   submitButton: {
     width: "100%",

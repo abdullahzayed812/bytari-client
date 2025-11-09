@@ -1,30 +1,21 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  SafeAreaView,
-  TextInput,
-  Alert,
-} from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { ArrowLeft, Plus, Stethoscope } from 'lucide-react-native';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, TextInput, Alert } from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { ArrowLeft, Plus, Stethoscope } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 
 export default function AddVetStoreScreen() {
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState({
-    name: '',
-    ownerName: '',
-    ownerEmail: '',
-    phone: '',
-    address: '',
-    city: '',
-    description: '',
-    specialties: '',
+    name: "عيادة الحيوانات الأليفة السعيدة",
+    ownerName: "د. أحمد العتيبي",
+    ownerEmail: "ahmad.vet@example.com",
+    phone: "+966501234567",
+    address: "شارع الملك فهد، حي العليا، الرياض",
+    city: "الرياض",
+    description: "نقدم أفضل رعاية بيطرية للحيوانات الأليفة، تشمل التطعيمات، الفحوصات، والجراحة.",
+    specialties: "الكلاب، القطط، الطيور، الحيوانات الصغيرة",
   });
 
   const handleBack = () => {
@@ -33,39 +24,35 @@ export default function AddVetStoreScreen() {
 
   const handleCreate = () => {
     if (!formData.name || !formData.ownerName || !formData.ownerEmail) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
-    Alert.alert(
-      'إنشاء متجر بيطري جديد',
-      'هل تريد إنشاء هذا المتجر البيطري؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'إنشاء', 
-          onPress: () => {
-            console.log('New vet store created:', formData);
-            router.back();
-          }
-        }
-      ]
-    );
+    Alert.alert("إنشاء متجر بيطري جديد", "هل تريد إنشاء هذا المتجر البيطري؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "إنشاء",
+        onPress: () => {
+          console.log("New vet store created:", formData);
+          router.back();
+        },
+      },
+    ]);
   };
 
   const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
-          title: 'إضافة متجر بيطري جديد',
+      <Stack.Screen
+        options={{
+          title: "إضافة متجر بيطري جديد",
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold' as const }
-        }} 
+          headerTitleStyle: { fontWeight: "bold" as const },
+        }}
       />
       <SafeAreaView style={styles.container}>
         {/* Header */}
@@ -89,7 +76,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(value) => updateField('name', value)}
+                onChangeText={(value) => updateField("name", value)}
                 placeholder="أدخل اسم المتجر البيطري"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -100,7 +87,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.ownerName}
-                onChangeText={(value) => updateField('ownerName', value)}
+                onChangeText={(value) => updateField("ownerName", value)}
                 placeholder="أدخل اسم الطبيب المالك"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -111,7 +98,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.ownerEmail}
-                onChangeText={(value) => updateField('ownerEmail', value)}
+                onChangeText={(value) => updateField("ownerEmail", value)}
                 placeholder="أدخل البريد الإلكتروني"
                 placeholderTextColor={COLORS.darkGray}
                 keyboardType="email-address"
@@ -123,7 +110,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.phone}
-                onChangeText={(value) => updateField('phone', value)}
+                onChangeText={(value) => updateField("phone", value)}
                 placeholder="أدخل رقم الهاتف"
                 placeholderTextColor={COLORS.darkGray}
                 keyboardType="phone-pad"
@@ -135,7 +122,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.address}
-                onChangeText={(value) => updateField('address', value)}
+                onChangeText={(value) => updateField("address", value)}
                 placeholder="أدخل العنوان"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -146,7 +133,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.city}
-                onChangeText={(value) => updateField('city', value)}
+                onChangeText={(value) => updateField("city", value)}
                 placeholder="أدخل المدينة"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -157,7 +144,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.specialties}
-                onChangeText={(value) => updateField('specialties', value)}
+                onChangeText={(value) => updateField("specialties", value)}
                 placeholder="أدخل التخصصات (مفصولة بفواصل)
 مثال: أدوية بيطرية، معدات جراحية، مستلزمات العيادات"
                 placeholderTextColor={COLORS.darkGray}
@@ -172,7 +159,7 @@ export default function AddVetStoreScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(value) => updateField('description', value)}
+                onChangeText={(value) => updateField("description", value)}
                 placeholder="أدخل وصف المتجر البيطري"
                 placeholderTextColor={COLORS.darkGray}
                 multiline
@@ -200,17 +187,17 @@ export default function AddVetStoreScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   header: {
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -220,9 +207,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -237,14 +224,14 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 20,
     paddingBottom: 12,
@@ -253,7 +240,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   inputGroup: {
@@ -261,10 +248,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   input: {
     borderWidth: 1,
@@ -275,7 +262,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     backgroundColor: COLORS.white,
-    textAlign: 'right',
+    textAlign: "right",
   },
   textArea: {
     height: 100,
@@ -284,7 +271,7 @@ const styles = StyleSheet.create({
   requiredNote: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
     marginTop: 8,
   },
   bottomActions: {
@@ -294,22 +281,22 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
   },
   createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   createButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
   },
 });

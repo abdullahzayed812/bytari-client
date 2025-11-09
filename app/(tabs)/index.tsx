@@ -84,10 +84,10 @@ export default function HomeScreen() {
   );
   const lostPets = useMemo(() => (lostPetsData as any)?.pets, [lostPetsData]);
 
-  const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(
-    trpc.pets.getApproved.queryOptions({ requestType: "adoption" })
-  );
+  const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(trpc.pets.getApproved.queryOptions({}));
   const adoptionPets = useMemo(() => (adoptionPetsData as any)?.pets, [adoptionPetsData]);
+
+  console.log({ adoptionPets, lostPets });
 
   // Simulate real-time updates
   useEffect(() => {
@@ -1081,7 +1081,7 @@ export default function HomeScreen() {
                               },
                             ]}
                           >
-                            {pet?.contactInfo.phone}
+                            {pet?.ownerPhone}
                           </Text>
                         </View>
                       </View>
@@ -1288,7 +1288,7 @@ export default function HomeScreen() {
                             },
                           ]}
                         >
-                          {pet?.contactInfo?.phone}
+                          {pet?.ownerPhone}
                         </Text>
                       </View>
                     </View>

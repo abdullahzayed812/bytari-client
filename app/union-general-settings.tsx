@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TextInput,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {
   ArrowRight,
@@ -20,16 +21,44 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { COLORS } from "../constants/colors";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { trpc } from '../lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function UnionGeneralSettingsScreen() {
   const router = useRouter();
-  const [unionName, setUnionName] = useState('نقابة الأطباء البيطريين');
-  const [unionDescription, setUnionDescription] = useState('نقابة مهنية تهدف إلى تطوير مهنة الطب البيطري');
-  const [contactEmail, setContactEmail] = useState('info@vetunion.com');
-  const [contactPhone, setContactPhone] = useState('+964 770 123 4567');
+  const queryClient = useQueryClient();
+
+  const { data: settings, isLoading, error } = useQuery(trpc.union.settings.get.queryOptions());
+
+  const [unionName, setUnionName] = useState('');
+  const [unionDescription, setUnionDescription] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [allowRegistration, setAllowRegistration] = useState(true);
   const [requireApproval, setRequireApproval] = useState(true);
+
+  useEffect(() => {
+    if (settings) {
+      setUnionName(settings.name);
+      setUnionDescription(settings.description);
+      setContactEmail(settings.contactEmail);
+      setContactPhone(settings.contactPhone);
+      setIsMaintenanceMode(settings.isMaintenanceMode);
+      setAllowRegistration(settings.allowRegistration);
+      setRequireApproval(settings.requireApproval);
+    }
+  }, [settings]);
+
+  const updateSettingsMutation = useMutation(trpc.union.settings.update.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.settings.get.queryKey);
+      Alert.alert('تم الحفظ', 'تم حفظ الإعدادات بنجاح');
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء حفظ الإعدادات');
+    }
+  }));
 
   const handleSave = () => {
     Alert.alert(
@@ -40,7 +69,15 @@ export default function UnionGeneralSettingsScreen() {
         {
           text: 'حفظ',
           onPress: () => {
-            Alert.alert('تم الحفظ', 'تم حفظ الإعدادات بنجاح');
+            updateSettingsMutation.mutate({
+              name: unionName,
+              description: unionDescription,
+              contactEmail,
+              contactPhone,
+              isMaintenanceMode,
+              allowRegistration,
+              requireApproval,
+            });
           },
         },
       ]
@@ -51,6 +88,22 @@ export default function UnionGeneralSettingsScreen() {
     router.push('/edit-union-main');
   };
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -59,7 +112,7 @@ export default function UnionGeneralSettingsScreen() {
           <ArrowRight size={24} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>الإعدادات العامة</Text>
-        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={updateSettingsMutation.isPending}>
           <Save size={20} color={COLORS.white} />
         </TouchableOpacity>
       </View>

@@ -25,7 +25,7 @@ import {
   User,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import { useToastContext } from "@/providers/ToastProvider";
 
@@ -37,6 +37,7 @@ export default function AddPoultryFarmScreen() {
   const { user } = useApp();
   const router = useRouter();
   const { showToast } = useToastContext();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: "حقل دواجن جيدي",
@@ -214,6 +215,7 @@ export default function AddPoultryFarmScreen() {
             message: data.message || "تم إنشاء حقل الدواجن بنجاح",
           });
           router.navigate("(tabs)/pets");
+          queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey);
         },
         onError: (error: any) => {
           showToast({

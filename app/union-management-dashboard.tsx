@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {
   ArrowLeft,
@@ -27,6 +28,8 @@ import { useRouter, Stack } from 'expo-router';
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { usePermissions } from "../lib/permissions";
+import { trpc } from '../lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UnionBranch {
   id: string;
@@ -50,93 +53,21 @@ export default function UnionManagementDashboardScreen() {
   const { moderatorPermissions, isSuperAdmin, isModerator } = useApp();
   const { canAccessUnion } = usePermissions();
   const [selectedTab, setSelectedTab] = useState<'overview' | 'unions' | 'announcements'>('overview');
+  const queryClient = useQueryClient();
 
-  console.log('Union management permissions:', moderatorPermissions);
+  const { data: allUnions, isLoading, error } = useQuery(trpc.union.branch.list.queryOptions());
 
-  // جميع النقابات (الرئيسية والفرعية)
-  const allUnions: UnionBranch[] = [
-    {
-      id: 'main',
-      name: 'نقابة الأطباء البيطريين العراقية - المقر الرئيسي',
-      type: 'main',
-      address: 'بغداد - الكرادة الشرقية - شارع أبو نواس - مجمع النقابات المهنية - الطابق الثالث',
-      phone: '+964 1 717 6543',
-      email: 'info@iraqvetunion.org',
-      president: 'د. عبدالله محمد الجبوري',
-      membersCount: 8000,
-      announcements: 12,
-      rating: 4.9,
-      status: 'active',
-      canManage: isSuperAdmin || (isModerator && moderatorPermissions?.sections?.includes('union')) || false
+  const deleteUnionMutation = useMutation(trpc.union.branch.delete.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.branch.list.queryKey);
+      Alert.alert('تم', 'تم حذف النقابة بنجاح');
     },
-    {
-      id: '1',
-      name: 'نقابة الأطباء البيطريين - بغداد',
-      type: 'branch',
-      governorate: 'بغداد',
-      region: 'central',
-      address: 'الكرادة الشرقية - شارع أبو نواس - مجمع النقابات المهنية - الطابق الثالث',
-      phone: '+964 780 123 4567',
-      email: 'baghdad@iraqvetunion.org',
-      president: 'د. محمد جاسم العبيدي',
-      membersCount: 1850,
-      announcements: 8,
-      rating: 4.9,
-      status: 'active',
-      canManage: isSuperAdmin || (isModerator && canAccessUnion('1')) || false
-    },
-    {
-      id: '2',
-      name: 'نقابة الأطباء البيطريين - البصرة',
-      type: 'branch',
-      governorate: 'البصرة',
-      region: 'southern',
-      address: 'العشار - شارع الكورنيش - مبنى النقابات المهنية - الطابق الثاني',
-      phone: '+964 770 234 5678',
-      email: 'basra@iraqvetunion.org',
-      president: 'د. سارة أحمد الجبوري',
-      membersCount: 680,
-      announcements: 5,
-      rating: 4.7,
-      status: 'active',
-      canManage: isSuperAdmin || (isModerator && canAccessUnion('2')) || false
-    },
-    {
-      id: '3',
-      name: 'نقابة الأطباء البيطريين - أربيل',
-      type: 'branch',
-      governorate: 'أربيل',
-      region: 'kurdistan',
-      address: 'منطقة عنكاوا - شارع الجامعة - مجمع النقابات المهنية',
-      phone: '+964 750 345 6789',
-      email: 'erbil@iraqvetunion.org',
-      president: 'د. آوات محمد صالح',
-      membersCount: 520,
-      announcements: 6,
-      rating: 4.8,
-      status: 'active',
-      canManage: isSuperAdmin || (isModerator && canAccessUnion('3')) || false
-    },
-    {
-      id: '4',
-      name: 'نقابة الأطباء البيطريين - الموصل',
-      type: 'branch',
-      governorate: 'نينوى',
-      region: 'northern',
-      address: 'الجانب الأيمن - حي الزهراء - مجمع النقابات المهنية',
-      phone: '+964 790 456 7890',
-      email: 'mosul@iraqvetunion.org',
-      president: 'د. أحمد يوسف الطائي',
-      membersCount: 420,
-      announcements: 4,
-      rating: 4.6,
-      status: 'active',
-      canManage: isSuperAdmin || (isModerator && canAccessUnion('4')) || false
-    },
-  ];
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء حذف النقابة');
+    }
+  }));
 
-  // تصفية النقابات حسب الصلاحيات
-  const filteredUnions = allUnions.filter(union => union.canManage);
+  const filteredUnions = allUnions?.filter(union => union.canManage) || [];
 
   const handleUnionPress = (union: UnionBranch) => {
     if (union.type === 'main') {
@@ -172,7 +103,7 @@ export default function UnionManagementDashboardScreen() {
           text: 'حذف',
           style: 'destructive',
           onPress: () => {
-            Alert.alert('تم', 'تم حذف النقابة بنجاح');
+            deleteUnionMutation.mutate(parseInt(unionId));
           }
         }
       ]
@@ -199,6 +130,22 @@ export default function UnionManagementDashboardScreen() {
     
     return stars;
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   const renderOverviewTab = () => (
     <View style={styles.tabContent}>
@@ -354,6 +301,7 @@ export default function UnionManagementDashboardScreen() {
               <TouchableOpacity 
                 style={[styles.actionButton, { backgroundColor: '#EF4444' }]}
                 onPress={() => handleDeleteUnion(union.id, union.name)}
+                disabled={deleteUnionMutation.isPending}
               >
                 <Trash2 size={16} color={COLORS.white} />
               </TouchableOpacity>

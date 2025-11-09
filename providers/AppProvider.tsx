@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface User {
@@ -50,8 +44,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userMode, setUserMode] = useState("");
-
-  console.log(user?.accountType);
 
   const hasAdminAccess = user?.hasAdminAccess || false;
   const isSuperAdmin = user?.isSuperAdmin || false;
@@ -102,7 +94,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(true);
 
         // If user is veterinarian and stored userMode exists, use it
-        if (parsedUser.accountType === "veterinarian" && storedUserMode) {
+        if (parsedUser.accountType === "veterinarian" || (parsedUser.accountType === "admin" && storedUserMode)) {
           setUserMode(storedUserMode as "pet_owner" | "veterinarian");
         } else {
           // fallback to accountType
@@ -127,10 +119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUser(userData);
       setIsAuthenticated(true);
       setUserMode(
-        userData?.accountType === "admin" ||
-          userData?.accountType === "veterinarian"
-          ? "veterinarian"
-          : "pet_owner"
+        userData?.accountType === "admin" || userData?.accountType === "veterinarian" ? "veterinarian" : "pet_owner"
       );
 
       console.log("✅ User data saved and state updated successfully");
@@ -163,8 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const isVet = user.accountType === "veterinarian";
-    const isAdmin =
-      user.hasAdminAccess || user.isSuperAdmin || user.isModerator;
+    const isAdmin = user.hasAdminAccess || user.isSuperAdmin || user.isModerator;
 
     // Only allow veterinarians or admins
     if (!isVet && !isAdmin) return;

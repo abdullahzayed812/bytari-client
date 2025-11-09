@@ -1,9 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Save, X, Upload, Camera, Link, Calendar, MessageSquare, Trash2 } from 'lucide-react-native';
+import { trpc } from '../lib/trpc';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
 interface Announcement {
   id: string;
@@ -25,67 +27,36 @@ export default function EditUnionAnnouncementScreen() {
   const router = useRouter();
   const { branchId, announcementId } = useLocalSearchParams();
 
-  // Mock data - in real app, fetch based on branchId and announcementId
-  const getAnnouncementData = (bId: string, aId: string): Announcement | null => {
-    const mockAnnouncements: { [key: string]: Announcement[] } = {
-      '1': [
-        {
-          id: '1',
-          title: 'اجتماع الجمعية العمومية السنوي 2025',
-          content: 'يسر نقابة الأطباء البيطريين في بغداد دعوة جميع الأعضاء لحضور اجتماع الجمعية العمومية السنوي المقرر عقده يوم الخميس الموافق 30/1/2025 في قاعة المؤتمرات بمقر النقابة. سيتم مناقشة التقرير السنوي والخطط المستقبلية.',
-          date: '2025-01-15',
-          type: 'meeting',
-          isImportant: true,
-          image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400',
-          link: 'https://baghdadvetunion.org/meeting-2025',
-          linkText: 'رابط التسجيل للاجتماع',
-          author: 'إدارة النقابة',
-          views: 245,
-          branchId: '1'
-        },
-        {
-          id: '2',
-          title: 'مؤتمر الطب البيطري الدولي 2025',
-          content: 'تنظم النقابة مؤتمرها الدولي السنوي للطب البيطري بمشاركة خبراء من العراق والعالم. التسجيل مفتوح لجميع الأطباء البيطريين.',
-          date: '2025-01-10',
-          type: 'event',
-          isImportant: true,
-          image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400',
-          link: 'https://vetconference2025.org',
-          linkText: 'موقع المؤتمر والتسجيل',
-          author: 'لجنة المؤتمرات',
-          views: 189,
-          branchId: '1'
-        }
-      ]
-    };
+  const { data: originalAnnouncement, isLoading: isLoadingAnnouncement, error: announcementError } = useQuery(trpc.union.announcement.get.queryOptions(parseInt(announcementId as string)));
 
-    const branchAnnouncements = mockAnnouncements[bId] || [];
-    return branchAnnouncements.find(ann => ann.id === aId) || null;
-  };
+  const [formData, setFormData] = useState<Announcement | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const originalAnnouncement = getAnnouncementData(branchId as string, announcementId as string);
-
-  // Form state - must be declared before any conditional returns
-  const [formData, setFormData] = useState<Announcement>(
-    originalAnnouncement || {
-      id: '',
-      title: '',
-      content: '',
-      date: new Date().toISOString().split('T')[0],
-      type: 'general',
-      isImportant: false,
-      image: '',
-      link: '',
-      linkText: '',
-      author: user?.name || '',
-      branchId: branchId as string
+  useEffect(() => {
+    if (originalAnnouncement) {
+      setFormData(originalAnnouncement as Announcement);
+      setSelectedImage(originalAnnouncement.image || null);
     }
-  );
-  const [selectedImage, setSelectedImage] = useState<string | null>(originalAnnouncement?.image || null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  }, [originalAnnouncement]);
 
-  // Check if user has permission to edit announcements
+  const updateAnnouncementMutation = useMutation(trpc.union.announcement.update.mutationOptions({
+    onSuccess: (data) => {
+      Alert.alert('تم الحفظ', 'تم تحديث الإعلان بنجاح', [{ text: 'موافق', onPress: () => router.back() }]);
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء تحديث الإعلان');
+    }
+  }));
+
+  const deleteAnnouncementMutation = useMutation(trpc.union.announcement.delete.mutationOptions({
+    onSuccess: (data) => {
+      Alert.alert('تم الحذف', 'تم حذف الإعلان بنجاح', [{ text: 'موافق', onPress: () => router.back() }]);
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء حذف الإعلان');
+    }
+  }));
+
   if (!isSuperAdmin && !hasAdminAccess && !(isModerator && moderatorPermissions?.sections?.includes('union-branches'))) {
     return (
       <View style={styles.container}>
@@ -103,8 +74,15 @@ export default function EditUnionAnnouncementScreen() {
     );
   }
 
-  // If announcement not found
-  if (!originalAnnouncement) {
+  if (isLoadingAnnouncement) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (announcementError || !formData) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'إعلان غير موجود' }} />
@@ -121,7 +99,6 @@ export default function EditUnionAnnouncementScreen() {
     );
   }
 
-  // Get branch name for display
   const getBranchName = (id: string): string => {
     const branches: { [key: string]: string } = {
       '1': 'نقابة الأطباء البيطريين - بغداد',
@@ -144,54 +121,17 @@ export default function EditUnionAnnouncementScreen() {
       return;
     }
 
-    setIsLoading(true);
-    
-    try {
-      // Update announcement object
-      const updatedAnnouncement: Announcement = {
-        ...formData,
-        image: selectedImage || formData.image,
-        views: formData.views || 0
-      };
-
-      // In a real app, this would save to backend
-      console.log('Updating announcement:', updatedAnnouncement);
-      
-      // Send notification to followers of this branch about the update
-      if (user) {
-        await sendNotification({
-          userId: 'all-branch-followers', // In real app, get all followers of this branch
-          type: 'medical_record',
-          title: `تحديث إعلان من ${branchName}`,
-          message: `تم تحديث الإعلان: ${formData.title}`,
-          data: {
-            petId: '',
-            petName: '',
-            clinicId: branchId as string,
-            clinicName: branchName,
-            recordId: updatedAnnouncement.id,
-            actionType: 'medical_record'
-          },
-          status: 'pending'
-        });
-      }
-      
-      Alert.alert(
-        'تم الحفظ',
-        'تم تحديث الإعلان بنجاح وإرسال إشعارات للمتابعين',
-        [
-          { 
-            text: 'موافق', 
-            onPress: () => router.back()
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('Error updating announcement:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تحديث الإعلان');
-    } finally {
-      setIsLoading(false);
-    }
+    updateAnnouncementMutation.mutate({
+      id: parseInt(announcementId as string),
+      title: formData.title,
+      content: formData.content,
+      type: formData.type,
+      isImportant: formData.isImportant,
+      image: selectedImage || formData.image,
+      link: formData.link,
+      linkText: formData.linkText,
+      author: formData.author,
+    });
   };
 
   const handleDelete = () => {
@@ -204,27 +144,7 @@ export default function EditUnionAnnouncementScreen() {
           text: 'حذف',
           style: 'destructive',
           onPress: async () => {
-            setIsLoading(true);
-            try {
-              // In a real app, this would delete from backend
-              console.log('Deleting announcement:', formData.id);
-              
-              Alert.alert(
-                'تم الحذف',
-                'تم حذف الإعلان بنجاح',
-                [
-                  { 
-                    text: 'موافق', 
-                    onPress: () => router.back()
-                  }
-                ]
-              );
-            } catch (error) {
-              console.error('Error deleting announcement:', error);
-              Alert.alert('خطأ', 'حدث خطأ أثناء حذف الإعلان');
-            } finally {
-              setIsLoading(false);
-            }
+            deleteAnnouncementMutation.mutate(parseInt(announcementId as string));
           }
         }
       ]
@@ -232,7 +152,6 @@ export default function EditUnionAnnouncementScreen() {
   };
 
   const handleImagePicker = () => {
-    // In a real app, this would open image picker
     Alert.alert(
       'اختيار صورة',
       'اختر مصدر الصورة',
@@ -266,14 +185,14 @@ export default function EditUnionAnnouncementScreen() {
               <TouchableOpacity 
                 onPress={handleDelete} 
                 style={styles.deleteButton}
-                disabled={isLoading}
+                disabled={deleteAnnouncementMutation.isPending}
               >
                 <Trash2 size={20} color={COLORS.white} />
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleSave} 
                 style={styles.saveButton}
-                disabled={isLoading}
+                disabled={updateAnnouncementMutation.isPending}
               >
                 <Save size={20} color={COLORS.white} />
               </TouchableOpacity>
@@ -513,12 +432,12 @@ export default function EditUnionAnnouncementScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.saveActionButton, isLoading && styles.disabledButton]}
+            style={[styles.saveActionButton, (updateAnnouncementMutation.isPending || deleteAnnouncementMutation.isPending) && styles.disabledButton]}
             onPress={handleSave}
-            disabled={isLoading || !formData.title || !formData.content}
+            disabled={updateAnnouncementMutation.isPending || deleteAnnouncementMutation.isPending || !formData.title || !formData.content}
           >
             <Text style={styles.saveActionButtonText}>
-              {isLoading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+              {updateAnnouncementMutation.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}
             </Text>
           </TouchableOpacity>
         </View>

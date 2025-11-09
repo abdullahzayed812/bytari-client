@@ -1,12 +1,40 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Image, Alert, TextInput, Modal } from 'react-native';
-import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  Alert,
+  TextInput,
+  Modal,
+} from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { Plus, Edit, Trash2, Search, Filter, MapPin, Star, Phone, Clock, X, Save, Camera, Upload } from 'lucide-react-native';
-import { router, Stack } from 'expo-router';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Filter,
+  MapPin,
+  Star,
+  Phone,
+  Clock,
+  X,
+  Save,
+  Camera,
+  Upload,
+} from "lucide-react-native";
+import { router, Stack } from "expo-router";
 import { mockVetStores, VetStore } from "../mocks/data";
-import * as ImagePicker from 'expo-image-picker';
+import * as ImagePicker from "expo-image-picker";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
+import { useToastContext } from "@/providers/ToastProvider";
 
 interface EditStoreData {
   id: string;
@@ -25,171 +53,148 @@ interface EditStoreData {
 
 export default function StoresAdminManagementScreen() {
   const { isRTL } = useI18n();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [stores, setStores] = useState<VetStore[]>(mockVetStores);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingStore, setEditingStore] = useState<EditStoreData | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "inactive">("all");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const filteredStores = stores.filter(store => {
-    const matchesSearch = store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         store.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         store.address.toLowerCase().includes(searchQuery.toLowerCase());
-    
+  const { showToast } = useToastContext();
+  const queryClient = useQueryClient();
+
+  // ✅ tRPC hooks
+  const { data, isLoading } = useQuery(trpc.stores.list.queryOptions());
+  const updateStoreMutation = useMutation(trpc.stores.update.mutationOptions());
+  const deleteStoreMutation = useMutation(trpc.stores.delete.mutationOptions());
+
+  const stores = data?.stores || [];
+
+  // ✅ Filter + Search
+  const filteredStores = stores.filter((store: any) => {
+    const matchesSearch =
+      store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      store.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      store.address?.toLowerCase().includes(searchQuery.toLowerCase());
+
     if (!matchesSearch) return false;
-    
+
     switch (selectedFilter) {
-      case 'active':
-        return store.rating >= 4.0; // Mock active criteria
-      case 'inactive':
-        return store.rating < 4.0; // Mock inactive criteria
+      case "active":
+        return store.isActive;
+      case "inactive":
+        return !store.isActive;
       default:
         return true;
     }
   });
 
-  const handleEditStore = (store: VetStore) => {
+  // ✅ Edit Store
+  const handleEditStore = (store: any) => {
     setEditingStore({
       id: store.id,
       name: store.name,
       description: store.description,
       address: store.address,
       phone: store.phone,
-      rating: store.rating,
-      workingHours: {
-        open: store.workingHours.open,
-        close: store.workingHours.close,
-        days: store.workingHours.days,
-      },
-      image: store.image,
+      rating: store.rating || 0,
+      workingHours: store.workingHours,
+      image: store.images?.[0] || "",
     });
-    setSelectedImage(store.image);
+    setSelectedImage(store.images?.[0] || "");
     setEditModalVisible(true);
   };
 
+  // Save / Update Store
   const handleSaveStore = () => {
     if (!editingStore) return;
-    
-    setStores(prevStores => 
-      prevStores.map(store => 
-        store.id === editingStore.id 
-          ? { ...store, ...editingStore }
-          : store
-      )
-    );
-    
-    setEditModalVisible(false);
-    setEditingStore(null);
-    setSelectedImage(null);
-    
-    Alert.alert('تم الحفظ', 'تم تحديث بيانات المذخر بنجاح');
-  };
 
-  const handleDeleteStore = (storeId: string, storeName: string) => {
-    Alert.alert(
-      'حذف المذخر',
-      `هل أنت متأكد من حذف مذخر "${storeName}"؟\n\nهذا الإجراء لا يمكن التراجع عنه.`,
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'حذف', 
-          style: 'destructive', 
-          onPress: () => {
-            setStores(prevStores => prevStores.filter(store => store.id !== storeId));
-            Alert.alert('تم الحذف', 'تم حذف المذخر بنجاح');
-          }
-        }
-      ]
+    updateStoreMutation.mutate(
+      {
+        id: editingStore.id,
+        name: editingStore.name,
+        description: editingStore.description,
+        address: editingStore.address,
+        phone: editingStore.phone,
+        workingHours: editingStore.workingHours,
+        images: selectedImage ? [selectedImage] : [],
+      },
+      {
+        onSuccess: () => {
+          showToast({ message: "تم تحديث بيانات المتجر بنجاح", type: "success" });
+          setEditModalVisible(false);
+          setEditingStore(null);
+          setSelectedImage(null);
+          queryClient.invalidateQueries(trpc.stores.list.queryKey);
+        },
+        onError: (error) => {
+          console.error("Error updating store:", error);
+          showToast({ message: "حدث خطأ أثناء تحديث المتجر", type: "error" });
+        },
+      }
     );
   };
 
-  const handleDeleteAllStores = () => {
-    Alert.alert(
-      'حذف جميع المذاخر',
-      'هل أنت متأكد من حذف جميع المذاخر؟\n\nهذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع البيانات.',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'حذف الكل', 
-          style: 'destructive', 
-          onPress: () => {
-            setStores([]);
-            Alert.alert('تم الحذف', 'تم حذف جميع المذاخر بنجاح');
-          }
-        }
-      ]
-    );
+  // Delete Store
+  const handleDeleteStore = (storeId: number, storeName: string) => {
+    // Keep the confirmation alert
+    Alert.alert("حذف المتجر", `هل أنت متأكد من حذف المتجر "${storeName}"؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deleteStoreMutation.mutate(
+            { id: storeId },
+            {
+              onSuccess: () => {
+                showToast({ message: "تم حذف المتجر بنجاح", type: "success" });
+                queryClient.invalidateQueries(trpc.stores.list.queryKey);
+              },
+              onError: (error) => {
+                console.error("Error deleting store:", error);
+                showToast({ message: "حدث خطأ أثناء حذف المتجر", type: "error" });
+              },
+            }
+          );
+        },
+      },
+    ]);
   };
 
+  // ✅ Pick or Change Image
   const pickImage = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert('خطأ', 'يجب السماح بالوصول إلى المعرض لاختيار الصور');
+      if (!permissionResult.granted) {
+        Alert.alert("خطأ", "يجب السماح بالوصول إلى المعرض لاختيار الصور");
         return;
       }
 
-      Alert.alert(
-        'اختيار الصورة',
-        'كيف تريد إضافة الصورة؟',
-        [
-          {
-            text: 'من المعرض',
-            onPress: async () => {
-              const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 0.8,
-              });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
 
-              if (!result.canceled && result.assets[0]) {
-                setSelectedImage(result.assets[0].uri);
-                setEditingStore(prev => prev ? {...prev, image: result.assets[0].uri} : null);
-              }
-            }
-          },
-          {
-            text: 'التقاط صورة',
-            onPress: async () => {
-              const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-              
-              if (cameraPermission.granted === false) {
-                Alert.alert('خطأ', 'يجب السماح بالوصول إلى الكاميرا');
-                return;
-              }
-
-              const result = await ImagePicker.launchCameraAsync({
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 0.8,
-              });
-
-              if (!result.canceled && result.assets[0]) {
-                setSelectedImage(result.assets[0].uri);
-                setEditingStore(prev => prev ? {...prev, image: result.assets[0].uri} : null);
-              }
-            }
-          },
-          { text: 'إلغاء', style: 'cancel' }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+        setEditingStore((prev) => (prev ? { ...prev, image: result.assets[0].uri } : null));
+      }
+    } catch {
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
     }
   };
 
   const removeImage = () => {
     setSelectedImage(null);
-    setEditingStore(prev => prev ? {...prev, image: ''} : null);
+    setEditingStore((prev) => (prev ? { ...prev, image: "" } : null));
   };
 
   const renderStoreCard = ({ item }: { item: VetStore }) => (
     <View style={styles.storeCard}>
       <Image source={{ uri: item.image }} style={styles.storeImage} />
-      
+
       <View style={styles.storeInfo}>
         <View style={styles.storeHeader}>
           <Text style={styles.storeName}>{item.name}</Text>
@@ -199,11 +204,11 @@ export default function StoresAdminManagementScreen() {
             <Text style={styles.reviewCount}>({item.reviewCount})</Text>
           </View>
         </View>
-        
+
         <Text style={styles.storeDescription} numberOfLines={2}>
           {item.description}
         </Text>
-        
+
         <View style={styles.storeDetails}>
           <View style={styles.detailItem}>
             <MapPin size={14} color={COLORS.darkGray} />
@@ -211,14 +216,12 @@ export default function StoresAdminManagementScreen() {
               {item.address}
             </Text>
           </View>
-          
+
           <View style={styles.detailItem}>
             <Phone size={14} color={COLORS.darkGray} />
-            <Text style={styles.detailText}>
-              {item.phone}
-            </Text>
+            <Text style={styles.detailText}>{item.phone}</Text>
           </View>
-          
+
           <View style={styles.detailItem}>
             <Clock size={14} color={COLORS.darkGray} />
             <Text style={styles.detailText}>
@@ -227,7 +230,7 @@ export default function StoresAdminManagementScreen() {
           </View>
         </View>
       </View>
-      
+
       <View style={styles.storeActions}>
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
@@ -235,7 +238,7 @@ export default function StoresAdminManagementScreen() {
         >
           <Edit size={18} color={COLORS.white} />
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: COLORS.error }]}
           onPress={() => handleDeleteStore(item.id, item.name)}
@@ -255,100 +258,106 @@ export default function StoresAdminManagementScreen() {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity
-            onPress={() => setEditModalVisible(false)}
-            style={styles.closeButton}
-          >
+          <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.closeButton}>
             <X size={24} color={COLORS.darkGray} />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>تعديل المذخر</Text>
-          <TouchableOpacity
-            onPress={handleSaveStore}
-            style={styles.saveButton}
-          >
+          <TouchableOpacity onPress={handleSaveStore} style={styles.saveButton}>
             <Save size={20} color={COLORS.primary} />
             <Text style={styles.saveButtonText}>حفظ</Text>
           </TouchableOpacity>
         </View>
-        
+
         <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>اسم المذخر</Text>
             <TextInput
               style={styles.textInput}
-              value={editingStore?.name || ''}
-              onChangeText={(text) => setEditingStore(prev => prev ? {...prev, name: text} : null)}
+              value={editingStore?.name || ""}
+              onChangeText={(text) => setEditingStore((prev) => (prev ? { ...prev, name: text } : null))}
               placeholder="أدخل اسم المذخر"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>الوصف</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
-              value={editingStore?.description || ''}
-              onChangeText={(text) => setEditingStore(prev => prev ? {...prev, description: text} : null)}
+              value={editingStore?.description || ""}
+              onChangeText={(text) => setEditingStore((prev) => (prev ? { ...prev, description: text } : null))}
               placeholder="أدخل وصف المذخر"
               textAlign="right"
               multiline
               numberOfLines={3}
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>العنوان</Text>
             <TextInput
               style={styles.textInput}
-              value={editingStore?.address || ''}
-              onChangeText={(text) => setEditingStore(prev => prev ? {...prev, address: text} : null)}
+              value={editingStore?.address || ""}
+              onChangeText={(text) => setEditingStore((prev) => (prev ? { ...prev, address: text } : null))}
               placeholder="أدخل عنوان المذخر"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>رقم الهاتف</Text>
             <TextInput
               style={styles.textInput}
-              value={editingStore?.phone || ''}
-              onChangeText={(text) => setEditingStore(prev => prev ? {...prev, phone: text} : null)}
+              value={editingStore?.phone || ""}
+              onChangeText={(text) => setEditingStore((prev) => (prev ? { ...prev, phone: text } : null))}
               placeholder="أدخل رقم الهاتف"
               textAlign="right"
               keyboardType="phone-pad"
             />
           </View>
-          
+
           <View style={styles.inputRow}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
               <Text style={styles.inputLabel}>ساعة الفتح</Text>
               <TextInput
                 style={styles.textInput}
-                value={editingStore?.workingHours.open || ''}
-                onChangeText={(text) => setEditingStore(prev => prev ? {
-                  ...prev, 
-                  workingHours: {...prev.workingHours, open: text}
-                } : null)}
+                value={editingStore?.workingHours.open || ""}
+                onChangeText={(text) =>
+                  setEditingStore((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          workingHours: { ...prev.workingHours, open: text },
+                        }
+                      : null
+                  )
+                }
                 placeholder="08:00"
                 textAlign="center"
               />
             </View>
-            
+
             <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
               <Text style={styles.inputLabel}>ساعة الإغلاق</Text>
               <TextInput
                 style={styles.textInput}
-                value={editingStore?.workingHours.close || ''}
-                onChangeText={(text) => setEditingStore(prev => prev ? {
-                  ...prev, 
-                  workingHours: {...prev.workingHours, close: text}
-                } : null)}
+                value={editingStore?.workingHours.close || ""}
+                onChangeText={(text) =>
+                  setEditingStore((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          workingHours: { ...prev.workingHours, close: text },
+                        }
+                      : null
+                  )
+                }
                 placeholder="18:00"
                 textAlign="center"
               />
             </View>
           </View>
-          
+
           {/* Image Upload Section */}
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>صورة المذخر</Text>
@@ -381,29 +390,26 @@ export default function StoresAdminManagementScreen() {
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'إدارة المذاخر البيطرية',
+          title: "إدارة المذاخر البيطرية",
           headerRight: () => (
             <View style={styles.headerActions}>
-              <TouchableOpacity 
-                onPress={() => router.push('/add-store')} 
+              <TouchableOpacity
+                onPress={() => router.push("/add-store")}
                 style={[styles.headerButton, styles.addButton]}
               >
                 <Plus size={20} color={COLORS.white} />
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                onPress={handleDeleteAllStores} 
-                style={[styles.headerButton, styles.deleteAllButton]}
-              >
+
+              {/* <TouchableOpacity onPress={handleDeleteAllStores} style={[styles.headerButton, styles.deleteAllButton]}>
                 <Trash2 size={20} color={COLORS.white} />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           ),
         }}
       />
-      
+
       <View style={styles.container}>
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
@@ -413,10 +419,10 @@ export default function StoresAdminManagementScreen() {
               placeholder="البحث في المذاخر..."
               value={searchQuery}
               onChangeText={setSearchQuery}
-              textAlign={isRTL ? 'right' : 'left'}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
-          
+
           <TouchableOpacity style={styles.filterButton}>
             <Filter size={20} color={COLORS.primary} />
           </TouchableOpacity>
@@ -425,42 +431,30 @@ export default function StoresAdminManagementScreen() {
         {/* Filter Buttons */}
         <View style={styles.filterButtonsContainer}>
           <TouchableOpacity
-            style={[
-              styles.filterChip,
-              selectedFilter === 'all' && styles.filterChipActive
-            ]}
-            onPress={() => setSelectedFilter('all')}
+            style={[styles.filterChip, selectedFilter === "all" && styles.filterChipActive]}
+            onPress={() => setSelectedFilter("all")}
           >
-            <Text style={[
-              styles.filterChipText,
-              selectedFilter === 'all' && styles.filterChipTextActive
-            ]}>الكل ({stores.length})</Text>
+            <Text style={[styles.filterChipText, selectedFilter === "all" && styles.filterChipTextActive]}>
+              الكل ({stores.length})
+            </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            style={[
-              styles.filterChip,
-              selectedFilter === 'active' && styles.filterChipActive
-            ]}
-            onPress={() => setSelectedFilter('active')}
+            style={[styles.filterChip, selectedFilter === "active" && styles.filterChipActive]}
+            onPress={() => setSelectedFilter("active")}
           >
-            <Text style={[
-              styles.filterChipText,
-              selectedFilter === 'active' && styles.filterChipTextActive
-            ]}>نشط ({stores.filter(s => s.rating >= 4.0).length})</Text>
+            <Text style={[styles.filterChipText, selectedFilter === "active" && styles.filterChipTextActive]}>
+              نشط ({stores.filter((s) => s.rating >= 4.0).length})
+            </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
-            style={[
-              styles.filterChip,
-              selectedFilter === 'inactive' && styles.filterChipActive
-            ]}
-            onPress={() => setSelectedFilter('inactive')}
+            style={[styles.filterChip, selectedFilter === "inactive" && styles.filterChipActive]}
+            onPress={() => setSelectedFilter("inactive")}
           >
-            <Text style={[
-              styles.filterChipText,
-              selectedFilter === 'inactive' && styles.filterChipTextActive
-            ]}>غير نشط ({stores.filter(s => s.rating < 4.0).length})</Text>
+            <Text style={[styles.filterChipText, selectedFilter === "inactive" && styles.filterChipTextActive]}>
+              غير نشط ({stores.filter((s) => s.rating < 4.0).length})
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -472,13 +466,11 @@ export default function StoresAdminManagementScreen() {
           contentContainerStyle={styles.storesList}
           ListEmptyComponent={() => (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                {stores.length === 0 ? 'لا توجد مذاخر' : 'لا توجد نتائج للبحث'}
-              </Text>
+              <Text style={styles.emptyStateText}>{stores.length === 0 ? "لا توجد مذاخر" : "لا توجد نتائج للبحث"}</Text>
               {stores.length === 0 && (
                 <Button
                   title="إضافة مذخر جديد"
-                  onPress={() => router.push('/add-store')}
+                  onPress={() => router.push("/add-store")}
                   type="primary"
                   size="small"
                   style={styles.addFirstStoreButton}
@@ -487,7 +479,7 @@ export default function StoresAdminManagementScreen() {
             </View>
           )}
         />
-        
+
         {renderEditModal()}
       </View>
     </>
@@ -500,8 +492,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   searchContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     padding: 16,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
@@ -509,8 +501,8 @@ const styles = StyleSheet.create({
   },
   searchInputContainer: {
     flex: 1,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     backgroundColor: COLORS.gray,
     borderRadius: 25,
     paddingHorizontal: 16,
@@ -528,11 +520,11 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: COLORS.lightBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   filterButtonsContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -553,12 +545,12 @@ const styles = StyleSheet.create({
   filterChipText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "500",
+    textAlign: "center",
   },
   filterChipTextActive: {
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   storesList: {
     paddingHorizontal: 16,
@@ -573,10 +565,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   storeImage: {
-    width: '100%',
+    width: "100%",
     height: 150,
     backgroundColor: COLORS.lightGray,
   },
@@ -584,27 +576,27 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   storeHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   storeName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   ratingContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
   },
   rating: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginRight: 4,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   reviewCount: {
     fontSize: 12,
@@ -615,36 +607,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
     lineHeight: 20,
   },
   storeDetails: {
     gap: 8,
   },
   detailItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
   },
   detailText: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginRight: 8,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   storeActions: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     left: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   actionButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -652,47 +644,47 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 60,
   },
   emptyStateText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
   },
   addFirstStoreButton: {
     marginTop: 16,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerButton: {
     padding: 8,
     borderRadius: 6,
     minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   addButton: {
-    backgroundColor: COLORS.success || '#28a745',
+    backgroundColor: COLORS.success || "#28a745",
   },
   deleteAllButton: {
     backgroundColor: COLORS.error,
   },
-  
+
   // Modal Styles
   modalContainer: {
     flex: 1,
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -704,20 +696,20 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
   },
   saveButton: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
     padding: 8,
   },
   saveButtonText: {
     fontSize: 16,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalContent: {
     flex: 1,
@@ -728,10 +720,10 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   textInput: {
     borderWidth: 1,
@@ -745,54 +737,54 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   inputRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'flex-end',
+    flexDirection: "row-reverse",
+    alignItems: "flex-end",
   },
   uploadButton: {
     borderWidth: 2,
     borderColor: COLORS.primary,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: 8,
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8F9FA',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8F9FA",
     gap: 8,
   },
   uploadButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   uploadButtonSubtext: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   imagePreviewContainer: {
     borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#F8F9FA',
+    overflow: "hidden",
+    backgroundColor: "#F8F9FA",
   },
   imagePreview: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   imageActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
     gap: 8,
   },
   changeImageButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.primary,
     paddingVertical: 8,
     borderRadius: 6,
@@ -800,9 +792,9 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.error,
     paddingVertical: 8,
     borderRadius: 6,
@@ -811,6 +803,6 @@ const styles = StyleSheet.create({
   imageActionText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

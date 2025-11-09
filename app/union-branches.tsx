@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react';
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -6,6 +6,8 @@ import { useApp } from "../providers/AppProvider";
 import { useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import { Building2, MapPin, Phone, Mail, Users, Bell, BellOff, Search, Edit3, Star } from 'lucide-react-native';
+import { trpc } from '../lib/trpc';
+import { useQuery } from '@tanstack/react-query';
 
 interface UnionBranch {
   id: string;
@@ -30,176 +32,7 @@ export default function UnionBranchesScreen() {
   const [selectedRegion, setSelectedRegion] = useState<string>('all');
   const [followingBranches, setFollowingBranches] = useState<Set<string>>(new Set());
 
-  const branches: UnionBranch[] = [
-    {
-      id: '1',
-      name: 'نقابة الأطباء البيطريين - بغداد',
-      governorate: 'بغداد',
-      region: 'central',
-      address: 'الكرادة الشرقية - شارع أبو نواس - مجمع النقابات المهنية - الطابق الثالث',
-      phone: '+964 780 123 4567',
-      email: 'baghdad@iraqvetunion.org',
-      president: 'د. محمد جاسم العبيدي',
-      membersCount: 1850,
-      isFollowing: true,
-      announcements: 8,
-      rating: 4.9
-    },
-    {
-      id: '2',
-      name: 'نقابة الأطباء البيطريين - البصرة',
-      governorate: 'البصرة',
-      region: 'southern',
-      address: 'العشار - شارع الكورنيش - مبنى النقابات المهنية - الطابق الثاني',
-      phone: '+964 770 234 5678',
-      email: 'basra@iraqvetunion.org',
-      president: 'د. سارة أحمد الجبوري',
-      membersCount: 680,
-      isFollowing: false,
-      announcements: 5,
-      rating: 4.7
-    },
-    {
-      id: '3',
-      name: 'نقابة الأطباء البيطريين - أربيل',
-      governorate: 'أربيل',
-      region: 'kurdistan',
-      address: 'منطقة عنكاوا - شارع الجامعة - مجمع النقابات المهنية',
-      phone: '+964 750 345 6789',
-      email: 'erbil@iraqvetunion.org',
-      president: 'د. آوات محمد صالح',
-      membersCount: 520,
-      isFollowing: true,
-      announcements: 6,
-      rating: 4.8
-    },
-    {
-      id: '4',
-      name: 'نقابة الأطباء البيطريين - الموصل',
-      governorate: 'نينوى',
-      region: 'northern',
-      address: 'الجانب الأيمن - حي الزهراء - مجمع النقابات المهنية',
-      phone: '+964 790 456 7890',
-      email: 'mosul@iraqvetunion.org',
-      president: 'د. أحمد يوسف الطائي',
-      membersCount: 420,
-      isFollowing: false,
-      announcements: 4,
-      rating: 4.6
-    },
-    {
-      id: '5',
-      name: 'نقابة الأطباء البيطريين - النجف',
-      governorate: 'النجف',
-      region: 'central',
-      address: 'حي الأمير - شارع الكوفة - مبنى النقابات المهنية',
-      phone: '+964 760 567 8901',
-      email: 'najaf@iraqvetunion.org',
-      president: 'د. علي حسين الموسوي',
-      membersCount: 350,
-      isFollowing: true,
-      announcements: 3,
-      rating: 4.5
-    },
-    {
-      id: '6',
-      name: 'نقابة الأطباء البيطريين - كربلاء',
-      governorate: 'كربلاء',
-      region: 'central',
-      address: 'حي الحسين - شارع الإمام علي - مجمع النقابات',
-      phone: '+964 740 678 9012',
-      email: 'karbala@iraqvetunion.org',
-      president: 'د. فاطمة جواد الكربلائي',
-      membersCount: 280,
-      isFollowing: false,
-      announcements: 2,
-      rating: 4.4
-    },
-    {
-      id: '7',
-      name: 'نقابة الأطباء البيطريين - السليمانية',
-      governorate: 'السليمانية',
-      region: 'kurdistan',
-      address: 'حي سالم - شارع الجامعة - مجمع النقابات المهنية',
-      phone: '+964 770 789 0123',
-      email: 'sulaymaniyah@iraqvetunion.org',
-      president: 'د. شيرين عمر قادر',
-      membersCount: 380,
-      isFollowing: true,
-      announcements: 7,
-      rating: 4.7
-    },
-    {
-      id: '8',
-      name: 'نقابة الأطباء البيطريين - دهوك',
-      governorate: 'دهوك',
-      region: 'kurdistan',
-      address: 'مركز المدينة - شارع زاخو - مبنى النقابات المهنية',
-      phone: '+964 750 890 1234',
-      email: 'duhok@iraqvetunion.org',
-      president: 'د. بيرفان أحمد حسن',
-      membersCount: 220,
-      isFollowing: false,
-      announcements: 4,
-      rating: 4.3
-    },
-    {
-      id: '9',
-      name: 'نقابة الأطباء البيطريين - ديالى',
-      governorate: 'ديالى',
-      region: 'central',
-      address: 'بعقوبة - حي المعلمين - شارع الجمهورية',
-      phone: '+964 780 901 2345',
-      email: 'diyala@iraqvetunion.org',
-      president: 'د. خالد محمد الدليمي',
-      membersCount: 180,
-      isFollowing: false,
-      announcements: 2,
-      rating: 4.2
-    },
-    {
-      id: '10',
-      name: 'نقابة الأطباء البيطريين - الأنبار',
-      governorate: 'الأنبار',
-      region: 'central',
-      address: 'الرمادي - حي الضباط - شارع الجامعة',
-      phone: '+964 790 012 3456',
-      email: 'anbar@iraqvetunion.org',
-      president: 'د. عبدالرحمن صالح العاني',
-      membersCount: 160,
-      isFollowing: false,
-      announcements: 1,
-      rating: 4.1
-    },
-    {
-      id: '11',
-      name: 'نقابة الأطباء البيطريين - ذي قار',
-      governorate: 'ذي قار',
-      region: 'southern',
-      address: 'الناصرية - حي الحسين - شارع الحبوبي',
-      phone: '+964 760 123 4567',
-      email: 'thiqar@iraqvetunion.org',
-      president: 'د. حيدر عبدالله الناصري',
-      membersCount: 240,
-      isFollowing: false,
-      announcements: 3,
-      rating: 4.3
-    },
-    {
-      id: '12',
-      name: 'نقابة الأطباء البيطريين - ميسان',
-      governorate: 'ميسان',
-      region: 'southern',
-      address: 'العمارة - حي الثورة - شارع الجمهورية',
-      phone: '+964 740 234 5678',
-      email: 'maysan@iraqvetunion.org',
-      president: 'د. نور الهدى جاسم العامري',
-      membersCount: 140,
-      isFollowing: false,
-      announcements: 2,
-      rating: 4.0
-    }
-  ];
+  const { data: branches, isLoading, error } = useQuery(trpc.union.branch.list.queryOptions());
 
   const regions = [
     { id: 'all', name: 'جميع المناطق', color: COLORS.primary },
@@ -209,12 +42,12 @@ export default function UnionBranchesScreen() {
     { id: 'kurdistan', name: 'إقليم كردستان', color: '#EF4444' }
   ];
 
-  const filteredBranches = branches.filter(branch => {
+  const filteredBranches = branches?.filter(branch => {
     const matchesSearch = branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          branch.governorate.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRegion = selectedRegion === 'all' || branch.region === selectedRegion;
     return matchesSearch && matchesRegion;
-  });
+  }) || [];
 
   const handleFollowToggle = (branchId: string) => {
     const newFollowing = new Set(followingBranches);
@@ -250,6 +83,22 @@ export default function UnionBranchesScreen() {
     
     return stars;
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -1,9 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { Building2, MapPin, Phone, Mail, Users, Save, Trash2, Plus, Edit3, Calendar, X, Link, Upload, Camera } from 'lucide-react-native';
+import { trpc } from '../lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface UnionBranch {
   id: string;
@@ -41,71 +43,11 @@ export default function EditUnionBranchScreen() {
   const { isSuperAdmin, hasAdminAccess, isModerator, moderatorPermissions } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const queryClient = useQueryClient();
 
-  // Mock data - in real app, fetch based on id
-  const getBranchData = (branchId: string): UnionBranch => {
-    const branches: { [key: string]: UnionBranch } = {
-      '1': {
-        id: '1',
-        name: 'نقابة الأطباء البيطريين - بغداد',
-        governorate: 'بغداد',
-        region: 'central',
-        address: 'الكرادة الشرقية - شارع أبو نواس - مجمع النقابات المهنية - الطابق الثالث',
-        phone: '+964 780 123 4567',
-        email: 'baghdad@iraqvetunion.org',
-        president: 'د. محمد جاسم العبيدي',
-        membersCount: 1850,
-        isFollowing: true,
-        rating: 4.9,
-        description: 'نقابة الأطباء البيطريين في بغداد هي النقابة الرئيسية والأكبر في العراق، تأسست عام 1959 وتضم أكثر من 1850 طبيب بيطري. تقود النقابة جهود تطوير مهنة الطب البيطري في العراق وتعمل على حماية حقوق الأطباء البيطريين وتقديم أفضل الخدمات للمجتمع.',
-        establishedYear: 1959,
-        services: [
-          'تسجيل وترخيص الأطباء البيطريين',
-          'برامج التطوير المهني والتدريب المستمر',
-          'الاستشارات القانونية والمهنية',
-          'برامج التأمين الصحي والاجتماعي',
-          'تنظيم المؤتمرات والندوات العلمية',
-          'البحوث والدراسات البيطرية',
-          'برامج التعاون الدولي',
-          'مراقبة جودة الخدمات البيطرية'
-        ],
-        announcements: [
-          {
-            id: '1',
-            title: 'اجتماع الجمعية العمومية السنوي 2025',
-            content: 'يسر نقابة الأطباء البيطريين في بغداد دعوة جميع الأعضاء لحضور اجتماع الجمعية العمومية السنوي المقرر عقده يوم الخميس الموافق 30/1/2025 في قاعة المؤتمرات بمقر النقابة. سيتم مناقشة التقرير السنوي والخطط المستقبلية.',
-            date: '2025-01-15',
-            type: 'meeting',
-            isImportant: true
-          },
-          {
-            id: '2',
-            title: 'مؤتمر الطب البيطري الدولي 2025',
-            content: 'تنظم النقابة مؤتمرها الدولي السنوي للطب البيطري بمشاركة خبراء من العراق والعالم. التسجيل مفتوح لجميع الأطباء البيطريين.',
-            date: '2025-01-10',
-            type: 'event',
-            isImportant: true
-          },
-          {
-            id: '3',
-            title: 'برنامج التدريب المتقدم في جراحة الحيوانات',
-            content: 'يبدأ برنامج التدريب المتقدم في جراحة الحيوانات الأليفة بالتعاون مع جامعة بغداد. البرنامج يشمل تدريب عملي ونظري.',
-            date: '2025-01-08',
-            type: 'event',
-            isImportant: false
-          }
-        ]
-      },
-      // Add other branches here...
-    };
-    
-    return branches[branchId as string] || branches['1'];
-  };
-  
-  const originalBranch = getBranchData(id as string);
-  
-  // Form state
-  const [formData, setFormData] = useState<UnionBranch>(originalBranch);
+  const { data: originalBranch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
+
+  const [formData, setFormData] = useState<UnionBranch | null>(null);
   const [newService, setNewService] = useState<string>('');
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [showAddAnnouncement, setShowAddAnnouncement] = useState<boolean>(false);
@@ -122,7 +64,24 @@ export default function EditUnionBranchScreen() {
   });
   const [selectedAnnouncementImage, setSelectedAnnouncementImage] = useState<string | null>(null);
 
-  // Check if user has permission to edit
+  useEffect(() => {
+    if (originalBranch) {
+      setFormData(originalBranch as UnionBranch);
+    }
+  }, [originalBranch]);
+
+  const updateBranchMutation = useMutation(trpc.union.branch.update.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.branch.get.queryKey(parseInt(id as string)));
+      Alert.alert('تم الحفظ', 'تم حفظ التغييرات بنجاح', [
+        { text: 'موافق', onPress: () => router.back() }
+      ]);
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء حفظ التغييرات');
+    }
+  }));
+
   if (!isSuperAdmin && !hasAdminAccess && !(isModerator && moderatorPermissions?.sections?.includes('union-branches'))) {
     return (
       <View style={styles.container}>
@@ -140,6 +99,22 @@ export default function EditUnionBranchScreen() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error || !formData) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
+
   const handleSave = () => {
     Alert.alert(
       'حفظ التغييرات',
@@ -149,11 +124,7 @@ export default function EditUnionBranchScreen() {
         {
           text: 'حفظ',
           onPress: () => {
-            // Here you would save to backend
-            console.log('Saving branch data:', formData);
-            Alert.alert('تم الحفظ', 'تم حفظ التغييرات بنجاح', [
-              { text: 'موافق', onPress: () => router.back() }
-            ]);
+            updateBranchMutation.mutate(formData as any);
           }
         }
       ]
@@ -272,7 +243,7 @@ export default function EditUnionBranchScreen() {
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: 'bold', fontSize: 16 },
           headerRight: () => (
-            <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+            <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={updateBranchMutation.isPending}>
               <Save size={20} color={COLORS.white} />
             </TouchableOpacity>
           ),

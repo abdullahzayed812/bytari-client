@@ -1,30 +1,11 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { useToastContext } from "../providers/ToastProvider";
 import Button from "../components/Button";
-import {
-  ArrowRight,
-  Upload,
-  MapPin,
-  Phone,
-  Mail,
-  Clock,
-  Eye,
-  EyeOff,
-  Edit,
-  School,
-} from "lucide-react-native";
+import { ArrowRight, Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "lucide-react-native";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { queryClient, trpc } from "../lib/trpc";
@@ -44,85 +25,86 @@ interface StoreFormData {
 }
 
 export default function AddStoreScreen() {
-  const { t, isRTL } = useI18n();
-  const { hasAdminAccess } = useApp();
+  const { isRTL } = useI18n();
+  const { hasAdminAccess, user } = useApp();
   const { showToast } = useToastContext();
+
   const [showSubscription, setShowSubscription] = useState(false);
   const [formData, setFormData] = useState<StoreFormData>({
-    name: "",
-    description: "",
-    address: "",
-    phone: "",
-    email: "",
-    category: "",
-    licenseNumber: "",
-    licenseImage: "",
-    workingHours: "",
+    name: "متجر الرعاية للحيوانات الأليفة",
+    description: "نوفر جميع مستلزمات الحيوانات الأليفة من طعام، أدوات عناية، ألعاب، وأدوية بيطرية بأفضل الأسعار.",
+    address: "شارع التحلية، حي الروضة، جدة، المملكة العربية السعودية",
+    phone: "+966500112233",
+    email: "info@petcarestore.sa",
+    category: "متجر مستلزمات حيوانات",
+    licenseNumber: "STORE-2025-98765",
+    licenseImage: "https://example.com/store-license.jpg",
+    workingHours: "من السبت إلى الخميس: 10:00 صباحًا - 10:00 مساءً",
   });
 
-  const createStoreMutation = useMutation(
-    trpc.stores.create.mutationOptions({})
-  );
+  const createStoreMutation = useMutation(trpc.stores.create.mutationOptions({}));
 
   const handleSubmit = async () => {
-    // Validation
     if (!formData.name.trim()) {
-      showToast("خطأ", "اسم المذخر مطلوب", "error");
+      showToast({ type: "error", message: "اسم المذخر مطلوب" });
       return;
     }
     if (!formData.address.trim()) {
-      showToast("خطأ", "العنوان مطلوب", "error");
+      showToast({ type: "error", message: "العنوان مطلوب" });
       return;
     }
     if (!formData.category.trim()) {
-      showToast("خطأ", "الفئة مطلوبة", "error");
+      showToast({ type: "error", message: "الفئة مطلوبة" });
       return;
     }
     if (!formData.licenseNumber.trim()) {
-      showToast("خطأ", "رقم الترخيص مطلوب", "error");
+      showToast({ type: "error", message: "رقم الترخيص مطلوب" });
       return;
     }
     if (!formData.licenseImage.trim()) {
-      showToast("خطأ", "صورة الترخيص مطلوبة", "error");
+      showToast({ type: "error", message: "صورة الترخيص مطلوبة" });
       return;
     }
 
     try {
-      createStoreMutation.mutate(
-        {
-          name: formData.name,
-          description: formData.description,
-          address: formData.address,
-          phone: formData.phone,
-          email: formData.email,
-          category: formData.category,
-          licenseNumber: formData.licenseNumber,
-          licenseImage: formData.licenseImage,
-          workingHours: formData.workingHours,
+      const payload: any = {
+        name: formData.name,
+        description: formData.description,
+        address: formData.address,
+        phone: formData.phone,
+        email: formData.email,
+        category: formData.category,
+        licenseNumber: formData.licenseNumber,
+        licenseImage: formData.licenseImage,
+        workingHours: formData.workingHours,
+      };
+
+      // ✅ Add adminId only if user has admin access
+      if (hasAdminAccess && user?.id) {
+        payload.adminId = user.id;
+      }
+
+      createStoreMutation.mutate(payload, {
+        onSuccess: (data) => {
+          showToast({ type: "success", message: data.message });
+          queryClient.invalidateQueries(trpc.content.stores.list.queryKey);
+          router.back();
         },
-        {
-          onSuccess: (data) => {
-            showToast("نجح", data.message, "success");
-            queryClient.invalidateQueries(trpc.content.stores.list.queryKey);
-            router.back();
-          },
-          onError: (error) => {
-            showToast("خطأ", error.message, "error");
-          },
-        }
-      );
+        onError: (error) => {
+          showToast({ type: "error", message: error.message });
+        },
+      });
     } catch (error) {
       console.error("Error creating store:", error);
-      showToast("خطأ", "حدث خطأ أثناء إرسال الطلب", "error");
+      showToast({ type: "error", message: "حدث خطأ أثناء إرسال الطلب" });
     }
   };
 
   const handleImageUpload = async () => {
     try {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
-        showToast("خطأ", "نحتاج إلى إذن للوصول إلى الصور", "error");
+        showToast({ type: "error", message: "نحتاج إلى إذن للوصول إلى الصور" });
         return;
       }
 
@@ -138,11 +120,11 @@ export default function AddStoreScreen() {
           ...prev,
           licenseImage: result.assets[0].uri,
         }));
-        showToast("نجح", "تم رفع الصورة بنجاح", "success");
+        showToast({ type: "success", message: "تم رفع الصورة بنجاح" });
       }
     } catch (error) {
       console.error("Error picking image:", error);
-      showToast("خطأ", "حدث خطأ أثناء اختيار الصورة", "error");
+      showToast({ type: "error", message: "حدث خطأ أثناء اختيار الصورة" });
     }
   };
 
@@ -164,9 +146,7 @@ export default function AddStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) =>
-                  setFormData((prev) => ({ ...prev, name: text }))
-                }
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
                 placeholder="أدخل اسم المذخر"
                 textAlign={isRTL ? "right" : "left"}
               />
@@ -177,9 +157,7 @@ export default function AddStoreScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(text) =>
-                  setFormData((prev) => ({ ...prev, description: text }))
-                }
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
                 placeholder="وصف المذخر والخدمات المقدمة"
                 multiline
                 numberOfLines={3}
@@ -194,9 +172,7 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.address}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({ ...prev, address: text }))
-                  }
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, address: text }))}
                   placeholder="العنوان الكامل للمذخر"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -214,9 +190,7 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.phone}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({ ...prev, phone: text }))
-                  }
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, phone: text }))}
                   placeholder="رقم الهاتف"
                   keyboardType="phone-pad"
                   textAlign={isRTL ? "right" : "left"}
@@ -231,9 +205,7 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.email}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({ ...prev, email: text }))
-                  }
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
                   placeholder="البريد الإلكتروني"
                   keyboardType="email-address"
                   textAlign={isRTL ? "right" : "left"}
@@ -248,9 +220,7 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.category}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({ ...prev, category: text }))
-                  }
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, category: text }))}
                   placeholder="الفئة المتعلق بها المتجر"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -264,9 +234,7 @@ export default function AddStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.workingHours}
-                  onChangeText={(text) =>
-                    setFormData((prev) => ({ ...prev, workingHours: text }))
-                  }
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, workingHours: text }))}
                   placeholder="مثال: السبت - الخميس: 8:00 ص - 10:00 م"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -282,9 +250,7 @@ export default function AddStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.licenseNumber}
-                onChangeText={(text) =>
-                  setFormData((prev) => ({ ...prev, licenseNumber: text }))
-                }
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, licenseNumber: text }))}
                 placeholder="رقم ترخيص المذخر"
                 textAlign={isRTL ? "right" : "left"}
               />
@@ -292,40 +258,25 @@ export default function AddStoreScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>صورة الترخيص *</Text>
-              <TouchableOpacity
-                style={styles.uploadButton}
-                onPress={handleImageUpload}
-              >
+              <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
                 <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadText}>
-                  {formData.licenseImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}
-                </Text>
+                <Text style={styles.uploadText}>{formData.licenseImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>
               </TouchableOpacity>
-              {formData.licenseImage && (
-                <Image
-                  source={{ uri: formData.licenseImage }}
-                  style={styles.previewImage}
-                />
-              )}
+              {formData.licenseImage && <Image source={{ uri: formData.licenseImage }} style={styles.previewImage} />}
             </View>
           </View>
 
           {/* Admin Controls for Subscription */}
           {hasAdminAccess && (
             <View style={styles.adminControls}>
-              <TouchableOpacity
-                style={styles.adminButton}
-                onPress={() => setShowSubscription(!showSubscription)}
-              >
+              <TouchableOpacity style={styles.adminButton} onPress={() => setShowSubscription(!showSubscription)}>
                 {showSubscription ? (
                   <EyeOff size={20} color={COLORS.primary} />
                 ) : (
                   <Eye size={20} color={COLORS.primary} />
                 )}
                 <Text style={styles.adminButtonText}>
-                  {showSubscription
-                    ? "إخفاء معلومات الاشتراك"
-                    : "إظهار معلومات الاشتراك"}
+                  {showSubscription ? "إخفاء معلومات الاشتراك" : "إظهار معلومات الاشتراك"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -342,24 +293,14 @@ export default function AddStoreScreen() {
                   </TouchableOpacity>
                 )}
               </View>
-              <Text style={styles.subscriptionText}>
-                • الاشتراك الشهري: 25 دولار
-              </Text>
-              <Text style={styles.subscriptionText}>
-                • يتضمن: عرض المذخر في التطبيق، إضافة المنتجات، إدارة المخزون
-              </Text>
-              <Text style={styles.subscriptionText}>
-                • سيتم تفعيل المذخر بعد الموافقة على الطلب ودفع الاشتراك
-              </Text>
+              <Text style={styles.subscriptionText}>• الاشتراك الشهري: 25 دولار</Text>
+              <Text style={styles.subscriptionText}>• يتضمن: عرض المذخر في التطبيق، إضافة المنتجات، إدارة المخزون</Text>
+              <Text style={styles.subscriptionText}>• سيتم تفعيل المذخر بعد الموافقة على الطلب ودفع الاشتراك</Text>
             </View>
           )}
 
           <Button
-            title={
-              createStoreMutation.isPending
-                ? "جاري الإرسال..."
-                : "إرسال طلب الإضافة"
-            }
+            title={createStoreMutation.isPending ? "جاري الإرسال..." : "إرسال طلب الإضافة"}
             onPress={handleSubmit}
             disabled={createStoreMutation.isPending}
             style={styles.submitButton}

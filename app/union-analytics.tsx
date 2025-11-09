@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import {
   ArrowRight,
@@ -20,6 +21,7 @@ import { useRouter, Stack } from 'expo-router';
 import { COLORS } from "../constants/colors";
 import { useQuery } from '@tanstack/react-query';
 import { trpc } from "../lib/trpc";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -27,7 +29,7 @@ export default function UnionAnalyticsScreen() {
   const router = useRouter();
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month');
 
-  const { data, isLoading, error } = useQuery(trpc.admin.stats.getUnionAnalytics.queryOptions());
+  const { data, isLoading, error } = useQuery(trpc.union.analytics.get.queryOptions());
 
   const statsData = [
     {
@@ -79,6 +81,22 @@ export default function UnionAnalyticsScreen() {
     // Handle export functionality
     console.log('Exporting analytics data...');
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -208,11 +226,7 @@ export default function UnionAnalyticsScreen() {
           <View style={styles.detailCard}>
             <Text style={styles.detailTitle}>أكثر الفعاليات نشاطاً</Text>
             <View style={styles.detailList}>
-              {[
-                { name: 'ورشة الطب البيطري الحديث', participants: 145 },
-                { name: 'مؤتمر الصحة الحيوانية', participants: 120 },
-                { name: 'دورة الجراحة المتقدمة', participants: 98 },
-              ].map((event, index) => (
+              {topEvents.map((event, index) => (
                 <View key={index} style={styles.detailItem}>
                   <Text style={styles.detailItemName}>{event.name}</Text>
                   <Text style={styles.detailItemValue}>{event.participants} مشارك</Text>
@@ -224,13 +238,7 @@ export default function UnionAnalyticsScreen() {
           <View style={styles.detailCard}>
             <Text style={styles.detailTitle}>التوزيع الجغرافي للأعضاء</Text>
             <View style={styles.detailList}>
-              {[
-                { region: 'بغداد', count: 3250, percentage: 28 },
-                { region: 'البصرة', count: 1890, percentage: 16 },
-                { region: 'أربيل', count: 1560, percentage: 14 },
-                { region: 'الموصل', count: 1340, percentage: 12 },
-                { region: 'أخرى', count: 3430, percentage: 30 },
-              ].map((region, index) => (
+              {regionDistribution.map((region, index) => (
                 <View key={index} style={styles.detailItem}>
                   <Text style={styles.detailItemName}>{region.region}</Text>
                   <View style={styles.regionStats}>

@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
-import React, { useState } from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack } from "expo-router";
@@ -19,6 +19,8 @@ import {
   Heart,
   Bell,
 } from "lucide-react-native";
+import { trpc } from "../lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 interface UnionService {
   id: string;
@@ -37,40 +39,18 @@ interface News {
 
 export default function VetUnionScreen() {
   const { isSuperAdmin, isAuthenticated, isModerator, moderatorPermissions } = useApp();
-  // const { canAccessUnion } = usePermissions();
   const router = useRouter();
   const [isFollowing, setIsFollowing] = useState(false);
 
-  const services: UnionService[] = [
-    {
-      id: "1",
-      title: "التسجيل والعضوية",
-      description: "تسجيل الأطباء البيطريين الجدد وتجديد عضوية الأعضاء الحاليين وفقاً لقانون النقابة",
+  const { data, isLoading, error } = useQuery(trpc.union.main.get.queryOptions());
+  const unionInfo = data?.union;
+
+  const services: UnionService[] = useMemo(() => {
+    return unionInfo?.services?.map((service: any) => ({
+      ...service,
       icon: <Users size={24} color={COLORS.white} />,
-      color: "#3B82F6",
-    },
-    {
-      id: "2",
-      title: "إجازة ممارسة المهنة",
-      description: "استخراج وتجديد إجازات ممارسة مهنة الطب البيطري وفقاً لقانون رقم 31 لسنة 1986",
-      icon: <Award size={24} color={COLORS.white} />,
-      color: "#10B981",
-    },
-    {
-      id: "3",
-      title: "التعليم المستمر",
-      description: "برامج التطوير المهني والدورات التخصصية والمؤتمرات العلمية السنوية",
-      icon: <Calendar size={24} color={COLORS.white} />,
-      color: "#F59E0B",
-    },
-    {
-      id: "4",
-      title: "الشهادات المهنية",
-      description: "إصدار شهادات الخبرة والممارسة والشهادات المطلوبة للعمل الحكومي والخاص",
-      icon: <FileText size={24} color={COLORS.white} />,
-      color: "#EF4444",
-    },
-  ];
+    }));
+  }, [unionInfo]);
 
   const news: News[] = [
     {
@@ -127,15 +107,27 @@ export default function VetUnionScreen() {
     // }
   };
 
-  // React.useEffect(() => {
-  //   setIsFollowing(isFollowingUnion() || false);
-  // }, [isFollowingUnion]);
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "نقابة الأطباء البيطريين العراقية",
+          title: unionInfo?.name || "نقابة الأطباء البيطريين العراقية",
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" },
@@ -173,18 +165,15 @@ export default function VetUnionScreen() {
           <View style={styles.logoContainer}>
             <Image
               source={{
-                uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Emblem_of_Iraq.svg/200px-Emblem_of_Iraq.svg.png",
+                uri:
+                  unionInfo?.logoUrl ||
+                  "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Emblem_of_Iraq.svg/200px-Emblem_of_Iraq.svg.png",
               }}
               style={styles.unionLogo}
             />
           </View>
-          <Text style={styles.unionTitle}>نقابة الأطباء البيطريين العراقية</Text>
-          <Text style={styles.unionDescription}>
-            نقابة الأطباء البيطريين العراقية هي المؤسسة المهنية الرسمية التي تأسست عام 1959 بموجب قانون النقابات المهنية
-            رقم 35 لسنة 1959. تمثل النقابة جميع الأطباء البيطريين المرخصين في العراق وتعمل على تنظيم وتطوير مهنة الطب
-            البيطري، وحماية حقوق الأعضاء، ورفع مستوى الخدمات البيطرية والصحة الحيوانية في جمهورية العراق. يبلغ عدد أعضاء
-            النقابة حوالي 8000 طبيب بيطري موزعين على جميع المحافظات العراقية.
-          </Text>
+          <Text style={styles.unionTitle}>{unionInfo?.name}</Text>
+          <Text style={styles.unionDescription}>{unionInfo?.description}</Text>
 
           {/* Follow Button */}
           <TouchableOpacity
@@ -307,7 +296,7 @@ export default function VetUnionScreen() {
               <Phone size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>الهاتف</Text>
-                <Text style={styles.contactValue}>+964 1 717 6543</Text>
+                <Text style={styles.contactValue}>{unionInfo?.phone1}</Text>
               </View>
             </TouchableOpacity>
 
@@ -315,7 +304,7 @@ export default function VetUnionScreen() {
               <Phone size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>الهاتف الثاني</Text>
-                <Text style={styles.contactValue}>+964 1 717 2891</Text>
+                <Text style={styles.contactValue}>{unionInfo?.phone2}</Text>
               </View>
             </TouchableOpacity>
 
@@ -323,7 +312,7 @@ export default function VetUnionScreen() {
               <Mail size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>البريد الإلكتروني</Text>
-                <Text style={styles.contactValue}>info@iraqvetunion.org</Text>
+                <Text style={styles.contactValue}>{unionInfo?.email}</Text>
               </View>
             </TouchableOpacity>
 
@@ -331,9 +320,7 @@ export default function VetUnionScreen() {
               <MapPin size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>العنوان</Text>
-                <Text style={styles.contactValue}>
-                  بغداد - الكرادة الشرقية - شارع أبو نواس - مجمع النقابات المهنية - الطابق الثالث
-                </Text>
+                <Text style={styles.contactValue}>{unionInfo?.address}</Text>
               </View>
             </View>
 
@@ -341,7 +328,7 @@ export default function VetUnionScreen() {
               <ExternalLink size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>الموقع الإلكتروني</Text>
-                <Text style={styles.contactValue}>www.iraqvetunion.org</Text>
+                <Text style={styles.contactValue}>{unionInfo?.website}</Text>
               </View>
             </TouchableOpacity>
           </View>

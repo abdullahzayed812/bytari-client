@@ -4,7 +4,7 @@ import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../../components/Button";
 import { Pet } from "../../types";
@@ -21,6 +21,7 @@ export default function AddPetScreen() {
   const { t } = useI18n();
   const { user } = useApp();
   const { showToast } = useToastContext();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const params = useLocalSearchParams<{ editMode?: string; petId?: string }>();
   const isEditMode = params.editMode === "true";
@@ -130,6 +131,7 @@ export default function AddPetScreen() {
             type: "success",
           });
           router.navigate("/(tabs)/pets");
+          queryClient.invalidateQueries(trpc.pets.getUserPets.queryKey);
         },
         onError: (error) => {
           showToast({

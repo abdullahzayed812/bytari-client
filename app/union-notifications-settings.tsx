@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {
   ArrowRight,
@@ -21,9 +22,15 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { COLORS } from "../constants/colors";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { trpc } from '../lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function UnionNotificationsSettingsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const { data: settings, isLoading, error } = useQuery(trpc.union.notificationSettings.get.queryOptions());
+
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [smsNotifications, setSmsNotifications] = useState(false);
@@ -32,6 +39,29 @@ export default function UnionNotificationsSettingsScreen() {
   const [emergencyNotifications, setEmergencyNotifications] = useState(true);
   const [weeklyReports, setWeeklyReports] = useState(true);
   const [monthlyReports, setMonthlyReports] = useState(true);
+
+  useEffect(() => {
+    if (settings) {
+      setEmailNotifications(settings.emailNotifications);
+      setPushNotifications(settings.pushNotifications);
+      setSmsNotifications(settings.smsNotifications);
+      setNewMemberNotifications(settings.newMemberNotifications);
+      setEventNotifications(settings.eventNotifications);
+      setEmergencyNotifications(settings.emergencyNotifications);
+      setWeeklyReports(settings.weeklyReports);
+      setMonthlyReports(settings.monthlyReports);
+    }
+  }, [settings]);
+
+  const updateSettingsMutation = useMutation(trpc.union.notificationSettings.update.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.notificationSettings.get.queryKey);
+      Alert.alert('تم الحفظ', 'تم حفظ إعدادات الإشعارات بنجاح');
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء حفظ الإعدادات');
+    }
+  }));
 
   const handleSave = () => {
     Alert.alert(
@@ -42,12 +72,37 @@ export default function UnionNotificationsSettingsScreen() {
         {
           text: 'حفظ',
           onPress: () => {
-            Alert.alert('تم الحفظ', 'تم حفظ إعدادات الإشعارات بنجاح');
+            updateSettingsMutation.mutate({
+              emailNotifications,
+              pushNotifications,
+              smsNotifications,
+              newMemberNotifications,
+              eventNotifications,
+              emergencyNotifications,
+              weeklyReports,
+              monthlyReports,
+            });
           },
         },
       ]
     );
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -57,7 +112,7 @@ export default function UnionNotificationsSettingsScreen() {
           <ArrowRight size={24} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>إعدادات الإشعارات</Text>
-        <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+        <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={updateSettingsMutation.isPending}>
           <Save size={20} color={COLORS.white} />
         </TouchableOpacity>
       </View>

@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import {
   ArrowRight,
@@ -22,6 +23,8 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { COLORS } from "../constants/colors";
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { trpc } from '../lib/trpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface User {
   id: string;
@@ -34,47 +37,52 @@ interface User {
 
 export default function UnionUsersManagementScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState<'all' | 'admin' | 'moderator' | 'member'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
-
   const [newUserBranch, setNewUserBranch] = useState('');
-  
-  const [users] = useState<User[]>([
-    {
-      id: '1',
-      name: 'د. أحمد محمد',
-      email: 'ahmed@example.com',
-      role: 'admin',
-      status: 'active',
-      joinDate: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'د. فاطمة علي',
-      email: 'fatima@example.com',
-      role: 'moderator',
-      status: 'active',
-      joinDate: '2024-02-20'
-    },
-    {
-      id: '3',
-      name: 'د. محمد حسن',
-      email: 'mohammed@example.com',
-      role: 'member',
-      status: 'inactive',
-      joinDate: '2024-03-10'
-    },
-  ]);
 
-  const filteredUsers = users.filter(user => {
+  const { data: users, isLoading, error } = useQuery(trpc.union.users.list.queryOptions());
+
+  const createUserMutation = useMutation(trpc.union.users.create.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.users.list.queryKey);
+      setShowAddModal(false);
+      Alert.alert('تم الإضافة بنجاح', 'تم إضافة المشرف بنجاح');
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء إضافة المشرف');
+    }
+  }));
+
+  const updateUserMutation = useMutation(trpc.union.users.update.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.users.list.queryKey);
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء تحديث المستخدم');
+    }
+  }));
+
+  const deleteUserMutation = useMutation(trpc.union.users.delete.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.union.users.list.queryKey);
+      Alert.alert('تم الحذف', 'تم حذف المستخدم بنجاح');
+    },
+    onError: (error) => {
+      Alert.alert('خطأ', 'حدث خطأ أثناء حذف المستخدم');
+    }
+  }));
+
+  const filteredUsers = users?.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = selectedRole === 'all' || user.role === selectedRole;
     return matchesSearch && matchesRole;
-  });
+  }) || [];
 
   const handleEditUser = (userId: string) => {
     Alert.alert('تعديل المستخدم', `تعديل المستخدم ${userId}`);
@@ -87,7 +95,7 @@ export default function UnionUsersManagementScreen() {
       [
         { text: 'إلغاء', style: 'cancel' },
         { text: 'حذف', style: 'destructive', onPress: () => {
-          Alert.alert('تم الحذف', 'تم حذف المستخدم بنجاح');
+          deleteUserMutation.mutate(parseInt(userId));
         }}
       ]
     );
@@ -95,8 +103,7 @@ export default function UnionUsersManagementScreen() {
 
   const handleToggleStatus = (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    const action = newStatus === 'active' ? 'تفعيل' : 'إلغاء تفعيل';
-    Alert.alert(`${action} المستخدم`, `تم ${action} المستخدم بنجاح`);
+    updateUserMutation.mutate({ id: parseInt(userId), status: newStatus });
   };
 
   const getRoleText = (role: string) => {
@@ -116,6 +123,22 @@ export default function UnionUsersManagementScreen() {
       default: return COLORS.darkGray;
     }
   };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -328,35 +351,13 @@ export default function UnionUsersManagementScreen() {
                     return;
                   }
 
-                  const branchName = [
-                    { id: '1', name: 'فرع بغداد الرئيسي' },
-                    { id: '2', name: 'فرع البصرة' },
-                    { id: '3', name: 'فرع الموصل' },
-                    { id: '4', name: 'فرع أربيل' },
-                    { id: '5', name: 'فرع النجف' },
-                    { id: '6', name: 'فرع كربلاء' },
-                    { id: '7', name: 'فرع الأنبار' },
-                    { id: '8', name: 'فرع ديالى' },
-                    { id: '9', name: 'فرع واسط' },
-                    { id: '10', name: 'فرع ميسان' }
-                  ].find(b => b.id === newUserBranch)?.name;
-                  
-                  Alert.alert(
-                    'تم الإضافة بنجاح', 
-                    `تم إضافة المشرف "${newUserName}" للفرع: ${branchName}\n\nالمشرف سيحصل على صلاحيات كاملة للتحكم في الفرع المحدد فقط.\n\nسيتم إرسال بيانات الدخول عبر البريد الإلكتروني.`,
-                    [
-                      {
-                        text: 'موافق',
-                        onPress: () => {
-                          setShowAddModal(false);
-                          setNewUserName('');
-                          setNewUserEmail('');
-                          setNewUserBranch('');
-                        }
-                      }
-                    ]
-                  );
+                  createUserMutation.mutate({
+                    name: newUserName,
+                    email: newUserEmail,
+                    branchId: parseInt(newUserBranch),
+                  });
                 }}
+                disabled={createUserMutation.isPending}
               >
                 <Text style={styles.saveButtonText}>إضافة</Text>
               </TouchableOpacity>

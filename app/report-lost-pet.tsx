@@ -1,30 +1,17 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  I18nManager,
-  Alert,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
-import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useRouter, Stack } from "expo-router";
 import Button from "../components/Button";
-import { Calendar, MapPin, Plus, X } from "lucide-react-native";
+import { MapPin, Plus, X } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
-import { Pet } from "../types";
 import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function ReportLostPetScreen() {
   const { user } = useApp();
   const router = useRouter();
-
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [breed, setBreed] = useState("");
@@ -39,9 +26,7 @@ export default function ReportLostPetScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create pet approval request mutation
-  const createApprovalMutation = useMutation(
-    trpc.pets.createApprovalRequest.mutationOptions({})
-  );
+  const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
   const handleAddImage = async () => {
     try {
@@ -103,9 +88,7 @@ export default function ReportLostPetScreen() {
             contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
           }`,
           images: image ? [image] : [],
-          contactInfo: `${contactName} - ${contactPhone}${
-            contactEmail ? ` - ${contactEmail}` : ""
-          }`,
+          contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
           location: location.trim(),
         },
         {
@@ -113,7 +96,14 @@ export default function ReportLostPetScreen() {
             Alert.alert(
               "تم إرسال البلاغ",
               "تم إرسال بلاغ الحيوان المفقود بنجاح وهو الآن في انتظار موافقة الإدارة. سيتم إشعارك عند اتخاذ قرار بشأن البلاغ.",
-              [{ text: "موافق", onPress: () => router.back() }]
+              [
+                {
+                  text: "موافق",
+                  onPress: () => {
+                    router.back();
+                  },
+                },
+              ]
             );
           },
           onError: (error) => {
@@ -140,10 +130,7 @@ export default function ReportLostPetScreen() {
         }}
       />
 
-      <ScrollView
-        style={[styles.container, { direction: "rtl" }]}
-        contentContainerStyle={styles.contentContainer}
-      >
+      <ScrollView style={[styles.container, { direction: "rtl" }]} contentContainerStyle={styles.contentContainer}>
         <Text style={styles.title}>{"تقرير حيوان مفقود"}</Text>
 
         <View style={styles.formGroup}>
@@ -151,18 +138,12 @@ export default function ReportLostPetScreen() {
           {image ? (
             <View style={styles.imageContainer}>
               <Image source={{ uri: image }} style={styles.image} />
-              <TouchableOpacity
-                style={styles.removeImageButton}
-                onPress={handleRemoveImage}
-              >
+              <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
                 <X size={16} color={COLORS.white} />
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity
-              style={styles.addImageButton}
-              onPress={handleAddImage}
-            >
+            <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
               <Plus size={24} color={COLORS.primary} />
               <Text style={styles.addImageText}>إضافة صورة</Text>
             </TouchableOpacity>
@@ -225,10 +206,7 @@ export default function ReportLostPetScreen() {
               placeholder="أدخل الموقع"
               placeholderTextColor={COLORS.darkGray}
             />
-            <TouchableOpacity
-              style={styles.mapButton}
-              onPress={handleSelectLocation}
-            >
+            <TouchableOpacity style={styles.mapButton} onPress={handleSelectLocation}>
               <MapPin size={20} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -320,8 +298,7 @@ export default function ReportLostPetScreen() {
         {/* Notice */}
         <View style={styles.noticeContainer}>
           <Text style={styles.noticeText}>
-            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك
-            عند الموافقة على البلاغ.
+            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك عند الموافقة على البلاغ.
           </Text>
         </View>
       </ScrollView>
