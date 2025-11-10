@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-  Alert,
-} from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Dimensions, Alert } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { COUNTRIES, CITIES, DEFAULT_COUNTRY } from "../constants/currency";
@@ -17,15 +8,7 @@ import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ChevronDown,
-  Upload,
-  FileText,
-  User,
-  Stethoscope,
-  Globe,
-  MessageCircle,
-} from "lucide-react-native";
+import { ChevronDown, Upload, FileText, User, Stethoscope, Globe, MessageCircle } from "lucide-react-native";
 import * as DocumentPicker from "expo-document-picker";
 import { API_URL, trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
@@ -48,21 +31,16 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState("123123");
   const [name, setName] = useState("ali");
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("788888888888888");
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [selectedLocationCountry, setSelectedLocationCountry] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
-  const [showLocationCountryPicker, setShowLocationCountryPicker] =
-    useState(false);
+  const [showLocationCountryPicker, setShowLocationCountryPicker] = useState(false);
   const [showProvincePicker, setShowProvincePicker] = useState(false);
   const [showGenderPicker, setShowGenderPicker] = useState(false);
-  const [accountType, setAccountType] = useState<"pet_owner" | "veterinarian">(
-    "pet_owner"
-  );
-  const [veterinarianType, setVeterinarianType] = useState<
-    "student" | "veterinarian"
-  >("student");
+  const [accountType, setAccountType] = useState<"pet_owner" | "veterinarian">("pet_owner");
+  const [veterinarianType, setVeterinarianType] = useState<"student" | "veterinarian">("student");
 
   const [idFrontImage, setIdFrontImage] = useState<any>(null);
   const [idBackImage, setIdBackImage] = useState<any>(null);
@@ -77,15 +55,10 @@ export default function AuthScreen() {
 
   const loginMutation = useMutation(trpc.auth.login.mutationOptions());
   const registerMutation = useMutation(trpc.auth.register.mutationOptions());
-  const vetApplicationMutation = useMutation(
-    trpc.admin.veterinarianApprovals.submitApplication.mutationOptions()
-  );
+  const vetApplicationMutation = useMutation(trpc.admin.veterinarianApprovals.submitApplication.mutationOptions());
   // const forgotPasswordMutation = trpc.auth.forgotPassword.useMutation(); // Uncomment when backend procedure is created
 
-  const isLoading =
-    loginMutation.isPending ||
-    registerMutation.isPending ||
-    vetApplicationMutation.isPending;
+  const isLoading = loginMutation.isPending || registerMutation.isPending || vetApplicationMutation.isPending;
 
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
@@ -155,9 +128,7 @@ export default function AuthScreen() {
 
       if (!idBackImage) {
         newErrors.idBack =
-          veterinarianType === "student"
-            ? t("validation.studentIdBackRequired")
-            : t("validation.doctorIdBackRequired");
+          veterinarianType === "student" ? t("validation.studentIdBackRequired") : t("validation.doctorIdBackRequired");
       }
     }
 
@@ -165,9 +136,7 @@ export default function AuthScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFakeLogin = async (
-    userType: "pet_owner" | "veterinarian" | "moderator" | "admin"
-  ) => {
+  const handleFakeLogin = async (userType: "pet_owner" | "veterinarian" | "moderator" | "admin") => {
     setErrors({});
 
     // Map user types to test credentials from seed data
@@ -203,9 +172,7 @@ export default function AuthScreen() {
         },
         onError: (error) => {
           setErrors({ general: error.message || t("auth.loginError") });
-          Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [
-            { text: "OK" },
-          ]);
+          Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [{ text: "OK" }]);
         },
       }
     );
@@ -299,6 +266,7 @@ export default function AuthScreen() {
             router.replace("/(tabs)");
           },
           onError: (error) => {
+            console.log(error);
             setErrors({
               general: error.message || "حدث خطأ أثناء إنشاء الحساب",
             });
@@ -313,10 +281,7 @@ export default function AuthScreen() {
       Alert.alert("تنبيه", "يرجى إدخال بريد إلكتروني صحيح");
       return;
     }
-    Alert.alert(
-      "Info",
-      "The forgot password functionality is not yet implemented in the backend."
-    );
+    Alert.alert("Info", "The forgot password functionality is not yet implemented in the backend.");
     // Uncomment the following when the backend procedure is ready
     /*
     forgotPasswordMutation.mutate({ email: usernameOrEmail }, {
@@ -427,17 +392,11 @@ export default function AuthScreen() {
 
       <SafeAreaView style={styles.topIconsContainer}>
         <View style={styles.topIcons}>
-          <TouchableOpacity
-            style={styles.topIconButton}
-            onPress={handleLanguageChange}
-          >
+          <TouchableOpacity style={styles.topIconButton} onPress={handleLanguageChange}>
             <Globe size={24} color={COLORS.primary} />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.topIconButton}
-            onPress={handleContactUs}
-          >
+          <TouchableOpacity style={styles.topIconButton} onPress={handleContactUs}>
             <MessageCircle size={24} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
@@ -449,12 +408,7 @@ export default function AuthScreen() {
 
       <View style={styles.cardContainer}>
         <View style={styles.card}>
-          <View
-            style={[
-              styles.tabContainer,
-              { flexDirection: isRTL ? "row-reverse" : "row" },
-            ]}
-          >
+          <View style={[styles.tabContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <TouchableOpacity
               style={[styles.tab, activeTab === "login" && styles.activeTab]}
               onPress={() => {
@@ -465,14 +419,7 @@ export default function AuthScreen() {
               }}
               disabled={isLoading}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "login" && styles.activeTabText,
-                ]}
-              >
-                {t("auth.login")}
-              </Text>
+              <Text style={[styles.tabText, activeTab === "login" && styles.activeTabText]}>{t("auth.login")}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, activeTab === "register" && styles.activeTab]}
@@ -484,26 +431,14 @@ export default function AuthScreen() {
               }}
               disabled={isLoading}
             >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "register" && styles.activeTabText,
-                ]}
-              >
+              <Text style={[styles.tabText, activeTab === "register" && styles.activeTabText]}>
                 {t("auth.register")}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <Text
-            style={[
-              styles.formTitle,
-              { textAlign: isRTL ? "right" : "center" },
-            ]}
-          >
-            {activeTab === "login"
-              ? t("auth.loginTitle")
-              : t("auth.registerTitle")}
+          <Text style={[styles.formTitle, { textAlign: isRTL ? "right" : "center" }]}>
+            {activeTab === "login" ? t("auth.loginTitle") : t("auth.registerTitle")}
           </Text>
 
           {errors.general && (
@@ -512,70 +447,30 @@ export default function AuthScreen() {
             </View>
           )}
 
-          <ScrollView
-            style={styles.formContainer}
-            showsVerticalScrollIndicator={false}
-          >
+          <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: "center", marginBottom: 16 },
-                  ]}
-                >
+                <Text style={[styles.inputLabel, { textAlign: "center", marginBottom: 16 }]}>
                   {t("auth.selectAccountType")}
                 </Text>
                 <View style={styles.accountTypeButtons}>
                   <TouchableOpacity
-                    style={[
-                      styles.accountTypeButton,
-                      accountType === "pet_owner" &&
-                        styles.accountTypeButtonActive,
-                    ]}
+                    style={[styles.accountTypeButton, accountType === "pet_owner" && styles.accountTypeButtonActive]}
                     onPress={() => setAccountType("pet_owner")}
                   >
-                    <User
-                      size={24}
-                      color={
-                        accountType === "pet_owner"
-                          ? COLORS.white
-                          : COLORS.primary
-                      }
-                    />
-                    <Text
-                      style={[
-                        styles.accountTypeText,
-                        accountType === "pet_owner" &&
-                          styles.accountTypeTextActive,
-                      ]}
-                    >
+                    <User size={24} color={accountType === "pet_owner" ? COLORS.white : COLORS.primary} />
+                    <Text style={[styles.accountTypeText, accountType === "pet_owner" && styles.accountTypeTextActive]}>
                       {t("auth.petOwner")}
                     </Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={[
-                      styles.accountTypeButton,
-                      accountType === "veterinarian" &&
-                        styles.accountTypeButtonActive,
-                    ]}
+                    style={[styles.accountTypeButton, accountType === "veterinarian" && styles.accountTypeButtonActive]}
                     onPress={() => setAccountType("veterinarian")}
                   >
-                    <Stethoscope
-                      size={24}
-                      color={
-                        accountType === "veterinarian"
-                          ? COLORS.white
-                          : COLORS.primary
-                      }
-                    />
+                    <Stethoscope size={24} color={accountType === "veterinarian" ? COLORS.white : COLORS.primary} />
                     <Text
-                      style={[
-                        styles.accountTypeText,
-                        accountType === "veterinarian" &&
-                          styles.accountTypeTextActive,
-                      ]}
+                      style={[styles.accountTypeText, accountType === "veterinarian" && styles.accountTypeTextActive]}
                     >
                       {t("auth.veterinarian")}
                     </Text>
@@ -586,28 +481,21 @@ export default function AuthScreen() {
 
             {activeTab === "register" && accountType === "veterinarian" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: "center", marginBottom: 16 },
-                  ]}
-                >
+                <Text style={[styles.inputLabel, { textAlign: "center", marginBottom: 16 }]}>
                   {t("auth.selectVetType")}
                 </Text>
                 <View style={styles.veterinarianTypeButtons}>
                   <TouchableOpacity
                     style={[
                       styles.veterinarianTypeButton,
-                      veterinarianType === "student" &&
-                        styles.veterinarianTypeButtonActive,
+                      veterinarianType === "student" && styles.veterinarianTypeButtonActive,
                     ]}
                     onPress={() => setVeterinarianType("student")}
                   >
                     <Text
                       style={[
                         styles.veterinarianTypeText,
-                        veterinarianType === "student" &&
-                          styles.veterinarianTypeTextActive,
+                        veterinarianType === "student" && styles.veterinarianTypeTextActive,
                       ]}
                     >
                       {t("auth.vetStudent")}
@@ -617,16 +505,14 @@ export default function AuthScreen() {
                   <TouchableOpacity
                     style={[
                       styles.veterinarianTypeButton,
-                      veterinarianType === "veterinarian" &&
-                        styles.veterinarianTypeButtonActive,
+                      veterinarianType === "veterinarian" && styles.veterinarianTypeButtonActive,
                     ]}
                     onPress={() => setVeterinarianType("veterinarian")}
                   >
                     <Text
                       style={[
                         styles.veterinarianTypeText,
-                        veterinarianType === "veterinarian" &&
-                          styles.veterinarianTypeTextActive,
+                        veterinarianType === "veterinarian" && styles.veterinarianTypeTextActive,
                       ]}
                     >
                       {t("auth.vetDoctor")}
@@ -638,20 +524,9 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: isRTL ? "right" : "left" },
-                  ]}
-                >
-                  {t("auth.name")}
-                </Text>
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.name")}</Text>
                 <TextInput
-                  style={[
-                    styles.input,
-                    { textAlign: isRTL ? "right" : "left" },
-                    errors.name && styles.inputError,
-                  ]}
+                  style={[styles.input, { textAlign: isRTL ? "right" : "left" }, errors.name && styles.inputError]}
                   placeholder={t("auth.nameLabel")}
                   value={name}
                   onChangeText={(text) => {
@@ -662,22 +537,13 @@ export default function AuthScreen() {
                   }}
                   placeholderTextColor={COLORS.darkGray}
                 />
-                {errors.name && (
-                  <Text style={styles.errorText}>{errors.name}</Text>
-                )}
+                {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
               </View>
             )}
 
             <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.inputLabel,
-                  { textAlign: isRTL ? "right" : "left" },
-                ]}
-              >
-                {activeTab === "login"
-                  ? t("auth.emailUsername")
-                  : t("auth.email")}
+              <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
+                {activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}
               </Text>
               <TextInput
                 style={[
@@ -685,11 +551,7 @@ export default function AuthScreen() {
                   { textAlign: isRTL ? "right" : "left" },
                   errors.usernameOrEmail && styles.inputError,
                 ]}
-                placeholder={
-                  activeTab === "login"
-                    ? t("auth.emailUsername")
-                    : t("auth.emailLabel")
-                }
+                placeholder={activeTab === "login" ? t("auth.emailUsername") : t("auth.emailLabel")}
                 value={usernameOrEmail}
                 onChangeText={(text) => {
                   setUsernameOrEmail(text);
@@ -697,25 +559,16 @@ export default function AuthScreen() {
                     setErrors((prev) => ({ ...prev, usernameOrEmail: "" }));
                   }
                 }}
-                keyboardType={
-                  activeTab === "login" ? "default" : "email-address"
-                }
+                keyboardType={activeTab === "login" ? "default" : "email-address"}
                 autoCapitalize="none"
                 placeholderTextColor={COLORS.darkGray}
               />
-              {errors.usernameOrEmail && (
-                <Text style={styles.errorText}>{errors.usernameOrEmail}</Text>
-              )}
+              {errors.usernameOrEmail && <Text style={styles.errorText}>{errors.usernameOrEmail}</Text>}
             </View>
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: isRTL ? "right" : "left" },
-                  ]}
-                >
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
                   {t("auth.phoneNumber")}
                 </Text>
                 <View style={styles.phoneContainer}>
@@ -723,12 +576,8 @@ export default function AuthScreen() {
                     style={styles.countrySelector}
                     onPress={() => setShowCountryPicker(!showCountryPicker)}
                   >
-                    <Text style={styles.countryFlag}>
-                      {selectedCountry.flag}
-                    </Text>
-                    <Text style={styles.countryCode}>
-                      {selectedCountry.code}
-                    </Text>
+                    <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
+                    <Text style={styles.countryCode}>{selectedCountry.code}</Text>
                     <ChevronDown size={16} color={COLORS.darkGray} />
                   </TouchableOpacity>
                   <TextInput
@@ -761,41 +610,22 @@ export default function AuthScreen() {
                             style={styles.countryItem}
                             onPress={() => handleCountrySelect(country)}
                           >
-                            <Text style={styles.countryFlag}>
-                              {country.flag}
-                            </Text>
-                            <Text style={styles.countryName}>
-                              {country.name}
-                            </Text>
-                            <Text style={styles.countryCodeInList}>
-                              {country.code}
-                            </Text>
+                            <Text style={styles.countryFlag}>{country.flag}</Text>
+                            <Text style={styles.countryName}>{country.name}</Text>
+                            <Text style={styles.countryCodeInList}>{country.code}</Text>
                           </TouchableOpacity>
                         ))}
                     </ScrollView>
                   </View>
                 )}
-                {errors.phoneNumber && (
-                  <Text style={styles.errorText}>{errors.phoneNumber}</Text>
-                )}
+                {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
               </View>
             )}
 
             <View style={styles.inputGroup}>
-              <Text
-                style={[
-                  styles.inputLabel,
-                  { textAlign: isRTL ? "right" : "left" },
-                ]}
-              >
-                {t("auth.password")}
-              </Text>
+              <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.password")}</Text>
               <TextInput
-                style={[
-                  styles.input,
-                  { textAlign: isRTL ? "right" : "left" },
-                  errors.password && styles.inputError,
-                ]}
+                style={[styles.input, { textAlign: isRTL ? "right" : "left" }, errors.password && styles.inputError]}
                 placeholder={t("auth.passwordLabel")}
                 value={password}
                 onChangeText={(text) => {
@@ -807,19 +637,12 @@ export default function AuthScreen() {
                 secureTextEntry
                 placeholderTextColor={COLORS.darkGray}
               />
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
-              )}
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
             </View>
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: isRTL ? "right" : "left" },
-                  ]}
-                >
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
                   {t("auth.confirmPassword")}
                 </Text>
                 <TextInput
@@ -839,27 +662,15 @@ export default function AuthScreen() {
                   secureTextEntry
                   placeholderTextColor={COLORS.darkGray}
                 />
-                {errors.confirmPassword && (
-                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-                )}
+                {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
               </View>
             )}
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: isRTL ? "right" : "left" },
-                  ]}
-                >
-                  {t("auth.country")}
-                </Text>
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.country")}</Text>
                 <TouchableOpacity
-                  style={[
-                    styles.pickerButton,
-                    errors.country && styles.inputError,
-                  ]}
+                  style={[styles.pickerButton, errors.country && styles.inputError]}
                   onPress={() => {
                     setShowLocationCountryPicker(!showLocationCountryPicker);
                     if (errors.country) {
@@ -867,12 +678,7 @@ export default function AuthScreen() {
                     }
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.pickerButtonText,
-                      !selectedLocationCountry && styles.placeholderText,
-                    ]}
-                  >
+                  <Text style={[styles.pickerButtonText, !selectedLocationCountry && styles.placeholderText]}>
                     {selectedLocationCountry || t("auth.selectCountry")}
                   </Text>
                   <ChevronDown size={16} color={COLORS.darkGray} />
@@ -893,27 +699,15 @@ export default function AuthScreen() {
                     </ScrollView>
                   </View>
                 )}
-                {errors.country && (
-                  <Text style={styles.errorText}>{errors.country}</Text>
-                )}
+                {errors.country && <Text style={styles.errorText}>{errors.country}</Text>}
               </View>
             )}
 
             {activeTab === "register" && selectedLocationCountry && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: isRTL ? "right" : "left" },
-                  ]}
-                >
-                  {t("auth.province")}
-                </Text>
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.province")}</Text>
                 <TouchableOpacity
-                  style={[
-                    styles.pickerButton,
-                    errors.province && styles.inputError,
-                  ]}
+                  style={[styles.pickerButton, errors.province && styles.inputError]}
                   onPress={() => {
                     setShowProvincePicker(!showProvincePicker);
                     if (errors.province) {
@@ -921,12 +715,7 @@ export default function AuthScreen() {
                     }
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.pickerButtonText,
-                      !selectedProvince && styles.placeholderText,
-                    ]}
-                  >
+                  <Text style={[styles.pickerButtonText, !selectedProvince && styles.placeholderText]}>
                     {selectedProvince || t("auth.selectProvince")}
                   </Text>
                   <ChevronDown size={16} color={COLORS.darkGray} />
@@ -935,9 +724,7 @@ export default function AuthScreen() {
                 {showProvincePicker && (
                   <View style={styles.pickerDropdown}>
                     <ScrollView style={styles.pickerList} nestedScrollEnabled>
-                      {provinces[
-                        selectedLocationCountry as keyof typeof provinces
-                      ]?.map((province, index) => (
+                      {provinces[selectedLocationCountry as keyof typeof provinces]?.map((province, index) => (
                         <TouchableOpacity
                           key={index}
                           style={styles.pickerItem}
@@ -949,27 +736,15 @@ export default function AuthScreen() {
                     </ScrollView>
                   </View>
                 )}
-                {errors.province && (
-                  <Text style={styles.errorText}>{errors.province}</Text>
-                )}
+                {errors.province && <Text style={styles.errorText}>{errors.province}</Text>}
               </View>
             )}
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text
-                  style={[
-                    styles.inputLabel,
-                    { textAlign: isRTL ? "right" : "left" },
-                  ]}
-                >
-                  {t("auth.gender")}
-                </Text>
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.gender")}</Text>
                 <TouchableOpacity
-                  style={[
-                    styles.pickerButton,
-                    errors.gender && styles.inputError,
-                  ]}
+                  style={[styles.pickerButton, errors.gender && styles.inputError]}
                   onPress={() => {
                     setShowGenderPicker(!showGenderPicker);
                     if (errors.gender) {
@@ -977,14 +752,8 @@ export default function AuthScreen() {
                     }
                   }}
                 >
-                  <Text
-                    style={[
-                      styles.pickerButtonText,
-                      !selectedGender && styles.placeholderText,
-                    ]}
-                  >
-                    {genders.find((g) => g.value === selectedGender)?.label ||
-                      t("auth.selectGender")}
+                  <Text style={[styles.pickerButtonText, !selectedGender && styles.placeholderText]}>
+                    {genders.find((g) => g.value === selectedGender)?.label || t("auth.selectGender")}
                   </Text>
                   <ChevronDown size={16} color={COLORS.darkGray} />
                 </TouchableOpacity>
@@ -998,112 +767,70 @@ export default function AuthScreen() {
                           style={styles.pickerItem}
                           onPress={() => handleGenderSelect(gender)}
                         >
-                          <Text style={styles.pickerItemText}>
-                            {gender.label}
-                          </Text>
+                          <Text style={styles.pickerItemText}>{gender.label}</Text>
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
                   </View>
                 )}
-                {errors.gender && (
-                  <Text style={styles.errorText}>{errors.gender}</Text>
-                )}
+                {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
               </View>
             )}
 
             {activeTab === "register" && accountType === "veterinarian" && (
               <>
                 <View style={styles.inputGroup}>
-                  <Text
-                    style={[
-                      styles.inputLabel,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                  >
-                    {veterinarianType === "student"
-                      ? t("auth.studentIdFront")
-                      : t("auth.doctorIdFront")}
+                  <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
+                    {veterinarianType === "student" ? t("auth.studentIdFront") : t("auth.doctorIdFront")}
                   </Text>
                   <TouchableOpacity
-                    style={[
-                      styles.documentButton,
-                      errors.idFront && styles.inputError,
-                    ]}
+                    style={[styles.documentButton, errors.idFront && styles.inputError]}
                     onPress={handleIdFrontPick}
                   >
                     <View style={styles.documentButtonContent}>
                       {idFrontImage ? (
                         <>
                           <FileText size={20} color={COLORS.primary} />
-                          <Text style={styles.documentButtonText}>
-                            {idFrontImage.name}
-                          </Text>
+                          <Text style={styles.documentButtonText}>{idFrontImage.name}</Text>
                         </>
                       ) : (
                         <>
                           <Upload size={20} color={COLORS.darkGray} />
-                          <Text
-                            style={[
-                              styles.documentButtonText,
-                              styles.placeholderText,
-                            ]}
-                          >
+                          <Text style={[styles.documentButtonText, styles.placeholderText]}>
                             {t("auth.uploadIdFront")}
                           </Text>
                         </>
                       )}
                     </View>
                   </TouchableOpacity>
-                  {errors.idFront && (
-                    <Text style={styles.errorText}>{errors.idFront}</Text>
-                  )}
+                  {errors.idFront && <Text style={styles.errorText}>{errors.idFront}</Text>}
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text
-                    style={[
-                      styles.inputLabel,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                  >
-                    {veterinarianType === "student"
-                      ? t("auth.studentIdBack")
-                      : t("auth.doctorIdBack")}
+                  <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
+                    {veterinarianType === "student" ? t("auth.studentIdBack") : t("auth.doctorIdBack")}
                   </Text>
                   <TouchableOpacity
-                    style={[
-                      +styles.documentButton,
-                      errors.idBack && styles.inputError,
-                    ]}
+                    style={[+styles.documentButton, errors.idBack && styles.inputError]}
                     onPress={handleIdBackPick}
                   >
                     <View style={styles.documentButtonContent}>
                       {idBackImage ? (
                         <>
                           <FileText size={20} color={COLORS.primary} />
-                          <Text style={styles.documentButtonText}>
-                            {idBackImage.name}
-                          </Text>
+                          <Text style={styles.documentButtonText}>{idBackImage.name}</Text>
                         </>
                       ) : (
                         <>
                           <Upload size={20} color={COLORS.darkGray} />
-                          <Text
-                            style={[
-                              styles.documentButtonText,
-                              styles.placeholderText,
-                            ]}
-                          >
+                          <Text style={[styles.documentButtonText, styles.placeholderText]}>
                             {t("auth.uploadIdBack")}
                           </Text>
                         </>
                       )}
                     </View>
                   </TouchableOpacity>
-                  {errors.idBack && (
-                    <Text style={styles.errorText}>{errors.idBack}</Text>
-                  )}
+                  {errors.idBack && <Text style={styles.errorText}>{errors.idBack}</Text>}
                 </View>
               </>
             )}
@@ -1111,22 +838,15 @@ export default function AuthScreen() {
             {activeTab === "login" && (
               <>
                 <TouchableOpacity
-                  style={[
-                    styles.forgotPasswordContainer,
-                    { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                  ]}
+                  style={[styles.forgotPasswordContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                   onPress={handleForgotPassword}
                   disabled={isLoading}
                 >
-                  <Text style={styles.forgotPasswordText}>
-                    نسيت كلمة المرور؟
-                  </Text>
+                  <Text style={styles.forgotPasswordText}>نسيت كلمة المرور؟</Text>
                 </TouchableOpacity>
 
                 <View style={styles.fakeLoginContainer}>
-                  <Text style={styles.fakeLoginTitle}>
-                    تسجيل دخول وهمي للاختبار:
-                  </Text>
+                  <Text style={styles.fakeLoginTitle}>تسجيل دخول وهمي للاختبار:</Text>
 
                   <View style={styles.fakeLoginButtons}>
                     <TouchableOpacity
@@ -1150,10 +870,7 @@ export default function AuthScreen() {
 
                   <View style={styles.fakeLoginButtons}>
                     <TouchableOpacity
-                      style={[
-                        styles.fakeLoginButton,
-                        styles.fakeLoginModerator,
-                      ]}
+                      style={[styles.fakeLoginButton, styles.fakeLoginModerator]}
                       onPress={() => handleFakeLogin("moderator")}
                       disabled={isLoading}
                     >
@@ -1176,26 +893,17 @@ export default function AuthScreen() {
 
             {activeTab === "login" && (
               <TouchableOpacity
-                style={[
-                  styles.forgotPasswordContainer,
-                  { alignSelf: isRTL ? "flex-start" : "flex-end" },
-                ]}
+                style={[styles.forgotPasswordContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                 onPress={handleForgotPassword}
                 disabled={isLoading}
               >
-                <Text style={styles.forgotPasswordText}>
-                  {t("auth.forgotPassword")}
-                </Text>
+                <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
               </TouchableOpacity>
             )}
 
             <Button
               title={
-                isLoading
-                  ? t("common.loading")
-                  : activeTab === "login"
-                  ? t("auth.login")
-                  : t("auth.createAccount")
+                isLoading ? t("common.loading") : activeTab === "login" ? t("auth.login") : t("auth.createAccount")
               }
               onPress={activeTab === "login" ? handleLogin : handleRegister}
               type="primary"
@@ -1204,16 +912,9 @@ export default function AuthScreen() {
               disabled={isLoading}
             />
 
-            <View
-              style={[
-                styles.switchContainer,
-                { flexDirection: isRTL ? "row-reverse" : "row" },
-              ]}
-            >
+            <View style={[styles.switchContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <Text style={styles.switchText}>
-                {activeTab === "login"
-                  ? t("auth.dontHaveAccount") + " "
-                  : t("auth.alreadyHaveAccount") + " "}
+                {activeTab === "login" ? t("auth.dontHaveAccount") + " " : t("auth.alreadyHaveAccount") + " "}
               </Text>
               <TouchableOpacity
                 onPress={() => {
