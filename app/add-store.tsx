@@ -5,7 +5,7 @@ import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { useToastContext } from "../providers/ToastProvider";
 import Button from "../components/Button";
-import { ArrowRight, Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "lucide-react-native";
+import { Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "lucide-react-native";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { queryClient, trpc } from "../lib/trpc";
@@ -26,7 +26,7 @@ interface StoreFormData {
 
 export default function AddStoreScreen() {
   const { isRTL } = useI18n();
-  const { hasAdminAccess, user } = useApp();
+  const { isSuperAdmin, user } = useApp();
   const { showToast } = useToastContext();
 
   const [showSubscription, setShowSubscription] = useState(false);
@@ -80,7 +80,7 @@ export default function AddStoreScreen() {
       };
 
       // ✅ Add adminId only if user has admin access
-      if (hasAdminAccess && user?.id) {
+      if (isSuperAdmin && user?.id) {
         payload.adminId = user.id;
       }
 
@@ -267,7 +267,7 @@ export default function AddStoreScreen() {
           </View>
 
           {/* Admin Controls for Subscription */}
-          {hasAdminAccess && (
+          {isSuperAdmin && (
             <View style={styles.adminControls}>
               <TouchableOpacity style={styles.adminButton} onPress={() => setShowSubscription(!showSubscription)}>
                 {showSubscription ? (
@@ -287,7 +287,7 @@ export default function AddStoreScreen() {
             <View style={styles.subscriptionInfo}>
               <View style={styles.subscriptionHeader}>
                 <Text style={styles.subscriptionTitle}>معلومات الاشتراك</Text>
-                {hasAdminAccess && (
+                {isSuperAdmin && (
                   <TouchableOpacity style={styles.editSubscriptionButton}>
                     <Edit size={16} color={COLORS.primary} />
                   </TouchableOpacity>

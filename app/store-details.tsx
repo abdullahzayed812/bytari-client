@@ -49,7 +49,7 @@ export default function StoreDetailsScreen() {
   const { data: rawStoreProducts, isLoading: isStoreProductsLoading } = useQuery(
     trpc.stores.products.list.queryOptions({ storeId: Number(id) })
   );
-  console.log({ rawStoreProducts });
+
   const storeProducts = useMemo(
     () => (rawStoreProducts as any)?.products as VetStoreProduct[] | undefined,
     [rawStoreProducts]

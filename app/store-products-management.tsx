@@ -1,13 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Image, Alert, TextInput } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Image, Alert, TextInput } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
-import { useI18n } from "../providers/I18nProvider";
-import Button from "../components/Button";
-import { ArrowRight, Plus, Package, BarChart3, Settings, Eye, Edit, Trash2, Search, Filter } from 'lucide-react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { Stack } from 'expo-router';
+import { ArrowRight, Plus, Package, BarChart3, Settings, Eye, Edit, Trash2, Search, Filter } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Stack } from "expo-router";
 import { useApp } from "../providers/AppProvider";
 import { formatPrice } from "../constants/currency";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 
 interface StoreProduct {
   id: number;
@@ -23,21 +23,20 @@ interface StoreProduct {
 }
 
 export default function StoreProductsManagementScreen() {
-  const { t, isRTL } = useI18n();
   const { userMode } = useApp();
   const { storeType } = useLocalSearchParams<{ storeType?: string }>();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'settings'>('products');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<"overview" | "products" | "orders" | "settings">("products");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Determine store type from params or userMode
-  const currentStoreType = storeType || (userMode === 'veterinarian' ? 'veterinarian' : 'pet_owner');
+  const currentStoreType = storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
 
   // Mock store data - replace with actual data from API
   const storeData = {
     id: 1,
-    name: currentStoreType === 'veterinarian' ? 'متجر الطبيب البيطري' : 'متجر صاحب الحيوان',
-    type: currentStoreType === 'veterinarian' ? 'vet_store' : 'pet_owner_store',
+    name: currentStoreType === "veterinarian" ? "متجر الطبيب البيطري" : "متجر صاحب الحيوان",
+    type: currentStoreType === "veterinarian" ? "vet_store" : "pet_owner_store",
     totalProducts: 32,
     totalOrders: 89,
 
@@ -45,56 +44,56 @@ export default function StoreProductsManagementScreen() {
   };
 
   const categories = [
-    { id: 'all', name: 'جميع المنتجات' },
-    { id: 'food', name: 'طعام' },
-    { id: 'accessories', name: 'إكسسوارات' },
-    { id: 'toys', name: 'ألعاب' },
-    { id: 'medicine', name: 'أدوية' },
-    { id: 'grooming', name: 'العناية' },
+    { id: "all", name: "جميع المنتجات" },
+    { id: "food", name: "طعام" },
+    { id: "accessories", name: "إكسسوارات" },
+    { id: "toys", name: "ألعاب" },
+    { id: "medicine", name: "أدوية" },
+    { id: "grooming", name: "العناية" },
   ];
 
   const mockProducts: StoreProduct[] = [
     {
       id: 1,
-      name: 'طعام قطط بريميوم',
-      category: 'food',
-      price: 45.00,
+      name: "طعام قطط بريميوم",
+      category: "food",
+      price: 45.0,
       stock: 15,
-      image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400',
+      image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400",
       isActive: true,
-      petType: ['cat'],
+      petType: ["cat"],
       rating: 4.5,
-      description: 'طعام عالي الجودة للقطط البالغة'
+      description: "طعام عالي الجودة للقطط البالغة",
     },
     {
       id: 2,
-      name: 'لعبة كرة للكلاب',
-      category: 'toys',
-      price: 25.00,
+      name: "لعبة كرة للكلاب",
+      category: "toys",
+      price: 25.0,
       stock: 8,
-      image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400',
+      image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
       isActive: true,
-      petType: ['dog'],
+      petType: ["dog"],
       rating: 4.2,
-      description: 'لعبة تفاعلية للكلاب'
+      description: "لعبة تفاعلية للكلاب",
     },
     {
       id: 3,
-      name: 'طوق أنيق للقطط',
-      category: 'accessories',
-      price: 35.00,
+      name: "طوق أنيق للقطط",
+      category: "accessories",
+      price: 35.0,
       stock: 12,
-      image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400',
+      image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400",
       isActive: false,
-      petType: ['cat'],
+      petType: ["cat"],
       rating: 4.0,
-      description: 'طوق جلدي أنيق ومريح'
+      description: "طوق جلدي أنيق ومريح",
     },
   ];
 
-  const filteredProducts = mockProducts.filter(product => {
+  const filteredProducts = mockProducts.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -107,22 +106,22 @@ export default function StoreProductsManagementScreen() {
   };
 
   const handleDeleteProduct = (productId: number) => {
-    Alert.alert(
-      'حذف المنتج',
-      'هل أنت متأكد من حذف هذا المنتج؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'حذف', style: 'destructive', onPress: () => {
+    Alert.alert("حذف المنتج", "هل أنت متأكد من حذف هذا المنتج؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
           // Handle delete logic here
-          console.log('Delete product:', productId);
-        }}
-      ]
-    );
+          console.log("Delete product:", productId);
+        },
+      },
+    ]);
   };
 
   const toggleProductStatus = (productId: number) => {
     // Handle toggle product active status
-    console.log('Toggle product status:', productId);
+    console.log("Toggle product status:", productId);
   };
 
   const renderOverviewTab = () => (
@@ -168,8 +167,8 @@ export default function StoreProductsManagementScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         style={styles.categoriesScroll}
         contentContainerStyle={styles.categoriesContainer}
@@ -177,16 +176,10 @@ export default function StoreProductsManagementScreen() {
         {categories.map((category) => (
           <TouchableOpacity
             key={category.id}
-            style={[
-              styles.categoryChip,
-              selectedCategory === category.id && styles.selectedCategoryChip
-            ]}
+            style={[styles.categoryChip, selectedCategory === category.id && styles.selectedCategoryChip]}
             onPress={() => setSelectedCategory(category.id)}
           >
-            <Text style={[
-              styles.categoryText,
-              selectedCategory === category.id && styles.selectedCategoryText
-            ]}>
+            <Text style={[styles.categoryText, selectedCategory === category.id && styles.selectedCategoryText]}>
               {category.name}
             </Text>
           </TouchableOpacity>
@@ -201,29 +194,29 @@ export default function StoreProductsManagementScreen() {
             <Image source={{ uri: item.image }} style={styles.productImage} />
             <View style={styles.productInfo}>
               <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productCategory}>{categories.find(c => c.id === item.category)?.name}</Text>
+              <Text style={styles.productCategory}>{categories.find((c) => c.id === item.category)?.name}</Text>
               <Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
               <Text style={styles.productStock}>المخزون: {item.stock}</Text>
               <View style={styles.productStatus}>
                 <Text style={[styles.statusText, { color: item.isActive ? COLORS.green : COLORS.red }]}>
-                  {item.isActive ? 'نشط' : 'غير نشط'}
+                  {item.isActive ? "نشط" : "غير نشط"}
                 </Text>
               </View>
             </View>
             <View style={styles.productActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionBtn, { backgroundColor: COLORS.primary }]}
                 onPress={() => handleEditProduct(item.id)}
               >
                 <Edit size={16} color={COLORS.white} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionBtn, { backgroundColor: item.isActive ? COLORS.warning : COLORS.green }]}
                 onPress={() => toggleProductStatus(item.id)}
               >
                 <Eye size={16} color={COLORS.white} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.actionBtn, { backgroundColor: COLORS.red }]}
                 onPress={() => handleDeleteProduct(item.id)}
               >
@@ -239,17 +232,17 @@ export default function StoreProductsManagementScreen() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'overview':
+      case "overview":
         return renderOverviewTab();
-      case 'products':
+      case "products":
         return renderProductsTab();
-      case 'orders':
+      case "orders":
         return (
           <View style={styles.tabContent}>
             <Text style={styles.comingSoon}>قريباً - إدارة الطلبات</Text>
           </View>
         );
-      case 'settings':
+      case "settings":
         return (
           <View style={styles.tabContent}>
             <Text style={styles.comingSoon}>قريباً - إعدادات المتجر</Text>
@@ -262,49 +255,38 @@ export default function StoreProductsManagementScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'إدارة المتجر',
+          title: "إدارة المتجر",
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold' }
+          headerTitleStyle: { fontWeight: "bold" },
         }}
       />
-      
+
       <View style={styles.storeHeader}>
         <Text style={styles.storeName}>{storeData.name}</Text>
         <Text style={styles.storeType}>
-          {currentStoreType === 'veterinarian' ? 'متجر الطبيب البيطري' : 'متجر صاحب الحيوان'}
+          {currentStoreType === "veterinarian" ? "متجر الطبيب البيطري" : "متجر صاحب الحيوان"}
         </Text>
       </View>
 
       <View style={styles.tabsContainer}>
         {[
-          { id: 'overview', label: 'نظرة عامة', icon: BarChart3 },
-          { id: 'products', label: 'المنتجات', icon: Package },
-          { id: 'orders', label: 'الطلبات', icon: ArrowRight },
-          { id: 'settings', label: 'الإعدادات', icon: Settings },
+          { id: "overview", label: "نظرة عامة", icon: BarChart3 },
+          { id: "products", label: "المنتجات", icon: Package },
+          { id: "orders", label: "الطلبات", icon: ArrowRight },
+          { id: "settings", label: "الإعدادات", icon: Settings },
         ].map((tab) => {
           const IconComponent = tab.icon;
           return (
             <TouchableOpacity
               key={tab.id}
-              style={[
-                styles.tab,
-                activeTab === tab.id && styles.activeTab
-              ]}
+              style={[styles.tab, activeTab === tab.id && styles.activeTab]}
               onPress={() => setActiveTab(tab.id as any)}
             >
-              <IconComponent 
-                size={20} 
-                color={activeTab === tab.id ? COLORS.primary : COLORS.darkGray} 
-              />
-              <Text style={[
-                styles.tabText,
-                activeTab === tab.id && styles.activeTabText
-              ]}>
-                {tab.label}
-              </Text>
+              <IconComponent size={20} color={activeTab === tab.id ? COLORS.primary : COLORS.darkGray} />
+              <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>{tab.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -328,26 +310,26 @@ const styles = StyleSheet.create({
   },
   storeName: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
   },
   storeType: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
   },
   tabsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
   tab: {
     flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 8,
   },
@@ -359,25 +341,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   activeTabText: {
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   tabContent: {
     flex: 1,
   },
   statsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   statCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
     marginHorizontal: 4,
     shadowColor: COLORS.black,
@@ -388,7 +370,7 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginTop: 8,
   },
@@ -396,22 +378,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   quickActions: {
     padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
   },
   actionButton: {
     backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -419,19 +401,19 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   productsHeader: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: COLORS.white,
   },
   searchContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.gray,
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -449,8 +431,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   categoriesScroll: {
     backgroundColor: COLORS.white,
@@ -479,7 +461,7 @@ const styles = StyleSheet.create({
   },
   productCard: {
     backgroundColor: COLORS.white,
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 8,
@@ -499,53 +481,53 @@ const styles = StyleSheet.create({
   productInfo: {
     flex: 1,
     marginLeft: 12,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   productName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   productCategory: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: 'right',
+    textAlign: "right",
   },
   productPrice: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.green,
-    textAlign: 'right',
+    textAlign: "right",
   },
   productStock: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   productStatus: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   productActions: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   actionBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 4,
   },
   comingSoon: {
     fontSize: 18,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 50,
   },
 });

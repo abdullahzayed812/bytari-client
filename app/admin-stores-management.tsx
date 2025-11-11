@@ -95,7 +95,7 @@ export default function AdminStoresManagement() {
     data: storesData,
     isLoading: storesLoading,
     error: storesError,
-  } = useQuery(trpc.stores.list.queryOptions({}));
+  } = useQuery(trpc.stores.listActive.queryOptions({}));
   const stores: StoreData[] = useMemo(() => (storesData as any)?.stores, [storesData]);
 
   const storeTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = [

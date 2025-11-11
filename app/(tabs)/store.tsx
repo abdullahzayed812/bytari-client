@@ -98,7 +98,7 @@ const vetCategories: { id: VetCategory; label: string }[] = [
 export default function StoreScreen() {
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
-  const { cart, addToCart, removeFromCart, updateQuantity, getCartItemCount } = useCart();
+  const { addToCart, getCartItemCount } = useCart();
   const [selectedAnimal, setSelectedAnimal] = useState<AnimalType | null>(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState<VetSpecialty | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");

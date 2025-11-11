@@ -1,24 +1,19 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { ArrowLeft, Plus, Upload } from "lucide-react-native";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import Button from "@/components/Button 2";
 import { useToastContext } from "@/providers/ToastProvider";
+import { useApp } from "@/providers/AppProvider";
 
 export default function AddClinicScreen() {
+  const { user, isSuperAdmin } = useApp();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: "test clinic name",
@@ -57,33 +52,38 @@ export default function AddClinicScreen() {
       return;
     }
 
+    const payload: any = {
+      name: formData.name,
+      address: formData.address,
+      phone: formData.phone,
+      email: formData.email || undefined,
+      description: formData.description || "",
+
+      licenseNumber: "TEMP123456", // TODO: Replace with actual value from UI when field is added
+      licenseImages: formData.licenseImages, // TODO: Implement image upload for license images
+      identityImages: formData.identityImages, // TODO: Implement image upload for identity images
+
+      latitude: 0,
+      longitude: 0,
+      workingHours: formData.workingHours,
+    };
+
+    // ✅ Add adminId only if user has admin access
+    if (isSuperAdmin && user?.id) {
+      payload.adminId = user.id;
+    }
+
     // Mock values for now to match the mutation input requirements
-    mutation.mutate(
-      {
-        name: formData.name,
-        address: formData.address,
-        phone: formData.phone,
-        email: formData.email || undefined,
-        description: formData.description || "",
-
-        licenseNumber: "TEMP123456", // TODO: Replace with actual value from UI when field is added
-        licenseImages: formData.licenseImages, // TODO: Implement image upload for license images
-        identityImages: formData.identityImages, // TODO: Implement image upload for identity images
-
-        latitude: 0,
-        longitude: 0,
-        workingHours: formData.workingHours,
+    mutation.mutate(payload, {
+      onSuccess: (data) => {
+        Alert.alert("نجاح", data.message || "تم إرسال الطلب بنجاح");
+        router.back();
+        if (isSuperAdmin) queryClient.invalidateQueries(trpc.clinics.list.queryKey);
       },
-      {
-        onSuccess: (data) => {
-          Alert.alert("نجاح", data.message || "تم إرسال الطلب بنجاح");
-          router.back();
-        },
-        onError: (error) => {
-          Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الطلب");
-        },
-      }
-    );
+      onError: (error) => {
+        Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الطلب");
+      },
+    });
   };
 
   return (
@@ -95,10 +95,7 @@ export default function AddClinicScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -134,9 +131,7 @@ export default function AddClinicScreen() {
             <TextInput
               style={styles.input}
               value={formData.address}
-              onChangeText={(text) =>
-                setFormData({ ...formData, address: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, address: text })}
               placeholder="أدخل عنوان العيادة"
               textAlign="right"
             />
@@ -171,9 +166,7 @@ export default function AddClinicScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) =>
-                setFormData({ ...formData, description: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, description: text })}
               placeholder="أدخل وصف العيادة"
               textAlign="right"
               multiline

@@ -261,7 +261,7 @@ export default function AdminContentManagerScreen() {
   });
 
   const storesQuery = useQuery({
-    ...trpc.stores.list.queryOptions(),
+    ...trpc.stores.listActive.queryOptions(),
     enabled: contentType === "stores",
   });
 
@@ -619,8 +619,6 @@ export default function AdminContentManagerScreen() {
       }
     }
 
-    console.log("------------------", formData.publishDate);
-
     const saveParams =
       contentType === "books"
         ? { ...formData, adminId, bookId: Number(editingItem?.id) }
@@ -629,6 +627,8 @@ export default function AdminContentManagerScreen() {
         : contentType === "pets"
         ? { ...formData, adminId, petId: Number(editingItem?.id) }
         : contentType === "articles"
+        ? { ...formData, adminId, petId: Number(editingItem?.id) }
+        : contentType === "stores"
         ? { ...formData, adminId, magazineId: Number(editingItem?.id) }
         : { ...formData, adminId, id: Number(editingItem?.id) };
 

@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
-import { trpc } from '../lib/trpc';
-import { Link } from 'expo-router';
+import React from "react";
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from "react-native";
+import { trpc } from "../lib/trpc";
+import { Link } from "expo-router";
 
 const StoresListScreen = () => {
-  const storesQuery = trpc.stores.list.useQuery();
+  const storesQuery = trpc.stores.listActive.useQuery();
 
   if (storesQuery.isLoading) {
     return (
@@ -49,31 +49,31 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   errorText: {
-    color: 'red',
+    color: "red",
   },
   addButton: {
-    backgroundColor: '#007BFF',
+    backgroundColor: "#007BFF",
     padding: 10,
     borderRadius: 5,
     marginBottom: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   addButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
   },
   itemContainer: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: "#ccc",
   },
   itemTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

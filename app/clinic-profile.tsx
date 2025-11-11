@@ -1,116 +1,137 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Linking, Alert } from 'react-native';
-import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  Linking,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
-import { router, Stack } from 'expo-router';
-import { 
-  ArrowLeft,
-  MapPin,
-  Phone,
-  Clock,
-  Star,
-  Navigation,
-  MessageSquare
-} from 'lucide-react-native';
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import { ArrowLeft, MapPin, Phone, Clock, Star, Navigation, MessageSquare } from "lucide-react-native";
 import RatingComponent from "../components/RatingComponent";
+import { trpc } from "../lib/trpc";
+import { useApp } from "@/providers/AppProvider";
+import { useQuery } from "@tanstack/react-query";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function ClinicProfileScreen() {
+  const { user } = useApp();
+  const { id } = useLocalSearchParams();
+  const clinicId = parseInt(id as string);
+  const userId = Number(user?.id);
+
   const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
-  
-  // Mock clinic data for public view
-  const clinic = {
-    id: 'clinic1',
-    name: 'عيادة الرحمة البيطرية',
-    address: 'بغداد - الكرادة - شارع الطيران',
-    latitude: 33.3152,
-    longitude: 44.3661,
-    phone: '+964 770 123 4567',
-    rating: 4.8,
-    reviewsCount: 156,
-    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    isOpen: true,
-    openingHours: '8:00 ص - 10:00 م',
-    services: ['فحص عام', 'تطعيمات', 'جراحة', 'أشعة', 'علاج الأسنان', 'العمليات الجراحية'],
-    isPremium: true,
-    description: 'عيادة بيطرية متخصصة تقدم أفضل الخدمات الطبية للحيوانات الأليفة مع فريق من الأطباء المتخصصين وأحدث المعدات الطبية.',
-    doctors: [
-      { name: 'د. أحمد محمد', specialty: 'طب بيطري عام' },
-      { name: 'د. فاطمة علي', specialty: 'جراحة بيطرية' },
-      { name: 'د. محمد حسن', specialty: 'طب الأسنان البيطري' }
-    ],
-    workingDays: 'السبت - الخميس',
-    emergencyAvailable: true
-  };
+
+  // Fetch clinic details
+  const { data, isLoading, error } = useQuery(
+    trpc.clinics.getDetails.queryOptions({
+      clinicId,
+      userId,
+    })
+  );
+
+  const clinic = (data as any)?.clinic;
 
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-    
+
     for (let i = 0; i < fullStars; i++) {
-      stars.push(
-        <Star key={i} size={16} color="#FFD700" fill="#FFD700" />
-      );
+      stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
     }
-    
+
     if (hasHalfStar) {
-      stars.push(
-        <Star key="half" size={16} color="#FFD700" fill="#FFD700" />
-      );
+      stars.push(<Star key="half" size={16} color="#FFD700" fill="#FFD700" />);
     }
-    
+
     const remainingStars = 5 - Math.ceil(rating);
     for (let i = 0; i < remainingStars; i++) {
-      stars.push(
-        <Star key={`empty-${i}`} size={16} color="#E5E7EB" />
-      );
+      stars.push(<Star key={`empty-${i}`} size={16} color="#E5E7EB" />);
     }
-    
+
     return stars;
   };
 
   const handleCall = async () => {
+    if (!clinic?.phone) return;
+
     try {
       const phoneUrl = `tel:${clinic.phone}`;
       const canOpen = await Linking.canOpenURL(phoneUrl);
-      
+
       if (canOpen) {
         await Linking.openURL(phoneUrl);
       } else {
-        Alert.alert('خطأ', 'لا يمكن إجراء المكالمة من هذا الجهاز');
+        Alert.alert("خطأ", "لا يمكن إجراء المكالمة من هذا الجهاز");
       }
     } catch (error) {
-      console.error('Error making call:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء محاولة الاتصال');
+      console.error("Error making call:", error);
+      Alert.alert("خطأ", "حدث خطأ أثناء محاولة الاتصال");
     }
   };
 
   const handleRatingSubmit = async (rating: number, comment: string) => {
-    console.log('Rating submitted:', { rating, comment, clinicId: clinic.id });
+    console.log("Rating submitted:", { rating, comment, clinicId: clinic?.id });
     // TODO: Implement API call to submit rating
     // await submitClinicRating(clinic.id, rating, comment);
   };
 
+  // Parse JSON fields
+  const services = clinic?.services
+    ? typeof clinic.services === "string"
+      ? JSON.parse(clinic.services)
+      : clinic.services
+    : [];
+  const doctors = clinic?.doctors
+    ? typeof clinic.doctors === "string"
+      ? JSON.parse(clinic.doctors)
+      : clinic.doctors
+    : [];
+  const images = clinic?.images ? (typeof clinic.images === "string" ? JSON.parse(clinic.images) : clinic.images) : [];
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>جاري تحميل بيانات العيادة...</Text>
+      </View>
+    );
+  }
 
-
-
-
+  // Error state
+  if (error || !clinic) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error?.message || "حدث خطأ أثناء تحميل بيانات العيادة"}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+          <Text style={styles.retryButtonText}>العودة</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: clinic.name,
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => {
-                console.log('Clinic profile back button pressed');
+                console.log("Clinic profile back button pressed");
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace('/');
+                  router.replace("/");
                 }
               }}
               style={styles.backButton}
@@ -118,127 +139,144 @@ export default function ClinicProfileScreen() {
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
-        }} 
+        }}
       />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Clinic Header */}
         <View style={styles.clinicHeader}>
-          <Image source={{ uri: clinic.image }} style={styles.clinicHeaderImage} />
+          <Image
+            source={{ uri: clinic.image || "https://via.placeholder.com/800x400?text=Clinic" }}
+            style={styles.clinicHeaderImage}
+          />
           <View style={styles.clinicHeaderOverlay}>
             <Text style={styles.clinicHeaderName}>{clinic.name}</Text>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>{clinic.isOpen ? 'مفتوح الآن' : 'مغلق'}</Text>
+            <View style={[styles.statusBadge, !clinic.isOpen && styles.closedBadge]}>
+              <Text style={styles.statusText}>{clinic.isOpen ? "مفتوح الآن" : "مغلق"}</Text>
             </View>
           </View>
         </View>
-        
+
         <View style={styles.content}>
+          {/* Premium Badge */}
+          {clinic.isPremium && (
+            <View style={styles.premiumBadge}>
+              <Star size={16} color="#FFD700" fill="#FFD700" />
+              <Text style={styles.premiumText}>عيادة مميزة</Text>
+            </View>
+          )}
+
           {/* Rating and Reviews */}
           <View style={styles.ratingSection}>
             <View style={styles.ratingContainer}>
-              <Text style={styles.ratingText}>{clinic.rating}</Text>
-              <View style={styles.starsContainer}>
-                {renderStars(clinic.rating)}
-              </View>
-              <Text style={styles.reviewsCount}>({clinic.reviewsCount} تقييم)</Text>
+              <Text style={styles.ratingText}>{clinic.rating?.toFixed(1) || "0.0"}</Text>
+              <View style={styles.starsContainer}>{renderStars(clinic.rating || 0)}</View>
+              <Text style={styles.reviewsCount}>({clinic.reviewsCount || 0} تقييم)</Text>
             </View>
           </View>
-          
+
           {/* Description */}
-          <View style={styles.descriptionSection}>
-            <Text style={styles.sectionTitle}>نبذة عن العيادة</Text>
-            <Text style={styles.descriptionText}>{clinic.description}</Text>
-          </View>
-          
+          {clinic.description && (
+            <View style={styles.descriptionSection}>
+              <Text style={styles.sectionTitle}>نبذة عن العيادة</Text>
+              <Text style={styles.descriptionText}>{clinic.description}</Text>
+            </View>
+          )}
+
           {/* Contact Information */}
           <View style={styles.contactSection}>
             <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
-            
-            <View style={styles.contactItem}>
-              <MapPin size={20} color={COLORS.primary} />
-              <Text style={styles.contactText}>{clinic.address}</Text>
-            </View>
-            
-            <View style={styles.contactItem}>
-              <Phone size={20} color={COLORS.primary} />
-              <Text style={styles.contactText}>{clinic.phone}</Text>
-            </View>
-            
-            <View style={styles.contactItem}>
-              <Clock size={20} color={COLORS.primary} />
-              <View style={styles.contactTextContainer}>
-                <Text style={styles.contactText}>ساعات العمل: {clinic.openingHours}</Text>
-                <Text style={styles.contactSubText}>أيام العمل: {clinic.workingDays}</Text>
-                {clinic.emergencyAvailable && (
-                  <Text style={styles.emergencyText}>متوفر للحالات الطارئة</Text>
-                )}
+
+            {clinic.address && (
+              <View style={styles.contactItem}>
+                <MapPin size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>{clinic.address}</Text>
               </View>
-            </View>
+            )}
+
+            {clinic.phone && (
+              <View style={styles.contactItem}>
+                <Phone size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>{clinic.phone}</Text>
+              </View>
+            )}
+
+            {(clinic.openingHours || clinic.workingDays) && (
+              <View style={styles.contactItem}>
+                <Clock size={20} color={COLORS.primary} />
+                <View style={styles.contactTextContainer}>
+                  {clinic.openingHours && <Text style={styles.contactText}>ساعات العمل: {clinic.openingHours}</Text>}
+                  {clinic.workingDays && <Text style={styles.contactSubText}>أيام العمل: {clinic.workingDays}</Text>}
+                  {clinic.emergencyAvailable && <Text style={styles.emergencyText}>متوفر للحالات الطارئة</Text>}
+                </View>
+              </View>
+            )}
           </View>
-          
+
           {/* Services */}
-          <View style={styles.servicesSection}>
-            <Text style={styles.sectionTitle}>الخدمات المتوفرة</Text>
-            {clinic.services.map((service, index) => (
-              <View key={index} style={styles.serviceItem}>
-                <Text style={styles.serviceText}>• {service}</Text>
-              </View>
-            ))}
-          </View>
-          
+          {services.length > 0 && (
+            <View style={styles.servicesSection}>
+              <Text style={styles.sectionTitle}>الخدمات المتوفرة</Text>
+              {services.map((service: string, index: number) => (
+                <View key={index} style={styles.serviceItem}>
+                  <Text style={styles.serviceText}>• {service}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Doctors */}
-          <View style={styles.doctorsSection}>
-            <Text style={styles.sectionTitle}>الأطباء</Text>
-            {clinic.doctors.map((doctor, index) => (
-              <View key={index} style={styles.doctorItem}>
-                <Text style={styles.doctorName}>{doctor.name}</Text>
-                <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
-              </View>
-            ))}
-          </View>
-          
+          {doctors.length > 0 && (
+            <View style={styles.doctorsSection}>
+              <Text style={styles.sectionTitle}>الأطباء</Text>
+              {doctors.map((doctor: { name: string; specialty: string }, index: number) => (
+                <View key={index} style={styles.doctorItem}>
+                  <Text style={styles.doctorName}>{doctor.name}</Text>
+                  <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.callButton]}
-              onPress={handleCall}
-            >
-              <Phone size={20} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>اتصال</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.directionsButton]}
-              onPress={() => {
-                console.log('Opening directions to clinic');
-                router.push({
-                  pathname: '/map-location',
-                  params: {
-                    latitude: clinic.latitude,
-                    longitude: clinic.longitude,
-                    name: clinic.name,
-                    address: clinic.address,
-                    mode: 'directions'
-                  }
-                });
-              }}
-            >
-              <Navigation size={20} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>الاتجاهات</Text>
-            </TouchableOpacity>
+            {clinic.phone && (
+              <TouchableOpacity style={[styles.actionButton, styles.callButton]} onPress={handleCall}>
+                <Phone size={20} color={COLORS.white} />
+                <Text style={styles.actionButtonText}>اتصال</Text>
+              </TouchableOpacity>
+            )}
+
+            {clinic.latitude && clinic.longitude && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.directionsButton]}
+                onPress={() => {
+                  console.log("Opening directions to clinic");
+                  router.push({
+                    pathname: "/map-location",
+                    params: {
+                      latitude: clinic.latitude,
+                      longitude: clinic.longitude,
+                      name: clinic.name,
+                      address: clinic.address,
+                      mode: "directions",
+                    },
+                  });
+                }}
+              >
+                <Navigation size={20} color={COLORS.white} />
+                <Text style={styles.actionButtonText}>الاتجاهات</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          
+
           {/* Rating Button */}
-          <TouchableOpacity 
-            style={styles.ratingButton}
-            onPress={() => setShowRatingModal(true)}
-          >
+          <TouchableOpacity style={styles.ratingButton} onPress={() => setShowRatingModal(true)}>
             <MessageSquare size={20} color={COLORS.primary} />
             <Text style={styles.ratingButtonText}>قيم العيادة</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-      
+
       <RatingComponent
         visible={showRatingModal}
         onClose={() => setShowRatingModal(false)}
@@ -255,35 +293,70 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.gray,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.gray,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: COLORS.darkGray,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.gray,
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: COLORS.error,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   backButton: {
     padding: 8,
   },
   clinicHeader: {
     height: 200,
-    position: 'relative',
+    position: "relative",
   },
   clinicHeaderImage: {
     width: width,
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   clinicHeaderOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
   },
   clinicHeaderName: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   statusBadge: {
     backgroundColor: COLORS.success,
@@ -291,13 +364,34 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
+  closedBadge: {
+    backgroundColor: COLORS.error,
+  },
   statusText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   content: {
     padding: 20,
+  },
+  premiumBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF9E6",
+    borderWidth: 1,
+    borderColor: "#FFD700",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    gap: 8,
+  },
+  premiumText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#B8860B",
   },
   ratingSection: {
     backgroundColor: COLORS.white,
@@ -311,16 +405,16 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   ratingContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   ratingText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
   },
   starsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 4,
     marginBottom: 8,
   },
@@ -343,7 +437,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: 'right',
+    textAlign: "right",
   },
   contactSection: {
     backgroundColor: COLORS.white,
@@ -357,8 +451,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   contactItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'flex-start',
+    flexDirection: "row-reverse",
+    alignItems: "flex-start",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -368,7 +462,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   contactTextContainer: {
     flex: 1,
@@ -377,14 +471,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   emergencyText: {
     fontSize: 12,
     color: COLORS.success,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   servicesSection: {
     backgroundColor: COLORS.white,
@@ -399,10 +493,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   serviceItem: {
     paddingVertical: 8,
@@ -410,7 +504,7 @@ const styles = StyleSheet.create({
   serviceText: {
     fontSize: 14,
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   doctorsSection: {
     backgroundColor: COLORS.white,
@@ -430,26 +524,26 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 4,
   },
   doctorSpecialty: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     marginBottom: 30,
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
@@ -463,7 +557,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   ratingButton: {
     backgroundColor: COLORS.white,
@@ -472,9 +566,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 30,
     gap: 8,
     shadowColor: COLORS.black,
@@ -486,6 +580,6 @@ const styles = StyleSheet.create({
   ratingButtonText: {
     color: COLORS.primary,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

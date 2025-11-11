@@ -809,67 +809,61 @@ export default function PoultryFarmDetailsScreen() {
   };
 
   const renderCompletedBatches = () => {
-    if (!farm?.batches?.length) {
-      return null;
-    }
-
-    const completedBatches = farm?.batches?.filter((batch) => batch.status === "sold" || batch.status === "completed");
-
-    if (!completedBatches?.length) {
-      return null;
-    }
-
     return (
       <View style={styles.card}>
         <Text style={styles.cardTitle}>الدفعات المكتملة ({completedBatches.length})</Text>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {completedBatches?.map((batch) => (
-            <TouchableOpacity
-              key={batch.id}
-              style={styles.completedBatchItem}
-              onPress={() => handleViewBatchDetails(batch)}
-            >
-              <View style={styles.batchItemHeader}>
-                <Text style={styles.batchItemTitle}>الدفعة رقم {batch.batchNumber}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(batch.status) }]}>
-                  <Text style={styles.statusText}>{batch.status === "sold" ? "مباع" : "مكتمل"}</Text>
-                </View>
-              </View>
-
-              <View style={styles.batchItemStats}>
-                <View style={styles.batchItemStat}>
-                  <Text style={styles.batchItemStatLabel}>العدد النهائي:</Text>
-                  <Text style={styles.batchItemStatValue}>{batch.finalCount || batch.currentCount}</Text>
+          {completedBatches.length > 0 ? (
+            completedBatches?.map((batch) => (
+              <TouchableOpacity
+                key={batch.id}
+                style={styles.completedBatchItem}
+                onPress={() => handleViewBatchDetails(batch)}
+              >
+                <View style={styles.batchItemHeader}>
+                  <Text style={styles.batchItemTitle}>الدفعة رقم {batch.batchNumber}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(batch.status) }]}>
+                    <Text style={styles.statusText}>{batch.status === "sold" ? "مباع" : "مكتمل"}</Text>
+                  </View>
                 </View>
 
-                <View style={styles.batchItemStat}>
-                  <Text style={styles.batchItemStatLabel}>الربح الصافي:</Text>
-                  <Text style={[styles.batchItemStatValue, { color: COLORS.success }]}>
-                    {batch.totalProfit?.toFixed(2) || "0.00"} د.ع
-                  </Text>
+                <View style={styles.batchItemStats}>
+                  <View style={styles.batchItemStat}>
+                    <Text style={styles.batchItemStatLabel}>العدد النهائي:</Text>
+                    <Text style={styles.batchItemStatValue}>{batch.finalCount || batch.currentCount}</Text>
+                  </View>
+
+                  <View style={styles.batchItemStat}>
+                    <Text style={styles.batchItemStatLabel}>الربح الصافي:</Text>
+                    <Text style={[styles.batchItemStatValue, { color: COLORS.success }]}>
+                      {batch.totalProfit?.toFixed(2) || "0.00"} د.ع
+                    </Text>
+                  </View>
+
+                  <View style={styles.batchItemStat}>
+                    <Text style={styles.batchItemStatLabel}>المدة:</Text>
+                    <Text style={styles.batchItemStatValue}>
+                      {Math.ceil(
+                        (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )}{" "}
+                      يوم
+                    </Text>
+                  </View>
                 </View>
 
-                <View style={styles.batchItemStat}>
-                  <Text style={styles.batchItemStatLabel}>المدة:</Text>
-                  <Text style={styles.batchItemStatValue}>
-                    {Math.ceil(
-                      (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
-                        (1000 * 60 * 60 * 24)
-                    )}{" "}
-                    يوم
-                  </Text>
-                </View>
-              </View>
+                <Text style={styles.batchItemDate}>
+                  {new Date(batch.startDate).toLocaleDateString("ar")} -{" "}
+                  {new Date(batch.endDate || batch.createdAt).toLocaleDateString("ar")}
+                </Text>
 
-              <Text style={styles.batchItemDate}>
-                {new Date(batch.startDate).toLocaleDateString("ar")} -{" "}
-                {new Date(batch.endDate || batch.createdAt).toLocaleDateString("ar")}
-              </Text>
-
-              <Text style={styles.viewDetailsText}>اضغط لعرض التفاصيل الكاملة</Text>
-            </TouchableOpacity>
-          ))}
+                <Text style={styles.viewDetailsText}>اضغط لعرض التفاصيل الكاملة</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text>لا توجد دفعات مكتملة</Text>
+          )}
         </ScrollView>
       </View>
     );

@@ -63,7 +63,7 @@ export default function StoresAdminManagementScreen() {
   const queryClient = useQueryClient();
 
   // ✅ tRPC hooks
-  const { data, isLoading } = useQuery(trpc.stores.list.queryOptions());
+  const { data, isLoading } = useQuery(trpc.stores.listActive.queryOptions());
   const updateStoreMutation = useMutation(trpc.stores.update.mutationOptions());
   const deleteStoreMutation = useMutation(trpc.stores.delete.mutationOptions());
 
@@ -124,7 +124,7 @@ export default function StoresAdminManagementScreen() {
           setEditModalVisible(false);
           setEditingStore(null);
           setSelectedImage(null);
-          queryClient.invalidateQueries(trpc.stores.list.queryKey);
+          queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
         },
         onError: (error) => {
           console.error("Error updating store:", error);
@@ -148,7 +148,7 @@ export default function StoresAdminManagementScreen() {
             {
               onSuccess: () => {
                 showToast({ message: "تم حذف المتجر بنجاح", type: "success" });
-                queryClient.invalidateQueries(trpc.stores.list.queryKey);
+                queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
               },
               onError: (error) => {
                 console.error("Error deleting store:", error);

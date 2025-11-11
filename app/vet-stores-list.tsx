@@ -19,7 +19,7 @@ export default function VetStoresListScreen() {
   const [selectedStore, setSelectedStore] = useState<VetStore | null>(null);
 
   const { data: rawVetStores, isLoading: vetStoresLoading } = useQuery({
-    ...trpc.stores.list.queryOptions(),
+    ...trpc.stores.listActive.queryOptions(),
     enabled: userMode === "veterinarian",
   });
 

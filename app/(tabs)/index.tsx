@@ -51,7 +51,7 @@ export default function HomeScreen() {
 
   // Real backend data for vet stores (when userMode is veterinarian)
   const { data: rawVetStores, isLoading: vetStoresLoading } = useQuery(
-    trpc.stores.list.queryOptions(undefined, {
+    trpc.stores.listActive.queryOptions(undefined, {
       enabled: userMode === "veterinarian",
     })
   );
@@ -86,8 +86,6 @@ export default function HomeScreen() {
 
   const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(trpc.pets.getApproved.queryOptions({}));
   const adoptionPets = useMemo(() => (adoptionPetsData as any)?.pets, [adoptionPetsData]);
-
-  console.log({ adoptionPets, lostPets });
 
   // Simulate real-time updates
   useEffect(() => {

@@ -3,8 +3,9 @@ import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { Search, X, Phone, Star } from "lucide-react-native";
 import { useLocalSearchParams, Stack, router } from "expo-router";
-import { mockVetStores, mockVetStoreProducts, VetStoreProduct } from "../mocks/data";
+import { VetStoreProduct } from "../mocks/data";
 import { trpc } from "../lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 export default function StoreProductsScreen() {
   const { storeId } = useLocalSearchParams();
@@ -13,9 +14,14 @@ export default function StoreProductsScreen() {
   const [selectedProduct, setSelectedProduct] = useState<VetStoreProduct | null>(null);
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
 
-  const storeData = mockVetStores.find((store) => store.id === storeId) || mockVetStores[0];
-  const { data, isPending, error } = trpc.stores.products.list.useQuery({ storeId: Number(storeId) });
+  const {
+    data: rawStoreData,
+    isLoading: isLoadingStore,
+    error: storeError,
+  } = useQuery(trpc.stores.getById.queryOptions({ storeId: Number(storeId) }));
+  const { data, isLoading, error } = useQuery(trpc.stores.products.list.queryOptions({ storeId: Number(storeId) }));
 
+  const storeData = useMemo(() => (rawStoreData as any)?.store, [rawStoreData]);
   const allProducts = data?.products ?? [];
 
   React.useEffect(() => {
@@ -41,7 +47,7 @@ export default function StoreProductsScreen() {
     setShowProductModal(true);
   };
 
-  if (isPending) {
+  if (isLoading) {
     return (
       <View style={styles.container}>
         <Text style={{ textAlign: "center", marginTop: 40 }}>جاري تحميل المنتجات...</Text>
@@ -158,7 +164,7 @@ export default function StoreProductsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: `منتجات ${storeData.name}`,
+          title: `منتجات ${storeData?.name}`,
         }}
       />
 

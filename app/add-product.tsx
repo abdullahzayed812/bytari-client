@@ -1,12 +1,15 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ArrowRight, Upload, Package, ImageIcon } from 'lucide-react-native';
-import { router } from 'expo-router';
-import { Stack } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
+import { ImageIcon } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Stack } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
+import { trpc } from "@/lib/trpc";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToastContext } from "@/providers/ToastProvider";
 
 interface ProductFormData {
   name: string;
@@ -19,104 +22,116 @@ interface ProductFormData {
 }
 
 export default function AddProductScreen() {
-  const { t, isRTL } = useI18n();
+  const { isRTL } = useI18n();
   const [formData, setFormData] = useState<ProductFormData>({
-    name: '',
-    description: '',
-    category: 'medicine',
-    price: '',
-    stock: '',
-    brand: '',
-    images: [],
+    name: "باراسيتامول 500 مجم",
+    description: "دواء مسكن وخافض للحرارة",
+    category: "medicine",
+    price: "5.50",
+    stock: "100",
+    brand: "شركة فارما",
+    images: ["https://images.unsplash.com/photo-1588776814546-c3a37b2ebd97?auto=format&fit=crop&w=400&q=80"],
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const queryClient = useQueryClient();
+
+  const { warehouseId } = useLocalSearchParams();
+  const { showToast } = useToastContext();
+
+  const addProductMutation = useMutation(trpc.stores.products.create.mutationOptions());
 
   const categories = [
-    { id: 'medicine', name: 'أدوية' },
-    { id: 'equipment', name: 'معدات' },
-    { id: 'supplements', name: 'مكملات' },
-    { id: 'tools', name: 'أدوات' },
+    { id: "medicine", name: "أدوية" },
+    { id: "equipment", name: "معدات" },
+    { id: "supplements", name: "مكملات" },
+    { id: "tools", name: "أدوات" },
   ];
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      Alert.alert('خطأ', 'اسم المنتج مطلوب');
+      Alert.alert("خطأ", "اسم المنتج مطلوب");
       return;
     }
     if (!formData.price.trim()) {
-      Alert.alert('خطأ', 'السعر مطلوب');
+      Alert.alert("خطأ", "السعر مطلوب");
       return;
     }
     if (!formData.stock.trim()) {
-      Alert.alert('خطأ', 'الكمية مطلوبة');
+      Alert.alert("خطأ", "الكمية مطلوبة");
+      return;
+    }
+    if (formData.images.length === 0) {
+      Alert.alert("خطأ", "يجب إضافة صورة واحدة على الأقل للمنتج");
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      // TODO: Implement product creation API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('نجح', 'تم إضافة المنتج بنجاح', [
-        {
-          text: 'موافق',
-          onPress: () => router.back()
-        }
-      ]);
-    } catch (error) {
-      console.error('Error creating product:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء إضافة المنتج');
-    } finally {
-      setIsSubmitting(false);
-    }
+    addProductMutation.mutate(
+      {
+        storeId: Number(warehouseId),
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        quantity: parseInt(formData.stock, 10),
+        category: formData.category,
+        image: formData.images[0],
+        inStock: parseInt(formData.stock, 10) > 0,
+      } as any,
+      {
+        onSuccess: () => {
+          showToast({ type: "success", message: "تم إضافة المنتج بنجاح" });
+          router.back();
+          queryClient.invalidateQueries(trpc.stores.getUserStoresProcedure.queryKey);
+        },
+        onError: () => {
+          showToast({ type: "error", message: "حدث خطا أثناء إضافة المنتج" });
+        },
+      }
+    );
   };
 
   const handleImageUpload = async () => {
     try {
-      if (Platform.OS === 'web') {
+      if (Platform.OS === "web") {
         // For web, simulate image selection
         const newImage = `https://images.unsplash.com/photo-${Date.now()}?w=400`;
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, newImage]
+          images: [...prev.images, newImage],
         }));
       } else {
         // Request permission for camera/gallery access
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('خطأ', 'نحتاج إذن للوصول إلى الصور');
+        if (status !== "granted") {
+          Alert.alert("خطأ", "نحتاج إذن للوصول إلى الصور");
           return;
         }
 
         // Show options for camera or gallery
-        Alert.alert(
-          'اختر مصدر الصورة',
-          'من أين تريد اختيار الصورة؟',
-          [
-            {
-              text: 'الكاميرا',
-              onPress: () => pickImageFromCamera()
-            },
-            {
-              text: 'المعرض',
-              onPress: () => pickImageFromGallery()
-            },
-            {
-              text: 'إلغاء',
-              style: 'cancel'
-            }
-          ]
-        );
+        Alert.alert("اختر مصدر الصورة", "من أين تريد اختيار الصورة؟", [
+          {
+            text: "الكاميرا",
+            onPress: () => pickImageFromCamera(),
+          },
+          {
+            text: "المعرض",
+            onPress: () => pickImageFromGallery(),
+          },
+          {
+            text: "إلغاء",
+            style: "cancel",
+          },
+        ]);
       }
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
     }
   };
 
   const pickImageFromCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إذن للوصول إلى الكاميرا');
+      if (status !== "granted") {
+        Alert.alert("خطأ", "نحتاج إذن للوصول إلى الكاميرا");
         return;
       }
 
@@ -128,13 +143,13 @@ export default function AddProductScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, result.assets[0].uri]
+          images: [...prev.images, result.assets[0].uri],
         }));
       }
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء التقاط الصورة');
+      Alert.alert("خطأ", "حدث خطأ أثناء التقاط الصورة");
     }
   };
 
@@ -148,44 +163,44 @@ export default function AddProductScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, result.assets[0].uri]
+          images: [...prev.images, result.assets[0].uri],
         }));
       }
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'إضافة منتج جديد',
+          title: "إضافة منتج جديد",
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>معلومات المنتج</Text>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>اسم المنتج *</Text>
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
                 placeholder="أدخل اسم المنتج"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -194,11 +209,11 @@ export default function AddProductScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
                 placeholder="وصف المنتج"
                 multiline
                 numberOfLines={3}
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -208,17 +223,11 @@ export default function AddProductScreen() {
                 {categories.map((category) => (
                   <TouchableOpacity
                     key={category.id}
-                    style={[
-                      styles.categoryButton,
-                      formData.category === category.id && styles.selectedCategoryButton
-                    ]}
-                    onPress={() => setFormData(prev => ({ ...prev, category: category.id }))}
+                    style={[styles.categoryButton, formData.category === category.id && styles.selectedCategoryButton]}
+                    onPress={() => setFormData((prev) => ({ ...prev, category: category.id }))}
                   >
                     <Text
-                      style={[
-                        styles.categoryText,
-                        formData.category === category.id && styles.selectedCategoryText
-                      ]}
+                      style={[styles.categoryText, formData.category === category.id && styles.selectedCategoryText]}
                     >
                       {category.name}
                     </Text>
@@ -232,10 +241,10 @@ export default function AddProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.price}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, price: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
                 placeholder="السعر بالدولار"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -244,10 +253,10 @@ export default function AddProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.stock}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, stock: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, stock: text }))}
                 placeholder="عدد القطع المتوفرة"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -256,9 +265,9 @@ export default function AddProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.brand}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, brand: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, brand: text }))}
                 placeholder="اسم العلامة التجارية"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -268,10 +277,7 @@ export default function AddProductScreen() {
                 {formData.images.map((image, index) => (
                   <View key={index} style={styles.imageItem}>
                     <Image source={{ uri: image }} style={styles.productImage} />
-                    <TouchableOpacity
-                      style={styles.removeImageButton}
-                      onPress={() => handleRemoveImage(index)}
-                    >
+                    <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveImage(index)}>
                       <Text style={styles.removeImageText}>×</Text>
                     </TouchableOpacity>
                   </View>
@@ -285,9 +291,9 @@ export default function AddProductScreen() {
           </View>
 
           <Button
-            title={isSubmitting ? 'جاري الإضافة...' : 'إضافة المنتج'}
+            title={addProductMutation.isPending ? "جاري الإضافة..." : "إضافة المنتج"}
             onPress={handleSubmit}
-            disabled={isSubmitting}
+            disabled={addProductMutation.isPending}
             style={styles.submitButton}
           />
         </View>
@@ -317,20 +323,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   inputGroup: {
     marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   input: {
     borderWidth: 1,
@@ -343,11 +349,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   categoryContainer: {
-    flexDirection: 'row-reverse',
-    flexWrap: 'wrap',
+    flexDirection: "row-reverse",
+    flexWrap: "wrap",
     gap: 8,
   },
   categoryButton: {
@@ -365,19 +371,19 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   selectedCategoryText: {
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   imagesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   imageItem: {
-    position: 'relative',
+    position: "relative",
   },
   productImage: {
     width: 80,
@@ -386,20 +392,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
   },
   removeImageButton: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     right: -8,
     backgroundColor: COLORS.red,
     width: 24,
     height: 24,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   removeImageText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   addImageButton: {
     width: 80,
@@ -407,16 +413,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: COLORS.lightGray,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLORS.white,
   },
   addImageText: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   submitButton: {
     marginBottom: 20,

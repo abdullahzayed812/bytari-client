@@ -42,18 +42,14 @@ export default function PetsScreen() {
   });
 
   // Fetch user's approved warehouses (for veterinarians)
-  const userWarehousesQuery = useQuery(
-    trpc.warehouses.getUserApprovedWarehouses.queryOptions(
-      { userId: Number(user?.id) },
-      {
-        enabled: !!user?.id && userMode === "veterinarian",
-      }
-    )
-  );
+  const userWarehousesQuery = useQuery({
+    ...trpc.stores.getUserApprovedStores.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user?.id && userMode === "veterinarian",
+  });
 
   // Get approved clinics and warehouses
   const approvedClinics = userClinicsQuery.data?.clinics || [];
-  const approvedWarehouses = userWarehousesQuery.data?.warehouses || [];
+  const approvedWarehouses = userWarehousesQuery.data?.stores || [];
 
   // Scroll to top when tab is focused
   useFocusEffect(

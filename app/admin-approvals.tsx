@@ -25,7 +25,7 @@ import {
   Clock,
 } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
 
@@ -78,6 +78,8 @@ export default function AdminApprovalsScreen() {
 
   const { showToast } = useToastContext();
 
+  const queryClient = useQueryClient();
+
   // Get pending approvals with error handling and performance optimization
   const {
     data: approvalsData,
@@ -100,7 +102,6 @@ export default function AdminApprovalsScreen() {
 
   const approvals = useMemo(() => (approvalsData as any)?.approvals, [approvalsData]);
 
-  // // Use mock data if server request fails with memoization
   // const effectiveApprovals = useMemo(() => {
   //   if (approvalsError) {
   //     console.error("Approvals error:", approvalsError);
@@ -423,63 +424,8 @@ export default function AdminApprovalsScreen() {
   };
 
   const handleApprove = (request: ApprovalRequest) => {
-    // if (
-    //   request.requestType === "clinic_activation" ||
-    //   request.requestType === "store_activation" ||
-    //   request.requestType === "clinic_renewal" ||
-    //   request.requestType === "store_renewal"
-    // ) {
-    //   // Show modal for activation dates
-    //   setSelectedRequest(request);
-    //   const today = new Date();
-    //   const nextYear = new Date(
-    //     today.getFullYear() + 1,
-    //     today.getMonth(),
-    //     today.getDate()
-    //   );
-    //   setActivationStartDate(today.toISOString().split("T")[0]);
-    //   setActivationEndDate(nextYear.toISOString().split("T")[0]);
-    // } else {
-    // Direct approval for vet registration
     setSelectedRequest(request);
     setShowApprovalModal(true);
-    // approveMutation.mutate(
-    //   {
-    //     requestId: Number(request.id),
-    //     adminId: Number(user?.id),
-    //     adminNotes: "تم قبول الطلب من قبل الإدارة",
-    //   },
-    //   {
-    //     onSuccess: () => {
-    //       showToast({
-    //         type: "success",
-    //         message: "تم قبول الطلب بنجاح",
-    //       });
-    //       refetch();
-    //       setShowDetailsModal(false);
-    //     },
-    //     onError: (error) => {
-    //       showToast({ type: "success", message: error?.message });
-    //       // Alert.alert("خطأ", error.message);
-    //     },
-    //   }
-    // );
-
-    // Alert.alert(
-    //   "تأكيد الموافقة",
-    //   `هل أنت متأكد من الموافقة على ${request.title}؟`,
-    //   [
-    //     { text: "إلغاء", style: "cancel" },
-    //     {
-    //       text: "موافقة",
-    //       style: "default",
-    //       onPress: () => {
-
-    //       },
-    //     },
-    //   ]
-    // );
-    // }
   };
 
   const parseDate = (str: string) => {
@@ -502,9 +448,16 @@ export default function AdminApprovalsScreen() {
         activationEndDate: parseDate(activationEndDate),
       },
       {
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           showToast({ type: "success", message: "تم قبول الطلب بنجاج" });
           refetch();
+
+          // Invalidate based on request type
+          if (data.requestType === "clinic_activation" || data.requestType === "clinic_renewal") {
+            queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey);
+          } else if (data.requestType === "store_activation" || data.requestType === "store_renewal") {
+            queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
+          }
         },
         onError: (error) => {
           showToast({ type: "error", message: error.message });
@@ -535,11 +488,18 @@ export default function AdminApprovalsScreen() {
           adminNotes: "تم رفض الطلب من قبل الإدارة",
         },
         {
-          onSuccess: () => {
+          onSuccess: (data: any) => {
             showToast({ type: "success", message: "تم رفض الطلب بنجاح" });
             setShowRejectModal(false);
             setRejectionReason("");
             refetch();
+
+            // Invalidate based on request type
+            if (data.requestType === "clinic_activation" || data.requestType === "clinic_renewal") {
+              queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey);
+            } else if (data.requestType === "store_activation" || data.requestType === "store_renewal") {
+              queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
+            }
           },
           onError: (error) => {
             showToast({ type: "error", message: error.message });
