@@ -38,7 +38,15 @@ export default function ClinicDashboard() {
 
   const { data: allPets, isLoading: isAllPetsLoading } = useQuery(trpc.pets.getAllPets.queryOptions({}));
 
-  const isLoading = isClinicDataLoading || isAllPetsLoading;
+  const { data: clinicPets, isLoading: isClinicPetsLoading } = useQuery({
+    ...trpc.clinics.getLatestPets.queryOptions({
+      clinicId: Number(clinicId),
+      limit: 5, // Show 5 latest pets
+    }),
+    enabled: !!clinicId,
+  });
+
+  const isLoading = isClinicDataLoading || isAllPetsLoading || isClinicPetsLoading;
 
   if (isLoading) {
     return (
@@ -127,7 +135,7 @@ export default function ClinicDashboard() {
     router.push({
       pathname: "/clinic-animals",
       params: {
-        clinicId: clinicData?.id,
+        clinicId: clinic.id,
         clinicName: clinicData?.name,
       },
     });
@@ -139,6 +147,7 @@ export default function ClinicDashboard() {
       params: {
         petId: animal.id,
         clinicAccess: "true",
+        clinicId: clinic.id,
       },
     });
   };
@@ -255,7 +264,7 @@ export default function ClinicDashboard() {
             </View>
 
             <FlatList
-              data={isSearching ? filteredAnimals : clinicData?.recentAnimals}
+              data={isSearching ? filteredAnimals : clinicPets?.pets}
               renderItem={renderAnimalItem}
               keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}
@@ -265,7 +274,12 @@ export default function ClinicDashboard() {
                   <View style={styles.emptyContainer}>
                     <Text style={styles.emptyText}>لا توجد نتائج للبحث</Text>
                   </View>
-                ) : null
+                ) : (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>لا توجد حيوانات متاحة للعيادة</Text>
+                    <Text style={styles.emptySubtext}>يجب طلب صلاحية الوصول من مالكي الحيوانات أولاً</Text>
+                  </View>
+                )
               }
             />
           </View>
@@ -645,5 +659,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     textAlign: "center",
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    marginTop: 4,
   },
 });
