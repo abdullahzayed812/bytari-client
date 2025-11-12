@@ -78,7 +78,7 @@ export default function PetDetailsScreen() {
   const { showToast } = useToastContext();
 
   const [activeTab, setActiveTab] = useState<
-    "info" | "medical" | "vaccinations" | "reminders" | "clinicRequests" | "myRequests"
+    "info" | "medical" | "vaccinations" | "reminders" | "clinicRequests" | "myRequests" | "medicalRequests"
   >("info");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTreatmentModal, setShowTreatmentModal] = useState(false);
@@ -176,15 +176,30 @@ export default function PetDetailsScreen() {
     enabled: isClinicAccess,
   });
 
+  // Fetch pending medical action requests (for owners)
+  const pendingMedicalActionsQuery = useQuery({
+    ...trpc.pets.getPendingMedicalActions.queryOptions(),
+    enabled: isOwner,
+  });
+
+  // Fetch clinic follow-ups (approved access)
+  const clinicFollowUpsQuery = useQuery({
+    ...trpc.pets.getClinicFollowUps.queryOptions({
+      petId: Number(petId),
+    }),
+    enabled: isOwner && !!petId,
+  });
+
   const pet = petQuery.data?.pet;
   const isLoading = petQuery.isLoading;
 
-  const checkAccess = useQuery(
-    trpc.pets.checkClinicAccess.queryOptions({
-      petId: Number(pet.id),
+  const checkAccess = useQuery({
+    ...trpc.pets.checkClinicAccess.queryOptions({
+      petId: Number(petId),
       clinicId: Number(clinicId),
-    })
-  );
+    }),
+    enabled: isClinicAccess,
+  });
 
   // Check access when component loads
   useEffect(() => {
@@ -198,12 +213,14 @@ export default function PetDetailsScreen() {
   const deletePetMutation = useMutation(trpc.admin.deletePet.mutationOptions({}));
   const updatePetOwnerMutation = useMutation(trpc.pets.update.mutationOptions({}));
 
-  // Mutations for adding records
-  const addMedicalRecordMutation = useMutation(trpc.pets.addMedicalRecord.mutationOptions({}));
-  const addVaccinationMutation = useMutation(trpc.pets.addVaccination.mutationOptions({}));
-  const addReminderMutation = useMutation(trpc.pets.addReminder.mutationOptions({}));
-  const createTreatmentCardMutation = useMutation(trpc.pets.createTreatmentCard.mutationOptions({}));
-  const createFollowUpRequestMutation = useMutation(trpc.pets.createFollowUpRequest.mutationOptions({}));
+  // Update mutations
+  const requestMedicalRecordMutation = useMutation(trpc.pets.requestAddMedicalRecord.mutationOptions({}));
+  const requestVaccinationMutation = useMutation(trpc.pets.requestAddVaccination.mutationOptions({}));
+  const requestReminderMutation = useMutation(trpc.pets.requestAddReminder.mutationOptions({}));
+
+  // Approval mutations for owners
+  const approveMedicalActionMutation = useMutation(trpc.pets.approveMedicalAction.mutationOptions({}));
+  const rejectMedicalActionMutation = useMutation(trpc.pets.rejectMedicalAction.mutationOptions({}));
 
   // Mutations for access management
   const requestAccessMutation = useMutation(trpc.pets.requestClinicAccess.mutationOptions({}));
@@ -214,6 +231,10 @@ export default function PetDetailsScreen() {
   const deleteMedicalRecordMutation = useMutation(trpc.pets.deleteMedicalRecord.mutationOptions({}));
   const deleteVaccinationMutation = useMutation(trpc.pets.deleteVaccination.mutationOptions({}));
   const deleteReminderMutation = useMutation(trpc.pets.deleteReminder.mutationOptions({}));
+
+  const createTreatmentCardMutation = useMutation(trpc.pets.createTreatmentCard.mutationOptions({}));
+  // Cancel clinic follow-ups mutation (revoke access)
+  const cancelClinicFollowUpsMutation = useMutation(trpc.pets.cancelFollowUps.mutationOptions({}));
 
   // Initialize edit form when pet data is loaded
   useEffect(() => {
@@ -338,6 +359,49 @@ export default function PetDetailsScreen() {
     }));
   };
 
+  const handleApproveMedicalAction = async (requestId: number) => {
+    try {
+      await approveMedicalActionMutation.mutateAsync({ requestId } as any);
+
+      showToast({
+        message: "تمت الموافقة على الطلب وإضافة البيانات",
+        type: "success",
+      });
+
+      pendingMedicalActionsQuery.refetch();
+      petQuery.refetch();
+    } catch (error: any) {
+      Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
+    }
+  };
+
+  const handleRejectMedicalAction = async (requestId: number) => {
+    Alert.alert("رفض الطلب", "هل أنت متأكد من رفض هذا الطلب؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "رفض",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await rejectMedicalActionMutation.mutateAsync({
+              requestId,
+              rejectionReason: "تم الرفض من قبل المالك",
+            } as any);
+
+            showToast({
+              message: "تم رفض الطلب",
+              type: "success",
+            });
+
+            pendingMedicalActionsQuery.refetch();
+          } catch (error: any) {
+            Alert.alert("خطأ", error.message || "فشل في رفض الطلب");
+          }
+        },
+      },
+    ]);
+  };
+
   const handlePrescriptionImageUpload = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -404,7 +468,7 @@ export default function PetDetailsScreen() {
         medications: treatmentForm.medications.filter((med) => med.name), // Only include medications with names
         instructions: treatmentForm.instructions,
         followUpDate: treatmentForm.followUpDate,
-      });
+      } as any);
 
       setShowTreatmentModal(false);
       setTreatmentForm({
@@ -438,7 +502,7 @@ export default function PetDetailsScreen() {
         petId: Number(pet.id),
         clinicId: Number(clinicId!),
         reason: followUpForm.reason,
-      });
+      } as any);
 
       setShowFollowUpModal(false);
       setFollowUpForm({ reason: "", notes: "", urgency: "normal" });
@@ -464,7 +528,7 @@ export default function PetDetailsScreen() {
         petId: Number(pet.id),
         clinicId: Number(clinicId!),
         reason: accessRequestForm.reason,
-      });
+      } as any);
 
       setShowAccessRequestModal(false);
       setAccessRequestForm({ reason: "" });
@@ -482,7 +546,7 @@ export default function PetDetailsScreen() {
       await approveAccessMutation.mutateAsync({
         requestId,
         accessDuration: 365, // 1 year access
-      });
+      } as any);
 
       showToast({
         message: "تم منح الصلاحية للعيادة بنجاح",
@@ -491,6 +555,7 @@ export default function PetDetailsScreen() {
 
       // Refresh requests list
       accessRequestsQuery.refetch();
+      clinicFollowUpsQuery.refetch();
     } catch (error: any) {
       Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
     }
@@ -507,7 +572,7 @@ export default function PetDetailsScreen() {
             await rejectAccessMutation.mutateAsync({
               requestId,
               rejectionReason: "تم الرفض من قبل المالك",
-            });
+            } as any);
 
             showToast({
               message: "تم رفض طلب الصلاحية",
@@ -534,27 +599,25 @@ export default function PetDetailsScreen() {
     if (!pet || !user) return;
 
     try {
-      await addMedicalRecordMutation.mutateAsync({
+      await requestMedicalRecordMutation.mutateAsync({
         petId: Number(pet.id),
         clinicId: Number(clinicId!),
         diagnosis: medicalForm.diagnosis,
         treatment: medicalForm.treatment,
         notes: medicalForm.notes,
         prescriptionImage: medicalForm.prescriptionImage,
-      });
+        requestReason: "إضافة سجل طبي بعد الفحص",
+      } as any);
 
       setShowMedicalModal(false);
       setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" });
 
       showToast({
-        message: "تم إضافة السجل الطبي بنجاح",
+        message: "تم إرسال طلب إضافة السجل الطبي إلى المالك",
         type: "success",
       });
-
-      // Refresh pet data
-      petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إضافة السجل الطبي");
+      Alert.alert("خطأ", error.message || "فشل في إرسال الطلب");
     }
   };
 
@@ -567,26 +630,24 @@ export default function PetDetailsScreen() {
     if (!pet || !user) return;
 
     try {
-      await addVaccinationMutation.mutateAsync({
+      await requestVaccinationMutation.mutateAsync({
         petId: Number(pet.id),
         clinicId: Number(clinicId!),
         name: vaccinationForm.name,
         nextDate: vaccinationForm.nextDate,
         notes: vaccinationForm.notes,
-      });
+        requestReason: "إضافة تطعيم جديد", // Add reason field
+      } as any);
 
       setShowVaccinationModal(false);
       setVaccinationForm({ name: "", nextDate: "", notes: "" });
 
       showToast({
-        message: "تم إضافة التطعيم بنجاح",
+        message: "تم إرسال طلب إضافة التطعيم إلى المالك",
         type: "success",
       });
-
-      // Refresh pet data
-      petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إضافة التطعيم");
+      Alert.alert("خطأ", error.message || "فشل في إرسال الطلب");
     }
   };
 
@@ -599,27 +660,25 @@ export default function PetDetailsScreen() {
     if (!pet || !user) return;
 
     try {
-      await addReminderMutation.mutateAsync({
+      await requestReminderMutation.mutateAsync({
         petId: Number(pet.id),
         clinicId: Number(clinicId!),
         title: reminderForm.title,
         description: reminderForm.description,
         reminderDate: reminderForm.date,
         reminderType: "checkup",
-      });
+        requestReason: "إضافة تذكير للمتابعة", // Add reason field
+      } as any);
 
       setShowReminderModal(false);
       setReminderForm({ title: "", description: "", date: "" });
 
       showToast({
-        message: "تم إضافة التذكير بنجاح",
+        message: "تم إرسال طلب إضافة التذكير إلى المالك",
         type: "success",
       });
-
-      // Refresh pet data
-      petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إضافة التذكير");
+      Alert.alert("خطأ", error.message || "فشل في إرسال الطلب");
     }
   };
 
@@ -653,7 +712,7 @@ export default function PetDetailsScreen() {
           medicalHistory: editForm.medicalHistory.trim() || undefined,
           vaccinations: editForm.vaccinations.trim() || undefined,
           isLost: editForm.isLost,
-        },
+        } as any,
         {
           onSuccess: () => {
             showToast({
@@ -684,7 +743,7 @@ export default function PetDetailsScreen() {
           weight: editForm.weight ? parseFloat(editForm.weight) : undefined,
           color: editForm.color.trim() || undefined,
           image: editForm.image || undefined,
-        },
+        } as any,
         {
           onSuccess: () => {
             showToast({
@@ -719,7 +778,7 @@ export default function PetDetailsScreen() {
               petId: pet.id,
               adminId: user.id,
               reason: "Admin deletion",
-            },
+            } as any,
             {
               onSuccess: () => {
                 showToast({
@@ -750,7 +809,7 @@ export default function PetDetailsScreen() {
         text: "حذف",
         style: "destructive",
         onPress: async () => {
-          // TODO: Implement medical record deletion with your backend
+          deleteMedicalRecordMutation.mutate({ recordId } as any);
           Alert.alert("تم", "تم حذف السجل الطبي");
         },
       },
@@ -766,7 +825,7 @@ export default function PetDetailsScreen() {
         text: "حذف",
         style: "destructive",
         onPress: async () => {
-          // TODO: Implement vaccination deletion with your backend
+          deleteVaccinationMutation.mutate({ vaccinationId } as any);
           Alert.alert("تم", "تم حذف التطعيم");
         },
       },
@@ -782,25 +841,54 @@ export default function PetDetailsScreen() {
         text: "حذف",
         style: "destructive",
         onPress: async () => {
-          // TODO: Implement reminder deletion with your backend
+          deleteReminderMutation.mutate({ reminderId } as any);
           Alert.alert("تم", "تم حذف التذكير");
         },
       },
     ]);
   };
 
-  const handleCancelFollowUp = () => {
-    if (!isOwner) return;
-
-    Alert.alert("إلغاء المتابعات", "هل تريد إلغاء جميع طلبات المتابعة المعلقة لهذا الحيوان؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "نعم",
-        onPress: () => {
-          Alert.alert("تم", "تم إلغاء جميع طلبات المتابعة المعلقة");
+  // Handle canceling follow-up for a specific clinic
+  const handleCancelClinicFollowUp = (clinicId: number, clinicName: string) => {
+    Alert.alert(
+      `إلغاء المتابعة مع ${clinicName}`,
+      "هل أنت متأكد من إلغاء المتابعة مع هذه العيادة؟ هذا الإجراء سيمنع العيادة من إضافة سجلات طبية جديدة لحيوانك الأليف.",
+      [
+        {
+          text: "إلغاء",
+          style: "cancel",
         },
-      },
-    ]);
+        {
+          text: "نعم، إلغاء المتابعة",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await cancelClinicFollowUpsMutation.mutateAsync({
+                petId: Number(petId),
+                clinicId: Number(clinicId),
+              } as any);
+
+              showToast({
+                message: `تم إلغاء المتابعة مع ${clinicName} بنجاح`,
+                type: "success",
+              });
+
+              // Refresh the clinic follow-ups data
+              clinicFollowUpsQuery.refetch();
+
+              // Also refresh access requests if needed
+              accessRequestsQuery.refetch();
+            } catch (error: any) {
+              // Dismiss loading toast if exists
+              showToast({
+                message: error.message || "فشل في إلغاء المتابعة",
+                type: "error",
+              });
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleAdoptionBreeding = (type: string) => {
@@ -852,7 +940,7 @@ export default function PetDetailsScreen() {
                 weight: pet?.weight ? parseFloat(pet?.weight) : undefined,
                 color: pet?.color || undefined,
                 image: pet?.image,
-                ownerId: parseInt(user.id.toString()),
+                ownerId: parseInt(user?.id.toString()),
                 requestType: type,
                 description: pet?.description,
                 images: [pet?.image],
@@ -860,7 +948,7 @@ export default function PetDetailsScreen() {
                 location: pet?.location,
                 price: pet?.price ? parseFloat(pet?.price) : undefined,
                 specialRequirements: pet.specialRequirements || undefined,
-              },
+              } as any,
               {
                 onSuccess: (data) => {
                   showToast({
@@ -1010,6 +1098,17 @@ export default function PetDetailsScreen() {
             <Text style={[styles.tabText, activeTab === "myRequests" && styles.activeTabText]}>طلباتي</Text>
           </TouchableOpacity>
         )}
+
+        {isOwner && (
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "medicalRequests" && styles.activeTab]}
+            onPress={() => setActiveTab("medicalRequests")}
+          >
+            <Text style={[styles.tabText, activeTab === "medicalRequests" && styles.activeTabText]}>
+              الطلبات الطبية
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.content}>
@@ -1064,14 +1163,36 @@ export default function PetDetailsScreen() {
             {/* Owner Actions */}
             {isOwner && (
               <View style={styles.ownerActions}>
-                {hasClinicFollowUps && (
-                  <Button
-                    title="إلغاء المتابعات"
-                    onPress={handleCancelFollowUp}
-                    type="outline"
-                    size="medium"
-                    style={styles.actionButton}
-                  />
+                {clinicFollowUpsQuery.data?.followUps && clinicFollowUpsQuery.data.followUps.length > 0 && (
+                  <View style={styles.clinicFollowUpsSection}>
+                    <Text style={styles.sectionTitle}>المتابعات مع العيادات</Text>
+                    {clinicFollowUpsQuery.data.followUps.map((clinic) => (
+                      <View key={clinic.clinicId} style={styles.clinicFollowUpCard}>
+                        <View style={styles.clinicInfo}>
+                          <Text style={styles.clinicName}>{clinic.clinicName}</Text>
+                          <Text style={styles.followUpDetails}>
+                            {clinic.medicalRecordsCount} سجلات طبية • {clinic.vaccinationsCount} تطعيمات •{" "}
+                            {clinic.remindersCount} تذكيرات
+                          </Text>
+                          {clinic.expiresAt && (
+                            <Text style={styles.followUpDate}>
+                              الصلاحية تنتهي: {new Date(clinic.expiresAt).toLocaleDateString("ar-SA")}
+                            </Text>
+                          )}
+                          {clinic.pendingFollowUpsCount > 0 && (
+                            <Text style={styles.pendingRequests}>{clinic.pendingFollowUpsCount} طلب متابعة معلق</Text>
+                          )}
+                        </View>
+                        <TouchableOpacity
+                          style={styles.cancelClinicFollowUpButton}
+                          onPress={() => handleCancelClinicFollowUp(clinic.clinicId, clinic.clinicName)}
+                        >
+                          <X size={16} color={COLORS.error} />
+                          <Text style={styles.cancelClinicFollowUpText}>إلغاء المتابعة</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
                 )}
 
                 <Button
@@ -1442,6 +1563,83 @@ export default function PetDetailsScreen() {
 
                   <Text style={styles.requestReason}>{request.reason}</Text>
                   <Text style={styles.requestDate}>{new Date(request.createdAt).toLocaleDateString()}</Text>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+
+        {activeTab === "medicalRequests" && isOwner && (
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>طلبات البيانات الطبية</Text>
+            </View>
+
+            {pendingMedicalActionsQuery.isLoading ? (
+              <ActivityIndicator size="large" />
+            ) : !pendingMedicalActionsQuery.data?.requests || pendingMedicalActionsQuery.data.requests.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>لا توجد طلبات معلقة</Text>
+              </View>
+            ) : (
+              pendingMedicalActionsQuery.data.requests.map((request: any) => (
+                <View key={request.id} style={styles.requestCard}>
+                  <View style={styles.requestHeader}>
+                    <Text style={styles.requestClinicName}>{request.clinicName}</Text>
+                    <Text style={styles.requestDate}>{new Date(request.createdAt).toLocaleDateString()}</Text>
+                  </View>
+
+                  <Text style={styles.requestType}>
+                    {request.actionType === "medical_record"
+                      ? "سجل طبي"
+                      : request.actionType === "vaccination"
+                      ? "تطعيم"
+                      : "تذكير"}
+                  </Text>
+
+                  <Text style={styles.requestReason}>{request.reason}</Text>
+
+                  {/* Show action details */}
+                  <View style={styles.actionDetails}>
+                    {request.actionType === "medical_record" && (
+                      <>
+                        <Text style={styles.detailLabel}>التشخيص:</Text>
+                        <Text style={styles.detailValue}>{request.actionData.diagnosis}</Text>
+                        <Text style={styles.detailLabel}>العلاج:</Text>
+                        <Text style={styles.detailValue}>{request.actionData.treatment}</Text>
+                      </>
+                    )}
+                    {request.actionType === "vaccination" && (
+                      <>
+                        <Text style={styles.detailLabel}>اسم التطعيم:</Text>
+                        <Text style={styles.detailValue}>{request.actionData.name}</Text>
+                      </>
+                    )}
+                    {request.actionType === "reminder" && (
+                      <>
+                        <Text style={styles.detailLabel}>العنوان:</Text>
+                        <Text style={styles.detailValue}>{request.actionData.title}</Text>
+                      </>
+                    )}
+                  </View>
+
+                  <View style={styles.requestActions}>
+                    <TouchableOpacity
+                      style={[styles.requestButton, styles.approveButton]}
+                      onPress={() => handleApproveMedicalAction(request.id)}
+                    >
+                      <Check size={16} color={COLORS.white} />
+                      <Text style={styles.requestButtonText}>موافقة</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.requestButton, styles.rejectButton]}
+                      onPress={() => handleRejectMedicalAction(request.id)}
+                    >
+                      <XIcon size={16} color={COLORS.white} />
+                      <Text style={styles.requestButtonText}>رفض</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ))
             )}
@@ -2802,5 +3000,101 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.primary,
     fontWeight: "600",
+  },
+  actionDetails: {
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+
+  // Detail labels and values
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.darkGray,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+
+  detailValue: {
+    fontSize: 14,
+    color: COLORS.black,
+    lineHeight: 20,
+  },
+
+  // Tab state for medical requests
+  medicalRequestsTab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+
+  requestType: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.primary,
+    backgroundColor: COLORS.primary + "20",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+
+  clinicFollowUpsSection: {
+    marginBottom: 20,
+    width: "100%",
+  },
+  clinicFollowUpCard: {
+    backgroundColor: COLORS.gray,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  clinicInfo: {
+    flex: 1,
+  },
+  clinicName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginBottom: 4,
+  },
+  followUpDetails: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+  },
+  cancelClinicFollowUpButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.error + "20",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    gap: 4,
+  },
+  cancelClinicFollowUpText: {
+    fontSize: 12,
+    color: COLORS.error,
+    fontWeight: "600",
+  },
+  followUpDate: {
+    fontSize: 11,
+    color: COLORS.warning,
+    marginBottom: 4,
+    fontFamily: "System",
+  },
+  pendingRequests: {
+    fontSize: 11,
+    color: COLORS.error,
+    fontWeight: "600",
+    marginBottom: 4,
   },
 });

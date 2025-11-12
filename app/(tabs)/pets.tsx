@@ -87,9 +87,10 @@ export default function PetsScreen() {
   ]);
 
   const handlePetPress = (pet: any) => {
+    console.log(pet);
     router.push({
       pathname: "/pet-details",
-      params: { petId: pet.id },
+      params: { petId: pet?.id },
     });
   };
 
