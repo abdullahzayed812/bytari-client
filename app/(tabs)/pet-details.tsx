@@ -78,8 +78,9 @@ export default function PetDetailsScreen() {
   const { showToast } = useToastContext();
 
   const [activeTab, setActiveTab] = useState<
-    "info" | "medical" | "vaccinations" | "reminders" | "clinicRequests" | "myRequests" | "medicalRequests"
+    "info" | "medical" | "vaccinations" | "reminders" | "requests" | "myRequests"
   >("info");
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTreatmentModal, setShowTreatmentModal] = useState(false);
 
@@ -162,23 +163,24 @@ export default function PetDetailsScreen() {
     }),
   });
 
-  // Fetch access requests
-  const accessRequestsQuery = useQuery({
-    ...trpc.pets.getPendingAccessRequests.queryOptions(),
-    enabled: isOwner,
-  });
-
   // Fetch my clinic requests (for vets)
   const myRequestsQuery = useQuery({
     ...trpc.pets.getMyAccessRequests.queryOptions({
       petId: Number(petId),
+      clinicId: Number(clinicId),
     }),
     enabled: isClinicAccess,
   });
 
+  // Fetch access requests (for owner)
+  const accessRequestsQuery = useQuery({
+    ...trpc.pets.getPendingAccessRequests.queryOptions({ petId: Number(petId) }),
+    enabled: isOwner,
+  });
+
   // Fetch pending medical action requests (for owners)
   const pendingMedicalActionsQuery = useQuery({
-    ...trpc.pets.getPendingMedicalActions.queryOptions(),
+    ...trpc.pets.getPendingMedicalActions.queryOptions({ petId: Number(petId) }),
     enabled: isOwner,
   });
 
@@ -506,6 +508,7 @@ export default function PetDetailsScreen() {
 
       setShowFollowUpModal(false);
       setFollowUpForm({ reason: "", notes: "", urgency: "normal" });
+      accessRequestsQuery.refetch();
 
       Alert.alert("تم إرسال الطلب", "تم إرسال طلب الصلاحية إلى مالك الحيوان. ستتمكن من إضافة البيانات بعد الموافقة.", [
         { text: "موافق" },
@@ -532,6 +535,7 @@ export default function PetDetailsScreen() {
 
       setShowAccessRequestModal(false);
       setAccessRequestForm({ reason: "" });
+      accessRequestsQuery.refetch();
 
       Alert.alert("تم إرسال الطلب", "تم إرسال طلب الصلاحية إلى مالك الحيوان. ستتمكن من إضافة البيانات بعد الموافقة.", [
         { text: "موافق" },
@@ -810,6 +814,7 @@ export default function PetDetailsScreen() {
         style: "destructive",
         onPress: async () => {
           deleteMedicalRecordMutation.mutate({ recordId } as any);
+          petQuery.refetch();
           Alert.alert("تم", "تم حذف السجل الطبي");
         },
       },
@@ -826,6 +831,7 @@ export default function PetDetailsScreen() {
         style: "destructive",
         onPress: async () => {
           deleteVaccinationMutation.mutate({ vaccinationId } as any);
+          petQuery.refetch();
           Alert.alert("تم", "تم حذف التطعيم");
         },
       },
@@ -842,6 +848,7 @@ export default function PetDetailsScreen() {
         style: "destructive",
         onPress: async () => {
           deleteReminderMutation.mutate({ reminderId } as any);
+          petQuery.refetch();
           Alert.alert("تم", "تم حذف التذكير");
         },
       },
@@ -1083,10 +1090,10 @@ export default function PetDetailsScreen() {
 
         {isOwner && (
           <TouchableOpacity
-            style={[styles.tab, activeTab === "clinicRequests" && styles.activeTab]}
-            onPress={() => setActiveTab("clinicRequests")}
+            style={[styles.tab, activeTab === "requests" && styles.activeTab]}
+            onPress={() => setActiveTab("requests")}
           >
-            <Text style={[styles.tabText, activeTab === "clinicRequests" && styles.activeTabText]}>طلبات العيادات</Text>
+            <Text style={[styles.tabText, activeTab === "requests" && styles.activeTabText]}>طلبات العيادات</Text>
           </TouchableOpacity>
         )}
 
@@ -1096,17 +1103,6 @@ export default function PetDetailsScreen() {
             onPress={() => setActiveTab("myRequests")}
           >
             <Text style={[styles.tabText, activeTab === "myRequests" && styles.activeTabText]}>طلباتي</Text>
-          </TouchableOpacity>
-        )}
-
-        {isOwner && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "medicalRequests" && styles.activeTab]}
-            onPress={() => setActiveTab("medicalRequests")}
-          >
-            <Text style={[styles.tabText, activeTab === "medicalRequests" && styles.activeTabText]}>
-              الطلبات الطبية
-            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -1476,51 +1472,6 @@ export default function PetDetailsScreen() {
           </View>
         )}
 
-        {activeTab === "clinicRequests" && isOwner && (
-          <View>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>طلبات صلاحية العيادات</Text>
-            </View>
-
-            {accessRequestsQuery.isLoading ? (
-              <ActivityIndicator size="large" />
-            ) : !accessRequestsQuery.data?.requests || accessRequestsQuery.data.requests.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>لا توجد طلبات صلاحية معلقة</Text>
-              </View>
-            ) : (
-              accessRequestsQuery.data.requests.map((request: any) => (
-                <View key={request.id} style={styles.requestCard}>
-                  <View style={styles.requestHeader}>
-                    <Text style={styles.requestClinicName}>{request.clinicName}</Text>
-                    <Text style={styles.requestDate}>{new Date(request.createdAt).toLocaleDateString()}</Text>
-                  </View>
-
-                  <Text style={styles.requestReason}>{request.reason}</Text>
-
-                  <View style={styles.requestActions}>
-                    <TouchableOpacity
-                      style={[styles.requestButton, styles.approveButton]}
-                      onPress={() => handleApproveRequest(request.id)}
-                    >
-                      <Check size={16} color={COLORS.white} />
-                      <Text style={styles.requestButtonText}>موافقة</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.requestButton, styles.rejectButton]}
-                      onPress={() => handleRejectRequest(request.id)}
-                    >
-                      <XIcon size={16} color={COLORS.white} />
-                      <Text style={styles.requestButtonText}>رفض</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-        )}
-
         {activeTab === "myRequests" && isClinicAccess && (
           <View>
             <View style={styles.sectionHeader}>
@@ -1569,8 +1520,51 @@ export default function PetDetailsScreen() {
           </View>
         )}
 
-        {activeTab === "medicalRequests" && isOwner && (
+        {activeTab === "requests" && isOwner && (
           <View>
+            {/* --- Section 1: Clinic Access Requests --- */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>طلبات صلاحية العيادات</Text>
+            </View>
+
+            {accessRequestsQuery.isLoading ? (
+              <ActivityIndicator size="large" />
+            ) : !accessRequestsQuery.data?.requests || accessRequestsQuery.data.requests.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>لا توجد طلبات صلاحية معلقة</Text>
+              </View>
+            ) : (
+              accessRequestsQuery.data.requests.map((request: any) => (
+                <View key={`clinic-${request.id}`} style={styles.requestCard}>
+                  <View style={styles.requestHeader}>
+                    <Text style={styles.requestClinicName}>{request.clinicName}</Text>
+                    <Text style={styles.requestDate}>{new Date(request.createdAt).toLocaleDateString()}</Text>
+                  </View>
+
+                  <Text style={styles.requestReason}>{request.reason}</Text>
+
+                  <View style={styles.requestActions}>
+                    <TouchableOpacity
+                      style={[styles.requestButton, styles.approveButton]}
+                      onPress={() => handleApproveRequest(request.id)}
+                    >
+                      <Check size={16} color={COLORS.white} />
+                      <Text style={styles.requestButtonText}>موافقة</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.requestButton, styles.rejectButton]}
+                      onPress={() => handleRejectRequest(request.id)}
+                    >
+                      <XIcon size={16} color={COLORS.white} />
+                      <Text style={styles.requestButtonText}>رفض</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+
+            {/* --- Section 2: Medical Data Requests --- */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>طلبات البيانات الطبية</Text>
             </View>
@@ -1579,11 +1573,11 @@ export default function PetDetailsScreen() {
               <ActivityIndicator size="large" />
             ) : !pendingMedicalActionsQuery.data?.requests || pendingMedicalActionsQuery.data.requests.length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>لا توجد طلبات معلقة</Text>
+                <Text style={styles.emptyStateText}>لا توجد طلبات بيانات طبية معلقة</Text>
               </View>
             ) : (
               pendingMedicalActionsQuery.data.requests.map((request: any) => (
-                <View key={request.id} style={styles.requestCard}>
+                <View key={`medical-${request.id}`} style={styles.requestCard}>
                   <View style={styles.requestHeader}>
                     <Text style={styles.requestClinicName}>{request.clinicName}</Text>
                     <Text style={styles.requestDate}>{new Date(request.createdAt).toLocaleDateString()}</Text>
@@ -1599,7 +1593,6 @@ export default function PetDetailsScreen() {
 
                   <Text style={styles.requestReason}>{request.reason}</Text>
 
-                  {/* Show action details */}
                   <View style={styles.actionDetails}>
                     {request.actionType === "medical_record" && (
                       <>

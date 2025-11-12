@@ -1,31 +1,38 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, FlatList, TextInput } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, FlatList, TextInput } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Search, Users, Phone } from 'lucide-react-native';
-import { useQuery } from '@tanstack/react-query';
-import { trpc } from '@/lib/trpc';
+import { useRouter, Stack, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ArrowLeft, Search, Users, Phone } from "lucide-react-native";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 
 export default function ClinicAnimals() {
   const router = useRouter();
   const { clinicId, clinicName } = useLocalSearchParams();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
 
-  const { data, isLoading } = useQuery({
-    ...trpc.clinics.getClinicAnimals.queryOptions({ clinicId: Number(clinicId) }),
+  const { data: clinicPets, isLoading: isClinicPetsLoading } = useQuery({
+    ...trpc.clinics.getLatestPets.queryOptions({
+      clinicId: Number(clinicId),
+      limit: 5, // Show 5 latest pets
+    }),
     enabled: !!clinicId,
   });
 
-  const clinicAnimals = data?.animals || [];
+  const clinicAnimals = clinicPets?.pets || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'تحت العلاج': return COLORS.warning;
-      case 'متعافي': return COLORS.success;
-      case 'فحص دوري': return COLORS.primary;
-      default: return COLORS.darkGray;
+      case "تحت العلاج":
+        return COLORS.warning;
+      case "متعافي":
+        return COLORS.success;
+      case "فحص دوري":
+        return COLORS.primary;
+      default:
+        return COLORS.darkGray;
     }
   };
 
@@ -34,7 +41,7 @@ export default function ClinicAnimals() {
   };
 
   const clearSearch = () => {
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const filterByStatus = (status: string) => {
@@ -43,7 +50,7 @@ export default function ClinicAnimals() {
 
   const filteredData = clinicAnimals
     .filter((animal) => {
-      if (filterStatus === 'all') return true;
+      if (filterStatus === "all") return true;
       return animal.status === filterStatus;
     })
     .filter((animal) => {
@@ -57,23 +64,19 @@ export default function ClinicAnimals() {
       );
     });
 
-  const handleAnimalPress = (animal: any) => {
+  const handleAnimalPress = (pet: any) => {
     router.push({
-      pathname: '/pet-details',
+      pathname: "/pet-details",
       params: {
-        petId: animal.petData.id,
-        fromClinic: 'true',
-        clinicId: clinicId as string
-      }
+        petId: pet.id,
+        fromClinic: "true",
+        clinicId: clinicId as string,
+      },
     });
   };
 
   const renderAnimalItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.animalCard} 
-      activeOpacity={0.8}
-      onPress={() => handleAnimalPress(item)}
-    >
+    <TouchableOpacity style={styles.animalCard} activeOpacity={0.8} onPress={() => handleAnimalPress(item)}>
       <Image source={{ uri: item.image }} style={styles.animalImage} />
       <View style={styles.animalInfo}>
         <View style={styles.animalHeader}>
@@ -82,7 +85,9 @@ export default function ClinicAnimals() {
             <Text style={styles.statusText}>{item.status}</Text>
           </View>
         </View>
-        <Text style={styles.animalDetails}>{item.type} - {item.breed}</Text>
+        <Text style={styles.animalDetails}>
+          {item.type} - {item.breed}
+        </Text>
         <Text style={styles.animalAge}>العمر: {item.age}</Text>
         <View style={styles.ownerInfo}>
           <Text style={styles.ownerName}>المالك: {item.owner}</Text>
@@ -102,9 +107,9 @@ export default function ClinicAnimals() {
 
   const statusCounts = {
     all: clinicAnimals.length,
-    'تحت العلاج': clinicAnimals.filter(a => a.status === 'تحت العلاج').length,
-    'متعافي': clinicAnimals.filter(a => a.status === 'متعافي').length,
-    'فحص دوري': clinicAnimals.filter(a => a.status === 'فحص دوري').length
+    "تحت العلاج": clinicAnimals.filter((a) => a.status === "تحت العلاج").length,
+    متعافي: clinicAnimals.filter((a) => a.status === "متعافي").length,
+    "فحص دوري": clinicAnimals.filter((a) => a.status === "فحص دوري").length,
   };
 
   const displayData = filteredData;
@@ -125,116 +130,122 @@ export default function ClinicAnimals() {
           <View style={styles.headerSpacer} />
         </View>
 
-        {isLoading ? (
+        {isClinicPetsLoading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>جاري تحميل بيانات الحيوانات...</Text>
           </View>
         ) : (
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Stats Summary */}
-          <View style={styles.statsCard}>
-            <View style={styles.statsHeader}>
-              <Users size={24} color={COLORS.primary} />
-              <Text style={styles.statsTitle}>إحصائيات الحيوانات</Text>
-            </View>
-            <View style={styles.statsGrid}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{statusCounts.all}</Text>
-                <Text style={styles.statLabel}>إجمالي الحيوانات</Text>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Stats Summary */}
+            <View style={styles.statsCard}>
+              <View style={styles.statsHeader}>
+                <Users size={24} color={COLORS.primary} />
+                <Text style={styles.statsTitle}>إحصائيات الحيوانات</Text>
               </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: COLORS.warning }]}>{statusCounts['تحت العلاج']}</Text>
-                <Text style={styles.statLabel}>تحت العلاج</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: COLORS.success }]}>{statusCounts['متعافي']}</Text>
-                <Text style={styles.statLabel}>متعافي</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: COLORS.primary }]}>{statusCounts['فحص دوري']}</Text>
-                <Text style={styles.statLabel}>فحص دوري</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Search Section */}
-          <View style={styles.searchSection}>
-            <Text style={styles.sectionTitle}>البحث والتصفية</Text>
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="ابحث بالاسم، المالك، النوع أو المعرف..."
-                placeholderTextColor={COLORS.darkGray}
-                value={searchQuery}
-                onChangeText={handleSearch}
-              />
-              <Search size={20} color={COLORS.darkGray} style={styles.searchIcon} />
-            </View>
-            
-            {/* Filter Buttons */}
-            <View style={styles.filterContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <TouchableOpacity 
-                  style={[styles.filterButton, filterStatus === 'all' && styles.filterButtonActive]}
-                  onPress={() => filterByStatus('all')}
-                >
-                  <Text style={[styles.filterText, filterStatus === 'all' && styles.filterTextActive]}>الكل ({statusCounts.all})</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.filterButton, filterStatus === 'تحت العلاج' && styles.filterButtonActive]}
-                  onPress={() => filterByStatus('تحت العلاج')}
-                >
-                  <Text style={[styles.filterText, filterStatus === 'تحت العلاج' && styles.filterTextActive]}>تحت العلاج ({statusCounts['تحت العلاج']})</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.filterButton, filterStatus === 'متعافي' && styles.filterButtonActive]}
-                  onPress={() => filterByStatus('متعافي')}
-                >
-                  <Text style={[styles.filterText, filterStatus === 'متعافي' && styles.filterTextActive]}>متعافي ({statusCounts['متعافي']})</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.filterButton, filterStatus === 'فحص دوري' && styles.filterButtonActive]}
-                  onPress={() => filterByStatus('فحص دوري')}
-                >
-                  <Text style={[styles.filterText, filterStatus === 'فحص دوري' && styles.filterTextActive]}>فحص دوري ({statusCounts['فحص دوري']})</Text>
-                </TouchableOpacity>
-              </ScrollView>
-            </View>
-          </View>
-
-          {/* Results Section */}
-          <View style={styles.resultsSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                {searchQuery || filterStatus !== 'all' ? 
-                  `نتائج البحث (${displayData.length})` : 
-                  `جميع الحيوانات (${displayData.length})`
-                }
-              </Text>
-              {(searchQuery || filterStatus !== 'all') && (
-                <TouchableOpacity onPress={clearSearch}>
-                  <Text style={styles.clearText}>مسح</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            
-            <FlatList
-              data={displayData}
-              renderItem={renderAnimalItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    {searchQuery || filterStatus !== 'all' ? 'لا توجد نتائج للبحث' : 'لا توجد حيوانات مسجلة'}
-                  </Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{statusCounts.all}</Text>
+                  <Text style={styles.statLabel}>إجمالي الحيوانات</Text>
                 </View>
-              }
-            />
-          </View>
-        </ScrollView>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statNumber, { color: COLORS.warning }]}>{statusCounts["تحت العلاج"]}</Text>
+                  <Text style={styles.statLabel}>تحت العلاج</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statNumber, { color: COLORS.success }]}>{statusCounts["متعافي"]}</Text>
+                  <Text style={styles.statLabel}>متعافي</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={[styles.statNumber, { color: COLORS.primary }]}>{statusCounts["فحص دوري"]}</Text>
+                  <Text style={styles.statLabel}>فحص دوري</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Search Section */}
+            <View style={styles.searchSection}>
+              <Text style={styles.sectionTitle}>البحث والتصفية</Text>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="ابحث بالاسم، المالك، النوع أو المعرف..."
+                  placeholderTextColor={COLORS.darkGray}
+                  value={searchQuery}
+                  onChangeText={handleSearch}
+                />
+                <Search size={20} color={COLORS.darkGray} style={styles.searchIcon} />
+              </View>
+
+              {/* Filter Buttons */}
+              <View style={styles.filterContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <TouchableOpacity
+                    style={[styles.filterButton, filterStatus === "all" && styles.filterButtonActive]}
+                    onPress={() => filterByStatus("all")}
+                  >
+                    <Text style={[styles.filterText, filterStatus === "all" && styles.filterTextActive]}>
+                      الكل ({statusCounts.all})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, filterStatus === "تحت العلاج" && styles.filterButtonActive]}
+                    onPress={() => filterByStatus("تحت العلاج")}
+                  >
+                    <Text style={[styles.filterText, filterStatus === "تحت العلاج" && styles.filterTextActive]}>
+                      تحت العلاج ({statusCounts["تحت العلاج"]})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, filterStatus === "متعافي" && styles.filterButtonActive]}
+                    onPress={() => filterByStatus("متعافي")}
+                  >
+                    <Text style={[styles.filterText, filterStatus === "متعافي" && styles.filterTextActive]}>
+                      متعافي ({statusCounts["متعافي"]})
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.filterButton, filterStatus === "فحص دوري" && styles.filterButtonActive]}
+                    onPress={() => filterByStatus("فحص دوري")}
+                  >
+                    <Text style={[styles.filterText, filterStatus === "فحص دوري" && styles.filterTextActive]}>
+                      فحص دوري ({statusCounts["فحص دوري"]})
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+            </View>
+
+            {/* Results Section */}
+            <View style={styles.resultsSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  {searchQuery || filterStatus !== "all"
+                    ? `نتائج البحث (${displayData.length})`
+                    : `جميع الحيوانات (${displayData.length})`}
+                </Text>
+                {(searchQuery || filterStatus !== "all") && (
+                  <TouchableOpacity onPress={clearSearch}>
+                    <Text style={styles.clearText}>مسح</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <FlatList
+                data={displayData}
+                renderItem={renderAnimalItem}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      {searchQuery || filterStatus !== "all" ? "لا توجد نتائج للبحث" : "لا توجد حيوانات مسجلة"}
+                    </Text>
+                  </View>
+                }
+              />
+            </View>
+          </ScrollView>
         )}
       </SafeAreaView>
     </View>
@@ -259,9 +270,9 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -272,11 +283,11 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerInfo: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   clinicNameText: {
@@ -303,47 +314,47 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   statsHeader: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 16,
     gap: 8,
   },
   statsTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   searchSection: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   searchContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -359,7 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   searchIcon: {
     marginLeft: 8,
@@ -383,28 +394,28 @@ const styles = StyleSheet.create({
   filterText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   filterTextActive: {
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   resultsSection: {
     marginBottom: 24,
   },
   sectionHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   clearText: {
     fontSize: 14,
     color: COLORS.error,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   animalCard: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -425,14 +436,14 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   animalHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 6,
   },
   animalName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   statusBadge: {
@@ -443,7 +454,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: COLORS.white,
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   animalDetails: {
     fontSize: 14,
@@ -464,14 +475,14 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   phoneContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   ownerPhone: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   visitInfo: {
     marginBottom: 6,
@@ -484,20 +495,20 @@ const styles = StyleSheet.create({
   nextAppointment: {
     fontSize: 12,
     color: COLORS.success,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   animalId: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   emptyContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

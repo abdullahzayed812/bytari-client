@@ -10,8 +10,6 @@ import {
   MapPin,
   Phone,
   Users,
-  Calendar,
-  TrendingUp,
   Stethoscope,
   Bell,
   Syringe,
@@ -136,7 +134,7 @@ export default function ClinicDashboard() {
       pathname: "/clinic-animals",
       params: {
         clinicId: clinic.id,
-        clinicName: clinicData?.name,
+        clinicName: clinic?.name,
       },
     });
   };
@@ -296,11 +294,33 @@ export default function ClinicDashboard() {
                 <Users size={24} color={COLORS.success} />
                 <Text style={styles.actionText}>جميع الحيوانات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-reminders")}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/clinic-reminders",
+                    params: {
+                      clinicId: clinic.id,
+                      clinicName: clinic?.name,
+                    },
+                  })
+                }
+              >
                 <Bell size={24} color={COLORS.warning} />
                 <Text style={styles.actionText}>تذكيرات الحيوانات</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-vaccinations")}>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/clinic-vaccinations",
+                    params: {
+                      clinicId: clinic.id,
+                      clinicName: clinic?.name,
+                    },
+                  })
+                }
+              >
                 <Syringe size={24} color={COLORS.error} />
                 <Text style={styles.actionText}>التطعيمات</Text>
               </TouchableOpacity>
@@ -315,17 +335,17 @@ export default function ClinicDashboard() {
                 <Settings size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>إعدادات عامة</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-vaccinations")}>
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-followups")}>
+                <Heart size={20} color={COLORS.error} />
+                <Text style={styles.settingText}>المتابعات</Text>
+              </TouchableOpacity>
+              {/* <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-vaccinations")}>
                 <Syringe size={20} color={COLORS.success} />
                 <Text style={styles.settingText}>إدارة التطعيمات</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-reminders")}>
                 <Bell size={20} color={COLORS.warning} />
                 <Text style={styles.settingText}>إدارة التذكيرات</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-followups")}>
-                <Heart size={20} color={COLORS.error} />
-                <Text style={styles.settingText}>المتابعات</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/appointments")}>
                 <Calendar size={20} color={COLORS.darkGray} />
@@ -334,7 +354,7 @@ export default function ClinicDashboard() {
               <TouchableOpacity style={styles.settingCard} onPress={() => handleReportsAndStats()}>
                 <TrendingUp size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>التقارير والإحصائيات</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </ScrollView>

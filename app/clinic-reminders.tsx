@@ -1,184 +1,451 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Modal } from "react-native";
+import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Bell, Calendar, Clock, AlertTriangle, CheckCircle, User } from 'lucide-react-native';
+import { useRouter, Stack, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  ArrowLeft,
+  Bell,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  CheckCircle,
+  User,
+  X,
+  Calendar as CalendarIcon,
+  Trash2,
+} from "lucide-react-native";
+import { trpc } from "../lib/trpc";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useToastContext } from "@/providers/ToastProvider";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+// Helper functions
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "pending":
+      return COLORS.warning;
+    case "overdue":
+      return COLORS.error;
+    case "completed":
+      return COLORS.success;
+    default:
+      return COLORS.darkGray;
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case "pending":
+      return "معلق";
+    case "overdue":
+      return "متأخر";
+    case "completed":
+      return "مكتمل";
+    default:
+      return "غير محدد";
+  }
+};
+
+const getReminderTypeText = (type: string) => {
+  switch (type) {
+    case "vaccination":
+      return "تطعيم";
+    case "medication":
+      return "دواء";
+    case "checkup":
+      return "فحص";
+    case "other":
+      return "أخرى";
+    default:
+      return "تذكير";
+  }
+};
+
+const getReminderTypeIcon = (type: string) => {
+  switch (type) {
+    case "vaccination":
+      return "💉";
+    case "medication":
+      return "💊";
+    case "checkup":
+      return "🩺";
+    case "other":
+      return "📅";
+    default:
+      return "📅";
+  }
+};
+
+// Modal Components
+const ReminderDetailsModal = ({ visible, onClose, reminder, onReschedule, onComplete, onDelete }: any) => {
+  if (!reminder) return null;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>تفاصيل التذكير</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <X size={24} color={COLORS.black} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.modalContent}>
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>العنوان</Text>
+            <Text style={styles.detailValue}>{reminder.title}</Text>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>نوع التذكير</Text>
+            <Text style={styles.detailValue}>{getReminderTypeText(reminder.reminderType)}</Text>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>الحيوان</Text>
+            <Text style={styles.detailValue}>
+              {reminder.petName} ({reminder.petType})
+            </Text>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>المالك</Text>
+            <Text style={styles.detailValue}>{reminder.ownerName}</Text>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>الموعد</Text>
+            <Text style={styles.detailValue}>
+              {reminder.reminderDate} في {reminder.reminderTime}
+            </Text>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>الحالة</Text>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(reminder.status) }]}>
+              <Text style={styles.statusText}>{getStatusText(reminder.status)}</Text>
+            </View>
+          </View>
+
+          <View style={styles.detailSection}>
+            <Text style={styles.detailLabel}>الوصف</Text>
+            <Text style={styles.detailValue}>{reminder.description}</Text>
+          </View>
+
+          {reminder.status === "overdue" && (
+            <View style={styles.overdueAlert}>
+              <AlertTriangle size={20} color={COLORS.error} />
+              <Text style={styles.overdueAlertText}>هذا التذكير متأخر!</Text>
+            </View>
+          )}
+        </ScrollView>
+
+        <View style={styles.modalActions}>
+          <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={onDelete}>
+            <Trash2 size={18} color={COLORS.error} />
+            <Text style={[styles.actionButtonText, styles.deleteButtonText]}>حذف</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+};
+
+const RescheduleModal = ({ visible, onClose, reminder, onConfirm }: any) => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const handleDateChange = (event, date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+    }
+  };
+
+  const handleConfirm = () => {
+    onConfirm(selectedDate);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+      <View style={styles.centeredModal}>
+        <View style={styles.rescheduleModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>تأجيل التذكير</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.rescheduleContent}>
+            <Text style={styles.rescheduleText}>
+              تأجيل تذكير "{reminder?.title}" للحيوان {reminder?.petName}
+            </Text>
+
+            <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowDatePicker(true)}>
+              <Calendar size={20} color={COLORS.primary} />
+              <Text style={styles.datePickerText}>{selectedDate.toLocaleDateString("ar-EG")}</Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+              />
+            )}
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]} onPress={onClose}>
+              <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>إلغاء</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={handleConfirm}>
+              <Text style={[styles.actionButtonText, styles.primaryButtonText]}>تأكيد التأجيل</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const CompleteReminderModal = ({ visible, onClose, reminder, onConfirm }: any) => {
+  const handleConfirm = () => {
+    onConfirm();
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+      <View style={styles.centeredModal}>
+        <View style={styles.completeModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>إكمال التذكير</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.completeContent}>
+            <Text style={styles.completeText}>
+              تأكيد إكمال تذكير "{reminder?.title}" للحيوان {reminder?.petName}
+            </Text>
+            <Text style={styles.completeSubtext}>سيتم نقل هذا التذكير إلى القائمة المكتملة</Text>
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]} onPress={onClose}>
+              <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>إلغاء</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionButton, styles.primaryButton]} onPress={handleConfirm}>
+              <Text style={[styles.actionButtonText, styles.primaryButtonText]}>تأكيد الإكمال</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const DeleteReminderModal = ({ visible, onClose, reminder, onConfirm }: any) => {
+  const handleConfirm = () => {
+    onConfirm();
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
+      <View style={styles.centeredModal}>
+        <View style={styles.deleteModal}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>حذف التذكير</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.deleteContent}>
+            <Text style={styles.deleteText}>هل أنت متأكد من حذف تذكير "{reminder?.title}"؟</Text>
+            <Text style={styles.deleteSubtext}>هذه العملية لا يمكن التراجع عنها</Text>
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]} onPress={onClose}>
+              <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>إلغاء</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleConfirm}>
+              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>حذف</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 export default function ClinicReminders() {
   const router = useRouter();
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const queryClient = useQueryClient();
+  const { showToast } = useToastContext();
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
+  const { clinicId } = useLocalSearchParams();
 
-  // Mock reminders data
-  const reminders = [
-    {
-      id: 'rem1',
-      petName: 'فلافي',
-      petType: 'قط',
-      ownerName: 'أحمد محمد',
-      reminderType: 'vaccination',
-      title: 'موعد التطعيم السنوي',
-      description: 'تطعيم ضد الأمراض الفيروسية',
-      dueDate: '2024-12-25',
-      dueTime: '10:00',
-      status: 'pending',
-      priority: 'high',
-      createdDate: '2024-12-20'
-    },
-    {
-      id: 'rem2',
-      petName: 'ماكس',
-      petType: 'كلب',
-      ownerName: 'سارة أحمد',
-      reminderType: 'checkup',
-      title: 'فحص دوري',
-      description: 'فحص شامل بعد العملية الجراحية',
-      dueDate: '2024-12-24',
-      dueTime: '14:30',
-      status: 'overdue',
-      priority: 'urgent',
-      createdDate: '2024-12-15'
-    },
-    {
-      id: 'rem3',
-      petName: 'لولو',
-      petType: 'أرنب',
-      ownerName: 'محمد علي',
-      reminderType: 'medication',
-      title: 'جرعة الدواء',
-      description: 'إعطاء المضاد الحيوي',
-      dueDate: '2024-12-23',
-      dueTime: '09:00',
-      status: 'completed',
-      priority: 'normal',
-      createdDate: '2024-12-18'
-    },
-    {
-      id: 'rem4',
-      petName: 'تويتي',
-      petType: 'طائر',
-      ownerName: 'فاطمة حسن',
-      reminderType: 'followup',
-      title: 'متابعة حالة التنفس',
-      description: 'فحص تحسن حالة التنفس',
-      dueDate: '2024-12-26',
-      dueTime: '11:00',
-      status: 'pending',
-      priority: 'high',
-      createdDate: '2024-12-21'
-    },
-    {
-      id: 'rem5',
-      petName: 'سيمبا',
-      petType: 'قط',
-      ownerName: 'عمر خالد',
-      reminderType: 'grooming',
-      title: 'موعد التنظيف',
-      description: 'تنظيف الأسنان والأذنين',
-      dueDate: '2024-12-27',
-      dueTime: '16:00',
-      status: 'pending',
-      priority: 'normal',
-      createdDate: '2024-12-22'
-    }
-  ];
+  // Modal states
+  const [selectedReminder, setSelectedReminder] = useState(null);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
+  const [completeModalVisible, setCompleteModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return COLORS.warning;
-      case 'overdue': return COLORS.error;
-      case 'completed': return COLORS.success;
-      default: return COLORS.darkGray;
-    }
-  };
+  // Fetch reminders using tRPC
+  const { data: remindersData, isLoading } = useQuery(
+    trpc.clinics.reminders.getClinicReminders.queryOptions(
+      {
+        clinicId: Number(clinicId),
+        status: selectedFilter as any,
+      },
+      {
+        enabled: !!clinicId,
+      }
+    )
+  );
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'معلق';
-      case 'overdue': return 'متأخر';
-      case 'completed': return 'مكتمل';
-      default: return 'غير محدد';
-    }
-  };
+  const reminders = useMemo(() => (remindersData as any)?.reminders || [], [remindersData]);
 
-  const getReminderTypeText = (type: string) => {
-    switch (type) {
-      case 'vaccination': return 'تطعيم';
-      case 'checkup': return 'فحص';
-      case 'medication': return 'دواء';
-      case 'followup': return 'متابعة';
-      case 'grooming': return 'تنظيف';
-      default: return 'تذكير';
-    }
-  };
+  const updateStatusMutation = useMutation(trpc.clinics.reminders.updateReminderStatus.mutationOptions());
+  const rescheduleMutation = useMutation(trpc.clinics.reminders.rescheduleReminder.mutationOptions());
+  const deleteMutation = useMutation(trpc.clinics.reminders.deleteReminder.mutationOptions());
 
-  const getReminderTypeIcon = (type: string) => {
-    switch (type) {
-      case 'vaccination': return '💉';
-      case 'checkup': return '🩺';
-      case 'medication': return '💊';
-      case 'followup': return '📋';
-      case 'grooming': return '✂️';
-      default: return '📅';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return COLORS.error;
-      case 'high': return COLORS.warning;
-      case 'normal': return COLORS.success;
-      default: return COLORS.darkGray;
-    }
-  };
-
-  const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'عاجل';
-      case 'high': return 'مهم';
-      case 'normal': return 'عادي';
-      default: return 'غير محدد';
-    }
-  };
-
-  const filteredReminders = reminders.filter(reminder => {
-    if (selectedFilter === 'all') return true;
-    return reminder.status === selectedFilter;
-  });
-
+  // Handler functions
   const handleReminderPress = (reminder: any) => {
-    Alert.alert(
-      'تفاصيل التذكير',
-      `العنوان: ${reminder.title}\nالحيوان: ${reminder.petName}\nالمالك: ${reminder.ownerName}\nالموعد: ${reminder.dueDate} في ${reminder.dueTime}\nالوصف: ${reminder.description}`,
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'تأجيل', onPress: () => postponeReminder(reminder.id) },
-        { text: 'إكمال', onPress: () => completeReminder(reminder.id) }
-      ]
+    setSelectedReminder(reminder);
+    setDetailsModalVisible(true);
+  };
+
+  const handleReschedule = () => {
+    setDetailsModalVisible(false);
+    setRescheduleModalVisible(true);
+  };
+
+  const handleComplete = () => {
+    setDetailsModalVisible(false);
+    setCompleteModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    setDetailsModalVisible(false);
+    setDeleteModalVisible(true);
+  };
+
+  const handleConfirmReschedule = (newDate: Date) => {
+    if (!selectedReminder) return;
+
+    rescheduleMutation.mutate(
+      {
+        reminderId: Number(selectedReminder.id),
+        newDate: newDate,
+      } as any,
+      {
+        onSuccess: (data) => {
+          queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
+          showToast({
+            type: "success",
+            message: data.message,
+          });
+        },
+        onError: (error) => {
+          showToast({
+            type: "error",
+            message: error.message || "فشل في تأجيل التذكير",
+          });
+        },
+      }
     );
+
+    setSelectedReminder(null);
   };
 
-  const completeReminder = (reminderId: string) => {
-    Alert.alert('تم الإكمال', 'تم تحديد التذكير كمكتمل');
+  const handleConfirmComplete = () => {
+    if (!selectedReminder) return;
+
+    updateStatusMutation.mutate(
+      {
+        reminderId: Number(selectedReminder.id),
+        isCompleted: true,
+      } as any,
+      {
+        onSuccess: (data) => {
+          queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
+          showToast({
+            type: "success",
+            message: data.message,
+          });
+        },
+        onError: (error) => {
+          showToast({
+            type: "error",
+            message: error.message || "فشل في تحديث حالة التذكير",
+          });
+        },
+      }
+    );
+
+    setSelectedReminder(null);
   };
 
-  const postponeReminder = (reminderId: string) => {
-    Alert.alert('تم التأجيل', 'تم تأجيل التذكير لموعد لاحق');
+  const handleConfirmDelete = () => {
+    if (!selectedReminder) return;
+
+    deleteMutation.mutate(
+      {
+        reminderId: Number(selectedReminder.id),
+      } as any,
+      {
+        onSuccess: (data) => {
+          queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
+          showToast({
+            type: "success",
+            message: data.message,
+          });
+        },
+        onError: (error) => {
+          showToast({
+            type: "error",
+            message: error.message || "فشل في حذف التذكير",
+          });
+        },
+      }
+    );
+
+    setSelectedReminder(null);
   };
 
-
+  const closeModals = () => {
+    setDetailsModalVisible(false);
+    setRescheduleModalVisible(false);
+    setCompleteModalVisible(false);
+    setDeleteModalVisible(false);
+    setSelectedReminder(null);
+  };
 
   const renderReminderItem = ({ item }: { item: any }) => {
-    const isOverdue = item.status === 'overdue';
-    const isToday = item.dueDate === new Date().toISOString().split('T')[0];
-    
+    const isOverdue = item.status === "overdue";
+    const isToday = item.reminderDate === new Date().toISOString().split("T")[0];
+    const isCompleted = item.isCompleted;
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
           styles.reminderCard,
           isOverdue && styles.overdueCard,
-          isToday && styles.todayCard
-        ]} 
+          isToday && styles.todayCard,
+          isCompleted && styles.completedCard,
+        ]}
         activeOpacity={0.8}
         onPress={() => handleReminderPress(item)}
       >
@@ -186,7 +453,7 @@ export default function ClinicReminders() {
           <View style={styles.reminderInfo}>
             <View style={styles.titleRow}>
               <Text style={styles.reminderIcon}>{getReminderTypeIcon(item.reminderType)}</Text>
-              <Text style={styles.reminderTitle}>{item.title}</Text>
+              <Text style={[styles.reminderTitle, isCompleted && styles.completedText]}>{item.title}</Text>
             </View>
             <Text style={styles.reminderType}>{getReminderTypeText(item.reminderType)}</Text>
           </View>
@@ -194,50 +461,56 @@ export default function ClinicReminders() {
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
               <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
             </View>
-            <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(item.priority) }]}>
-              <Text style={styles.priorityText}>{getPriorityText(item.priority)}</Text>
-            </View>
           </View>
         </View>
-        
+
         <View style={styles.petInfo}>
           <View style={styles.petRow}>
-            <Text style={styles.petName}>{item.petName} ({item.petType})</Text>
+            <Text style={[styles.petName, isCompleted && styles.completedText]}>
+              {item.petName} ({item.petType})
+            </Text>
           </View>
           <View style={styles.ownerRow}>
             <User size={14} color={COLORS.darkGray} />
-            <Text style={styles.ownerName}>{item.ownerName}</Text>
+            <Text style={[styles.ownerName, isCompleted && styles.completedText]}>{item.ownerName}</Text>
           </View>
         </View>
-        
+
         <View style={styles.dateTimeContainer}>
           <View style={styles.dateRow}>
-            <Calendar size={14} color={isOverdue ? COLORS.error : COLORS.primary} />
-            <Text style={[styles.dateText, isOverdue && styles.overdueText]}>
-              {item.dueDate}
+            <Calendar size={14} color={isOverdue ? COLORS.error : isCompleted ? COLORS.success : COLORS.primary} />
+            <Text style={[styles.dateText, isOverdue && styles.overdueText, isCompleted && styles.completedText]}>
+              {item.reminderDate}
             </Text>
           </View>
           <View style={styles.timeRow}>
-            <Clock size={14} color={isOverdue ? COLORS.error : COLORS.primary} />
-            <Text style={[styles.timeText, isOverdue && styles.overdueText]}>
-              {item.dueTime}
+            <Clock size={14} color={isOverdue ? COLORS.error : isCompleted ? COLORS.success : COLORS.primary} />
+            <Text style={[styles.timeText, isOverdue && styles.overdueText, isCompleted && styles.completedText]}>
+              {item.reminderTime}
             </Text>
           </View>
         </View>
-        
-        <Text style={styles.description}>{item.description}</Text>
-        
+
+        <Text style={[styles.description, isCompleted && styles.completedText]}>{item.description}</Text>
+
         {isOverdue && (
           <View style={styles.overdueWarning}>
             <AlertTriangle size={16} color={COLORS.error} />
             <Text style={styles.overdueWarningText}>هذا التذكير متأخر!</Text>
           </View>
         )}
-        
-        {isToday && (
+
+        {isToday && !isCompleted && (
           <View style={styles.todayIndicator}>
             <Bell size={16} color={COLORS.warning} />
             <Text style={styles.todayIndicatorText}>موعد اليوم</Text>
+          </View>
+        )}
+
+        {isCompleted && (
+          <View style={styles.completedIndicator}>
+            <CheckCircle size={16} color={COLORS.success} />
+            <Text style={styles.completedIndicatorText}>مكتمل</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -245,11 +518,24 @@ export default function ClinicReminders() {
   };
 
   const filterButtons = [
-    { key: 'all', label: 'الكل', count: reminders.length },
-    { key: 'pending', label: 'معلق', count: reminders.filter(r => r.status === 'pending').length },
-    { key: 'overdue', label: 'متأخر', count: reminders.filter(r => r.status === 'overdue').length },
-    { key: 'completed', label: 'مكتمل', count: reminders.filter(r => r.status === 'completed').length }
+    { key: "all", label: "الكل", count: reminders.length },
+    { key: "pending", label: "معلق", count: reminders.filter((r: any) => r.status === "pending").length },
+    { key: "overdue", label: "متأخر", count: reminders.filter((r: any) => r.status === "overdue").length },
+    { key: "completed", label: "مكتمل", count: reminders.filter((r: any) => r.status === "completed").length },
   ];
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>جاري تحميل التذكيرات...</Text>
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -267,19 +553,19 @@ export default function ClinicReminders() {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Stats Cards */}
           <View style={styles.statsContainer}>
-            <View style={[styles.statCard, { backgroundColor: COLORS.warning + '20' }]}>
+            <View style={[styles.statCard, { backgroundColor: COLORS.warning + "20" }]}>
               <Bell size={24} color={COLORS.warning} />
-              <Text style={styles.statNumber}>{reminders.filter(r => r.status === 'pending').length}</Text>
+              <Text style={styles.statNumber}>{reminders.filter((r: any) => r.status === "pending").length}</Text>
               <Text style={styles.statLabel}>تذكيرات معلقة</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: COLORS.error + '20' }]}>
+            <View style={[styles.statCard, { backgroundColor: COLORS.error + "20" }]}>
               <AlertTriangle size={24} color={COLORS.error} />
-              <Text style={styles.statNumber}>{reminders.filter(r => r.status === 'overdue').length}</Text>
+              <Text style={styles.statNumber}>{reminders.filter((r: any) => r.status === "overdue").length}</Text>
               <Text style={styles.statLabel}>تذكيرات متأخرة</Text>
             </View>
-            <View style={[styles.statCard, { backgroundColor: COLORS.success + '20' }]}>
+            <View style={[styles.statCard, { backgroundColor: COLORS.success + "20" }]}>
               <CheckCircle size={24} color={COLORS.success} />
-              <Text style={styles.statNumber}>{reminders.filter(r => r.status === 'completed').length}</Text>
+              <Text style={styles.statNumber}>{reminders.filter((r: any) => r.status === "completed").length}</Text>
               <Text style={styles.statLabel}>تذكيرات مكتملة</Text>
             </View>
           </View>
@@ -291,16 +577,12 @@ export default function ClinicReminders() {
                 {filterButtons.map((filter) => (
                   <TouchableOpacity
                     key={filter.key}
-                    style={[
-                      styles.filterButton,
-                      selectedFilter === filter.key && styles.activeFilterButton
-                    ]}
+                    style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilterButton]}
                     onPress={() => setSelectedFilter(filter.key)}
                   >
-                    <Text style={[
-                      styles.filterButtonText,
-                      selectedFilter === filter.key && styles.activeFilterButtonText
-                    ]}>
+                    <Text
+                      style={[styles.filterButtonText, selectedFilter === filter.key && styles.activeFilterButtonText]}
+                    >
                       {filter.label} ({filter.count})
                     </Text>
                   </TouchableOpacity>
@@ -312,11 +594,13 @@ export default function ClinicReminders() {
           {/* Reminders List */}
           <View style={styles.remindersSection}>
             <Text style={styles.sectionTitle}>
-              {selectedFilter === 'all' ? 'جميع التذكيرات' : `تذكيرات ${filterButtons.find(f => f.key === selectedFilter)?.label}`}
+              {selectedFilter === "all"
+                ? "جميع التذكيرات"
+                : `تذكيرات ${filterButtons.find((f) => f.key === selectedFilter)?.label}`}
             </Text>
-            
+
             <FlatList
-              data={filteredReminders}
+              data={reminders}
               renderItem={renderReminderItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
@@ -330,6 +614,37 @@ export default function ClinicReminders() {
             />
           </View>
         </ScrollView>
+
+        {/* Modals */}
+        <ReminderDetailsModal
+          visible={detailsModalVisible}
+          onClose={closeModals}
+          reminder={selectedReminder}
+          onReschedule={handleReschedule}
+          onComplete={handleComplete}
+          onDelete={handleDelete}
+        />
+
+        <RescheduleModal
+          visible={rescheduleModalVisible}
+          onClose={closeModals}
+          reminder={selectedReminder}
+          onConfirm={handleConfirmReschedule}
+        />
+
+        <CompleteReminderModal
+          visible={completeModalVisible}
+          onClose={closeModals}
+          reminder={selectedReminder}
+          onConfirm={handleConfirmComplete}
+        />
+
+        <DeleteReminderModal
+          visible={deleteModalVisible}
+          onClose={closeModals}
+          reminder={selectedReminder}
+          onConfirm={handleConfirmDelete}
+        />
       </SafeAreaView>
     </View>
   );
@@ -343,10 +658,19 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: COLORS.darkGray,
+  },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -358,7 +682,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   headerSpacer: {
@@ -369,8 +693,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
     gap: 8,
   },
@@ -379,7 +703,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 12,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -388,20 +712,20 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginVertical: 4,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   filterContainer: {
     marginBottom: 16,
   },
   filterButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     paddingHorizontal: 4,
   },
@@ -420,7 +744,7 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   activeFilterButtonText: {
     color: COLORS.white,
@@ -430,10 +754,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   reminderCard: {
     backgroundColor: COLORS.white,
@@ -455,17 +779,17 @@ const styles = StyleSheet.create({
     borderLeftColor: COLORS.warning,
   },
   reminderHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   reminderInfo: {
     flex: 1,
   },
   titleRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 8,
     marginBottom: 4,
   },
@@ -474,16 +798,16 @@ const styles = StyleSheet.create({
   },
   reminderTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   reminderType: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statusContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     gap: 4,
   },
   statusBadge: {
@@ -494,7 +818,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   priorityBadge: {
     paddingHorizontal: 6,
@@ -504,7 +828,7 @@ const styles = StyleSheet.create({
   priorityText: {
     color: COLORS.white,
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   petInfo: {
     marginBottom: 8,
@@ -514,12 +838,12 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
   },
   ownerRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   ownerName: {
@@ -527,29 +851,29 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   dateTimeContainer: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   dateRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   dateText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   timeRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   timeText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   overdueText: {
     color: COLORS.error,
@@ -557,13 +881,13 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
   },
   overdueWarning: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: COLORS.error + '20',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.error + "20",
     padding: 8,
     borderRadius: 8,
     gap: 4,
@@ -571,12 +895,12 @@ const styles = StyleSheet.create({
   overdueWarningText: {
     fontSize: 12,
     color: COLORS.error,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   todayIndicator: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    backgroundColor: COLORS.warning + '20',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.warning + "20",
     padding: 8,
     borderRadius: 8,
     gap: 4,
@@ -584,16 +908,224 @@ const styles = StyleSheet.create({
   todayIndicatorText: {
     fontSize: 12,
     color: COLORS.warning,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   emptyContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 12,
+  },
+
+  // New styles for completed state
+  completedCard: {
+    opacity: 0.7,
+    backgroundColor: COLORS.lightGray,
+  },
+  completedText: {
+    textDecorationLine: "line-through",
+    color: COLORS.darkGray,
+  },
+  completedIndicator: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.success + "20",
+    padding: 8,
+    borderRadius: 8,
+    gap: 4,
+  },
+  completedIndicatorText: {
+    fontSize: 12,
+    color: COLORS.success,
+    fontWeight: "bold",
+  },
+
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: COLORS.white,
+  },
+  centeredModal: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  rescheduleModal: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+  },
+  completeModal: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+  },
+  deleteModal: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalActions: {
+    flexDirection: "row-reverse",
+    justifyContent: "flex-start",
+    gap: 12,
+    marginTop: 20,
+  },
+  actionButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+    borderWidth: 1,
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  // Button variants
+  rescheduleButton: {
+    backgroundColor: COLORS.warning + "20",
+    borderColor: COLORS.warning,
+  },
+  rescheduleButtonText: {
+    color: COLORS.warning,
+  },
+  completeButton: {
+    backgroundColor: COLORS.success + "20",
+    borderColor: COLORS.success,
+  },
+  completeButtonText: {
+    color: COLORS.success,
+  },
+  deleteButton: {
+    backgroundColor: COLORS.error + "20",
+    borderColor: COLORS.error,
+  },
+  deleteButtonText: {
+    color: COLORS.error,
+  },
+  primaryButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  primaryButtonText: {
+    color: COLORS.white,
+  },
+  secondaryButton: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.lightGray,
+  },
+  secondaryButtonText: {
+    color: COLORS.darkGray,
+  },
+  // Detail sections
+  detailSection: {
+    marginBottom: 16,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    marginBottom: 4,
+  },
+  detailValue: {
+    fontSize: 16,
+    color: COLORS.black,
+    fontWeight: "600",
+  },
+  overdueAlert: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.error + "20",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 16,
+  },
+  overdueAlertText: {
+    color: COLORS.error,
+    fontWeight: "bold",
+  },
+  // Reschedule modal content
+  rescheduleContent: {
+    marginBottom: 20,
+  },
+  rescheduleText: {
+    fontSize: 16,
+    color: COLORS.black,
+    marginBottom: 16,
+    textAlign: "right",
+  },
+  datePickerButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.lightGray,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  // Complete modal content
+  completeContent: {
+    marginBottom: 20,
+  },
+  completeText: {
+    fontSize: 16,
+    color: COLORS.black,
+    marginBottom: 8,
+    textAlign: "right",
+  },
+  completeSubtext: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "right",
+  },
+  // Delete modal content
+  deleteContent: {
+    marginBottom: 20,
+  },
+  deleteText: {
+    fontSize: 16,
+    color: COLORS.black,
+    marginBottom: 8,
+    textAlign: "right",
+  },
+  deleteSubtext: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "right",
   },
 });
