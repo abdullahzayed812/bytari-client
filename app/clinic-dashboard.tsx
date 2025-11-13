@@ -335,7 +335,10 @@ export default function ClinicDashboard() {
                 <Settings size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>إعدادات عامة</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-followups")}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push({ pathname: "/clinic-followups", params: { clinicId: clinic?.id } })}
+              >
                 <Heart size={20} color={COLORS.error} />
                 <Text style={styles.settingText}>المتابعات</Text>
               </TouchableOpacity>

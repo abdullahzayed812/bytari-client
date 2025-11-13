@@ -1,16 +1,16 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Clock, AlertCircle, CheckCircle, Calendar, User, Stethoscope } from 'lucide-react-native';
-import { useQuery } from '@tanstack/react-query';
-import { trpc } from '@/lib/trpc';
+import { useRouter, Stack, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ArrowLeft, Clock, AlertCircle, Calendar, User, Stethoscope } from "lucide-react-native";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 
 export default function ClinicTodayCases() {
   const router = useRouter();
   const { clinicId } = useLocalSearchParams();
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
 
   const { data, isLoading } = useQuery({
     ...trpc.clinics.getTodayCases.queryOptions({ clinicId: Number(clinicId) }),
@@ -21,54 +21,70 @@ export default function ClinicTodayCases() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'waiting': return COLORS.warning;
-      case 'in-progress': return COLORS.primary;
-      case 'completed': return COLORS.success;
-      default: return COLORS.darkGray;
+      case "waiting":
+        return COLORS.warning;
+      case "in-progress":
+        return COLORS.primary;
+      case "completed":
+        return COLORS.success;
+      default:
+        return COLORS.darkGray;
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'waiting': return 'في الانتظار';
-      case 'in-progress': return 'قيد الفحص';
-      case 'completed': return 'مكتمل';
-      default: return 'غير محدد';
+      case "waiting":
+        return "في الانتظار";
+      case "in-progress":
+        return "قيد الفحص";
+      case "completed":
+        return "مكتمل";
+      default:
+        return "غير محدد";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return COLORS.error;
-      case 'high': return COLORS.warning;
-      case 'normal': return COLORS.success;
-      default: return COLORS.darkGray;
+      case "urgent":
+        return COLORS.error;
+      case "high":
+        return COLORS.warning;
+      case "normal":
+        return COLORS.success;
+      default:
+        return COLORS.darkGray;
     }
   };
 
   const getPriorityText = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'عاجل';
-      case 'high': return 'مهم';
-      case 'normal': return 'عادي';
-      default: return 'غير محدد';
+      case "urgent":
+        return "عاجل";
+      case "high":
+        return "مهم";
+      case "normal":
+        return "عادي";
+      default:
+        return "غير محدد";
     }
   };
 
-  const filteredCases = todayCases.filter(caseItem => {
-    if (selectedFilter === 'all') return true;
+  const filteredCases = todayCases.filter((caseItem) => {
+    if (selectedFilter === "all") return true;
     return caseItem.status === selectedFilter;
   });
 
   const handleCasePress = (caseItem: any) => {
     Alert.alert(
-      'تفاصيل الحالة',
+      "تفاصيل الحالة",
       `الحيوان: ${caseItem.petName}\nالمالك: ${caseItem.ownerName}\nالموعد: ${caseItem.appointmentTime}\nالسبب: ${caseItem.reason}\nملاحظات: ${caseItem.notes}`,
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'فتح ملف الحيوان', onPress: () => openPetProfile(caseItem.id) },
-        { text: 'بدء الفحص', onPress: () => updateCaseStatus(caseItem.id, 'in-progress') },
-        { text: 'إكمال', onPress: () => updateCaseStatus(caseItem.id, 'completed') }
+        { text: "إلغاء", style: "cancel" },
+        { text: "فتح ملف الحيوان", onPress: () => openPetProfile(caseItem.id) },
+        { text: "بدء الفحص", onPress: () => updateCaseStatus(caseItem.id, "in-progress") },
+        { text: "إكمال", onPress: () => updateCaseStatus(caseItem.id, "completed") },
       ]
     );
   };
@@ -76,38 +92,36 @@ export default function ClinicTodayCases() {
   const openPetProfile = (caseId: string) => {
     // Map case IDs to pet IDs
     const petIdMap: { [key: string]: string } = {
-      'case1': 'pet1', // فلافي
-      'case2': 'pet2', // ماكس
-      'case3': 'pet3', // لولو
-      'case4': 'pet4', // تويتي
-      'case5': 'pet1'  // سيمبا (using pet1 as fallback)
+      case1: "pet1", // فلافي
+      case2: "pet2", // ماكس
+      case3: "pet3", // لولو
+      case4: "pet4", // تويتي
+      case5: "pet1", // سيمبا (using pet1 as fallback)
     };
-    
-    const petId = petIdMap[caseId] || 'pet1';
-    
+
+    const petId = petIdMap[caseId] || "pet1";
+
     router.push({
-      pathname: '/pet-details',
+      pathname: "/pet-details",
       params: {
         petId: petId,
-        fromClinic: 'true',
-        openSection: 'medical'
-      }
+        fromClinic: "true",
+        openSection: "medical",
+      },
     });
   };
 
   const updateCaseStatus = (caseId: string, newStatus: string) => {
-    Alert.alert('تم التحديث', `تم تحديث حالة الحالة إلى: ${getStatusText(newStatus)}`);
+    Alert.alert("تم التحديث", `تم تحديث حالة الحالة إلى: ${getStatusText(newStatus)}`);
   };
 
   const renderCaseItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={styles.caseCard} 
-      activeOpacity={0.8}
-      onPress={() => handleCasePress(item)}
-    >
+    <TouchableOpacity style={styles.caseCard} activeOpacity={0.8} onPress={() => handleCasePress(item)}>
       <View style={styles.caseHeader}>
         <View style={styles.caseInfo}>
-          <Text style={styles.petName}>{item.petName} ({item.petType})</Text>
+          <Text style={styles.petName}>
+            {item.petName} ({item.petType})
+          </Text>
           <View style={styles.ownerRow}>
             <User size={14} color={COLORS.darkGray} />
             <Text style={styles.ownerName}>{item.ownerName}</Text>
@@ -122,7 +136,7 @@ export default function ClinicTodayCases() {
           </View>
         </View>
       </View>
-      
+
       <View style={styles.caseDetails}>
         <View style={styles.timeRow}>
           <Clock size={14} color={COLORS.primary} />
@@ -133,7 +147,7 @@ export default function ClinicTodayCases() {
           <Text style={styles.reasonText}>{item.reason}</Text>
         </View>
       </View>
-      
+
       {item.notes && (
         <View style={styles.notesContainer}>
           <Text style={styles.notesLabel}>ملاحظات:</Text>
@@ -144,10 +158,10 @@ export default function ClinicTodayCases() {
   );
 
   const filterButtons = [
-    { key: 'all', label: 'الكل', count: todayCases.length },
-    { key: 'waiting', label: 'في الانتظار', count: todayCases.filter(c => c.status === 'waiting').length },
-    { key: 'in-progress', label: 'قيد الفحص', count: todayCases.filter(c => c.status === 'in-progress').length },
-    { key: 'completed', label: 'مكتمل', count: todayCases.filter(c => c.status === 'completed').length }
+    { key: "all", label: "الكل", count: todayCases.length },
+    { key: "waiting", label: "في الانتظار", count: todayCases.filter((c) => c.status === "waiting").length },
+    { key: "in-progress", label: "قيد الفحص", count: todayCases.filter((c) => c.status === "in-progress").length },
+    { key: "completed", label: "مكتمل", count: todayCases.filter((c) => c.status === "completed").length },
   ];
 
   return (
@@ -168,60 +182,60 @@ export default function ClinicTodayCases() {
             <Text style={styles.loadingText}>جاري تحميل حالات اليوم...</Text>
           </View>
         ) : (
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {/* Date Header */}
+            <View style={styles.dateHeader}>
+              <Calendar size={20} color={COLORS.primary} />
+              <Text style={styles.dateText}>اليوم - {new Date().toLocaleDateString("ar-EG")}</Text>
+            </View>
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Date Header */}
-          <View style={styles.dateHeader}>
-            <Calendar size={20} color={COLORS.primary} />
-            <Text style={styles.dateText}>اليوم - {new Date().toLocaleDateString('ar-EG')}</Text>
-          </View>
-
-          {/* Filter Buttons */}
-          <View style={styles.filterContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.filterButtons}>
-                {filterButtons.map((filter) => (
-                  <TouchableOpacity
-                    key={filter.key}
-                    style={[
-                      styles.filterButton,
-                      selectedFilter === filter.key && styles.activeFilterButton
-                    ]}
-                    onPress={() => setSelectedFilter(filter.key)}
-                  >
-                    <Text style={[
-                      styles.filterButtonText,
-                      selectedFilter === filter.key && styles.activeFilterButtonText
-                    ]}>
-                      {filter.label} ({filter.count})
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-
-          {/* Cases List */}
-          <View style={styles.casesSection}>
-            <Text style={styles.sectionTitle}>
-              {selectedFilter === 'all' ? 'جميع الحالات' : `حالات ${filterButtons.find(f => f.key === selectedFilter)?.label}`}
-            </Text>
-            
-            <FlatList
-              data={filteredCases}
-              renderItem={renderCaseItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <AlertCircle size={48} color={COLORS.darkGray} />
-                  <Text style={styles.emptyText}>لا توجد حالات لهذا اليوم</Text>
+            {/* Filter Buttons */}
+            <View style={styles.filterContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.filterButtons}>
+                  {filterButtons.map((filter) => (
+                    <TouchableOpacity
+                      key={filter.key}
+                      style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilterButton]}
+                      onPress={() => setSelectedFilter(filter.key)}
+                    >
+                      <Text
+                        style={[
+                          styles.filterButtonText,
+                          selectedFilter === filter.key && styles.activeFilterButtonText,
+                        ]}
+                      >
+                        {filter.label} ({filter.count})
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              }
-            />
-          </View>
-        </ScrollView>
+              </ScrollView>
+            </View>
+
+            {/* Cases List */}
+            <View style={styles.casesSection}>
+              <Text style={styles.sectionTitle}>
+                {selectedFilter === "all"
+                  ? "جميع الحالات"
+                  : `حالات ${filterButtons.find((f) => f.key === selectedFilter)?.label}`}
+              </Text>
+
+              <FlatList
+                data={filteredCases}
+                renderItem={renderCaseItem}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <AlertCircle size={48} color={COLORS.darkGray} />
+                    <Text style={styles.emptyText}>لا توجد حالات لهذا اليوم</Text>
+                  </View>
+                }
+              />
+            </View>
+          </ScrollView>
         )}
       </SafeAreaView>
     </View>
@@ -246,9 +260,9 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -260,7 +274,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   headerSpacer: {
@@ -271,8 +285,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   dateHeader: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 12,
@@ -281,14 +295,14 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   filterContainer: {
     marginBottom: 16,
   },
   filterButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     paddingHorizontal: 4,
   },
@@ -307,7 +321,7 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   activeFilterButtonText: {
     color: COLORS.white,
@@ -317,10 +331,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   caseCard: {
     backgroundColor: COLORS.white,
@@ -334,9 +348,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   caseHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   caseInfo: {
@@ -344,13 +358,13 @@ const styles = StyleSheet.create({
   },
   petName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
   },
   ownerRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   ownerName: {
@@ -358,7 +372,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   statusContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     gap: 4,
   },
   statusBadge: {
@@ -369,7 +383,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   priorityBadge: {
     paddingHorizontal: 6,
@@ -379,26 +393,26 @@ const styles = StyleSheet.create({
   priorityText: {
     color: COLORS.white,
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   caseDetails: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   timeRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   timeText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   reasonRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   reasonText: {
@@ -413,23 +427,23 @@ const styles = StyleSheet.create({
   },
   notesLabel: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.darkGray,
     marginBottom: 2,
   },
   notesText: {
     fontSize: 12,
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
   },
   emptyContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 12,
   },
 });

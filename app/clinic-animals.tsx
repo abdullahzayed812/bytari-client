@@ -66,7 +66,7 @@ export default function ClinicAnimals() {
 
   const handleAnimalPress = (pet: any) => {
     router.push({
-      pathname: "/pet-details",
+      pathname: "/(tabs)/pet-details",
       params: {
         petId: pet.id,
         fromClinic: "true",
