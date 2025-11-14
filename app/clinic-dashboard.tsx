@@ -331,7 +331,10 @@ export default function ClinicDashboard() {
           <View style={styles.settingsSection}>
             <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
             <View style={styles.settingsGrid}>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-settings")}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}
+              >
                 <Settings size={20} color={COLORS.primary} />
                 <Text style={styles.settingText}>إعدادات عامة</Text>
               </TouchableOpacity>

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert, Image } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
@@ -18,6 +18,12 @@ export default function ClinicTodayCases() {
   });
 
   const todayCases = data?.todayCases || [];
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "white" }}>
+      <Image style={{ width: "100%" }} source={require("../assets/comming-soon.png")} />
+    </View>
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {

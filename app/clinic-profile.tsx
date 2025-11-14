@@ -85,16 +85,10 @@ export default function ClinicProfileScreen() {
   };
 
   // Parse JSON fields
-  const services = clinic?.services
-    ? typeof clinic.services === "string"
-      ? JSON.parse(clinic.services)
-      : clinic.services
-    : [];
-  const doctors = clinic?.doctors
-    ? typeof clinic.doctors === "string"
-      ? JSON.parse(clinic.doctors)
-      : clinic.doctors
-    : [];
+  const services = clinic?.services.split("،");
+
+  const doctors = clinic?.doctors || [];
+
   const images = clinic?.images ? (typeof clinic.images === "string" ? JSON.parse(clinic.images) : clinic.images) : [];
 
   // Loading state
@@ -150,8 +144,8 @@ export default function ClinicProfileScreen() {
           />
           <View style={styles.clinicHeaderOverlay}>
             <Text style={styles.clinicHeaderName}>{clinic.name}</Text>
-            <View style={[styles.statusBadge, !clinic.isOpen && styles.closedBadge]}>
-              <Text style={styles.statusText}>{clinic.isOpen ? "مفتوح الآن" : "مغلق"}</Text>
+            <View style={[styles.statusBadge, !clinic.isActive && styles.closedBadge]}>
+              <Text style={styles.statusText}>{clinic.isActive ? "مفتوح الآن" : "مغلق"}</Text>
             </View>
           </View>
         </View>
@@ -231,7 +225,7 @@ export default function ClinicProfileScreen() {
               {doctors.map((doctor: { name: string; specialty: string }, index: number) => (
                 <View key={index} style={styles.doctorItem}>
                   <Text style={styles.doctorName}>{doctor.name}</Text>
-                  <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
+                  <Text style={styles.doctorSpecialty}>{doctor.specialization}</Text>
                 </View>
               ))}
             </View>

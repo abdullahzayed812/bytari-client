@@ -40,6 +40,7 @@ type ClinicRegistration = {
   phone: string;
   email: string;
   workingHours: string;
+  services: string;
   licenseNumber: string;
   licenseImages: string[];
   images: string[];
@@ -101,6 +102,7 @@ export default function ClinicSystemScreen() {
     phone: "07288892222",
     email: "zuhair@mail.com",
     workingHours: "8",
+    services: "فحص عام، تطعيمات، جراحة، علاج اسنان، عمليات جراحية",
     licenseNumber: "CLI_LIC322111",
     licenseImages: ["http://bytari/media/img1.png"],
     identityImages: ["http://bytari/media/img1.png"],
@@ -245,6 +247,7 @@ export default function ClinicSystemScreen() {
             phone: "",
             email: "",
             workingHours: "",
+            services: "",
             licenseNumber: "",
             licenseImages: [],
             images: [],
@@ -706,6 +709,20 @@ export default function ClinicSystemScreen() {
               value={registrationData.workingHours}
               onChangeText={(value) => handleInputChange("workingHours", value)}
               placeholder="مثال: السبت - الخميس: 8:00 ص - 6:00 م"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>الخدمات</Text>
+          <View style={styles.inputWithIcon}>
+            <Clock size={20} color={COLORS.darkGray} />
+            <TextInput
+              style={styles.inputWithIconText}
+              value={registrationData.services}
+              onChangeText={(value) => handleInputChange("services", value)}
+              placeholder="جرحة، اشعة، تطعيمات"
               placeholderTextColor={COLORS.darkGray}
             />
           </View>
