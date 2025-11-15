@@ -204,7 +204,7 @@ export default function ClinicProfileScreen() {
             {clinic.website && (
               <View style={styles.contactItem}>
                 <Earth size={20} color={COLORS.primary} />
-                <Text style={styles.contactText}>{clinic.phone}</Text>
+                <Text style={styles.contactText}>{clinic.website}</Text>
               </View>
             )}
 

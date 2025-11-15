@@ -46,6 +46,7 @@ type ClinicRegistration = {
   facebook: string;
   instagram: string;
   whatsapp: string;
+  website: string;
 };
 
 type TreatmentCard = {
@@ -111,6 +112,7 @@ export default function ClinicSystemScreen() {
     facebook: "https://facebook.com/mohamed-ali",
     instagram: "https://instagram.com/mohamed-ali",
     whatsapp: "07993322113",
+    website: "https://bytari.com",
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);
@@ -252,6 +254,7 @@ export default function ClinicSystemScreen() {
             facebook: "",
             instagram: "",
             whatsapp: "",
+            website: "",
           });
 
           // Navigate back after success
@@ -733,6 +736,20 @@ export default function ClinicSystemScreen() {
               value={registrationData.doctors}
               onChangeText={(value) => handleInputChange("doctors", value)}
               placeholder="محمد علي. طبيب بيطري، احمد حسن. طبيب بيطري"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>الموقع الإلكتروني</Text>
+          <View style={styles.inputWithIcon}>
+            <Clock size={20} color={COLORS.darkGray} />
+            <TextInput
+              style={styles.inputWithIconText}
+              value={registrationData.website}
+              onChangeText={(value) => handleInputChange("website", value)}
+              placeholder="موقع العيادة الإكتروني"
               placeholderTextColor={COLORS.darkGray}
             />
           </View>
