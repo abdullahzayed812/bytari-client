@@ -478,6 +478,7 @@ export default function ClinicSettings() {
             initialData={{
               name: clinic.name,
               address: clinic.address,
+              doctors: clinic.doctors,
               latitude: clinic.latitude,
               longitude: clinic.longitude,
             }}
@@ -491,6 +492,10 @@ export default function ClinicSettings() {
             initialData={{
               phone: clinic.phone || "",
               email: clinic.email,
+              facebook: clinic.facebook,
+              instagram: clinic.instagram,
+              whatsapp: clinic.whatsapp,
+              website: clinic.website,
             }}
             onSave={handleContactInfoSave}
             isLoading={updateContactInfoMutation.isPending}

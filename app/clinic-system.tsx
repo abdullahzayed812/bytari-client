@@ -7,11 +7,9 @@ import {
   Building2,
   Phone,
   MapPin,
-  FileImage,
   Mail,
   Search,
   Stethoscope,
-  Pill,
   Camera,
   Crown,
   CheckCircle,
@@ -44,7 +42,10 @@ type ClinicRegistration = {
   licenseNumber: string;
   licenseImages: string[];
   images: string[];
-  identityImages: string[];
+  doctors: string;
+  facebook: string;
+  instagram: string;
+  whatsapp: string;
 };
 
 type TreatmentCard = {
@@ -105,8 +106,11 @@ export default function ClinicSystemScreen() {
     services: "فحص عام، تطعيمات، جراحة، علاج اسنان، عمليات جراحية",
     licenseNumber: "CLI_LIC322111",
     licenseImages: ["http://bytari/media/img1.png"],
-    identityImages: ["http://bytari/media/img1.png"],
     images: ["http://bytari/media/img1.png"],
+    doctors: "محمد علي. طبيب بيطري، احمد حسن. طبيب بيطري",
+    facebook: "https://facebook.com/mohamed-ali",
+    instagram: "https://instagram.com/mohamed-ali",
+    whatsapp: "07993322113",
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);
@@ -221,13 +225,6 @@ export default function ClinicSystemScreen() {
       });
       return;
     }
-    if (registrationData.identityImages.length === 0) {
-      showToast({
-        type: "error",
-        message: "صورة الهويه مطلوبة.",
-      });
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -251,7 +248,10 @@ export default function ClinicSystemScreen() {
             licenseNumber: "",
             licenseImages: [],
             images: [],
-            identityImages: [],
+            doctors: "",
+            facebook: "",
+            instagram: "",
+            whatsapp: "",
           });
 
           // Navigate back after success
@@ -427,11 +427,7 @@ export default function ClinicSystemScreen() {
     setShowFollowUpConfirmation(true);
   };
 
-  const renderImageSection = (
-    title: string,
-    type: "licenseImages" | "images" | "identityImages",
-    required: boolean = false
-  ) => (
+  const renderImageSection = (title: string, type: "licenseImages" | "images", required: boolean = false) => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>
         {title} {required && <Text style={styles.required}>*</Text>}
@@ -442,9 +438,9 @@ export default function ClinicSystemScreen() {
         <Text style={styles.uploadButtonText}>رفع صورة</Text>
       </TouchableOpacity>
 
-      {registrationData[type].length > 0 && (
+      {registrationData[type]?.length > 0 && (
         <View style={styles.imageGrid}>
-          {registrationData[type].map((imageUrl, index) => (
+          {registrationData[type]?.map((imageUrl, index) => (
             <View key={index} style={styles.imageContainer}>
               <Image source={{ uri: imageUrl }} style={styles.uploadedImage} />
               <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(type, index)}>
@@ -727,6 +723,62 @@ export default function ClinicSystemScreen() {
             />
           </View>
         </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>الأطباء</Text>
+          <View style={styles.inputWithIcon}>
+            <Clock size={20} color={COLORS.darkGray} />
+            <TextInput
+              style={styles.inputWithIconText}
+              value={registrationData.doctors}
+              onChangeText={(value) => handleInputChange("doctors", value)}
+              placeholder="محمد علي. طبيب بيطري، احمد حسن. طبيب بيطري"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>صفحة الفيسبوك</Text>
+          <View style={styles.inputWithIcon}>
+            <Clock size={20} color={COLORS.darkGray} />
+            <TextInput
+              style={styles.inputWithIconText}
+              value={registrationData.facebook}
+              onChangeText={(value) => handleInputChange("facebook", value)}
+              placeholder="رابط صفحة فيسبوك"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>صفحة الانستجرام</Text>
+          <View style={styles.inputWithIcon}>
+            <Clock size={20} color={COLORS.darkGray} />
+            <TextInput
+              style={styles.inputWithIconText}
+              value={registrationData.instagram}
+              onChangeText={(value) => handleInputChange("instagram", value)}
+              placeholder="رابط سفحة انستجرام"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>رقم واتساب</Text>
+          <View style={styles.inputWithIcon}>
+            <Clock size={20} color={COLORS.darkGray} />
+            <TextInput
+              style={styles.inputWithIconText}
+              value={registrationData.whatsapp}
+              onChangeText={(value) => handleInputChange("whatsapp", value)}
+              placeholder="رقم تواصل واتساب"
+              placeholderTextColor={COLORS.darkGray}
+            />
+          </View>
+        </View>
       </View>
 
       {/* License Information */}
@@ -753,7 +805,6 @@ export default function ClinicSystemScreen() {
       {/* Document Uploads */}
       {renderImageSection("صور الترخيص", "licenseImages", true)}
       {renderImageSection("صور العيادة", "images")}
-      {renderImageSection("صورة الهوية", "identityImages", true)}
 
       {/* Submit Button */}
       <TouchableOpacity

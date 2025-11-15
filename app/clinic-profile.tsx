@@ -10,10 +10,21 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, MapPin, Phone, Clock, Star, Navigation, MessageSquare } from "lucide-react-native";
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
+  Clock,
+  Star,
+  Navigation,
+  MessageSquare,
+  Earth,
+  Facebook,
+  Instagram,
+} from "lucide-react-native";
 import RatingComponent from "../components/RatingComponent";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -84,12 +95,8 @@ export default function ClinicProfileScreen() {
     // await submitClinicRating(clinic.id, rating, comment);
   };
 
-  // Parse JSON fields
-  const services = clinic?.services.split("،");
-
-  const doctors = clinic?.doctors || [];
-
-  const images = clinic?.images ? (typeof clinic.images === "string" ? JSON.parse(clinic.images) : clinic.images) : [];
+  const services = clinic?.services?.split("،");
+  const doctors = clinic?.doctors?.split("،");
 
   // Loading state
   if (isLoading) {
@@ -194,23 +201,49 @@ export default function ClinicProfileScreen() {
               </View>
             )}
 
-            {(clinic.openingHours || clinic.workingDays) && (
+            {clinic.website && (
+              <View style={styles.contactItem}>
+                <Earth size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>{clinic.phone}</Text>
+              </View>
+            )}
+
+            {clinic.facebook && (
+              <View style={styles.contactItem}>
+                <Facebook size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>{clinic.facebook}</Text>
+              </View>
+            )}
+
+            {clinic.instagram && (
+              <View style={styles.contactItem}>
+                <Instagram size={20} color={COLORS.primary} />
+                <Text style={styles.contactText}>{clinic.instagram}</Text>
+              </View>
+            )}
+
+            {clinic.whatsapp && (
+              <View style={styles.contactItem}>
+                <Image style={{ width: 20, height: 20 }} source={require("../assets/whatsapp.png")} />
+                <Text style={styles.contactText}>{clinic.whatsapp}</Text>
+              </View>
+            )}
+
+            {clinic.workingHours && (
               <View style={styles.contactItem}>
                 <Clock size={20} color={COLORS.primary} />
                 <View style={styles.contactTextContainer}>
-                  {clinic.openingHours && <Text style={styles.contactText}>ساعات العمل: {clinic.openingHours}</Text>}
-                  {clinic.workingDays && <Text style={styles.contactSubText}>أيام العمل: {clinic.workingDays}</Text>}
-                  {clinic.emergencyAvailable && <Text style={styles.emergencyText}>متوفر للحالات الطارئة</Text>}
+                  <Text style={styles.contactText}>ساعات العمل: {clinic.workingHours}</Text>
                 </View>
               </View>
             )}
           </View>
 
           {/* Services */}
-          {services.length > 0 && (
+          {services?.length > 0 && (
             <View style={styles.servicesSection}>
               <Text style={styles.sectionTitle}>الخدمات المتوفرة</Text>
-              {services.map((service: string, index: number) => (
+              {services?.map((service: string, index: number) => (
                 <View key={index} style={styles.serviceItem}>
                   <Text style={styles.serviceText}>• {service}</Text>
                 </View>
@@ -219,13 +252,12 @@ export default function ClinicProfileScreen() {
           )}
 
           {/* Doctors */}
-          {doctors.length > 0 && (
+          {doctors?.length > 0 && (
             <View style={styles.doctorsSection}>
               <Text style={styles.sectionTitle}>الأطباء</Text>
-              {doctors.map((doctor: { name: string; specialty: string }, index: number) => (
+              {doctors?.map((doctor: string, index: number) => (
                 <View key={index} style={styles.doctorItem}>
-                  <Text style={styles.doctorName}>{doctor.name}</Text>
-                  <Text style={styles.doctorSpecialty}>{doctor.specialization}</Text>
+                  <Text style={styles.doctorName}>{doctor}</Text>
                 </View>
               ))}
             </View>

@@ -21,6 +21,7 @@ interface BasicInfoModalProps {
   initialData: {
     name: string;
     address: string;
+    doctors: string;
     latitude?: number | null;
     longitude?: number | null;
   };
@@ -31,6 +32,7 @@ interface BasicInfoModalProps {
 export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose, initialData, onSave, isLoading }) => {
   const [name, setName] = useState(initialData.name);
   const [address, setAddress] = useState(initialData.address);
+  const [doctors, setDoctors] = useState(initialData?.doctors);
   const [latitude, setLatitude] = useState(initialData.latitude?.toString() || "");
   const [longitude, setLongitude] = useState(initialData.longitude?.toString() || "");
 
@@ -47,6 +49,7 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
     onSave({
       name: name.trim(),
       address: address.trim(),
+      doctors: doctors?.trim(),
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
     });
@@ -92,6 +95,24 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
                   value={address}
                   onChangeText={setAddress}
                   placeholder="أدخل عنوان العيادة"
+                  placeholderTextColor={COLORS.darkGray}
+                  textAlign="right"
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+            </View>
+
+            {/* Doctors */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>الاطباء *</Text>
+              <View style={styles.inputContainer}>
+                <MapPin size={20} color={COLORS.primary} style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={doctors}
+                  onChangeText={setDoctors}
+                  placeholder="أدخل الاطباء"
                   placeholderTextColor={COLORS.darkGray}
                   textAlign="right"
                   multiline
@@ -155,6 +176,7 @@ interface ContactInfoModalProps {
     website?: string;
     facebook?: string;
     instagram?: string;
+    whatsapp?: string;
   };
   onSave: (data: any) => void;
   isLoading?: boolean;
@@ -172,6 +194,7 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
   const [website, setWebsite] = useState(initialData.website || "");
   const [facebook, setFacebook] = useState(initialData.facebook || "");
   const [instagram, setInstagram] = useState(initialData.instagram || "");
+  const [whatsapp, setWhatsapp] = useState(initialData.whatsapp || "");
 
   const handleSave = () => {
     if (!phone.trim()) {
@@ -188,10 +211,9 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
       phone: phone.trim(),
       email: email.trim() || undefined,
       website: website.trim() || undefined,
-      socialMedia: {
-        facebook: facebook.trim() || undefined,
-        instagram: instagram.trim() || undefined,
-      },
+      facebook: facebook.trim() || undefined,
+      instagram: instagram.trim() || undefined,
+      whatsapp: whatsapp?.trim() || undefined,
     });
   };
 
@@ -288,6 +310,21 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
                   value={instagram}
                   onChangeText={setInstagram}
                   placeholder="@YourPage"
+                  placeholderTextColor={COLORS.darkGray}
+                  textAlign="right"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>واتساب</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={whatsapp}
+                  onChangeText={setWhatsapp}
+                  placeholder="7289922288"
                   placeholderTextColor={COLORS.darkGray}
                   textAlign="right"
                   autoCapitalize="none"
