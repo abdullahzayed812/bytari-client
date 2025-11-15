@@ -14,25 +14,29 @@ import {
   Bell,
   Syringe,
   Settings,
-  ClipboardList,
   Heart,
 } from "lucide-react-native";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { useApp } from "@/providers/AppProvider";
 
 export default function ClinicDashboard() {
   const router = useRouter();
+  const { user } = useApp();
+  const { clinicId } = useLocalSearchParams();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const { clinicId } = useLocalSearchParams();
-
   const { data: clinicData, isLoading: isClinicDataLoading } = useQuery({
-    ...trpc.clinics.getDashboardData.queryOptions({ clinicId: Number(clinicId) }),
+    ...trpc.clinics.getDashboardData.queryOptions({ clinicId: Number(clinicId), userId: user?.id }),
     enabled: !!clinicId,
   });
   const clinic = useMemo(() => (clinicData as any)?.clinic, [clinicData]);
+  const stats = useMemo(() => (clinicData as any)?.stats, [clinicData]);
+  const access = useMemo(() => (clinicData as any)?.access, [clinicData]);
+  const permissions = useMemo(() => (clinicData as any)?.permissions, [clinicData]);
 
   const { data: allPets, isLoading: isAllPetsLoading } = useQuery(trpc.pets.getAllPets.queryOptions({}));
 
@@ -144,8 +148,8 @@ export default function ClinicDashboard() {
       pathname: "/(tabs)/pet-details",
       params: {
         petId: animal.id,
-        clinicAccess: "true",
         clinicId: clinic.id,
+        clinicAccess: permissions?.canEditPets || access?.isOwner ? "true" : "false",
       },
     });
   };
@@ -215,36 +219,38 @@ export default function ClinicDashboard() {
             {/* Stats */}
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{clinicData?.stats?.totalAnimals}</Text>
+                <Text style={styles.statNumber}>{stats?.totalAnimals}</Text>
                 <Text style={styles.statLabel}>إجمالي الحيوانات</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{clinicData?.stats?.activePatients}</Text>
+                <Text style={styles.statNumber}>{stats?.activePatients}</Text>
                 <Text style={styles.statLabel}>المرضى النشطون</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{clinicData?.stats?.completedTreatments}</Text>
+                <Text style={styles.statNumber}>{stats?.completedTreatments}</Text>
                 <Text style={styles.statLabel}>العلاجات المكتملة</Text>
               </View>
             </View>
           </View>
 
           {/* Search Section */}
-          <View style={styles.searchSection}>
-            <Text style={styles.sectionTitle}>البحث عن حيوان</Text>
-            <View style={styles.searchContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="ادخل رقم ID أو اسمه أو اسم المالك"
-                placeholderTextColor={COLORS.darkGray}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-                <Search size={20} color={COLORS.white} />
-              </TouchableOpacity>
+          {access.isOwner ? (
+            <View style={styles.searchSection}>
+              <Text style={styles.sectionTitle}>البحث عن حيوان</Text>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="ادخل رقم ID أو اسمه أو اسم المالك"
+                  placeholderTextColor={COLORS.darkGray}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+                  <Search size={20} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          ) : null}
 
           {/* Search Results or Recent Animals Section */}
           <View style={styles.recentSection}>
@@ -286,10 +292,17 @@ export default function ClinicDashboard() {
           <View style={styles.actionsSection}>
             <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
             <View style={styles.actionsGrid}>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-today-cases")}>
+              <TouchableOpacity
+                style={styles.settingCard}
+                onPress={() => router.push({ pathname: "/clinic-followups", params: { clinicId: clinic?.id } })}
+              >
+                <Heart size={20} color={COLORS.error} />
+                <Text style={styles.settingText}>المتابعات</Text>
+              </TouchableOpacity>
+              {/* <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-today-cases")}>
                 <ClipboardList size={24} color={COLORS.primary} />
                 <Text style={styles.actionText}>حالات اليوم</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               <TouchableOpacity style={styles.actionCard} onPress={() => handleAllAnimals()}>
                 <Users size={24} color={COLORS.success} />
                 <Text style={styles.actionText}>جميع الحيوانات</Text>
@@ -328,41 +341,20 @@ export default function ClinicDashboard() {
           </View>
 
           {/* Settings Section */}
-          <View style={styles.settingsSection}>
-            <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
-            <View style={styles.settingsGrid}>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}
-              >
-                <Settings size={20} color={COLORS.primary} />
-                <Text style={styles.settingText}>إعدادات عامة</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push({ pathname: "/clinic-followups", params: { clinicId: clinic?.id } })}
-              >
-                <Heart size={20} color={COLORS.error} />
-                <Text style={styles.settingText}>المتابعات</Text>
-              </TouchableOpacity>
-              {/* <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-vaccinations")}>
-                <Syringe size={20} color={COLORS.success} />
-                <Text style={styles.settingText}>إدارة التطعيمات</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/clinic-reminders")}>
-                <Bell size={20} color={COLORS.warning} />
-                <Text style={styles.settingText}>إدارة التذكيرات</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push("/appointments")}>
-                <Calendar size={20} color={COLORS.darkGray} />
-                <Text style={styles.settingText}>جدولة المواعيد</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.settingCard} onPress={() => handleReportsAndStats()}>
-                <TrendingUp size={20} color={COLORS.primary} />
-                <Text style={styles.settingText}>التقارير والإحصائيات</Text>
-              </TouchableOpacity> */}
+          {access?.isOwner ? (
+            <View style={styles.settingsSection}>
+              <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
+              <View style={styles.settingsGrid}>
+                <TouchableOpacity
+                  style={styles.settingCard}
+                  onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}
+                >
+                  <Settings size={20} color={COLORS.primary} />
+                  <Text style={styles.settingText}>إعدادات عامة</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </View>

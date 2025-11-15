@@ -203,6 +203,8 @@ export default function PetDetailsScreen() {
     enabled: isClinicAccess,
   });
 
+  console.log("--------------------------", clinicAccess);
+
   // Check access when component loads
   useEffect(() => {
     if (isClinicAccess && pet && clinicId) {

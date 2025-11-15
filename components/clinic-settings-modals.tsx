@@ -442,35 +442,19 @@ interface AddStaffModalProps {
 
 export const AddStaffModal: React.FC<AddStaffModalProps> = ({ visible, onClose, onSave, isLoading }) => {
   const [email, setEmail] = useState("vet1@example.com");
-  const [licenseNumber, setLicenseNumber] = useState("LIC123123");
-  const [specialization, setSpecialization] = useState("جراحة");
-  const [experience, setExperience] = useState("3 سنوات");
-  const [consultationFee, setConsultationFee] = useState("1200 دينار");
 
   const handleSave = () => {
     if (!email.trim() || !email.includes("@")) {
       Alert.alert("خطأ", "البريد الإلكتروني مطلوب وغير صحيح");
       return;
     }
-    if (!licenseNumber.trim()) {
-      Alert.alert("خطأ", "رقم الترخيص مطلوب");
-      return;
-    }
 
     onSave({
       email: email.trim(),
-      licenseNumber: licenseNumber.trim(),
-      specialization: specialization.trim() || undefined,
-      experience: experience ? parseInt(experience) : undefined,
-      consultationFee: consultationFee ? parseFloat(consultationFee) : undefined,
     });
 
     // Reset form
     setEmail("");
-    setLicenseNumber("");
-    setSpecialization("");
-    setExperience("");
-    setConsultationFee("");
   };
 
   return (
@@ -501,68 +485,6 @@ export const AddStaffModal: React.FC<AddStaffModalProps> = ({ visible, onClose, 
                   keyboardType="email-address"
                   textAlign="right"
                   autoCapitalize="none"
-                />
-              </View>
-            </View>
-
-            {/* License Number */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>رقم الترخيص *</Text>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={licenseNumber}
-                  onChangeText={setLicenseNumber}
-                  placeholder="أدخل رقم الترخيص"
-                  placeholderTextColor={COLORS.darkGray}
-                  textAlign="right"
-                />
-              </View>
-            </View>
-
-            {/* Specialization */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>التخصص</Text>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={specialization}
-                  onChangeText={setSpecialization}
-                  placeholder="مثال: جراحة، باطنة، أسنان"
-                  placeholderTextColor={COLORS.darkGray}
-                  textAlign="right"
-                />
-              </View>
-            </View>
-
-            {/* Experience */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>سنوات الخبرة</Text>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={experience}
-                  onChangeText={setExperience}
-                  placeholder="عدد السنوات"
-                  placeholderTextColor={COLORS.darkGray}
-                  keyboardType="number-pad"
-                  textAlign="right"
-                />
-              </View>
-            </View>
-
-            {/* Consultation Fee */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>رسوم الاستشارة (دينار)</Text>
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={consultationFee}
-                  onChangeText={setConsultationFee}
-                  placeholder="المبلغ"
-                  placeholderTextColor={COLORS.darkGray}
-                  keyboardType="decimal-pad"
-                  textAlign="right"
                 />
               </View>
             </View>

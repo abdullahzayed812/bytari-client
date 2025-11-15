@@ -19,6 +19,8 @@ import {
   CheckCircle,
   Package,
   AlertCircle,
+  Crown,
+  Briefcase,
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -30,13 +32,13 @@ export default function PetsScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   // Fetch user's own pets
-  const userPetsQuery = useQuery(trpc.pets.getUserPets.queryOptions({ userId: Number(user?.id) || 0 }));
+  const userPetsQuery = useQuery(trpc.pets.getUserPets.queryOptions({ userId: Number(user?.id) }));
 
   // Fetch user's own farms
-  const userFarmsQuery = useQuery(trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) || 0 }));
+  const userFarmsQuery = useQuery(trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) }));
 
-  // Fetch user's approved clinics (for veterinarians)
-  const userClinicsQuery = useQuery({
+  // Fetch ALL user's clinics (owned + assigned) using the new procedure
+  const allUserClinicsQuery = useQuery({
     ...trpc.clinics.getUserApprovedClinics.queryOptions({ userId: Number(user?.id) }),
     enabled: !!user?.id && userMode === "veterinarian",
   });
@@ -47,8 +49,16 @@ export default function PetsScreen() {
     enabled: !!user?.id && userMode === "veterinarian",
   });
 
-  // Get approved clinics and warehouses
-  const approvedClinics = userClinicsQuery.data?.clinics || [];
+  // Separate clinics into owned and assigned
+  const { ownedClinics, assignedClinics } = useMemo(() => {
+    const allClinics = allUserClinicsQuery.data?.clinics || [];
+
+    return {
+      ownedClinics: allClinics.filter((clinic: any) => clinic.isOwned),
+      assignedClinics: allClinics.filter((clinic: any) => !clinic.isOwned),
+    };
+  }, [allUserClinicsQuery.data]);
+
   const approvedWarehouses = userWarehousesQuery.data?.stores || [];
 
   // Scroll to top when tab is focused
@@ -60,31 +70,13 @@ export default function PetsScreen() {
 
   // Get user pets or admin view
   const displayPets = useMemo(() => {
-    // if (hasAdminAccess || isSuperAdmin || isModerator) {
-    //   return allPetsQuery.data?.pets || [];
-    // }
     return userPetsQuery.data?.pets || [];
-  }, [
-    hasAdminAccess,
-    isSuperAdmin,
-    isModerator,
-    // allPetsQuery.data,
-    userPetsQuery.data,
-  ]);
+  }, [userPetsQuery.data]);
 
   // Get user farms or admin view
   const displayFarms = useMemo(() => {
-    // if (hasAdminAccess || isSuperAdmin || isModerator) {
-    //   return allFarmsQuery.data?.farms || [];
-    // }
     return userFarmsQuery.data?.farms || [];
-  }, [
-    hasAdminAccess,
-    isSuperAdmin,
-    isModerator,
-    // allFarmsQuery.data,
-    userFarmsQuery.data,
-  ]);
+  }, [userFarmsQuery.data]);
 
   const handlePetPress = (pet: any) => {
     console.log(pet);
@@ -137,9 +129,107 @@ export default function PetsScreen() {
     return statuses[status] || status;
   };
 
+  const getRoleLabel = (role: string) => {
+    const roles: Record<string, string> = {
+      all: "كامل الصلاحيات",
+      view_edit_pets: "عرض وتعديل الحيوانات",
+      view_only: "عرض فقط",
+      appointments_only: "المواعيد فقط",
+    };
+    return roles[role] || role;
+  };
+
   const handleAddPet = () => {
     router.push("/add-pet");
   };
+
+  // Render clinic card component
+  const renderClinicCard = (clinic: any, isOwned: boolean) => (
+    <TouchableOpacity
+      key={clinic.id}
+      style={styles.clinicCard}
+      onPress={() =>
+        router.push({
+          pathname: "/clinic-dashboard",
+          params: { clinicId: clinic.id },
+        })
+      }
+      activeOpacity={0.8}
+    >
+      {/* Ownership Badge */}
+      <View style={[styles.ownershipBadge, isOwned ? styles.ownerBadge : styles.staffBadge]}>
+        {isOwned ? (
+          <>
+            <Crown size={12} color={COLORS.white} />
+            <Text style={styles.ownershipBadgeText}>مالك</Text>
+          </>
+        ) : (
+          <>
+            <Briefcase size={12} color={COLORS.white} />
+            <Text style={styles.ownershipBadgeText}>طبيب</Text>
+          </>
+        )}
+      </View>
+
+      <Image
+        source={{
+          uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
+        }}
+        style={styles.clinicImage}
+      />
+      <View style={styles.clinicInfo}>
+        <View style={styles.clinicHeader}>
+          <Text style={styles.clinicName}>{clinic.name}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
+            <Text style={styles.statusText}>مفعل</Text>
+          </View>
+        </View>
+
+        {/* Show role for assigned clinics */}
+        {!isOwned && clinic.role && (
+          <View style={styles.roleContainer}>
+            <Text style={styles.roleLabel}>الصلاحية:</Text>
+            <Text style={styles.roleValue}>{getRoleLabel(clinic.role)}</Text>
+          </View>
+        )}
+
+        <View style={styles.clinicInfoRow}>
+          <MapPin size={14} color={COLORS.darkGray} />
+          <Text style={styles.clinicInfoText}>{clinic.address}</Text>
+        </View>
+        <View style={styles.clinicInfoRow}>
+          <Phone size={14} color={COLORS.darkGray} />
+          <Text style={styles.clinicInfoText}>{clinic.phone}</Text>
+        </View>
+
+        {!isOwned && clinic.assignedAt && (
+          <View style={styles.clinicInfoRow}>
+            <Calendar size={14} color={COLORS.primary} />
+            <Text style={styles.clinicInfoText}>
+              تم التعيين: {new Date(clinic.assignedAt).toLocaleDateString("ar-SA")}
+            </Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.clinicStats}>
+        <View style={styles.clinicStat}>
+          <Users size={16} color={COLORS.primary} />
+          <Text style={styles.clinicStatValue}>85</Text>
+          <Text style={styles.clinicStatLabel}>مريض</Text>
+        </View>
+        <View style={styles.clinicStat}>
+          <Activity size={16} color={COLORS.success} />
+          <Text style={styles.clinicStatValue}>18</Text>
+          <Text style={styles.clinicStatLabel}>نشط</Text>
+        </View>
+        <View style={styles.clinicStat}>
+          <CheckCircle size={16} color={COLORS.primary} />
+          <Text style={styles.clinicStatValue}>256</Text>
+          <Text style={styles.clinicStatLabel}>مكتمل</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   // If user is veterinarian, show clinic interface
   if (userMode === "veterinarian") {
@@ -148,74 +238,30 @@ export default function PetsScreen() {
         <ScrollView style={styles.listContent}>
           <View style={styles.header}>
             <Text style={styles.title}>عيادتي</Text>
+            <Text style={styles.subtitle}>{ownedClinics.length + assignedClinics.length} عيادة إجمالاً</Text>
           </View>
 
-          {/* Approved Clinics Section */}
-          {approvedClinics.length > 0 && (
+          {/* Owned Clinics Section */}
+          {ownedClinics.length > 0 && (
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>عياداتي المفعلة</Text>
-              {approvedClinics.map((clinic: any) => (
-                <TouchableOpacity
-                  key={clinic.id}
-                  style={styles.clinicCard}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/clinic-dashboard",
-                      params: { clinicId: clinic.id },
-                    })
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={{
-                      uri: clinic.image || "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-                    }}
-                    style={styles.clinicImage}
-                  />
-                  <View style={styles.clinicInfo}>
-                    <View style={styles.clinicHeader}>
-                      <Text style={styles.clinicName}>{clinic.name}</Text>
-                      <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
-                        <Text style={styles.statusText}>مفعل</Text>
-                      </View>
-                    </View>
-                    <View style={styles.clinicInfoRow}>
-                      <MapPin size={14} color={COLORS.darkGray} />
-                      <Text style={styles.clinicInfoText}>{clinic.address}</Text>
-                    </View>
-                    <View style={styles.clinicInfoRow}>
-                      <Phone size={14} color={COLORS.darkGray} />
-                      <Text style={styles.clinicInfoText}>{clinic.phone}</Text>
-                    </View>
-                    <View style={styles.clinicInfoRow}>
-                      <Calendar size={14} color={COLORS.primary} />
-                      <Text style={styles.clinicInfoText}>
-                        صالح حتى:{" "}
-                        {clinic.activationEndDate
-                          ? new Date(clinic.activationEndDate).toLocaleDateString("ar-SA")
-                          : "غير محدد"}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.clinicStats}>
-                    <View style={styles.clinicStat}>
-                      <Users size={16} color={COLORS.primary} />
-                      <Text style={styles.clinicStatValue}>85</Text>
-                      <Text style={styles.clinicStatLabel}>مريض</Text>
-                    </View>
-                    <View style={styles.clinicStat}>
-                      <Activity size={16} color={COLORS.success} />
-                      <Text style={styles.clinicStatValue}>18</Text>
-                      <Text style={styles.clinicStatLabel}>نشط</Text>
-                    </View>
-                    <View style={styles.clinicStat}>
-                      <CheckCircle size={16} color={COLORS.primary} />
-                      <Text style={styles.clinicStatValue}>256</Text>
-                      <Text style={styles.clinicStatLabel}>مكتمل</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.sectionHeaderRow}>
+                <Crown size={20} color={COLORS.primary} />
+                <Text style={styles.sectionTitle}>عياداتي ({ownedClinics.length})</Text>
+              </View>
+              <Text style={styles.sectionDescription}>العيادات التي تملكها</Text>
+              {ownedClinics.map((clinic: any) => renderClinicCard(clinic, true))}
+            </View>
+          )}
+
+          {/* Assigned Clinics Section */}
+          {assignedClinics.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <Briefcase size={20} color={COLORS.success} />
+                <Text style={styles.sectionTitle}>أعمل فيها ({assignedClinics.length})</Text>
+              </View>
+              <Text style={styles.sectionDescription}>العيادات المعين فيها كطبيب</Text>
+              {assignedClinics.map((clinic: any) => renderClinicCard(clinic, false))}
             </View>
           )}
 
@@ -288,8 +334,8 @@ export default function PetsScreen() {
             </View>
           )}
 
-          {/* Empty State for No Approved Clinics/Warehouses */}
-          {approvedClinics.length === 0 && approvedWarehouses.length === 0 && (
+          {/* Empty State for No Clinics/Warehouses */}
+          {ownedClinics.length === 0 && assignedClinics.length === 0 && approvedWarehouses.length === 0 && (
             <View style={styles.emptyStateContainer}>
               <Stethoscope size={64} color={COLORS.lightGray} />
               <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
@@ -315,28 +361,6 @@ export default function PetsScreen() {
               icon={<Store size={16} color={COLORS.white} />}
               style={[styles.actionButton, styles.storeButton]}
             />
-
-            {/* {hasAdminAccess && (
-              <>
-                <Button
-                  title="تعيين طبيب بيطري"
-                  onPress={() => setShowAssignVetModal(true)}
-                  type="primary"
-                  size="medium"
-                  icon={<UserPlus size={16} color={COLORS.white} />}
-                  style={[styles.actionButton, styles.assignVetButton]}
-                />
-
-                <Button
-                  title="تعيين مشرف على حقول الدواجن"
-                  onPress={() => setShowAssignSupervisorModal(true)}
-                  type="primary"
-                  size="medium"
-                  icon={<UserCheck size={16} color={COLORS.white} />}
-                  style={[styles.actionButton, styles.assignSupervisorButton]}
-                />
-              </>
-            )} */}
           </View>
         </ScrollView>
       </View>
@@ -547,98 +571,11 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     textAlign: "right",
   },
-  searchSection: {
-    marginBottom: 20,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  searchTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginBottom: 12,
-    textAlign: "right",
-  },
-  searchContainer: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    backgroundColor: COLORS.gray,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  searchIcon: {
-    marginLeft: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: COLORS.black,
-    textAlign: "right",
-    paddingVertical: 4,
-  },
-  searchResults: {
-    marginTop: 16,
-  },
-  searchResultsTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: COLORS.primary,
-    marginBottom: 12,
-    textAlign: "right",
-  },
-  searchResultItem: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    backgroundColor: COLORS.gray,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  searchResultImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-  searchResultInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  searchResultName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: COLORS.black,
-    marginBottom: 2,
-    textAlign: "right",
-  },
-  searchResultType: {
+  subtitle: {
     fontSize: 14,
     color: COLORS.darkGray,
-    marginBottom: 2,
     textAlign: "right",
-  },
-  searchResultId: {
-    fontSize: 12,
-    color: COLORS.primary,
-    textAlign: "right",
-  },
-  noResults: {
-    marginTop: 16,
-    padding: 20,
-    alignItems: "center",
-    backgroundColor: COLORS.gray,
-    borderRadius: 8,
-  },
-  noResultsText: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-    textAlign: "center",
+    marginTop: 4,
   },
   headerButtons: {
     flexDirection: "row-reverse",
@@ -652,17 +589,32 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
   },
-  poultryButton: {
-    marginTop: 12,
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: COLORS.primary,
+  sectionHeaderRow: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
     textAlign: "right",
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "right",
+    marginBottom: 12,
+  },
+  sectionContainer: {
+    marginBottom: 24,
+  },
+  poultryButton: {
+    marginTop: 12,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
   poultryFarmCard: {
     backgroundColor: COLORS.white,
@@ -882,6 +834,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: "relative",
+  },
+  ownershipBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+    zIndex: 10,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  ownerBadge: {
+    backgroundColor: COLORS.primary,
+  },
+  staffBadge: {
+    backgroundColor: COLORS.success,
+  },
+  ownershipBadgeText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: "bold",
   },
   clinicImage: {
     width: "100%",
@@ -902,6 +883,27 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
+    flex: 1,
+  },
+  roleContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.gray,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 8,
+    alignSelf: "flex-start",
+  },
+  roleLabel: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginLeft: 6,
+  },
+  roleValue: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: COLORS.primary,
   },
   clinicInfoRow: {
     flexDirection: "row-reverse",
@@ -912,6 +914,7 @@ const styles = StyleSheet.create({
   clinicInfoText: {
     fontSize: 14,
     color: COLORS.darkGray,
+    flex: 1,
   },
   clinicStats: {
     flexDirection: "row",
@@ -1032,16 +1035,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   storeButton: {
-    backgroundColor: "#8B5CF6",
-  },
-  sectionContainer: {
-    marginBottom: 20,
-  },
-
-  assignVetButton: {
-    backgroundColor: "#10B981",
-  },
-  assignSupervisorButton: {
     backgroundColor: "#8B5CF6",
   },
 });
