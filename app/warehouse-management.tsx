@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
-import { Stack, router } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { Plus, Search, Edit, Trash2, Package, AlertCircle, Eye, EyeOff, Settings, Users } from "lucide-react-native";
 import { formatPrice } from "../constants/currency";
 import Button from "../components/Button 2";
@@ -41,11 +41,13 @@ export default function WarehouseManagementScreen() {
   const { user } = useApp();
   const queryClient = useQueryClient();
   const { showToast } = useToastContext();
+  const { canEdit, isOwner } = useLocalSearchParams();
+  console.log({ canEdit, isOwner });
 
-  const { data: warehouses, isLoading, error } = useQuery(trpc.stores.getUserStores.queryOptions({ userId: user?.id }));
+  const { data, isLoading, error } = useQuery(trpc.stores.getUserStores.queryOptions({ userId: user?.id }));
+  const warehouses = useMemo(() => (data as any)?.stores, [data]);
 
   const deleteProductMutation = useMutation(trpc.stores.products.delete.mutationOptions());
-
   const toggleVisibilityMutation = useMutation(trpc.stores.products.toggle.mutationOptions());
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -507,15 +509,19 @@ export default function WarehouseManagementScreen() {
           />
         </View>
 
-        <TouchableOpacity style={styles.settingsButton} onPress={handleWarehouseSettings}>
-          <Settings size={20} color={COLORS.white} />
-          <Text style={styles.settingsButtonText}>إعدادات</Text>
-        </TouchableOpacity>
+        {isOwner === "true" ? (
+          <TouchableOpacity style={styles.settingsButton} onPress={handleWarehouseSettings}>
+            <Settings size={20} color={COLORS.white} />
+            <Text style={styles.settingsButtonText}>إعدادات</Text>
+          </TouchableOpacity>
+        ) : null}
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
-          <Plus size={20} color={COLORS.white} />
-          <Text style={styles.addButtonText}>إضافة</Text>
-        </TouchableOpacity>
+        {canEdit === "true" ? (
+          <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
+            <Plus size={20} color={COLORS.white} />
+            <Text style={styles.addButtonText}>إضافة</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {/* Filters */}
@@ -540,7 +546,7 @@ export default function WarehouseManagementScreen() {
               <Text style={styles.emptyStateSubtext}>
                 {searchQuery ? "جرب البحث بكلمات أخرى" : "ابدأ بإضافة منتجات جديدة"}
               </Text>
-              {!searchQuery && (
+              {!searchQuery && canEdit === "true" && (
                 <Button
                   title="إضافة منتج جديد"
                   onPress={handleAddProduct}

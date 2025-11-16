@@ -43,12 +43,6 @@ export default function PetsScreen() {
     enabled: !!user?.id && userMode === "veterinarian",
   });
 
-  // Fetch user's approved warehouses (for veterinarians)
-  const userWarehousesQuery = useQuery({
-    ...trpc.stores.getUserApprovedStores.queryOptions({ userId: Number(user?.id) }),
-    enabled: !!user?.id && userMode === "veterinarian",
-  });
-
   // Separate clinics into owned and assigned
   const { ownedClinics, assignedClinics } = useMemo(() => {
     const allClinics = allUserClinicsQuery.data?.clinics || [];
@@ -59,7 +53,21 @@ export default function PetsScreen() {
     };
   }, [allUserClinicsQuery.data]);
 
-  const approvedWarehouses = userWarehousesQuery.data?.stores || [];
+  // Fetch user's approved stores (owned + assigned)
+  const allUserStoresQuery = useQuery({
+    ...trpc.stores.getUserApprovedStores.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user?.id && userMode === "veterinarian",
+  });
+
+  // Separate stores into owned and assigned
+  const { ownedStores, assignedStores } = useMemo(() => {
+    const allStores = allUserStoresQuery.data?.stores || [];
+
+    return {
+      ownedStores: allStores.filter((store: any) => store.isOwned),
+      assignedStores: allStores.filter((store: any) => !store.isOwned),
+    };
+  }, [allUserStoresQuery.data]);
 
   // Scroll to top when tab is focused
   useFocusEffect(
@@ -135,6 +143,16 @@ export default function PetsScreen() {
       view_edit_pets: "عرض وتعديل الحيوانات",
       view_only: "عرض فقط",
       appointments_only: "المواعيد فقط",
+    };
+    return roles[role] || role;
+  };
+
+  const getStoreRoleLabel = (role: string) => {
+    const roles: Record<string, string> = {
+      all: "كامل الصلاحيات",
+      view_edit_inventory: "عرض وتعديل المخزون",
+      view_only: "عرض فقط",
+      orders_only: "إدارة الطلبات فقط",
     };
     return roles[role] || role;
   };
@@ -231,14 +249,117 @@ export default function PetsScreen() {
     </TouchableOpacity>
   );
 
+  // Render store card component
+  const renderStoreCard = (store: any, isOwned: boolean) => (
+    <TouchableOpacity
+      key={store.id}
+      style={styles.warehouseCard}
+      onPress={() =>
+        router.push({
+          pathname: "/warehouse-management",
+          params: {
+            isOwner: store.isOwned,
+            canEdit:
+              store?.role === "view_edit_inventory" || store?.role === "all" || store?.isOwned ? "true" : "false",
+          },
+        })
+      }
+      activeOpacity={0.8}
+    >
+      {/* Ownership Badge */}
+      <View style={[styles.ownershipBadge, isOwned ? styles.ownerBadge : styles.staffBadge]}>
+        {isOwned ? (
+          <>
+            <Crown size={12} color={COLORS.white} />
+            <Text style={styles.ownershipBadgeText}>مالك</Text>
+          </>
+        ) : (
+          <>
+            <Briefcase size={12} color={COLORS.white} />
+            <Text style={styles.ownershipBadgeText}>موظف</Text>
+          </>
+        )}
+      </View>
+
+      <Image
+        source={{
+          uri: store.logo || store.bannerImage || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
+        }}
+        style={styles.warehouseImage}
+      />
+      <View style={styles.warehouseInfo}>
+        <View style={styles.warehouseHeader}>
+          <Text style={styles.warehouseName}>{store.name}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
+            <Text style={styles.statusText}>مفعل</Text>
+          </View>
+        </View>
+
+        {/* Show role for assigned stores */}
+        {!isOwned && store.role && (
+          <View style={styles.roleContainer}>
+            <Text style={styles.roleLabel}>الصلاحية:</Text>
+            <Text style={styles.roleValue}>{getStoreRoleLabel(store.role)}</Text>
+          </View>
+        )}
+
+        <View style={styles.warehouseInfoRow}>
+          <MapPin size={14} color={COLORS.darkGray} />
+          <Text style={styles.warehouseInfoText}>{store.address}</Text>
+        </View>
+        <View style={styles.warehouseInfoRow}>
+          <Phone size={14} color={COLORS.darkGray} />
+          <Text style={styles.warehouseInfoText}>{store.phone}</Text>
+        </View>
+
+        {!isOwned && store.assignedAt && (
+          <View style={styles.warehouseInfoRow}>
+            <Calendar size={14} color={COLORS.primary} />
+            <Text style={styles.warehouseInfoText}>
+              تم التعيين: {new Date(store.assignedAt).toLocaleDateString("ar-SA")}
+            </Text>
+          </View>
+        )}
+
+        {isOwned && store.activationEndDate && (
+          <View style={styles.warehouseInfoRow}>
+            <Calendar size={14} color={COLORS.primary} />
+            <Text style={styles.warehouseInfoText}>
+              صالح حتى: {new Date(store.activationEndDate).toLocaleDateString("ar-SA")}
+            </Text>
+          </View>
+        )}
+      </View>
+      <View style={styles.warehouseStats}>
+        <View style={styles.warehouseStat}>
+          <Package size={16} color={COLORS.primary} />
+          <Text style={styles.warehouseStatValue}>{store.totalProducts || 45}</Text>
+          <Text style={styles.warehouseStatLabel}>منتج</Text>
+        </View>
+        <View style={styles.warehouseStat}>
+          <DollarSign size={16} color={COLORS.success} />
+          <Text style={styles.warehouseStatValue}>{store.totalSales || 1247}</Text>
+          <Text style={styles.warehouseStatLabel}>مبيعات</Text>
+        </View>
+        <View style={styles.warehouseStat}>
+          <Users size={16} color={COLORS.warning} />
+          <Text style={styles.warehouseStatValue}>{store.followers || 892}</Text>
+          <Text style={styles.warehouseStatLabel}>متابع</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   // If user is veterinarian, show clinic interface
   if (userMode === "veterinarian") {
     return (
       <View style={styles.container}>
         <ScrollView style={styles.listContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>عيادتي</Text>
-            <Text style={styles.subtitle}>{ownedClinics.length + assignedClinics.length} عيادة إجمالاً</Text>
+            <Text style={styles.title}>عيادتي ومخازني</Text>
+            <Text style={styles.subtitle}>
+              {ownedClinics.length + assignedClinics.length} عيادة • {ownedStores.length + assignedStores.length} مذخر
+            </Text>
           </View>
 
           {/* Owned Clinics Section */}
@@ -265,84 +386,41 @@ export default function PetsScreen() {
             </View>
           )}
 
-          {/* Approved Warehouses Section */}
-          {approvedWarehouses.length > 0 && (
+          {/* Owned Stores Section */}
+          {ownedStores.length > 0 && (
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>مخازني المفعلة</Text>
-              {approvedWarehouses.map((warehouse: any) => (
-                <TouchableOpacity
-                  key={warehouse.id}
-                  style={styles.warehouseCard}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/warehouse-management",
-                      params: { warehouseId: warehouse.id },
-                    })
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={{
-                      uri: warehouse.image || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
-                    }}
-                    style={styles.warehouseImage}
-                  />
-                  <View style={styles.warehouseInfo}>
-                    <View style={styles.warehouseHeader}>
-                      <Text style={styles.warehouseName}>{warehouse.name}</Text>
-                      <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
-                        <Text style={styles.statusText}>مفعل</Text>
-                      </View>
-                    </View>
-                    <View style={styles.warehouseInfoRow}>
-                      <MapPin size={14} color={COLORS.darkGray} />
-                      <Text style={styles.warehouseInfoText}>{warehouse.address}</Text>
-                    </View>
-                    <View style={styles.warehouseInfoRow}>
-                      <Phone size={14} color={COLORS.darkGray} />
-                      <Text style={styles.warehouseInfoText}>{warehouse.phone}</Text>
-                    </View>
-                    <View style={styles.warehouseInfoRow}>
-                      <Calendar size={14} color={COLORS.primary} />
-                      <Text style={styles.warehouseInfoText}>
-                        صالح حتى:{" "}
-                        {warehouse.activationEndDate
-                          ? new Date(warehouse.activationEndDate).toLocaleDateString("ar-SA")
-                          : "غير محدد"}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.warehouseStats}>
-                    <View style={styles.warehouseStat}>
-                      <Package size={16} color={COLORS.primary} />
-                      <Text style={styles.warehouseStatValue}>{warehouse.totalProducts || 45}</Text>
-                      <Text style={styles.warehouseStatLabel}>منتج</Text>
-                    </View>
-                    <View style={styles.warehouseStat}>
-                      <DollarSign size={16} color={COLORS.success} />
-                      <Text style={styles.warehouseStatValue}>{warehouse.totalSales || 1247}</Text>
-                      <Text style={styles.warehouseStatLabel}>مبيعات</Text>
-                    </View>
-                    <View style={styles.warehouseStat}>
-                      <Users size={16} color={COLORS.warning} />
-                      <Text style={styles.warehouseStatValue}>{warehouse.followers || 892}</Text>
-                      <Text style={styles.warehouseStatLabel}>متابع</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.sectionHeaderRow}>
+                <Crown size={20} color={COLORS.primary} />
+                <Text style={styles.sectionTitle}>مخازني ({ownedStores.length})</Text>
+              </View>
+              <Text style={styles.sectionDescription}>المخازن التي تملكها</Text>
+              {ownedStores.map((store: any) => renderStoreCard(store, true))}
+            </View>
+          )}
+
+          {/* Assigned Stores Section */}
+          {assignedStores.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <Briefcase size={20} color={COLORS.success} />
+                <Text style={styles.sectionTitle}>أعمل فيها ({assignedStores.length})</Text>
+              </View>
+              <Text style={styles.sectionDescription}>المخازن المعين فيها كموظف</Text>
+              {assignedStores.map((store: any) => renderStoreCard(store, false))}
             </View>
           )}
 
           {/* Empty State for No Clinics/Warehouses */}
-          {ownedClinics.length === 0 && assignedClinics.length === 0 && approvedWarehouses.length === 0 && (
-            <View style={styles.emptyStateContainer}>
-              <Stethoscope size={64} color={COLORS.lightGray} />
-              <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
-              <Text style={styles.emptyStateSubtext}>بعد الموافقة على طلباتك ستظهر لوحات التحكم هنا</Text>
-            </View>
-          )}
-
+          {ownedClinics.length === 0 &&
+            assignedClinics.length === 0 &&
+            ownedStores.length === 0 &&
+            assignedStores.length === 0 && (
+              <View style={styles.emptyStateContainer}>
+                <Stethoscope size={64} color={COLORS.lightGray} />
+                <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
+                <Text style={styles.emptyStateSubtext}>بعد الموافقة على طلباتك ستظهر لوحات التحكم هنا</Text>
+              </View>
+            )}
           <View style={styles.clinicActions}>
             <Button
               title="إضافة عيادة جديدة"
