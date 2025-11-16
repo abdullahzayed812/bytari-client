@@ -76,6 +76,8 @@ export default function PetsScreen() {
     }, [])
   );
 
+  console.log({ ownedClinics });
+
   // Get user pets or admin view
   const displayPets = useMemo(() => {
     return userPetsQuery.data?.pets || [];

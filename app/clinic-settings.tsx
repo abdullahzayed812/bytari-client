@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -52,6 +52,8 @@ export default function ClinicSettings() {
     })
   );
 
+  // Renewal clinc
+
   // Get subscription status
   const { data: subscriptionData } = useQuery(
     trpc.clinics.settings.getSubscription.queryOptions({
@@ -74,6 +76,7 @@ export default function ClinicSettings() {
   const addStaffMutation = useMutation(trpc.clinics.settings.staff.addStaff.mutationOptions());
   const removeStaffMutation = useMutation(trpc.clinics.settings.staff.removeStaff.mutationOptions());
   const updatePermissionsMutation = useMutation(trpc.clinics.settings.staff.updatePermissions.mutationOptions());
+  const requestRenewalMutation = useMutation(trpc.clinics.settings.requestRenewal.mutationOptions());
 
   const clinic = clinicData?.clinic;
   const subscription = subscriptionData?.subscription;
@@ -244,15 +247,47 @@ export default function ClinicSettings() {
   };
 
   const handleRenewSubscription = () => {
-    Alert.alert("تجديد الاشتراك", "هل تريد تجديد اشتراك العيادة؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "تجديد",
-        onPress: () => {
-          Alert.alert("تجديد", "سيتم توجيهك إلى صفحة الدفع");
+    // Check if already has pending renewal
+    if (subscription?.hasPendingRenewal) {
+      Alert.alert("طلب قيد المراجعة", "يوجد طلب تجديد قيد المراجعة بالفعل. سيتم إشعارك عند الموافقة عليه.");
+      return;
+    }
+
+    Alert.alert(
+      "تأكيد التجديد",
+      "هل تريد إرسال طلب تجديد اشتراك العيادة لمدة سنة إضافية؟\n\nسيتم مراجعة الطلب من قبل الإدارة.",
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "تأكيد",
+          onPress: () => {
+            requestRenewalMutation.mutate(
+              { clinicId: Number(clinicId) },
+              {
+                onSuccess: () => {
+                  Alert.alert(
+                    "تم بنجاح",
+                    "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.",
+                    [
+                      {
+                        text: "حسناً",
+                        onPress: () => {
+                          // Refresh subscription data
+                          refetch();
+                        },
+                      },
+                    ]
+                  );
+                },
+                onError: (error) => {
+                  Alert.alert("خطأ", error.message);
+                },
+              }
+            );
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const settingsGroups = [
@@ -429,9 +464,21 @@ export default function ClinicSettings() {
                 </View>
 
                 <View style={styles.subscriptionActions}>
-                  <TouchableOpacity style={styles.renewButton} onPress={handleRenewSubscription}>
-                    <RefreshCw size={16} color={COLORS.white} />
-                    <Text style={styles.renewButtonText}>تجديد الاشتراك</Text>
+                  <TouchableOpacity
+                    style={[styles.renewButton, requestRenewalMutation.isPending && { opacity: 0.6 }]}
+                    onPress={handleRenewSubscription}
+                    disabled={requestRenewalMutation.isPending || subscription?.needsRenewal}
+                  >
+                    {requestRenewalMutation.isPending ? (
+                      <ActivityIndicator size="small" color={COLORS.white} />
+                    ) : (
+                      <>
+                        <RefreshCw size={16} color={COLORS.white} />
+                        <Text style={styles.renewButtonText}>
+                          {subscription?.needsRenewal ? "قيد المراجعة" : "تجديد الاشتراك"}
+                        </Text>
+                      </>
+                    )}
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -441,6 +488,15 @@ export default function ClinicSettings() {
                     <Text style={styles.followUpButtonText}>متابعة الاشتراك</Text>
                   </TouchableOpacity>
                 </View>
+
+                {subscription?.needsRenewal && (
+                  <View style={styles.pendingRenewalBanner}>
+                    <View style={styles.pendingRenewalIcon}>
+                      <Clock size={16} color={COLORS.warning} />
+                    </View>
+                    <Text style={styles.pendingRenewalText}>يوجد طلب تجديد قيد المراجعة</Text>
+                  </View>
+                )}
               </View>
             </View>
           )}
@@ -784,5 +840,30 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 14,
     fontWeight: "600",
+  },
+
+  pendingRenewalBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: "#FFF4E5",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 8,
+  },
+  pendingRenewalIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.warning + "20",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pendingRenewalText: {
+    fontSize: 13,
+    color: COLORS.warning,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
   },
 });
