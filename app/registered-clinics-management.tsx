@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { Edit3, Eye, EyeOff, Trash2, Star, MapPin, Phone, Settings } from 'lucide-react-native';
+import { Edit3, Eye, EyeOff, Trash2, Star, MapPin, Phone, Settings } from "lucide-react-native";
 import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 type RegisteredClinic = {
   id: number;
@@ -28,186 +29,138 @@ type RegisteredClinic = {
 
 export default function RegisteredClinicsManagementScreen() {
   const router = useRouter();
-  const { isSuperAdmin } = useApp();
+  const { user, isSuperAdmin } = useApp();
+  const queryClient = useQueryClient();
   const [clinics, setClinics] = useState<RegisteredClinic[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Fetch registered clinics from database
-  const clinicsQuery = trpc.clinics.getActiveList.useQuery({
-    limit: 100,
-    offset: 0,
-    search: '',
-    city: '',
-    country: ''
+  const clinicsQuery = useQuery({
+    ...trpc.clinics.getAllClinics.queryOptions({
+      adminId: Number(user?.id),
+    }),
+    enabled: isSuperAdmin,
   });
-  
+
+  // Toggle visibility mutation
+  const toggleVisibilityMutation = useMutation(trpc.clinics.toggleClinicVisibility.mutationOptions());
+
+  // Delete mutation
+  const deleteMutation = useMutation(trpc.clinics.deleteClinic.mutationOptions());
+
   // Debug logging
   if (clinicsQuery.error) {
-    console.error('Registered Clinics Query Error:', clinicsQuery.error);
+    console.error("Registered Clinics Query Error:", clinicsQuery.error);
   }
   if (clinicsQuery.data) {
-    console.log('Registered clinics loaded successfully:', clinicsQuery.data.clinics?.length || 0, 'clinics');
+    console.log("Registered clinics loaded successfully:", clinicsQuery.data.clinics?.length || 0, "clinics");
   }
-  
+
   useEffect(() => {
     if (clinicsQuery.data) {
-      console.log('Registered clinics data received:', clinicsQuery.data);
+      console.log("Registered clinics data received:", clinicsQuery.data);
       setClinics(clinicsQuery.data.clinics || []);
       setLoading(false);
     }
     if (clinicsQuery.error) {
-      console.error('Error fetching registered clinics:', clinicsQuery.error);
+      console.error("Error fetching registered clinics:", clinicsQuery.error);
       setLoading(false);
     }
     if (clinicsQuery.isLoading) {
-      console.log('Loading registered clinics...');
+      console.log("Loading registered clinics...");
     }
   }, [clinicsQuery.data, clinicsQuery.error, clinicsQuery.isLoading]);
 
   // Add fallback mock data if no data from server or if empty
   useEffect(() => {
     if (!clinicsQuery.isLoading && (!clinicsQuery.data || clinicsQuery.data.clinics.length === 0)) {
-      console.log('No registered clinics data from server or empty, using mock data');
-      const mockRegisteredClinics: RegisteredClinic[] = [
-        {
-          id: 101,
-          name: 'عيادة د. أحمد البيطرية',
-          address: 'بغداد - الجادرية - شارع الجامعة',
-          phone: '+964 770 111 2222',
-          email: 'dr.ahmed@vet-clinic.com',
-          images: ['https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400'],
-          rating: 4.9,
-          services: ['فحص عام', 'تطعيمات', 'جراحة', 'أشعة'],
-          workingHours: {
-            saturday: '8:00 AM - 8:00 PM',
-            sunday: '8:00 AM - 8:00 PM',
-            monday: '8:00 AM - 8:00 PM',
-            tuesday: '8:00 AM - 8:00 PM',
-            wednesday: '8:00 AM - 8:00 PM',
-            thursday: '8:00 AM - 8:00 PM',
-            friday: '2:00 PM - 6:00 PM'
-          },
-          isActive: true,
-          ownerId: 1,
-          ownerName: 'د. أحمد محمد'
-        },
-        {
-          id: 102,
-          name: 'مركز الشفاء البيطري',
-          address: 'البصرة - الزبير - شارع الصناعة',
-          phone: '+964 770 333 4444',
-          email: 'info@shifa-vet.com',
-          images: ['https://images.unsplash.com/photo-1548767797-d8c844163c4c?w=400'],
-          rating: 4.7,
-          services: ['طوارئ', 'جراحة متقدمة', 'تحاليل مخبرية'],
-          workingHours: {
-            saturday: '24 Hours',
-            sunday: '24 Hours',
-            monday: '24 Hours',
-            tuesday: '24 Hours',
-            wednesday: '24 Hours',
-            thursday: '24 Hours',
-            friday: '24 Hours'
-          },
-          isActive: true,
-          ownerId: 2,
-          ownerName: 'د. فاطمة علي'
-        },
-        {
-          id: 103,
-          name: 'عيادة النجف المتخصصة',
-          address: 'النجف - المدينة الصناعية - شارع الكوفة',
-          phone: '+964 770 555 6666',
-          email: 'najaf.specialized@gmail.com',
-          images: ['https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400'],
-          rating: 4.8,
-          services: ['علاج الماشية', 'تلقيح صناعي', 'فحص الحمل'],
-          workingHours: {
-            saturday: '7:00 AM - 7:00 PM',
-            sunday: '7:00 AM - 7:00 PM',
-            monday: '7:00 AM - 7:00 PM',
-            tuesday: '7:00 AM - 7:00 PM',
-            wednesday: '7:00 AM - 7:00 PM',
-            thursday: '7:00 AM - 7:00 PM',
-            friday: 'Closed'
-          },
-          isActive: true,
-          ownerId: 3,
-          ownerName: 'د. حسن كريم'
-        },
-        {
-          id: 104,
-          name: 'مستشفى كربلاء البيطري',
-          address: 'كربلاء - حي الحسين - شارع الإمام علي',
-          phone: '+964 770 777 8888',
-          email: 'karbala.vet.hospital@yahoo.com',
-          images: ['https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=400'],
-          rating: 4.6,
-          services: ['جراحة العظام', 'طب العيون البيطري', 'العلاج الطبيعي'],
-          workingHours: {
-            saturday: '8:00 AM - 10:00 PM',
-            sunday: '8:00 AM - 10:00 PM',
-            monday: '8:00 AM - 10:00 PM',
-            tuesday: '8:00 AM - 10:00 PM',
-            wednesday: '8:00 AM - 10:00 PM',
-            thursday: '8:00 AM - 10:00 PM',
-            friday: '2:00 PM - 8:00 PM'
-          },
-          isActive: true,
-          ownerId: 4,
-          ownerName: 'د. زينب حسين'
-        }
-      ];
-      setClinics(mockRegisteredClinics);
+      setClinics([]);
       setLoading(false);
     }
   }, [clinicsQuery.isLoading, clinicsQuery.data, clinicsQuery.error]);
 
   const handleDeleteClinic = (clinicId: number) => {
-    Alert.alert(
-      'حذف العيادة المسجلة',
-      'هل أنت متأكد من حذف هذه العيادة المسجلة؟ سيتم إزالتها من قائمة العيادات المتواجدة.',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: () => {
-            setClinics(prevClinics => prevClinics.filter(clinic => clinic.id !== clinicId));
-          }
-        }
-      ]
-    );
+    Alert.alert("حذف العيادة المسجلة", "هل أنت متأكد من حذف هذه العيادة المسجلة؟ سيتم إزالتها نهائياً من النظام.", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deleteMutation.mutate(
+            { clinicId },
+            {
+              onSuccess: (data) => {
+                // Remove from local state
+                setClinics((prevClinics) => prevClinics.filter((clinic) => clinic.id !== clinicId));
+                // Invalidate queries to refetch data
+                queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey);
+                Alert.alert("نجح", data.message);
+              },
+              onError: (error: any) => {
+                Alert.alert("خطأ", error.message || "حدث خطأ أثناء حذف العيادة");
+              },
+            }
+          );
+        },
+      },
+    ]);
   };
 
   const handleEditRegisteredClinic = (clinicId: number) => {
-    router.push({ pathname: '/edit-clinic', params: { id: clinicId.toString(), type: 'registered' } });
+    router.push({ pathname: "/edit-clinic", params: { id: clinicId.toString(), type: "registered" } });
   };
 
-  const handleToggleClinicStatus = (clinicId: number) => {
-    setClinics(prevClinics => 
-      prevClinics.map(clinic => 
-        clinic.id === clinicId 
-          ? { ...clinic, isActive: !clinic.isActive }
-          : clinic
-      )
-    );
+  const handleToggleClinicStatus = (clinicId: number, currentStatus: boolean) => {
+    const newStatus = !currentStatus;
+    const actionText = newStatus ? "إظهار" : "إخفاء";
+
+    Alert.alert(`${actionText} العيادة`, `هل أنت متأكد من ${actionText} هذه العيادة؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: actionText,
+        onPress: () => {
+          toggleVisibilityMutation.mutate(
+            { clinicId, isActive: newStatus },
+            {
+              onSuccess: (data) => {
+                // Update local state
+                setClinics((prevClinics) =>
+                  prevClinics.map((clinic) => (clinic.id === clinicId ? { ...clinic, isActive: newStatus } : clinic))
+                );
+                // Invalidate queries to refetch data
+                queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey);
+                Alert.alert("نجح", data.message);
+              },
+              onError: (error: any) => {
+                Alert.alert("خطأ", error.message || "حدث خطأ أثناء تغيير حالة العيادة");
+              },
+            }
+          );
+        },
+      },
+    ]);
   };
 
   const renderRegisteredClinicCard = (clinic: RegisteredClinic) => {
-    const clinicImage = clinic.images && clinic.images.length > 0 
-      ? clinic.images[0] 
-      : 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80';
-    
+    const clinicImage =
+      clinic.images && clinic.images.length > 0
+        ? clinic.images[0]
+        : "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80";
+
+    const isActionLoading =
+      (toggleVisibilityMutation.isPending && toggleVisibilityMutation.variables?.clinicId === clinic.id) ||
+      (deleteMutation.isPending && deleteMutation.variables?.clinicId === clinic.id);
+
     return (
-      <TouchableOpacity 
-        key={clinic.id} 
+      <TouchableOpacity
+        key={clinic.id}
         style={[styles.clinicCard, !clinic.isActive && styles.inactiveClinicCard]}
-        onPress={() => router.push({ pathname: '/clinic-profile', params: { id: clinic.id.toString() } })}
+        onPress={() => router.push({ pathname: "/clinic-profile", params: { id: clinic.id.toString() } })}
+        disabled={isActionLoading}
       >
         <View style={styles.clinicCardContent}>
           <Image source={{ uri: clinicImage }} style={styles.clinicImage} />
-          
+
           <View style={styles.clinicDetails}>
             <View style={styles.clinicHeader}>
               <Text style={styles.clinicName}>{clinic.name}</Text>
@@ -226,43 +179,48 @@ export default function RegisteredClinicsManagementScreen() {
                 )}
               </View>
             </View>
-            
+
             <View style={styles.clinicInfoRow}>
               <MapPin size={14} color={COLORS.darkGray} />
-              <Text style={styles.clinicInfoText} numberOfLines={2}>{clinic.address}</Text>
+              <Text style={styles.clinicInfoText} numberOfLines={2}>
+                {clinic.address}
+              </Text>
             </View>
-            
+
             {clinic.phone && (
               <View style={styles.clinicInfoRow}>
                 <Phone size={14} color={COLORS.darkGray} />
                 <Text style={styles.clinicInfoText}>{clinic.phone}</Text>
               </View>
             )}
-            
+
             {clinic.ownerName && (
               <View style={styles.clinicInfoRow}>
                 <Settings size={14} color={COLORS.darkGray} />
                 <Text style={styles.clinicInfoText}>المالك: {clinic.ownerName}</Text>
               </View>
             )}
-            
+
             <View style={styles.ratingContainer}>
               <Star size={16} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.ratingText}>{clinic.rating?.toFixed(1) || '0.0'}</Text>
+              <Text style={styles.ratingText}>{clinic.rating?.toFixed(1) || "0.0"}</Text>
             </View>
           </View>
         </View>
-        
+
         {isSuperAdmin && (
           <View style={styles.clinicActions}>
             <TouchableOpacity
               style={[styles.actionButton, clinic.isActive ? styles.deactivateButton : styles.activateButton]}
               onPress={(e) => {
                 e.stopPropagation();
-                handleToggleClinicStatus(clinic.id);
+                handleToggleClinicStatus(clinic.id, clinic.isActive);
               }}
+              disabled={isActionLoading}
             >
-              {clinic.isActive ? (
+              {isActionLoading && toggleVisibilityMutation.variables?.clinicId === clinic.id ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : clinic.isActive ? (
                 <>
                   <EyeOff size={16} color={COLORS.white} />
                   <Text style={styles.actionButtonText}>إخفاء</Text>
@@ -274,27 +232,35 @@ export default function RegisteredClinicsManagementScreen() {
                 </>
               )}
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.actionButton, styles.editButton]}
               onPress={(e) => {
                 e.stopPropagation();
                 handleEditRegisteredClinic(clinic.id);
               }}
+              disabled={isActionLoading}
             >
               <Edit3 size={16} color={COLORS.white} />
               <Text style={styles.actionButtonText}>تعديل</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.actionButton, styles.deleteButton]}
               onPress={(e) => {
                 e.stopPropagation();
                 handleDeleteClinic(clinic.id);
               }}
+              disabled={isActionLoading}
             >
-              <Trash2 size={16} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>حذف</Text>
+              {isActionLoading && deleteMutation.variables?.clinicId === clinic.id ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : (
+                <>
+                  <Trash2 size={16} color={COLORS.white} />
+                  <Text style={styles.actionButtonText}>حذف</Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -304,32 +270,30 @@ export default function RegisteredClinicsManagementScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'إدارة العيادات المسجلة',
+          title: "إدارة العيادات المسجلة",
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: { fontWeight: "bold" },
         }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>إدارة العيادات المسجلة</Text>
-          <Text style={styles.headerSubtitle}>
-            إدارة جميع العيادات البيطرية المسجلة من قبل الأطباء البيطريين
-          </Text>
+          <Text style={styles.headerSubtitle}>إدارة جميع العيادات البيطرية المسجلة من قبل الأطباء البيطريين</Text>
         </View>
-        
+
         {/* Statistics */}
         <View style={styles.statsSection}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{clinics.filter(c => c.isActive).length}</Text>
+            <Text style={styles.statNumber}>{clinics.filter((c) => c.isActive).length}</Text>
             <Text style={styles.statLabel}>عيادات نشطة</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{clinics.filter(c => !c.isActive).length}</Text>
+            <Text style={styles.statNumber}>{clinics.filter((c) => !c.isActive).length}</Text>
             <Text style={styles.statLabel}>عيادات معطلة</Text>
           </View>
           <View style={styles.statCard}>
@@ -337,19 +301,17 @@ export default function RegisteredClinicsManagementScreen() {
             <Text style={styles.statLabel}>إجمالي العيادات</Text>
           </View>
         </View>
-        
+
         {/* Registered Clinics List */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            العيادات المسجلة ({clinics.length})
-          </Text>
+          <Text style={styles.sectionTitle}>العيادات المسجلة ({clinics.length})</Text>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={COLORS.primary} />
               <Text style={styles.loadingText}>جاري تحميل العيادات المسجلة...</Text>
             </View>
           ) : clinics.length > 0 ? (
-            clinics.map(clinic => renderRegisteredClinicCard(clinic))
+            clinics.map((clinic) => renderRegisteredClinicCard(clinic))
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>لا توجد عيادات مسجلة</Text>
@@ -376,19 +338,19 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   statsSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     marginBottom: 10,
   },
@@ -396,7 +358,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
     marginHorizontal: 4,
     shadowColor: COLORS.black,
@@ -407,14 +369,14 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   section: {
     padding: 20,
@@ -423,9 +385,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 15,
   },
   clinicCard: {
@@ -445,8 +407,8 @@ const styles = StyleSheet.create({
     borderColor: COLORS.error,
   },
   clinicCardContent: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 12,
   },
   clinicImage: {
@@ -459,19 +421,19 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   clinicHeader: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   clinicName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
   },
   badgeContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 6,
   },
   premiumBadge: {
@@ -479,32 +441,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   premiumBadgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   inactiveBadge: {
     backgroundColor: COLORS.error,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   inactiveBadgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   clinicInfoRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 6,
     gap: 6,
   },
@@ -513,25 +475,25 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   ratingContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 4,
   },
   ratingText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   clinicActions: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
     gap: 8,
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
@@ -552,25 +514,25 @@ const styles = StyleSheet.create({
   actionButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyState: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyStateText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingContainer: {
     padding: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 10,
   },
 });

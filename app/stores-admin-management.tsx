@@ -43,11 +43,7 @@ interface EditStoreData {
   address: string;
   phone: string;
   rating: number;
-  workingHours: {
-    open: string;
-    close: string;
-    days: string;
-  };
+  workingHours: string;
   image: string;
 }
 
@@ -110,7 +106,7 @@ export default function StoresAdminManagementScreen() {
 
     updateStoreMutation.mutate(
       {
-        id: editingStore.id,
+        storeId: Number(editingStore.id),
         name: editingStore.name,
         description: editingStore.description,
         address: editingStore.address,
@@ -144,7 +140,7 @@ export default function StoresAdminManagementScreen() {
         style: "destructive",
         onPress: () => {
           deleteStoreMutation.mutate(
-            { id: storeId },
+            { id: Number(storeId) },
             {
               onSuccess: () => {
                 showToast({ message: "تم حذف المتجر بنجاح", type: "success" });
@@ -224,9 +220,7 @@ export default function StoresAdminManagementScreen() {
 
           <View style={styles.detailItem}>
             <Clock size={14} color={COLORS.darkGray} />
-            <Text style={styles.detailText}>
-              {item.workingHours.open} - {item.workingHours.close}
-            </Text>
+            <Text style={styles.detailText}>{item.workingHours}</Text>
           </View>
         </View>
       </View>
@@ -318,41 +312,21 @@ export default function StoresAdminManagementScreen() {
 
           <View style={styles.inputRow}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-              <Text style={styles.inputLabel}>ساعة الفتح</Text>
+              <Text style={styles.inputLabel}>ساعات العمل</Text>
               <TextInput
                 style={styles.textInput}
-                value={editingStore?.workingHours.open || ""}
+                value={editingStore?.workingHours}
                 onChangeText={(text) =>
                   setEditingStore((prev) =>
                     prev
                       ? {
                           ...prev,
-                          workingHours: { ...prev.workingHours, open: text },
+                          workingHours: text,
                         }
                       : null
                   )
                 }
                 placeholder="08:00"
-                textAlign="center"
-              />
-            </View>
-
-            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-              <Text style={styles.inputLabel}>ساعة الإغلاق</Text>
-              <TextInput
-                style={styles.textInput}
-                value={editingStore?.workingHours.close || ""}
-                onChangeText={(text) =>
-                  setEditingStore((prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          workingHours: { ...prev.workingHours, close: text },
-                        }
-                      : null
-                  )
-                }
-                placeholder="18:00"
                 textAlign="center"
               />
             </View>

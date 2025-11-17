@@ -21,6 +21,7 @@ interface StoreFormData {
   category: string;
   licenseNumber: string;
   licenseImage: string;
+  identityImage: string;
   workingHours: string;
 }
 
@@ -39,6 +40,7 @@ export default function AddStoreScreen() {
     category: "متجر مستلزمات حيوانات",
     licenseNumber: "STORE-2025-98765",
     licenseImage: "https://example.com/store-license.jpg",
+    identityImage: "https://bytari.com/media/identity-image.png",
     workingHours: "من السبت إلى الخميس: 10:00 صباحًا - 10:00 مساءً",
   });
 
@@ -76,6 +78,7 @@ export default function AddStoreScreen() {
         category: formData.category,
         licenseNumber: formData.licenseNumber,
         licenseImage: formData.licenseImage,
+        identityImage: formData.identityImage,
         workingHours: formData.workingHours,
       };
 
@@ -100,7 +103,7 @@ export default function AddStoreScreen() {
     }
   };
 
-  const handleImageUpload = async () => {
+  const handleImageUpload = async (type: "identity" | " license") => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
@@ -118,7 +121,7 @@ export default function AddStoreScreen() {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setFormData((prev) => ({
           ...prev,
-          licenseImage: result.assets[0].uri,
+          ...(type === "identity" ? { identityImage: result.assets[0].uri } : { licenseImage: result.assets[0].uri }),
         }));
         showToast({ type: "success", message: "تم رفع الصورة بنجاح" });
       }
@@ -258,11 +261,20 @@ export default function AddStoreScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>صورة الترخيص *</Text>
-              <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
+              <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload(" license")}>
                 <Upload size={24} color={COLORS.primary} />
                 <Text style={styles.uploadText}>{formData.licenseImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>
               </TouchableOpacity>
               {formData.licenseImage && <Image source={{ uri: formData.licenseImage }} style={styles.previewImage} />}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>صورة الترخيص *</Text>
+              <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("identity")}>
+                <Upload size={24} color={COLORS.primary} />
+                <Text style={styles.uploadText}>{formData.identityImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>
+              </TouchableOpacity>
+              {formData.identityImage && <Image source={{ uri: formData.identityImage }} style={styles.previewImage} />}
             </View>
           </View>
 

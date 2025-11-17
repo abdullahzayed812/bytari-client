@@ -9,6 +9,7 @@ import {
   Linking,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
@@ -50,6 +51,9 @@ export default function ClinicProfileScreen() {
 
   const clinic = (data as any)?.clinic;
 
+  const services = clinic?.services?.split("،");
+  const doctors = clinic?.doctors?.split("،");
+
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
@@ -71,32 +75,47 @@ export default function ClinicProfileScreen() {
     return stars;
   };
 
-  const handleCall = async () => {
-    if (!clinic?.phone) return;
-
-    try {
-      const phoneUrl = `tel:${clinic.phone}`;
-      const canOpen = await Linking.canOpenURL(phoneUrl);
-
-      if (canOpen) {
-        await Linking.openURL(phoneUrl);
-      } else {
-        Alert.alert("خطأ", "لا يمكن إجراء المكالمة من هذا الجهاز");
-      }
-    } catch (error) {
-      console.error("Error making call:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء محاولة الاتصال");
-    }
-  };
-
   const handleRatingSubmit = async (rating: number, comment: string) => {
     console.log("Rating submitted:", { rating, comment, clinicId: clinic?.id });
     // TODO: Implement API call to submit rating
     // await submitClinicRating(clinic.id, rating, comment);
   };
 
-  const services = clinic?.services?.split("،");
-  const doctors = clinic?.doctors?.split("،");
+  // Open external links
+  const handleOpenLink = async (url: string) => {
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("خطأ", "لا يمكن فتح الرابط");
+      }
+    } catch (error) {
+      console.error("Failed to open link:", error);
+    }
+  };
+
+  // Make phone call
+  const handleCall = async (phone: string) => {
+    const phoneUrl = `tel:${phone}`;
+    handleOpenLink(phoneUrl);
+  };
+
+  // Open WhatsApp chat
+  const handleWhatsApp = (phone: string) => {
+    const whatsappUrl = `https://wa.me/${phone}`;
+    handleOpenLink(whatsappUrl);
+  };
+
+  // Open in Maps
+  const handleOpenMaps = (address: string) => {
+    const query = encodeURIComponent(address);
+    const mapsUrl = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+    })!;
+    handleOpenLink(mapsUrl);
+  };
 
   // Loading state
   if (isLoading) {
@@ -188,45 +207,45 @@ export default function ClinicProfileScreen() {
             <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
 
             {clinic.address && (
-              <View style={styles.contactItem}>
+              <TouchableOpacity style={styles.contactItem} onPress={() => handleOpenMaps(clinic.address)}>
                 <MapPin size={20} color={COLORS.primary} />
                 <Text style={styles.contactText}>{clinic.address}</Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {clinic.phone && (
-              <View style={styles.contactItem}>
+              <TouchableOpacity style={styles.contactItem} onPress={() => handleCall(clinic.phone)}>
                 <Phone size={20} color={COLORS.primary} />
                 <Text style={styles.contactText}>{clinic.phone}</Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {clinic.website && (
-              <View style={styles.contactItem}>
+              <TouchableOpacity style={styles.contactItem} onPress={() => handleOpenLink(clinic.website)}>
                 <Earth size={20} color={COLORS.primary} />
                 <Text style={styles.contactText}>{clinic.website}</Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {clinic.facebook && (
-              <View style={styles.contactItem}>
+              <TouchableOpacity style={styles.contactItem} onPress={() => handleOpenLink(clinic.facebook)}>
                 <Facebook size={20} color={COLORS.primary} />
                 <Text style={styles.contactText}>{clinic.facebook}</Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {clinic.instagram && (
-              <View style={styles.contactItem}>
+              <TouchableOpacity style={styles.contactItem} onPress={() => handleOpenLink(clinic.instagram)}>
                 <Instagram size={20} color={COLORS.primary} />
                 <Text style={styles.contactText}>{clinic.instagram}</Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {clinic.whatsapp && (
-              <View style={styles.contactItem}>
+              <TouchableOpacity style={styles.contactItem} onPress={() => handleWhatsApp(clinic.whatsapp)}>
                 <Image style={{ width: 20, height: 20 }} source={require("../assets/whatsapp.png")} />
                 <Text style={styles.contactText}>{clinic.whatsapp}</Text>
-              </View>
+              </TouchableOpacity>
             )}
 
             {clinic.workingHours && (

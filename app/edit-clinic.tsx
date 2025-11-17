@@ -1,37 +1,126 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Stack, useRouter, useLocalSearchParams } from "expo-router";
+import { ArrowLeft, Save, Upload } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
-import { ArrowLeft, Save, Upload } from 'lucide-react-native';
 import Button from "../components/Button";
+import { trpc } from "../lib/trpc";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToastContext } from "@/providers/ToastProvider";
 
 export default function EditClinicScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { showToast } = useToastContext();
   const { id } = useLocalSearchParams();
-  
-  const [formData, setFormData] = useState({
-    name: 'عيادة الرحمة البيطرية',
-    address: 'شارع الملك فهد، الرياض',
-    phone: '+966501234567',
-    email: 'info@rahma-clinic.com',
-    image: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
-    description: 'عيادة بيطرية متخصصة في علاج الحيوانات الأليفة'
+  const clinicId = Number(id);
+
+  // ============= TRPC HOOKS =============
+  const clinicQuery = useQuery({
+    ...trpc.clinics.getById.queryOptions({ clinicId: Number(clinicId) }),
+    enabled: !!clinicId,
   });
 
+  const updateClinic = useMutation(trpc.clinics.updateClinic.mutationOptions());
+
+  // ============= FORM STATE =============
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    description: "",
+    workingHours: "",
+    services: "",
+    doctors: "",
+    facebook: "",
+    instagram: "",
+    whatsapp: "",
+    website: "",
+    images: [],
+  });
+
+  // Load clinic data when fetched
+  useEffect(() => {
+    if (clinicQuery.data?.clinic) {
+      const c = clinicQuery.data.clinic;
+
+      setFormData({
+        name: c.name || "",
+        address: c.address || "",
+        phone: c.phone || "",
+        email: c.email || "",
+        description: c.description || "",
+        workingHours: c.workingHours || "",
+        services: c.services || "",
+        doctors: c.doctors || "",
+        facebook: c.facebook || "",
+        instagram: c.instagram || "",
+        whatsapp: c.whatsapp || "",
+        website: c.website || "",
+        images: c.images ? JSON.parse(JSON.stringify(c.images)) : [],
+      });
+    }
+  }, [clinicQuery.data]);
+
+  // ============= SAVE HANDLER =============
   const handleSave = () => {
-    Alert.alert('نجح', 'تم تحديث العيادة بنجاح');
-    router.back();
+    if (!formData.name || !formData.phone || !formData.address) {
+      showToast({
+        type: "error",
+        message: "يرجى ملء الحقول المطلوبة: الاسم، الهاتف، العنوان",
+      });
+      return;
+    }
+
+    updateClinic.mutate(
+      {
+        clinicId,
+        ...formData,
+      },
+      {
+        onSuccess: (data) => {
+          showToast({
+            type: "success",
+            message: data?.message || "تم تحديث بيانات العيادة بنجاح",
+          });
+          queryClient.invalidateQueries(trpc.clinics.getById.queryKey);
+          router.back();
+        },
+        onError: (error) => {
+          showToast({
+            type: "error",
+            message: error.message || "حدث خطأ أثناء تحديث العيادة",
+          });
+        },
+      }
+    );
   };
 
+  // ============= LOADING VIEW =============
+  if (clinicQuery.isLoading) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text style={{ fontSize: 18 }}>جار تحميل بيانات العيادة...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (clinicQuery.isError) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text style={{ fontSize: 18, color: "red" }}>خطأ في تحميل بيانات العيادة</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // ====================== UI ======================
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'تعديل العيادة',
-          headerStyle: { backgroundColor: COLORS.white },
-          headerTintColor: COLORS.black,
-          headerTitleStyle: { fontWeight: 'bold' },
+          title: "تعديل العيادة",
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -39,75 +128,39 @@ export default function EditClinicScreen() {
           ),
         }}
       />
-      
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+
+      <ScrollView style={styles.content}>
         <View style={styles.form}>
+          {/* Image */}
           <View style={styles.imageSection}>
-            <Image source={{ uri: formData.image }} style={styles.clinicImage} />
+            <Image
+              source={{
+                uri: formData.images?.[0] || "https://via.placeholder.com/150?text=Clinic",
+              }}
+              style={styles.clinicImage}
+            />
             <TouchableOpacity style={styles.uploadButton}>
               <Upload size={16} color={COLORS.white} />
               <Text style={styles.uploadButtonText}>تغيير الصورة</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>اسم العيادة</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.name}
-              onChangeText={(text) => setFormData({...formData, name: text})}
-              placeholder="أدخل اسم العيادة"
-              textAlign="right"
-            />
-          </View>
+          {/* Input Builder */}
+          {renderInput("اسم العيادة", "name")}
+          {renderInput("العنوان", "address")}
+          {renderInput("رقم الهاتف", "phone", "phone-pad")}
+          {renderInput("البريد الإلكتروني", "email", "email-address")}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>العنوان</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.address}
-              onChangeText={(text) => setFormData({...formData, address: text})}
-              placeholder="أدخل عنوان العيادة"
-              textAlign="right"
-            />
-          </View>
+          {renderInput("الوصف", "description", "default", true)}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>رقم الهاتف</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.phone}
-              onChangeText={(text) => setFormData({...formData, phone: text})}
-              placeholder="أدخل رقم الهاتف"
-              textAlign="right"
-              keyboardType="phone-pad"
-            />
-          </View>
+          {renderInput("ساعات العمل", "workingHours")}
+          {renderInput("الخدمات", "services")}
+          {renderInput("الأطباء", "doctors")}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>البريد الإلكتروني</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.email}
-              onChangeText={(text) => setFormData({...formData, email: text})}
-              placeholder="أدخل البريد الإلكتروني"
-              textAlign="right"
-              keyboardType="email-address"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>الوصف</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.description}
-              onChangeText={(text) => setFormData({...formData, description: text})}
-              placeholder="أدخل وصف العيادة"
-              textAlign="right"
-              multiline
-              numberOfLines={4}
-            />
-          </View>
+          {renderInput("فيسبوك", "facebook")}
+          {renderInput("إنستغرام", "instagram")}
+          {renderInput("واتساب", "whatsapp")}
+          {renderInput("الموقع الإلكتروني", "website")}
         </View>
       </ScrollView>
 
@@ -122,19 +175,39 @@ export default function EditClinicScreen() {
       </View>
     </SafeAreaView>
   );
+
+  // Helper: Render Input Box
+  function renderInput(label, key, keyboardType = "default", multiline = false) {
+    return (
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>{label}</Text>
+        <TextInput
+          style={[styles.input, multiline && styles.textArea]}
+          value={String(formData[key] ?? "")}
+          onChangeText={(text) => setFormData((prev) => ({ ...prev, [key]: text }))}
+          textAlign="right"
+          placeholder={`أدخل ${label}`}
+          keyboardType={keyboardType}
+          multiline={multiline}
+        />
+      </View>
+    );
+  }
 }
 
+// ====================== STYLES ======================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  backButton: {
-    padding: 8,
-  },
-  content: {
+  center: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
+  backButton: { padding: 8 },
+  content: { flex: 1 },
   form: {
     padding: 20,
     backgroundColor: COLORS.white,
@@ -142,7 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   imageSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   clinicImage: {
@@ -152,47 +225,34 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
     gap: 6,
   },
-  uploadButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
+  uploadButtonText: { color: COLORS.white, fontWeight: "600" },
+  inputGroup: { marginBottom: 18 },
   label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.black,
-    textAlign: 'right',
-    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: "bold",
+    marginBottom: 6,
+    textAlign: "right",
   },
   input: {
     borderWidth: 1,
     borderColor: COLORS.lightGray,
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: COLORS.black,
+    padding: 12,
+    fontSize: 15,
     backgroundColor: COLORS.white,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
+  textArea: { height: 100, textAlignVertical: "top" },
   footer: {
     padding: 20,
-    backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
+    backgroundColor: COLORS.white,
   },
 });

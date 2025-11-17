@@ -266,26 +266,33 @@ export default function WarehouseManagementScreen() {
             <Text style={styles.actionButtonText}>عرض</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => handleEditProduct(product)}>
-            <Edit size={16} color={COLORS.white} />
-            <Text style={styles.actionButtonText}>تعديل</Text>
-          </TouchableOpacity>
+          {isOwner === "true" || canEdit === "true" ? (
+            <>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.editButton]}
+                onPress={() => handleEditProduct(product)}
+              >
+                <Edit size={16} color={COLORS.white} />
+                <Text style={styles.actionButtonText}>تعديل</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, product.inStock ? styles.hideButton : styles.showButton]}
-            onPress={() => handleToggleVisibility(product)}
-          >
-            {product.inStock ? <EyeOff size={16} color={COLORS.white} /> : <Eye size={16} color={COLORS.white} />}
-            <Text style={styles.actionButtonText}>{product.inStock ? "إخفاء" : "إظهار"}</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, product.inStock ? styles.hideButton : styles.showButton]}
+                onPress={() => handleToggleVisibility(product)}
+              >
+                {product.inStock ? <EyeOff size={16} color={COLORS.white} /> : <Eye size={16} color={COLORS.white} />}
+                <Text style={styles.actionButtonText}>{product.inStock ? "إخفاء" : "إظهار"}</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={() => handleDeleteProduct(product)}
-          >
-            <Trash2 size={16} color={COLORS.white} />
-            <Text style={styles.actionButtonText}>حذف</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.deleteButton]}
+                onPress={() => handleDeleteProduct(product)}
+              >
+                <Trash2 size={16} color={COLORS.white} />
+                <Text style={styles.actionButtonText}>حذف</Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
         </View>
       </View>
     );

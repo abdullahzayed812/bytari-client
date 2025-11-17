@@ -1,4 +1,14 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import React, { useRef, useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
@@ -21,12 +31,15 @@ import {
   AlertCircle,
   Crown,
   Briefcase,
+  RefreshCw,
+  Clock,
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function PetsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { t } = useI18n();
   const { userMode, user, hasAdminAccess, isSuperAdmin, isModerator } = useApp();
   const flatListRef = useRef<FlatList>(null);
@@ -69,14 +82,35 @@ export default function PetsScreen() {
     };
   }, [allUserStoresQuery.data]);
 
+  // Get items that need renewal
+  const itemsNeedingRenewal = useMemo(() => {
+    const items: Array<{ type: "clinic" | "store"; data: any }> = [];
+
+    ownedClinics.forEach((clinic: any) => {
+      if (clinic.needsRenewal && clinic.daysRemaining !== null && clinic.daysRemaining < 30) {
+        items.push({ type: "clinic", data: clinic });
+      }
+    });
+
+    ownedStores.forEach((store: any) => {
+      if (store.needsRenewal && store.daysRemaining !== null && store.daysRemaining < 30) {
+        items.push({ type: "store", data: store });
+      }
+    });
+
+    return items;
+  }, [ownedClinics, ownedStores]);
+
+  // Renewal mutation (you'll need to add this to your tRPC router)
+  const requestClinicRenewalMutation = useMutation(trpc.clinics.settings.requestRenewal.mutationOptions());
+  const requestStoreRenewalMutation = useMutation(trpc.stores.settings.requestRenewal.mutationOptions());
+
   // Scroll to top when tab is focused
   useFocusEffect(
     React.useCallback(() => {
       flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
     }, [])
   );
-
-  console.log({ ownedClinics });
 
   // Get user pets or admin view
   const displayPets = useMemo(() => {
@@ -163,194 +197,406 @@ export default function PetsScreen() {
     router.push("/add-pet");
   };
 
-  // Render clinic card component
-  const renderClinicCard = (clinic: any, isOwned: boolean) => (
-    <TouchableOpacity
-      key={clinic.id}
-      style={styles.clinicCard}
-      onPress={() =>
-        router.push({
-          pathname: "/clinic-dashboard",
-          params: { clinicId: clinic.id },
-        })
+  const handleRenewSubscription = (type: "clinic" | "store", id: number, hasRenewal: boolean) => {
+    if (hasRenewal) {
+      Alert.alert("طلب قيد المراجعة", "يوجد طلب تجديد قيد المراجعة بالفعل. سيتم إشعارك عند الموافقة عليه.");
+      return;
+    }
+
+    const resourceType = type === "clinic" ? "العيادة" : "المذخر";
+
+    Alert.alert(
+      "تأكيد التجديد",
+      `هل تريد إرسال طلب تجديد اشتراك ${resourceType} لمدة سنة إضافية؟\n\nسيتم مراجعة الطلب من قبل الإدارة.`,
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "تأكيد",
+          onPress: async () => {
+            try {
+              if (type === "clinic") {
+                requestClinicRenewalMutation.mutate({ clinicId: Number(id) } as any, {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey);
+                    Alert.alert(
+                      "تم بنجاح",
+                      "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة."
+                    );
+                  },
+                  onError: (error) => {
+                    Alert.alert("خطأ", error.message);
+                  },
+                });
+              } else {
+                requestStoreRenewalMutation.mutate({ storeId: Number(id) } as any, {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
+                    Alert.alert(
+                      "تم بنجاح",
+                      "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة."
+                    );
+                  },
+                  onError: (error) => {
+                    Alert.alert("خطأ", error.message);
+                  },
+                });
+              }
+
+              Alert.alert(
+                "تم بنجاح",
+                "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.",
+                [
+                  {
+                    text: "حسناً",
+                    onPress: () => {
+                      // Refresh data
+                      if (type === "clinic") {
+                        allUserClinicsQuery.refetch();
+                      } else {
+                        allUserStoresQuery.refetch();
+                      }
+                    },
+                  },
+                ]
+              );
+            } catch (error: any) {
+              Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الطلب");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Render subscription renewal card
+  const renderSubscriptionCard = (item: { type: "clinic" | "store"; data: any }) => {
+    const { type, data } = item;
+    const isClinic = type === "clinic";
+    const resourceName = isClinic ? data.name : data.name;
+    const startDate = data.activationStartDate ? new Date(data.activationStartDate) : null;
+    const endDate = data.activationEndDate ? new Date(data.activationEndDate) : null;
+    const daysRemaining = data.daysRemaining || 0;
+    const needsRenewal = data.needsRenewal || false;
+    const reviewingRenewalRequest = data.reviewingRenewalRequest || false;
+    const isExpired = daysRemaining < 1;
+
+    const getStatusInfo = () => {
+      if (reviewingRenewalRequest) {
+        return { text: "قيد المراجعة", color: COLORS.warning };
       }
-      activeOpacity={0.8}
-    >
-      {/* Ownership Badge */}
-      <View style={[styles.ownershipBadge, isOwned ? styles.ownerBadge : styles.staffBadge]}>
-        {isOwned ? (
-          <>
-            <Crown size={12} color={COLORS.white} />
-            <Text style={styles.ownershipBadgeText}>مالك</Text>
-          </>
-        ) : (
-          <>
-            <Briefcase size={12} color={COLORS.white} />
-            <Text style={styles.ownershipBadgeText}>طبيب</Text>
-          </>
-        )}
-      </View>
+      if (isExpired) {
+        return { text: "منتهي", color: COLORS.error };
+      }
+      if (daysRemaining < 7) {
+        return { text: "عاجل", color: COLORS.error };
+      }
+      if (daysRemaining < 30) {
+        return { text: "قريب الانتهاء", color: COLORS.warning };
+      }
+      return { text: "نشط", color: COLORS.success };
+    };
 
-      <Image
-        source={{
-          uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-        }}
-        style={styles.clinicImage}
-      />
-      <View style={styles.clinicInfo}>
-        <View style={styles.clinicHeader}>
-          <Text style={styles.clinicName}>{clinic.name}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
-            <Text style={styles.statusText}>مفعل</Text>
+    const statusInfo = getStatusInfo();
+    const isLoading =
+      type === "clinic" ? requestClinicRenewalMutation.isPending : requestStoreRenewalMutation.isPending;
+
+    return (
+      <View key={`${type}-${data.id}`} style={styles.subscriptionCard}>
+        <View style={styles.subscriptionHeader}>
+          <View style={styles.subscriptionIconContainer}>
+            {isClinic ? <Stethoscope size={20} color={COLORS.primary} /> : <Package size={20} color={COLORS.primary} />}
           </View>
-        </View>
-
-        {/* Show role for assigned clinics */}
-        {!isOwned && clinic.role && (
-          <View style={styles.roleContainer}>
-            <Text style={styles.roleLabel}>الصلاحية:</Text>
-            <Text style={styles.roleValue}>{getRoleLabel(clinic.role)}</Text>
-          </View>
-        )}
-
-        <View style={styles.clinicInfoRow}>
-          <MapPin size={14} color={COLORS.darkGray} />
-          <Text style={styles.clinicInfoText}>{clinic.address}</Text>
-        </View>
-        <View style={styles.clinicInfoRow}>
-          <Phone size={14} color={COLORS.darkGray} />
-          <Text style={styles.clinicInfoText}>{clinic.phone}</Text>
-        </View>
-
-        {!isOwned && clinic.assignedAt && (
-          <View style={styles.clinicInfoRow}>
-            <Calendar size={14} color={COLORS.primary} />
-            <Text style={styles.clinicInfoText}>
-              تم التعيين: {new Date(clinic.assignedAt).toLocaleDateString("ar-SA")}
+          <View style={styles.subscriptionHeaderText}>
+            <Text style={styles.subscriptionTitle}>{isClinic ? "اشتراك العيادة" : "اشتراك المذخر"}</Text>
+            <Text style={styles.subscriptionResourceName} numberOfLines={1}>
+              {resourceName}
             </Text>
           </View>
-        )}
+        </View>
+
+        <View style={styles.subscriptionContent}>
+          <View style={[styles.subscriptionBadge, { backgroundColor: statusInfo.color }]}>
+            <Text style={styles.subscriptionBadgeText}>{statusInfo.text}</Text>
+          </View>
+
+          <View style={styles.subscriptionDates}>
+            {startDate && (
+              <View style={styles.dateItem}>
+                <Calendar size={16} color={COLORS.darkGray} />
+                <Text style={styles.dateLabel}>تاريخ الانتهاء:</Text>
+                <Text style={styles.dateValue}>{startDate.toLocaleDateString("ar-EG")}</Text>
+              </View>
+            )}
+            {endDate && (
+              <View style={styles.dateItem}>
+                <Calendar size={16} color={COLORS.darkGray} />
+                <Text style={styles.dateLabel}>تاريخ الانتهاء:</Text>
+                <Text style={styles.dateValue}>{endDate.toLocaleDateString("ar-EG")}</Text>
+              </View>
+            )}
+
+            <View style={styles.dateItem}>
+              <Clock size={16} color={COLORS.darkGray} />
+              <Text style={styles.dateLabel}>الأيام المتبقية:</Text>
+              <Text
+                style={[
+                  styles.dateValue,
+                  {
+                    color: daysRemaining < 7 ? COLORS.error : daysRemaining < 30 ? COLORS.warning : COLORS.success,
+                  },
+                ]}
+              >
+                {daysRemaining} يوم
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.subscriptionActions}>
+            <TouchableOpacity
+              style={[styles.renewButton, (isLoading || reviewingRenewalRequest) && { opacity: 0.6 }]}
+              onPress={() => handleRenewSubscription(type, data.id, reviewingRenewalRequest)}
+              disabled={isLoading || reviewingRenewalRequest}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color={COLORS.white} />
+              ) : (
+                <>
+                  <RefreshCw size={16} color={COLORS.white} />
+                  <Text style={styles.renewButtonText}>
+                    {reviewingRenewalRequest ? "قيد المراجعة" : "تجديد الاشتراك"}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {reviewingRenewalRequest && (
+            <View style={styles.pendingRenewalBanner}>
+              <View style={styles.pendingRenewalIcon}>
+                <Clock size={16} color={COLORS.warning} />
+              </View>
+              <Text style={styles.pendingRenewalText}>يوجد طلب تجديد قيد المراجعة</Text>
+            </View>
+          )}
+
+          {isExpired && !needsRenewal && (
+            <View style={styles.expiredBanner}>
+              <View style={styles.expiredIcon}>
+                <AlertCircle size={16} color={COLORS.error} />
+              </View>
+              <Text style={styles.expiredText}>
+                الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : "المذخر"}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
-      <View style={styles.clinicStats}>
-        <View style={styles.clinicStat}>
-          <Users size={16} color={COLORS.primary} />
-          <Text style={styles.clinicStatValue}>85</Text>
-          <Text style={styles.clinicStatLabel}>مريض</Text>
+    );
+  };
+
+  // Render clinic card component
+  const renderClinicCard = (clinic: any, isOwned: boolean) => {
+    // If clinic needs renewal, show subscription card instead
+    if (isOwned && clinic.needsRenewal) {
+      return renderSubscriptionCard({ type: "clinic", data: clinic });
+    }
+
+    return (
+      <TouchableOpacity
+        key={clinic.id}
+        style={styles.clinicCard}
+        onPress={() =>
+          router.push({
+            pathname: "/clinic-dashboard",
+            params: { clinicId: clinic.id },
+          })
+        }
+        activeOpacity={0.8}
+      >
+        {/* Ownership Badge */}
+        <View style={[styles.ownershipBadge, isOwned ? styles.ownerBadge : styles.staffBadge]}>
+          {isOwned ? (
+            <>
+              <Crown size={12} color={COLORS.white} />
+              <Text style={styles.ownershipBadgeText}>مالك</Text>
+            </>
+          ) : (
+            <>
+              <Briefcase size={12} color={COLORS.white} />
+              <Text style={styles.ownershipBadgeText}>طبيب</Text>
+            </>
+          )}
         </View>
-        <View style={styles.clinicStat}>
-          <Activity size={16} color={COLORS.success} />
-          <Text style={styles.clinicStatValue}>18</Text>
-          <Text style={styles.clinicStatLabel}>نشط</Text>
+
+        <Image
+          source={{
+            uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
+          }}
+          style={styles.clinicImage}
+        />
+        <View style={styles.clinicInfo}>
+          <View style={styles.clinicHeader}>
+            <Text style={styles.clinicName}>{clinic.name}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
+              <Text style={styles.statusText}>مفعل</Text>
+            </View>
+          </View>
+
+          {/* Show role for assigned clinics */}
+          {!isOwned && clinic.role && (
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>الصلاحية:</Text>
+              <Text style={styles.roleValue}>{getRoleLabel(clinic.role)}</Text>
+            </View>
+          )}
+
+          <View style={styles.clinicInfoRow}>
+            <MapPin size={14} color={COLORS.darkGray} />
+            <Text style={styles.clinicInfoText}>{clinic.address}</Text>
+          </View>
+          <View style={styles.clinicInfoRow}>
+            <Phone size={14} color={COLORS.darkGray} />
+            <Text style={styles.clinicInfoText}>{clinic.phone}</Text>
+          </View>
+
+          {!isOwned && clinic.assignedAt && (
+            <View style={styles.clinicInfoRow}>
+              <Calendar size={14} color={COLORS.primary} />
+              <Text style={styles.clinicInfoText}>
+                تم التعيين: {new Date(clinic.assignedAt).toLocaleDateString("ar-SA")}
+              </Text>
+            </View>
+          )}
         </View>
-        <View style={styles.clinicStat}>
-          <CheckCircle size={16} color={COLORS.primary} />
-          <Text style={styles.clinicStatValue}>256</Text>
-          <Text style={styles.clinicStatLabel}>مكتمل</Text>
+        <View style={styles.clinicStats}>
+          <View style={styles.clinicStat}>
+            <Users size={16} color={COLORS.primary} />
+            <Text style={styles.clinicStatValue}>85</Text>
+            <Text style={styles.clinicStatLabel}>مريض</Text>
+          </View>
+          <View style={styles.clinicStat}>
+            <Activity size={16} color={COLORS.success} />
+            <Text style={styles.clinicStatValue}>18</Text>
+            <Text style={styles.clinicStatLabel}>نشط</Text>
+          </View>
+          <View style={styles.clinicStat}>
+            <CheckCircle size={16} color={COLORS.primary} />
+            <Text style={styles.clinicStatValue}>256</Text>
+            <Text style={styles.clinicStatLabel}>مكتمل</Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   // Render store card component
-  const renderStoreCard = (store: any, isOwned: boolean) => (
-    <TouchableOpacity
-      key={store.id}
-      style={styles.warehouseCard}
-      onPress={() =>
-        router.push({
-          pathname: "/warehouse-management",
-          params: {
-            isOwner: store.isOwned,
-            canEdit:
-              store?.role === "view_edit_inventory" || store?.role === "all" || store?.isOwned ? "true" : "false",
-          },
-        })
-      }
-      activeOpacity={0.8}
-    >
-      {/* Ownership Badge */}
-      <View style={[styles.ownershipBadge, isOwned ? styles.ownerBadge : styles.staffBadge]}>
-        {isOwned ? (
-          <>
-            <Crown size={12} color={COLORS.white} />
-            <Text style={styles.ownershipBadgeText}>مالك</Text>
-          </>
-        ) : (
-          <>
-            <Briefcase size={12} color={COLORS.white} />
-            <Text style={styles.ownershipBadgeText}>موظف</Text>
-          </>
-        )}
-      </View>
+  const renderStoreCard = (store: any, isOwned: boolean) => {
+    // If store needs renewal, show subscription card instead
+    if (isOwned && store.needsRenewal) {
+      return renderSubscriptionCard({ type: "store", data: store });
+    }
 
-      <Image
-        source={{
-          uri: store.logo || store.bannerImage || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
-        }}
-        style={styles.warehouseImage}
-      />
-      <View style={styles.warehouseInfo}>
-        <View style={styles.warehouseHeader}>
-          <Text style={styles.warehouseName}>{store.name}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
-            <Text style={styles.statusText}>مفعل</Text>
+    return (
+      <TouchableOpacity
+        key={store.id}
+        style={styles.warehouseCard}
+        onPress={() =>
+          router.push({
+            pathname: "/warehouse-management",
+            params: {
+              isOwner: store.isOwned,
+              canEdit:
+                store?.role === "view_edit_inventory" || store?.role === "all" || store?.isOwned ? "true" : "false",
+            },
+          })
+        }
+        activeOpacity={0.8}
+      >
+        {/* Ownership Badge */}
+        <View style={[styles.ownershipBadge, isOwned ? styles.ownerBadge : styles.staffBadge]}>
+          {isOwned ? (
+            <>
+              <Crown size={12} color={COLORS.white} />
+              <Text style={styles.ownershipBadgeText}>مالك</Text>
+            </>
+          ) : (
+            <>
+              <Briefcase size={12} color={COLORS.white} />
+              <Text style={styles.ownershipBadgeText}>موظف</Text>
+            </>
+          )}
+        </View>
+
+        <Image
+          source={{
+            uri:
+              store.logo || store.bannerImage || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
+          }}
+          style={styles.warehouseImage}
+        />
+        <View style={styles.warehouseInfo}>
+          <View style={styles.warehouseHeader}>
+            <Text style={styles.warehouseName}>{store.name}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: COLORS.success }]}>
+              <Text style={styles.statusText}>مفعل</Text>
+            </View>
           </View>
-        </View>
 
-        {/* Show role for assigned stores */}
-        {!isOwned && store.role && (
-          <View style={styles.roleContainer}>
-            <Text style={styles.roleLabel}>الصلاحية:</Text>
-            <Text style={styles.roleValue}>{getStoreRoleLabel(store.role)}</Text>
-          </View>
-        )}
+          {/* Show role for assigned stores */}
+          {!isOwned && store.role && (
+            <View style={styles.roleContainer}>
+              <Text style={styles.roleLabel}>الصلاحية:</Text>
+              <Text style={styles.roleValue}>{getStoreRoleLabel(store.role)}</Text>
+            </View>
+          )}
 
-        <View style={styles.warehouseInfoRow}>
-          <MapPin size={14} color={COLORS.darkGray} />
-          <Text style={styles.warehouseInfoText}>{store.address}</Text>
-        </View>
-        <View style={styles.warehouseInfoRow}>
-          <Phone size={14} color={COLORS.darkGray} />
-          <Text style={styles.warehouseInfoText}>{store.phone}</Text>
-        </View>
-
-        {!isOwned && store.assignedAt && (
           <View style={styles.warehouseInfoRow}>
-            <Calendar size={14} color={COLORS.primary} />
-            <Text style={styles.warehouseInfoText}>
-              تم التعيين: {new Date(store.assignedAt).toLocaleDateString("ar-SA")}
-            </Text>
+            <MapPin size={14} color={COLORS.darkGray} />
+            <Text style={styles.warehouseInfoText}>{store.address}</Text>
           </View>
-        )}
-
-        {isOwned && store.activationEndDate && (
           <View style={styles.warehouseInfoRow}>
-            <Calendar size={14} color={COLORS.primary} />
-            <Text style={styles.warehouseInfoText}>
-              صالح حتى: {new Date(store.activationEndDate).toLocaleDateString("ar-SA")}
-            </Text>
+            <Phone size={14} color={COLORS.darkGray} />
+            <Text style={styles.warehouseInfoText}>{store.phone}</Text>
           </View>
-        )}
-      </View>
-      <View style={styles.warehouseStats}>
-        <View style={styles.warehouseStat}>
-          <Package size={16} color={COLORS.primary} />
-          <Text style={styles.warehouseStatValue}>{store.totalProducts || 45}</Text>
-          <Text style={styles.warehouseStatLabel}>منتج</Text>
+
+          {!isOwned && store.assignedAt && (
+            <View style={styles.warehouseInfoRow}>
+              <Calendar size={14} color={COLORS.primary} />
+              <Text style={styles.warehouseInfoText}>
+                تم التعيين: {new Date(store.assignedAt).toLocaleDateString("ar-SA")}
+              </Text>
+            </View>
+          )}
+
+          {isOwned && store.activationEndDate && (
+            <View style={styles.warehouseInfoRow}>
+              <Calendar size={14} color={COLORS.primary} />
+              <Text style={styles.warehouseInfoText}>
+                صالح حتى: {new Date(store.activationEndDate).toLocaleDateString("ar-SA")}
+              </Text>
+            </View>
+          )}
         </View>
-        <View style={styles.warehouseStat}>
-          <DollarSign size={16} color={COLORS.success} />
-          <Text style={styles.warehouseStatValue}>{store.totalSales || 1247}</Text>
-          <Text style={styles.warehouseStatLabel}>مبيعات</Text>
+        <View style={styles.warehouseStats}>
+          <View style={styles.warehouseStat}>
+            <Package size={16} color={COLORS.primary} />
+            <Text style={styles.warehouseStatValue}>{store.totalProducts || 45}</Text>
+            <Text style={styles.warehouseStatLabel}>منتج</Text>
+          </View>
+          <View style={styles.warehouseStat}>
+            <DollarSign size={16} color={COLORS.success} />
+            <Text style={styles.warehouseStatValue}>{store.totalSales || 1247}</Text>
+            <Text style={styles.warehouseStatLabel}>مبيعات</Text>
+          </View>
+          <View style={styles.warehouseStat}>
+            <Users size={16} color={COLORS.warning} />
+            <Text style={styles.warehouseStatValue}>{store.followers || 892}</Text>
+            <Text style={styles.warehouseStatLabel}>متابع</Text>
+          </View>
         </View>
-        <View style={styles.warehouseStat}>
-          <Users size={16} color={COLORS.warning} />
-          <Text style={styles.warehouseStatValue}>{store.followers || 892}</Text>
-          <Text style={styles.warehouseStatLabel}>متابع</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   // If user is veterinarian, show clinic interface
   if (userMode === "veterinarian") {
@@ -689,6 +935,26 @@ const styles = StyleSheet.create({
   },
   sectionContainer: {
     marginBottom: 24,
+  },
+  renewalSection: {
+    marginBottom: 24,
+  },
+  renewalSectionHeader: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+  },
+  renewalSectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.error,
+  },
+  renewalSectionDescription: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "right",
+    marginTop: 4,
   },
   poultryButton: {
     marginTop: 12,
@@ -1116,5 +1382,151 @@ const styles = StyleSheet.create({
   },
   storeButton: {
     backgroundColor: "#8B5CF6",
+  },
+
+  // Subscription Card Styles
+  subscriptionCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.error,
+  },
+  subscriptionHeader: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  subscriptionIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary + "20",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 12,
+  },
+  subscriptionHeaderText: {
+    flex: 1,
+  },
+  subscriptionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.darkGray,
+    marginBottom: 2,
+    textAlign: "right",
+  },
+  subscriptionResourceName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "right",
+  },
+  subscriptionContent: {
+    gap: 10,
+  },
+  subscriptionBadge: {
+    alignSelf: "flex-end",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  subscriptionBadgeText: {
+    color: COLORS.white,
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+  subscriptionDates: {
+    gap: 8,
+    backgroundColor: COLORS.gray,
+    padding: 12,
+    borderRadius: 8,
+  },
+  dateItem: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+  },
+  dateLabel: {
+    fontSize: 13,
+    color: COLORS.darkGray,
+    flex: 1,
+    textAlign: "right",
+  },
+  dateValue: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.black,
+  },
+  subscriptionActions: {
+    flexDirection: "row-reverse",
+    gap: 10,
+    marginTop: 4,
+  },
+  renewButton: {
+    backgroundColor: COLORS.success,
+    borderRadius: 8,
+    padding: 10,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  renewButtonText: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  pendingRenewalBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: "#FFF4E5",
+    padding: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  pendingRenewalIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.warning + "20",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pendingRenewalText: {
+    fontSize: 12,
+    color: COLORS.warning,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
+  },
+  expiredBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: "#FFEBEE",
+    padding: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  expiredIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.error + "20",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  expiredText: {
+    fontSize: 12,
+    color: COLORS.error,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
   },
 });

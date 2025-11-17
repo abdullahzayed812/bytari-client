@@ -1,43 +1,43 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { formatPrice } from "../constants/currency";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { Product } from "../types";
 import { mockProducts } from "../mocks/data";
-import Button from "../components/Button";
-import { ShoppingCart, Heart, Star, ArrowLeft, Phone, Share, Truck, Shield, RotateCcw } from 'lucide-react-native';
-import { useLocalSearchParams, Stack, router } from 'expo-router';
+import Button from "../components/Button 2";
+import { ShoppingCart, Heart, Star, ArrowLeft, Phone, Share, Truck, Shield, RotateCcw } from "lucide-react-native";
+import { useLocalSearchParams, Stack, router } from "expo-router";
 
 export default function ProductDetailsScreen() {
   const { productId } = useLocalSearchParams();
   const { t, isRTL } = useI18n();
-  const { addToCart, addToFavorites, removeFromFavorites, favorites } = useApp();
+  // const { addToCart, addToFavorites, removeFromFavorites, favorites } = useApp();
   const [quantity, setQuantity] = useState(1);
-  
-  const product = mockProducts.find(p => p.id === productId) || mockProducts[0];
-  const isFavorite = favorites.some(f => f.productId === product.id);
+
+  const product = mockProducts.find((p) => p.id === productId) || mockProducts[0];
+  // const isFavorite = favorites.some(f => f.productId === product.id);
 
   const handleAddToCart = () => {
-    addToCart({
-      productId: product.id,
-      quantity,
-      product,
-    });
-    Alert.alert('تم الإضافة', 'تم إضافة المنتج إلى السلة بنجاح');
+    // addToCart({
+    //   productId: product.id,
+    //   quantity,
+    //   product,
+    // });
+    Alert.alert("تم الإضافة", "تم إضافة المنتج إلى السلة بنجاح");
   };
 
   const handleToggleFavorite = () => {
-    if (isFavorite) {
-      removeFromFavorites(product.id);
-    } else {
-      addToFavorites({
-        productId: product.id,
-        product,
-        addedAt: new Date().toISOString(),
-      });
-    }
+    // if (isFavorite) {
+    //   // removeFromFavorites(product.id);
+    // } else {
+    //   // addToFavorites({
+    //   //   productId: product.id,
+    //   //   product,
+    //   //   addedAt: new Date().toISOString(),
+    //   // });
+    // }
   };
 
   const handleQuantityChange = (change: number) => {
@@ -48,40 +48,34 @@ export default function ProductDetailsScreen() {
   };
 
   const handleContactSeller = () => {
-    Alert.alert('اتصال بالبائع', 'سيتم الاتصال بالبائع قريباً');
+    Alert.alert("اتصال بالبائع", "سيتم الاتصال بالبائع قريباً");
   };
 
   const handleShare = () => {
-    Alert.alert('مشاركة المنتج', 'سيتم مشاركة المنتج قريباً');
+    Alert.alert("مشاركة المنتج", "سيتم مشاركة المنتج قريباً");
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: product.name,
           headerShown: true,
         }}
       />
-      
+
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Product Image */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: product.image }} style={styles.productImage} />
-          <TouchableOpacity 
-            style={styles.favoriteButton}
-            onPress={handleToggleFavorite}
-          >
-            <Heart 
-              size={24} 
-              color={isFavorite ? COLORS.red : COLORS.gray} 
-              fill={isFavorite ? COLORS.red : 'transparent'}
+          <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
+            <Heart
+              size={24}
+              // color={isFavorite ? COLORS.red : COLORS.gray}
+              // fill={isFavorite ? COLORS.red : 'transparent'}
             />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.shareButton}
-            onPress={handleShare}
-          >
+          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
             <Share size={20} color={COLORS.gray} />
           </TouchableOpacity>
         </View>
@@ -90,7 +84,7 @@ export default function ProductDetailsScreen() {
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{product.name}</Text>
           <Text style={styles.productCategory}>{product.category}</Text>
-          
+
           {/* Rating */}
           <View style={styles.ratingContainer}>
             <View style={styles.starsContainer}>
@@ -98,8 +92,8 @@ export default function ProductDetailsScreen() {
                 <Star
                   key={star}
                   size={16}
-                  color={star <= Math.floor(product.rating) ? '#FFD700' : COLORS.lightGray}
-                  fill={star <= Math.floor(product.rating) ? '#FFD700' : 'transparent'}
+                  color={star <= Math.floor(product.rating) ? "#FFD700" : COLORS.lightGray}
+                  fill={star <= Math.floor(product.rating) ? "#FFD700" : "transparent"}
                 />
               ))}
             </View>
@@ -120,7 +114,8 @@ export default function ProductDetailsScreen() {
           <View style={styles.descriptionContainer}>
             <Text style={styles.sectionTitle}>الوصف</Text>
             <Text style={styles.description}>
-              {product.description || 'منتج عالي الجودة مناسب لجميع أنواع الحيوانات الأليفة. يتميز بالجودة العالية والمواد الطبيعية الآمنة. مصنوع من أفضل المواد المتاحة لضمان صحة وسلامة حيوانك الأليف.'}
+              {product.description ||
+                "منتج عالي الجودة مناسب لجميع أنواع الحيوانات الأليفة. يتميز بالجودة العالية والمواد الطبيعية الآمنة. مصنوع من أفضل المواد المتاحة لضمان صحة وسلامة حيوانك الأليف."}
             </Text>
           </View>
 
@@ -147,17 +142,11 @@ export default function ProductDetailsScreen() {
           <View style={styles.quantityContainer}>
             <Text style={styles.sectionTitle}>الكمية</Text>
             <View style={styles.quantitySelector}>
-              <TouchableOpacity 
-                style={styles.quantityButton}
-                onPress={() => handleQuantityChange(-1)}
-              >
+              <TouchableOpacity style={styles.quantityButton} onPress={() => handleQuantityChange(-1)}>
                 <Text style={styles.quantityButtonText}>-</Text>
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
-              <TouchableOpacity 
-                style={styles.quantityButton}
-                onPress={() => handleQuantityChange(1)}
-              >
+              <TouchableOpacity style={styles.quantityButton} onPress={() => handleQuantityChange(1)}>
                 <Text style={styles.quantityButtonText}>+</Text>
               </TouchableOpacity>
             </View>
@@ -167,10 +156,7 @@ export default function ProductDetailsScreen() {
 
       {/* Bottom Actions */}
       <View style={styles.bottomActions}>
-        <TouchableOpacity 
-          style={styles.contactButton}
-          onPress={handleContactSeller}
-        >
+        <TouchableOpacity style={styles.contactButton} onPress={handleContactSeller}>
           <Phone size={20} color={COLORS.primary} />
         </TouchableOpacity>
         <Button
@@ -194,25 +180,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageContainer: {
-    position: 'relative',
+    position: "relative",
     height: 300,
     backgroundColor: COLORS.lightGray,
   },
   productImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   favoriteButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     right: 16,
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -220,15 +206,15 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   shareButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 16,
     left: 16,
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -240,24 +226,24 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
   },
   productCategory: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 12,
   },
   ratingContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 16,
   },
   starsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginLeft: 8,
   },
   ratingText: {
@@ -270,20 +256,20 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   priceContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 24,
   },
   currentPrice: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginLeft: 12,
   },
   originalPrice: {
     fontSize: 18,
     color: COLORS.darkGray,
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
     marginLeft: 8,
   },
   discountBadge: {
@@ -295,22 +281,22 @@ const styles = StyleSheet.create({
   discountText: {
     fontSize: 12,
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   descriptionContainer: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 12,
   },
   description: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
     lineHeight: 24,
   },
   featuresContainer: {
@@ -320,8 +306,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featureItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 8,
   },
   featureText: {
@@ -332,9 +318,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   quantitySelector: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    alignSelf: 'flex-end',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    alignSelf: "flex-end",
     backgroundColor: COLORS.lightGray,
     borderRadius: 8,
     padding: 4,
@@ -344,23 +330,23 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 6,
     backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   quantityButtonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
   },
   quantityText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginHorizontal: 20,
   },
   bottomActions: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     padding: 20,
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
@@ -374,8 +360,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderWidth: 2,
     borderColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   addToCartButton: {
     flex: 1,

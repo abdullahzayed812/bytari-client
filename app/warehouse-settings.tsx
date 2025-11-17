@@ -371,7 +371,13 @@ export default function StoreSettings() {
                     },
                   ]}
                 >
-                  <Text style={styles.subscriptionBadgeText}>{subscription.isActive ? "نشط" : "غير نشط"}</Text>
+                  <Text style={styles.subscriptionBadgeText}>
+                    {subscription.status === "expiring_soon"
+                      ? "قريب الانتهاء"
+                      : subscription.status_under_treatment === "active"
+                      ? "نشط"
+                      : "غير نشط"}
+                  </Text>
                 </View>
                 <Text style={styles.subscriptionPlan}>اشتراك المذخر المميز</Text>
 
@@ -379,7 +385,7 @@ export default function StoreSettings() {
                   {subscription.startDate && (
                     <View style={styles.dateItem}>
                       <Calendar size={16} color={COLORS.darkGray} />
-                      <Text style={styles.dateLabel}>تاريخ البداية:</Text>
+                      <Text style={styles.dateLabel}>تاريخ البدء:</Text>
                       <Text style={styles.dateValue}>
                         {new Date(subscription.startDate).toLocaleDateString("ar-EG")}
                       </Text>
