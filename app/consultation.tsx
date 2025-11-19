@@ -10,11 +10,12 @@ import { Camera, X, Send } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import Card from "../components/Card";
 import UserReplyForm from "../components/UserReplyForm";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const petTypes = ["dog", "cat", "rabbit", "bird", "other"];
 
 export default function ConsultationScreen() {
+  const queryClient = useQueryClient();
   const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function ConsultationScreen() {
         question: question,
         attachments: prescriptionFile ? JSON.stringify([{ uri: prescriptionFile, type: fileType }]) : undefined,
         priority: "normal" as const,
-      },
+      } as any,
       {
         onSuccess: (result) => {
           let message = result.message || "تم إرسال استشارتك بنجاح. سيتم الرد عليها قريباً.";
@@ -62,7 +63,7 @@ export default function ConsultationScreen() {
           setFileType(null);
           // Optionally, navigate away or refetch previous consultations
           router.replace("/(tabs)");
-          trpc.consultations.listForUser.invalidate();
+          queryClient.invalidateQueries(trpc.consultations.listForUser.queryKey);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الاستشارة");

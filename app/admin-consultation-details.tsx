@@ -5,12 +5,15 @@ import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { COLORS } from "@/constants/colors";
 import { trpc } from "@/lib/trpc";
 import AdminReplyForm from "@/components/AdminReplyForm";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApp } from "@/providers/AppProvider";
 
 type StatusFilter = "pending" | "assigned" | "answered" | "closed";
 
 export default function AdminConsultationDetailsScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user } = useApp();
   const { id } = useLocalSearchParams();
   const consultationId = typeof id === "string" ? parseInt(id) : 0;
 
@@ -156,10 +159,10 @@ export default function AdminConsultationDetailsScreen() {
                   })}
                 </Text>
               </View>
-              {consultation.petType && (
+              {consultation.category && (
                 <View style={styles.metaItem}>
                   <PawPrint size={16} color={COLORS.darkGray} />
-                  <Text style={styles.metaText}>{petTypeLabels[consultation.petType] || consultation.petType}</Text>
+                  <Text style={styles.metaText}>{petTypeLabels[consultation.category] || consultation.category}</Text>
                 </View>
               )}
             </View>
@@ -167,14 +170,14 @@ export default function AdminConsultationDetailsScreen() {
             <View style={styles.divider} />
 
             <Text style={styles.sectionTitle}>السؤال:</Text>
-            <Text style={styles.consultationContent}>{consultation.question}</Text>
-
-            {consultation.petAge && (
+            <Text style={styles.consultationContent}>{consultation.description}</Text>
+            {/* 
+            {consultation.category && (
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>عمر الحيوان:</Text>
-                <Text style={styles.infoValue}>{consultation.petAge}</Text>
+                <Text style={styles.infoValue}>{consultation.category}</Text>
               </View>
-            )}
+            )} */}
 
             {consultation.symptoms && (
               <View style={styles.infoRow}>
@@ -243,11 +246,19 @@ export default function AdminConsultationDetailsScreen() {
             </View>
           )}
 
-          {consultation.isConversationOpen && (
-            <AdminReplyForm type="consultation" itemId={consultation.id} moderatorId={1} onReplySuccess={refetch} />
+          {consultation.status !== "closed" && (
+            <AdminReplyForm
+              type="consultation"
+              itemId={consultation.id}
+              moderatorId={+user?.id!}
+              onReplySuccess={() => {
+                queryClient.invalidateQueries(trpc.consultations.getList.queryKey);
+                queryClient.invalidateQueries(trpc.consultations.getDetails.queryKey);
+              }}
+            />
           )}
 
-          {!consultation.isConversationOpen && (
+          {consultation.status === "closed" && (
             <View style={styles.closedCard}>
               <Text style={styles.closedText}>تم إغلاق المحادثة</Text>
             </View>

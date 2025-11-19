@@ -4,7 +4,7 @@ import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useRouter, Stack } from "expo-router";
 import { Send, Camera, X } from "lucide-react-native";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import * as ImagePicker from "expo-image-picker";
@@ -12,9 +12,10 @@ import * as ImagePicker from "expo-image-picker";
 const categories = ["عام", "تغذية", "سلوكيات", "أمراض جلدية", "تطعيمات", "أخرى"];
 
 export default function NewInquiryScreen() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const { isRTL } = useI18n();
   const { user } = useApp();
-  const router = useRouter();
   const [newInquiry, setNewInquiry] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("عام");
   const [prescriptionFile, setPrescriptionFile] = useState<string | null>(null);
@@ -66,7 +67,7 @@ export default function NewInquiryScreen() {
         category: selectedCategory,
         priority: "normal" as const,
         attachments: prescriptionFile ? JSON.stringify([{ uri: prescriptionFile, type: fileType }]) : undefined,
-      },
+      } as any,
       {
         onSuccess: (result) => {
           const message = result.message || "تم إرسال الاستفسار بنجاح. سيتم الرد عليه قريباً.";
@@ -78,8 +79,8 @@ export default function NewInquiryScreen() {
                 setSelectedCategory("عام");
                 setPrescriptionFile(null);
                 setFileType(null);
-                router.push("/vet-inquiries");
-                trpc.inquiries.listForUser.invalidate();
+                router.back();
+                queryClient.invalidateQueries(trpc.inquiries.listForUser.queryKey);
               },
             },
           ]);

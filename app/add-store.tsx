@@ -269,7 +269,7 @@ export default function AddStoreScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>صورة الترخيص *</Text>
+              <Text style={styles.label}>صورة الهوية *</Text>
               <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("identity")}>
                 <Upload size={24} color={COLORS.primary} />
                 <Text style={styles.uploadText}>{formData.identityImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>

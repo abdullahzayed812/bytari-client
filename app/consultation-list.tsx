@@ -1,12 +1,12 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import React from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight } from 'lucide-react-native';
-import { Stack } from 'expo-router';
+import { useRouter } from "expo-router";
+import { ArrowLeft, ArrowRight } from "lucide-react-native";
+import { Stack } from "expo-router";
 import Card from "../components/Card";
-import { trpc } from '../lib/trpc';
+import { trpc } from "../lib/trpc";
 
 export default function ConsultationsListScreen() {
   const { t, isRTL } = useI18n();
@@ -32,26 +32,19 @@ export default function ConsultationsListScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'استشاراتك السابقة',
+          title: "استشاراتك السابقة",
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black },
           headerLeft: () => (
-            <TouchableOpacity 
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              {isRTL ? (
-                <ArrowRight size={24} color={COLORS.black} />
-              ) : (
-                <ArrowLeft size={24} color={COLORS.black} />
-              )}
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
             </TouchableOpacity>
           ),
         }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {consultations.map((consultation) => (
           <Card
@@ -64,13 +57,13 @@ export default function ConsultationsListScreen() {
               // TODO: Navigate to consultation details
             }}
           >
-            <View style={[styles.statusContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <View style={[styles.statusContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <View
                 style={[
                   styles.statusIndicator,
-                  consultation.status === 'pending'
+                  consultation.status === "pending"
                     ? styles.statusPending
-                    : consultation.status === 'answered'
+                    : consultation.status === "answered"
                     ? styles.statusAnswered
                     : styles.statusClosed,
                 ]}
@@ -80,7 +73,7 @@ export default function ConsultationsListScreen() {
               </Text>
             </View>
             {consultation.answer && (
-              <Text style={[styles.answerText, { textAlign: isRTL ? 'right' : 'left' }]} numberOfLines={3}>
+              <Text style={[styles.answerText, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={3}>
                 {consultation.answer.text}
               </Text>
             )}
@@ -93,9 +86,9 @@ export default function ConsultationsListScreen() {
 
 const styles = StyleSheet.create({
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
   },
   container: {
@@ -113,7 +106,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   statusContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 8,
   },
   statusIndicator: {
@@ -138,7 +131,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: "#F3F4F6",
     padding: 12,
     borderRadius: 8,
   },

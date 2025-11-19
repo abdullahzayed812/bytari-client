@@ -14,11 +14,11 @@ import {
   ArrowLeft,
   Search,
   Filter,
-  MessageCircle,
+  FileText,
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle,
+  MessageCircle,
   Plus,
 } from "lucide-react-native";
 import { useRouter, Stack } from "expo-router";
@@ -28,61 +28,59 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 
 type StatusFilter = "all" | "pending" | "answered" | "closed";
-type UrgencyFilter = "all" | "low" | "medium" | "high" | "emergency";
 
-export default function UserConsultationsListScreen() {
+export default function UserInquiriesListScreen() {
   const router = useRouter();
   const { user } = useApp();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const { data, isLoading, refetch, isRefetching } = useQuery(
-    trpc.consultations.listForUser.queryOptions({
-      userId: user?.id,
-    })
+    trpc.inquiries.listForUser.queryOptions({ userId: user?.id })
   );
 
   const statusConfig = {
-    all: { label: "الكل", color: COLORS.darkGray, icon: MessageCircle },
+    all: { label: "الكل", color: COLORS.darkGray, icon: FileText },
     pending: { label: "قيد المراجعة", color: "#F59E0B", icon: Clock },
     answered: { label: "تم الرد", color: "#10B981", icon: CheckCircle },
     closed: { label: "مغلق", color: "#6B7280", icon: XCircle },
   };
 
-  const urgencyConfig = {
-    all: { label: "الكل", color: COLORS.darkGray },
-    low: { label: "منخفضة", color: "#6B7280" },
-    medium: { label: "متوسطة", color: "#3B82F6" },
-    high: { label: "عالية", color: "#F59E0B" },
-    emergency: { label: "طارئة", color: "#EF4444" },
-  };
+  const categories = [
+    { value: "all", label: "الكل" },
+    { value: "technical", label: "تقني" },
+    { value: "billing", label: "فواتير" },
+    { value: "general", label: "عام" },
+    { value: "account", label: "حساب" },
+    { value: "other", label: "أخرى" },
+  ];
 
   const handleBack = () => {
     router.back();
   };
 
-  const handleNewConsultation = () => {
-    router.push("/consultation");
+  const handleNewInquiry = () => {
+    router.push("/new-inquiry");
   };
 
-  const filteredConsultations = data?.consultations?.filter((consultation) => {
+  const filteredInquiries = data?.inquiries?.filter((inquiry) => {
     const matchesSearch =
-      consultation.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      consultation.description.toLowerCase().includes(searchQuery.toLowerCase());
+      inquiry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inquiry.content.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
   const getStatusCount = (status: StatusFilter) => {
-    if (!data?.consultations) return 0;
+    if (!data?.inquiries) return 0;
 
     if (status === "all") {
-      return data.consultations.length;
+      return data.inquiries.length;
     }
 
-    return data.consultations.filter((c) => c.status === status).length;
+    return data.inquiries.filter((c) => c.status === status).length;
   };
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -92,8 +90,8 @@ export default function UserConsultationsListScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={24} color={COLORS.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>استشاراتي</Text>
-          <TouchableOpacity onPress={handleNewConsultation} style={styles.addButton}>
+          <Text style={styles.headerTitle}>استفساراتي</Text>
+          <TouchableOpacity onPress={handleNewInquiry} style={styles.addButton}>
             <Plus size={24} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -104,18 +102,12 @@ export default function UserConsultationsListScreen() {
             <Search size={20} color={COLORS.darkGray} />
             <TextInput
               style={styles.searchInput}
-              placeholder="البحث في الاستشارات..."
+              placeholder="البحث في الاستفسارات..."
               placeholderTextColor={COLORS.lightGray}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
-          <TouchableOpacity
-            style={[styles.filterButton, showFilters && styles.filterButtonActive]}
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={20} color={showFilters ? COLORS.white : COLORS.primary} />
-          </TouchableOpacity>
         </View>
 
         {/* Status Filters */}
@@ -155,35 +147,30 @@ export default function UserConsultationsListScreen() {
           </ScrollView>
         </View>
 
-        {/* Urgency Filters (Collapsible) */}
+        {/* Category Filters */}
         <View>
-          {showFilters && (
-            <View style={styles.urgencyFiltersContainer}>
-              <Text style={styles.urgencyFiltersTitle}>مستوى الأهمية:</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.urgencyFiltersContent}
-              >
-                {(Object.keys(urgencyConfig) as UrgencyFilter[]).map((urgency) => {
-                  const config = urgencyConfig[urgency];
-                  const isActive = urgencyFilter === urgency;
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryFiltersContainer}
+            contentContainerStyle={styles.categoryFiltersContent}
+          >
+            {categories.map((category) => {
+              const isActive = selectedCategory === category.value;
 
-                  return (
-                    <TouchableOpacity
-                      key={urgency}
-                      style={[styles.urgencyFilterChip, isActive && { backgroundColor: config.color }]}
-                      onPress={() => setUrgencyFilter(urgency)}
-                    >
-                      <Text style={[styles.urgencyFilterText, { color: isActive ? COLORS.white : config.color }]}>
-                        {config.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          )}
+              return (
+                <TouchableOpacity
+                  key={category.value}
+                  style={[styles.categoryChip, isActive && styles.categoryChipActive]}
+                  onPress={() => setSelectedCategory(category.value)}
+                >
+                  <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
+                    {category.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* Content */}
@@ -195,19 +182,19 @@ export default function UserConsultationsListScreen() {
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={COLORS.primary} />
-              <Text style={styles.loadingText}>جاري تحميل الاستشارات...</Text>
+              <Text style={styles.loadingText}>جاري تحميل الاستفسارات...</Text>
             </View>
-          ) : filteredConsultations && filteredConsultations.length > 0 ? (
+          ) : filteredInquiries && filteredInquiries.length > 0 ? (
             <>
-              <Text style={styles.resultsCount}>{filteredConsultations.length} استشارة</Text>
-              {filteredConsultations.map((consultation) => (
+              <Text style={styles.resultsCount}>{filteredInquiries.length} استفسار</Text>
+              {filteredInquiries.map((inquiry) => (
                 <TouchableOpacity
-                  key={consultation.id}
-                  style={styles.consultationCard}
+                  key={inquiry.id}
+                  style={styles.inquiryCard}
                   onPress={() =>
                     router.push({
-                      pathname: "/consultation-details",
-                      params: { id: consultation.id },
+                      pathname: "/inquiry-details",
+                      params: { id: inquiry.id },
                     })
                   }
                 >
@@ -217,56 +204,56 @@ export default function UserConsultationsListScreen() {
                         style={[
                           styles.statusDot,
                           {
-                            backgroundColor:
-                              statusConfig[consultation.status as StatusFilter]?.color || COLORS.darkGray,
+                            backgroundColor: statusConfig[inquiry.status as StatusFilter]?.color || COLORS.darkGray,
                           },
                         ]}
                       />
                       <Text style={styles.statusText}>
-                        {statusConfig[consultation.status as StatusFilter]?.label || consultation.status}
+                        {statusConfig[inquiry.status as StatusFilter]?.label || inquiry.status}
                       </Text>
                     </View>
-                    {consultation.urgencyLevel && consultation.urgencyLevel !== "medium" && (
-                      <View
-                        style={[
-                          styles.urgencyBadge,
-                          {
-                            backgroundColor:
-                              urgencyConfig[consultation.urgencyLevel as UrgencyFilter]?.color || COLORS.darkGray,
-                          },
-                        ]}
-                      >
-                        <AlertCircle size={12} color={COLORS.white} />
-                        <Text style={styles.urgencyBadgeText}>
-                          {urgencyConfig[consultation.urgencyLevel as UrgencyFilter]?.label ||
-                            consultation.urgencyLevel}
+                    {inquiry.category && (
+                      <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryBadgeText}>
+                          {categories.find((c) => c.value === inquiry.category)?.label || inquiry.category}
                         </Text>
                       </View>
                     )}
                   </View>
 
-                  <Text style={styles.consultationTitle} numberOfLines={2}>
-                    {consultation.title}
+                  <View style={styles.inquiryIdRow}>
+                    <Text style={styles.inquiryId}>#{inquiry.id}</Text>
+                  </View>
+
+                  <Text style={styles.inquiryTitle} numberOfLines={2}>
+                    {inquiry.title}
                   </Text>
 
-                  <Text style={styles.consultationDescription} numberOfLines={3}>
-                    {consultation.description}
+                  <Text style={styles.inquiryContent} numberOfLines={3}>
+                    {inquiry.content}
                   </Text>
+
+                  {inquiry.petName && (
+                    <View style={styles.petNameContainer}>
+                      <Text style={styles.petNameLabel}>الحيوان:</Text>
+                      <Text style={styles.petNameText}>{inquiry.petName}</Text>
+                    </View>
+                  )}
 
                   <View style={styles.cardFooter}>
                     <View style={styles.metaInfo}>
                       <Clock size={14} color={COLORS.darkGray} />
                       <Text style={styles.metaText}>
-                        {new Date(consultation.createdAt || "").toLocaleDateString("ar-SA", {
+                        {new Date(inquiry.createdAt || "").toLocaleDateString("ar-SA", {
                           month: "short",
                           day: "numeric",
                         })}
                       </Text>
                     </View>
-                    {consultation.responsesCount > 0 && (
+                    {inquiry.responsesCount > 0 && (
                       <View style={styles.responsesInfo}>
                         <MessageCircle size={14} color={COLORS.primary} />
-                        <Text style={styles.responsesText}>{consultation.responsesCount} رد</Text>
+                        <Text style={styles.responsesText}>{inquiry.responsesCount} رد</Text>
                       </View>
                     )}
                   </View>
@@ -275,22 +262,22 @@ export default function UserConsultationsListScreen() {
             </>
           ) : (
             <View style={styles.emptyContainer}>
-              <MessageCircle size={64} color={COLORS.lightGray} />
-              <Text style={styles.emptyTitle}>{searchQuery ? "لا توجد نتائج بحث" : "لا توجد استشارات"}</Text>
+              <FileText size={64} color={COLORS.lightGray} />
+              <Text style={styles.emptyTitle}>{searchQuery ? "لا توجد نتائج بحث" : "لا توجد استفسارات"}</Text>
               <Text style={styles.emptyText}>
-                {searchQuery ? "جرب البحث بكلمات مختلفة" : "ابدأ بإضافة استشارتك الأولى"}
+                {searchQuery ? "جرب البحث بكلمات مختلفة" : "ابدأ بإضافة استفسارك الأول"}
               </Text>
-              <TouchableOpacity style={styles.emptyButton} onPress={handleNewConsultation}>
+              <TouchableOpacity style={styles.emptyButton} onPress={handleNewInquiry}>
                 <Plus size={20} color={COLORS.white} />
-                <Text style={styles.emptyButtonText}>إضافة استشارة جديدة</Text>
+                <Text style={styles.emptyButtonText}>إضافة استفسار جديد</Text>
               </TouchableOpacity>
             </View>
           )}
         </ScrollView>
 
         {/* Floating Action Button */}
-        {filteredConsultations && filteredConsultations.length > 0 && (
-          <TouchableOpacity style={styles.fab} onPress={handleNewConsultation}>
+        {filteredInquiries && filteredInquiries.length > 0 && (
+          <TouchableOpacity style={styles.fab} onPress={handleNewInquiry}>
             <Plus size={24} color={COLORS.white} />
           </TouchableOpacity>
         )}
@@ -333,7 +320,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    gap: 12,
     backgroundColor: COLORS.white,
   },
   searchBar: {
@@ -351,17 +337,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: COLORS.black,
     textAlign: "right",
-  },
-  filterButton: {
-    width: 44,
-    height: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-  },
-  filterButtonActive: {
-    backgroundColor: COLORS.primary,
   },
   statusFiltersContainer: {
     backgroundColor: COLORS.white,
@@ -401,31 +376,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  urgencyFiltersContainer: {
+  categoryFiltersContainer: {
     backgroundColor: COLORS.white,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
   },
-  urgencyFiltersTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.black,
-    marginBottom: 8,
-  },
-  urgencyFiltersContent: {
+  categoryFiltersContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     gap: 8,
   },
-  urgencyFilterChip: {
+  categoryChip: {
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
     backgroundColor: "#F3F4F6",
   },
-  urgencyFilterText: {
+  categoryChipActive: {
+    backgroundColor: COLORS.primary,
+  },
+  categoryChipText: {
     fontSize: 13,
     fontWeight: "600",
+    color: COLORS.darkGray,
+  },
+  categoryChipTextActive: {
+    color: COLORS.white,
   },
   content: {
     flex: 1,
@@ -448,7 +424,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontWeight: "500",
   },
-  consultationCard: {
+  inquiryCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -463,7 +439,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   cardHeaderLeft: {
     flexDirection: "row",
@@ -480,30 +456,56 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: COLORS.darkGray,
   },
-  urgencyBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
+  categoryBadge: {
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  urgencyBadgeText: {
-    fontSize: 11,
+  categoryBadgeText: {
+    fontSize: 12,
     fontWeight: "600",
-    color: COLORS.white,
+    color: "#1E40AF",
   },
-  consultationTitle: {
+  inquiryIdRow: {
+    marginBottom: 8,
+  },
+  inquiryId: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.darkGray,
+  },
+  inquiryTitle: {
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
-  consultationDescription: {
+  inquiryContent: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
     marginBottom: 12,
+  },
+  petNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 6,
+    alignSelf: "flex-start",
+  },
+  petNameLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.darkGray,
+  },
+  petNameText: {
+    fontSize: 13,
+    color: COLORS.black,
   },
   cardFooter: {
     flexDirection: "row",

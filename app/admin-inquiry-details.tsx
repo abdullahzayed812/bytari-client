@@ -5,11 +5,12 @@ import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { COLORS } from "@/constants/colors";
 import { trpc } from "@/lib/trpc";
 import AdminReplyForm from "@/components/AdminReplyForm";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type StatusFilter = "pending" | "assigned" | "answered" | "closed";
 
 export default function AdminInquiryDetailsScreen() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const inquiryId = typeof id === "string" ? parseInt(id) : 0;
@@ -219,11 +220,19 @@ export default function AdminInquiryDetailsScreen() {
             </View>
           )}
 
-          {inquiry.isConversationOpen && (
-            <AdminReplyForm type="inquiry" itemId={inquiry.id} moderatorId={1} onReplySuccess={refetch} />
+          {inquiry.status !== "closed" && (
+            <AdminReplyForm
+              type="inquiry"
+              itemId={inquiry.id}
+              moderatorId={1}
+              onReplySuccess={() => {
+                queryClient.invalidateQueries(trpc.inquiries.getList.queryKey);
+                queryClient.invalidateQueries(trpc.inquiries.getDetails.queryKey);
+              }}
+            />
           )}
 
-          {!inquiry.isConversationOpen && (
+          {inquiry.status === "closed" && (
             <View style={styles.closedCard}>
               <Text style={styles.closedText}>تم إغلاق المحادثة</Text>
             </View>

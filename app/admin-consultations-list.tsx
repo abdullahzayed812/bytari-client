@@ -83,6 +83,8 @@ export default function AdminConsultationsListScreen() {
         consultation.user?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
+  // console.log(consultations);
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -186,7 +188,7 @@ export default function AdminConsultationsListScreen() {
 
                   <View style={styles.consultationFooter}>
                     <Text style={styles.consultationPetType}>
-                      نوع الحيوان: {petTypeLabels[consultation.petType] || consultation.petType}
+                      نوع الحيوان: {petTypeLabels[consultation.category] || consultation.category}
                     </Text>
                     {consultation.responsesCount > 0 && (
                       <Text style={styles.consultationResponses}>{consultation.responsesCount} رد</Text>

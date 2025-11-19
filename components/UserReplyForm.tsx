@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { COLORS } from '@/constants/colors';
-import { useMutation } from '@tanstack/react-query';
-import { trpc } from '@/lib/trpc';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { COLORS } from "@/constants/colors";
+import { useMutation } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
+import { Send } from "lucide-react-native";
 
 interface UserReplyFormProps {
-  type: 'inquiry' | 'consultation';
+  type: "inquiry" | "consultation";
   itemId: number;
   userId: number;
   isConversationOpen: boolean;
@@ -17,64 +18,59 @@ export default function UserReplyForm({
   itemId,
   userId,
   isConversationOpen,
-  onReplySuccess
+  onReplySuccess,
 }: UserReplyFormProps) {
-  const [replyContent, setReplyContent] = useState('');
+  const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userReplyInquiryMutation = useMutation(trpc.inquiries.userReply.mutationOptions());
   const userReplyConsultationMutation = useMutation(trpc.consultations.userReply.mutationOptions());
+
   if (!isConversationOpen) {
     return (
       <View style={styles.closedContainer}>
         <Text style={styles.closedTitle}>🔒 المحادثة مغلقة</Text>
-        <Text style={styles.closedText}>
-          تم إغلاق هذه المحادثة من قبل المشرف ولا يمكن إضافة ردود جديدة.
-        </Text>
+        <Text style={styles.closedText}>تم إغلاق هذه المحادثة من قبل المشرف ولا يمكن إضافة ردود جديدة.</Text>
       </View>
     );
   }
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) {
-      Alert.alert('خطأ', 'يرجى كتابة الرد');
+      Alert.alert("خطأ", "يرجى كتابة الرد");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      if (type === 'inquiry') {
+      if (type === "inquiry") {
         await userReplyInquiryMutation.mutateAsync({
           inquiryId: itemId,
           userId,
           content: replyContent,
-        });
+        } as any);
       } else {
         await userReplyConsultationMutation.mutateAsync({
           consultationId: itemId,
           userId,
           content: replyContent,
-        });
+        } as any);
       }
 
-      Alert.alert(
-        'تم الإرسال',
-        'تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص.',
-        [
-          {
-            text: 'موافق',
-            onPress: () => {
-              setReplyContent('');
-              onReplySuccess?.();
-            }
-          }
-        ]
-      );
+      Alert.alert("تم الإرسال", "تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص.", [
+        {
+          text: "موافق",
+          onPress: () => {
+            setReplyContent("");
+            onReplySuccess?.();
+          },
+        },
+      ]);
     } catch (error: any) {
-      console.error('Error submitting user reply:', error);
-      const errorMessage = error?.message || 'حدث خطأ أثناء إرسال الرد';
-      Alert.alert('خطأ', errorMessage);
+      console.error("Error submitting user reply:", error);
+      const errorMessage = error?.message || "حدث خطأ أثناء إرسال الرد";
+      Alert.alert("خطأ", errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -82,10 +78,8 @@ export default function UserReplyForm({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        إضافة رد على {type === 'inquiry' ? 'الاستفسار' : 'الاستشارة'}
-      </Text>
-      
+      <Text style={styles.title}>إضافة رد على {type === "inquiry" ? "الاستفسار" : "الاستشارة"}</Text>
+
       <TextInput
         style={styles.textInput}
         placeholder="اكتب ردك أو استفسارك الإضافي هنا..."
@@ -97,22 +91,15 @@ export default function UserReplyForm({
         textAlign="right"
       />
 
-      <Text style={styles.helpText}>
-        سيتم إرسال ردك إلى المشرف المختص وستحصل على إشعار عند الرد
-      </Text>
+      <Text style={styles.helpText}>سيتم إرسال ردك إلى المشرف المختص وستحصل على إشعار عند الرد</Text>
 
       <TouchableOpacity
-        style={[
-          styles.submitButton,
-          (!replyContent.trim() || isSubmitting) && styles.submitButtonDisabled
-        ]}
+        style={[styles.submitButton, (!replyContent.trim() || isSubmitting) && styles.submitButtonDisabled]}
         onPress={handleSubmitReply}
         disabled={!replyContent.trim() || isSubmitting}
       >
         <Send size={20} color={COLORS.white} />
-        <Text style={styles.submitButtonText}>
-          {isSubmitting ? 'جاري الإرسال...' : 'إرسال الرد'}
-        </Text>
+        <Text style={styles.submitButtonText}>{isSubmitting ? "جاري الإرسال..." : "إرسال الرد"}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -124,39 +111,39 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   closedContainer: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: "#FEF2F2",
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: "#FECACA",
   },
   closedTitle: {
     fontSize: 16,
-    color: '#DC2626',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    color: "#DC2626",
+    textAlign: "center",
+    fontWeight: "bold",
     marginBottom: 8,
   },
   closedText: {
     fontSize: 14,
-    color: '#DC2626',
-    textAlign: 'center',
+    color: "#DC2626",
+    textAlign: "center",
     lineHeight: 20,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   textInput: {
     borderWidth: 1,
@@ -166,20 +153,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     minHeight: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     marginBottom: 16,
   },
   helpText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
     lineHeight: 20,
   },
   submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.primary,
     borderRadius: 8,
     padding: 12,
@@ -188,7 +175,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   submitButtonDisabled: {
     backgroundColor: COLORS.darkGray,

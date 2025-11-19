@@ -126,7 +126,7 @@ export default function AdminAdsManagement() {
         startDate: new Date(formData.startDate),
         endDate: new Date(formData.endDate),
         adminId: user?.id,
-      },
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم إنشاء الإعلان بنجاح");
@@ -143,8 +143,15 @@ export default function AdminAdsManagement() {
 
   const handleEditAd = () => {
     if (!selectedAd) return;
+
     updateAdMutation.mutate(
-      { ...formData, id: selectedAd.id },
+      {
+        ...formData,
+        adminId: Number(user?.id),
+        adId: Number(selectedAd.id),
+        startDate: new Date(formData.startDate), // ← التحويل الصحيح
+        endDate: new Date(formData.endDate), // ← التحويل الصحيح
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم تحديث الإعلان بنجاح");
@@ -167,18 +174,15 @@ export default function AdminAdsManagement() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          deleteAdMutation.mutate(
-            { id: ad.id },
-            {
-              onSuccess: () => {
-                Alert.alert("نجح", "تم حذف الإعلان بنجاح");
-                refetch();
-              },
-              onError: (error) => {
-                Alert.alert("خطأ", error.message || "فشل في حذف الإعلان");
-              },
-            }
-          );
+          deleteAdMutation.mutate({ adminId: Number(user?.id), adId: Number(ad.id) } as any, {
+            onSuccess: () => {
+              Alert.alert("نجح", "تم حذف الإعلان بنجاح");
+              refetch();
+            },
+            onError: (error) => {
+              Alert.alert("خطأ", error.message || "فشل في حذف الإعلان");
+            },
+          });
         },
       },
     ]);

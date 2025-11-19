@@ -37,13 +37,16 @@ export default function HomeScreen() {
   const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  const isVet = userMode === "veterinarian";
+
   // Real backend data queries
   const {
     data: heroImagesData,
     isLoading: heroImagesLoading,
     error: heroError,
-  } = useQuery(trpc.admin.ads.getAll.queryOptions({ adminId: 1 }));
+  } = useQuery(trpc.admin.ads.getActive.queryOptions({ interface: isVet ? "vet" : "pet_owner" }));
   const heroImages = useMemo(() => (heroImagesData as any)?.ads, [heroImagesData]);
+  console.log(heroImagesData);
 
   const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
   // Real backend data for clinics that should be shown on home screen
@@ -408,98 +411,97 @@ export default function HomeScreen() {
         {/* Previous Consultations/Inquiries Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={userMode === "veterinarian" ? "استفساراتك السابقة" : "استشاراتك السابقة"}
+            title={isVet ? "استفساراتك السابقة" : "استشاراتك السابقة"}
             isRTL={isRTL}
             showSeeAll={true}
-            onSeeAll={() =>
-              userMode === "veterinarian" ? router.navigate("/") : router.navigate("/consultations-list")
-            }
+            onSeeAll={() => (isVet ? router.navigate("/inquiries-list") : router.navigate("/consultations-list"))}
           />
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
           >
-            {inquiriesLoading ? (
-              <ActivityIndicator size="large" color={COLORS.primary} />
-            ) : inquiries?.length > 0 ? (
-              inquiries?.slice(0, 3).map((inquiry) => (
-                <TouchableOpacity
-                  key={inquiry.id}
-                  style={[styles.consultationHistoryCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
-                  onPress={() => {
-                    if (userMode === "veterinarian") {
-                      router.push("/vet-inquiries");
-                    } else {
-                      router.push("/consultation");
-                    }
-                  }}
-                >
-                  <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                    {/* Status Badge */}
-                    <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
-                      <View
-                        style={[
-                          styles.statusIndicator,
-                          inquiry.status === "pending"
-                            ? styles.statusPending
+            {isVet ? (
+              inquiriesLoading ? (
+                <ActivityIndicator size="large" color={COLORS.primary} />
+              ) : inquiries?.length > 0 ? (
+                inquiries.slice(0, 3).map((inquiry) => (
+                  <TouchableOpacity
+                    key={inquiry.id}
+                    style={[
+                      styles.consultationHistoryCard,
+                      { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 },
+                    ]}
+                    onPress={() => router.push({ pathname: "/inquiry-details", params: { id: inquiry?.id } })}
+                  >
+                    <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
+                        <View
+                          style={[
+                            styles.statusIndicator,
+                            inquiry.status === "pending"
+                              ? styles.statusPending
+                              : inquiry.status === "answered"
+                              ? styles.statusAnswered
+                              : styles.statusClosed,
+                          ]}
+                        />
+                        <Text style={styles.statusText}>
+                          {inquiry.status === "pending"
+                            ? "قيد المراجعة"
                             : inquiry.status === "answered"
-                            ? styles.statusAnswered
-                            : styles.statusClosed,
-                        ]}
-                      />
-                      <Text style={styles.statusText}>
-                        {inquiry.status === "pending"
-                          ? "قيد المراجعة"
-                          : inquiry.status === "answered"
-                          ? "تم الرد"
-                          : "مغلق"}
-                      </Text>
-                    </View>
-
-                    {/* Consultation Info */}
-                    <View style={styles.consultationHistoryDetails}>
-                      <Text
-                        style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
-                        numberOfLines={2}
-                      >
-                        {inquiry.title}
-                      </Text>
-
-                      {inquiry.petName && (
-                        <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
-                          الحيوان: {inquiry.petName}
+                            ? "تم الرد"
+                            : "مغلق"}
                         </Text>
-                      )}
+                      </View>
 
-                      <Text
-                        style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
-                        numberOfLines={3}
-                      >
-                        {inquiry.content}
-                      </Text>
+                      <View style={styles.consultationHistoryDetails}>
+                        <Text
+                          style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
+                          numberOfLines={2}
+                        >
+                          {inquiry.title}
+                        </Text>
 
-                      <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
-                        {new Date(inquiry.createdAt).toLocaleDateString("ar-SA")}
-                      </Text>
+                        {inquiry.petName && (
+                          <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
+                            الحيوان: {inquiry.petName}
+                          </Text>
+                        )}
+
+                        <Text
+                          style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
+                          numberOfLines={3}
+                        >
+                          {inquiry.content}
+                        </Text>
+
+                        <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
+                          {new Date(inquiry.createdAt).toLocaleDateString("ar-SA")}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text>لا توجد استفسارات</Text>
+              )
+            ) : consultationsLoading ? (
+              <ActivityIndicator size="large" color={COLORS.primary} />
             ) : consultations?.length > 0 ? (
               consultations.slice(0, 3).map((con) => (
                 <TouchableOpacity
                   key={con.id}
                   style={[styles.consultationHistoryCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
-                  onPress={() => {
+                  onPress={() =>
                     router.push({
                       pathname: "/consultation-details",
                       params: { id: con.id },
-                    });
-                  }}
+                    })
+                  }
                 >
                   <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                    {/* 🔵 Status Badge */}
                     <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                       <View
                         style={[
@@ -516,9 +518,7 @@ export default function HomeScreen() {
                       </Text>
                     </View>
 
-                    {/* 🐾 Consultation Info */}
                     <View style={styles.consultationHistoryDetails}>
-                      {/* Title */}
                       <Text
                         style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={2}
@@ -526,14 +526,12 @@ export default function HomeScreen() {
                         {con.title}
                       </Text>
 
-                      {/* Category / Pet Type */}
                       {con.category && (
                         <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
                           النوع: {con.category}
                         </Text>
                       )}
 
-                      {/* Description */}
                       <Text
                         style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={3}
@@ -541,7 +539,6 @@ export default function HomeScreen() {
                         {con.description}
                       </Text>
 
-                      {/* Urgency */}
                       <Text
                         style={[
                           styles.consultationUrgency,
@@ -566,7 +563,6 @@ export default function HomeScreen() {
                           : "منخفض"}
                       </Text>
 
-                      {/* Date */}
                       <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
                         {new Date(con.createdAt).toLocaleDateString("ar-SA")}
                       </Text>
@@ -575,7 +571,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               ))
             ) : (
-              <Text>{userMode === "veterinarian" ? "لا توجد استفسارات" : "لا توجد استفسارات"}</Text>
+              <Text>لا توجد استشارات</Text>
             )}
           </ScrollView>
         </View>
@@ -957,7 +953,7 @@ export default function HomeScreen() {
                 <Card
                   key={tip.id}
                   title={tip.title}
-                  image={tip.images[0]}
+                  image={tip.image}
                   style={[styles.tipCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() => {
                     router.push(`/tip-details?id=${tip.id}`);
