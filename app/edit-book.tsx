@@ -1,8 +1,9 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   SafeAreaView,
@@ -21,6 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 
 export default function EditBookScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { id } = useLocalSearchParams();
   const bookId = parseInt(id as string);
 
@@ -36,7 +38,9 @@ export default function EditBookScreen() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<any>(null);
 
-  const { data: book, isLoading, error } = useQuery(trpc.admin.content.getBookById.queryOptions({ id: bookId }));
+  const { data, isLoading, error } = useQuery(trpc.content.getBookById.queryOptions({ id: bookId }));
+  const book = useMemo(() => (data as any)?.book, [data]);
+
   const updateBookMutation = useMutation(trpc.admin.content.updateBook.mutationOptions());
 
   useEffect(() => {
@@ -45,7 +49,7 @@ export default function EditBookScreen() {
         title: book.title,
         author: book.author,
         description: book.description,
-        pages: book.pages,
+        pages: book.pageCount.toString(),
         category: book.category,
         image: book.image,
       });
@@ -103,14 +107,15 @@ export default function EditBookScreen() {
         title: formData.title,
         author: formData.author,
         description: formData.description,
-        pages: formData.pages ? parseInt(formData.pages) : undefined,
+        pageCount: formData.pages ? parseInt(formData.pages) : undefined,
         category: formData.category as any,
         coverImage: selectedImage,
         pdfUrl: selectedFile ? selectedFile.uri : undefined,
-      },
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم تحديث الكتاب بنجاح");
+          queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey());
           router.back();
         },
         onError: (error) => {
@@ -119,6 +124,8 @@ export default function EditBookScreen() {
       }
     );
   };
+
+  if (isLoading) return <ActivityIndicator size="large" />;
 
   return (
     <SafeAreaView style={styles.container}>

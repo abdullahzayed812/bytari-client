@@ -28,24 +28,18 @@ export default function HomeMagazineManagementScreen() {
   );
   const articles = useMemo(() => (articlesData as any)?.articles, [articlesData]);
 
-  const toggleVisibilityMutation = useMutation({
-    mutationFn: trpc.content.toggleArticleHomeVisibility.mutate,
-    onSuccess: () => {
-      queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
-    },
-  });
+  const { data: availableArticlesData } = useQuery(trpc.content.getAvailableArticles.queryOptions({}));
 
-  const deleteMutation = useMutation({
-    mutationFn: trpc.content.deleteArticle.mutate,
-    onSuccess: () => {
-      queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
-    },
-  });
+  const toggleVisibilityMutation = useMutation(trpc.content.toggleArticleHomeVisibility.mutationOptions());
 
-  const { data: availableArticlesData } = useQuery(trpc.content.getAvailableArticles.queryOptions());
+  const deleteMutation = useMutation(trpc.content.deleteArticle.mutationOptions());
 
   const handleToggleHomeVisibility = (articleId: string) => {
-    toggleVisibilityMutation.mutate({ id: Number(articleId) });
+    toggleVisibilityMutation.mutate({ id: Number(articleId) } as any, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+      },
+    });
   };
 
   const handleDeleteArticle = (articleId: string) => {
@@ -55,7 +49,11 @@ export default function HomeMagazineManagementScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          deleteMutation.mutate({ id: Number(articleId) });
+          deleteMutation.mutate({ id: Number(articleId) } as any, {
+            onSuccess: () => {
+              queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+            },
+          });
         },
       },
     ]);
@@ -93,8 +91,8 @@ export default function HomeMagazineManagementScreen() {
     );
   };
 
-  const visibleArticles = articles.filter((article) => article.isSelectedForHome);
-  const hiddenArticles = articles.filter((article) => !article.isSelectedForHome);
+  const visibleArticles = articles.filter((article) => article.isPublished);
+  const hiddenArticles = articles.filter((article) => !article.isPublished);
 
   const renderArticleCard = (article: Article, isVisible: boolean) => (
     <View key={article.id} style={styles.articleCard}>

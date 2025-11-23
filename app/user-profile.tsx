@@ -10,12 +10,13 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Phone, Mail, MapPin, Calendar, Briefcase, MessageCircle, Send, X } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useApp } from "@/providers/AppProvider";
 
 interface UserProfile {
   id: string;
@@ -36,6 +37,7 @@ interface UserProfile {
 export default function UserProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ userId?: string }>();
+  const { user } = useApp();
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [messageSubject, setMessageSubject] = useState<string>("");
   const [messageContent, setMessageContent] = useState<string>("");
@@ -44,7 +46,7 @@ export default function UserProfileScreen() {
   const isAdminView = !!params.userId;
   const ownProfileQuery = useQuery(trpc.auth.getProfile.queryOptions(undefined, { enabled: !isAdminView }));
   const userProfileQuery = useQuery(
-    trpc.admin.users.getProfile.queryOptions({ userId: params.userId! }, { enabled: isAdminView })
+    trpc.admin.users.getProfile.queryOptions({ userId: +params.userId!, adminId: user?.id }, { enabled: isAdminView })
   );
 
   const { data, isLoading, error } = isAdminView ? userProfileQuery : ownProfileQuery;
@@ -53,20 +55,19 @@ export default function UserProfileScreen() {
 
   const userProfile: UserProfile | null = data
     ? {
-        id: data.user.id.toString(),
-        name: data.user.name || "N/A",
-        email: data.user.email || "N/A",
-        phone: data.user.phone || null,
-        location: data.user.province || "غير محدد",
-        joinDate: new Date(data.user.createdAt).toLocaleDateString("ar-SA"),
-        profession:
-          data.user.userType === "vet" ? "طبيب بيطري" : data.user.userType === "admin" ? "مشرف" : "مستخدم عادي",
-        experience: data.user.experience || "غير محدد",
-        education: data.user.education || "غير محدد",
-        bio: data.user.bio || "لا توجد معلومات إضافية متاحة",
-        userType: data.user.userType,
-        isActive: data.user.isActive,
-        avatar: data.user.avatar,
+        id: data.id.toString(),
+        name: data.name || "N/A",
+        email: data.email || "N/A",
+        phone: data.phone || null,
+        location: data.province || "غير محدد",
+        joinDate: new Date(data.createdAt).toLocaleDateString("ar-SA"),
+        profession: data.userType === "vet" ? "طبيب بيطري" : data.userType === "admin" ? "مشرف" : "مستخدم عادي",
+        experience: data.experience || "غير محدد",
+        education: data.education || "غير محدد",
+        bio: data.bio || "لا توجد معلومات إضافية متاحة",
+        userType: data.userType,
+        isActive: data.isActive,
+        avatar: data.avatar,
       }
     : null;
 
@@ -86,11 +87,13 @@ export default function UserProfileScreen() {
 
     sendMessageMutation.mutate(
       {
+        senderId: user?.id,
         title: messageSubject,
         content: messageContent,
         targetUserId: userProfile.id,
-        // senderId should be inferred from the logged-in admin user on the backend
-      },
+        type: "announcement",
+        targetAudience: "users",
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("تم الإرسال", "تم إرسال رسالتك بنجاح.");
@@ -338,8 +341,8 @@ export default function UserProfileScreen() {
             <Text style={styles.modalTitle}>إرسال رسالة</Text>
             <TouchableOpacity
               onPress={handleSendMessageSubmit}
-              style={[styles.sendButton, isSending && styles.sendButtonDisabled]}
-              disabled={isSending}
+              style={[styles.sendButton && styles.sendButtonDisabled]}
+              // disabled={isSending}
             >
               <Send size={20} color={COLORS.white} />
             </TouchableOpacity>

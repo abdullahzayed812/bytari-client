@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Alert, Modal, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, router } from "expo-router";
@@ -24,7 +24,6 @@ import {
   TestTube,
   MessageCircle,
 } from "lucide-react-native";
-// import { useApp } from "../providers/AppProvider";
 
 interface UserData {
   id: number;
@@ -52,523 +51,210 @@ interface PermissionSubOption {
   enabled: boolean;
 }
 
+interface PermissionCategory {
+  name: string;
+  permissions: Permission[];
+  expanded: boolean;
+}
+
+// Permission mapping utility
+const permissionTranslations: Record<string, string> = {
+  // Category names
+  ads: "الإعلانات",
+  approvals: "الموافقات",
+  assignments: "التكليفات",
+  clinics: "العيادات",
+  communications: "الاتصالات",
+  consultations: "الاستشارات",
+  content: "المحتوى",
+  education: "التعليم",
+  hospitals: "المستشفيات",
+  inquiries: "الاستفسارات",
+  jobs: "الوظائف",
+  notifications: "الإشعارات",
+  orders: "الطلبات",
+  pets: "الحيوانات الأليفة",
+  roles: "الأدوار",
+  stores: "المتاجر",
+  system: "النظام",
+  unions: "النقابات",
+  users: "المستخدمين",
+
+  // Permission names
+  manage_ads: "إدارة الإعلانات",
+  manage_approvals: "إدارة الموافقات",
+  manage_clinic_approvals: "إدارة موافقات العيادات",
+  manage_store_approvals: "إدارة موافقات المذاخر",
+  manage_vet_approvals: "إدارة موافقات تسجيل الأطباء",
+  manage_adoption_approvals: "إدارة موافقات حيوانات التبني",
+  manage_breeding_approvals: "إدارة موافقات حيوانات التزاوج",
+  manage_assignments: "إدارة التكليفات",
+  manage_clinics: "إدارة العيادات",
+  manage_communications: "إدارة الاتصالات",
+  manage_consultations: "إدارة الاستشارات",
+  view_consultations: "عرض الاستشارات",
+  manage_content: "إدارة المحتوى",
+  manage_education: "إدارة التعليم",
+  manage_hospitals: "إدارة المستشفيات",
+  manage_inquiries: "إدارة الاستفسارات",
+  view_inquiries: "عرض الاستفسارات",
+  reply_inquiries: "الرد على الاستفسارات",
+  manage_jobs: "إدارة الوظائف",
+  manage_notifications: "إدارة الإشعارات",
+  manage_orders: "إدارة الطلبات",
+  manage_pets: "إدارة الحيوانات الأليفة",
+  manage_roles: "إدارة الأدوار",
+  manage_stores: "إدارة المتاجر",
+  view_stores: "عرض المتاجر",
+  manage_store_products: "إدارة منتجات المتاجر",
+  manage_system: "إدارة النظام",
+  view_system_logs: "عرض سجلات النظام",
+  manage_system_settings: "إدارة إعدادات النظام",
+  manage_unions: "إدارة النقابات",
+  manage_users: "إدارة المستخدمين",
+  view_users: "عرض المستخدمين",
+};
+
 export default function AdminUsersList() {
-  // Mock function for testing moderator login
-  const loginAsModerator = async () => {
-    return { success: true, message: "تم تسجيل دخول المشرف التجريبي بنجاح" };
-  };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<"all" | "user" | "vet" | "admin">("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [currentAdminId] = useState(1); // Mock admin ID
+  const [currentAdminId] = useState(1); // Should come from auth context
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [showModeratorsSection, setShowModeratorsSection] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageRecipient, setMessageRecipient] = useState<UserData | null>(null);
   const [messageText, setMessageText] = useState("");
-  const [userPermissions, setUserPermissions] = useState<Permission[]>([
-    {
-      id: "consultations_reply",
-      name: "صلاحيات الرد على الاستشارات",
-      description: "السماح بالرد على الاستشارات والاستفسارات",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "consultations", name: "الاستشارات", enabled: false },
-        { id: "inquiries", name: "الاستفسارات", enabled: false },
-      ],
-    },
-    {
-      id: "sections_control",
-      name: "صلاحيات التحكم بالأقسام",
-      description: "التحكم في الأقسام حسب التحديد أو كلها",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "pets_section", name: "قسم الحيوانات الأليفة", enabled: false },
-        { id: "clinics_section", name: "قسم العيادات", enabled: false },
-        { id: "stores_section", name: "قسم المتاجر", enabled: false },
-        { id: "lost_pets_section", name: "قسم الحيوانات المفقودة", enabled: false },
-        { id: "adoption_section", name: "قسم التبني والتزاوج", enabled: false },
-        { id: "tips_section", name: "قسم النصائح", enabled: false },
-        { id: "books_section", name: "قسم الكتب البيطرية", enabled: false },
-        { id: "courses_section", name: "قسم الدورات والندوات", enabled: false },
-        { id: "jobs_section", name: "قسم الوظائف", enabled: false },
-        { id: "vet_union_section", name: "قسم نقابة الأطباء البيطريين", enabled: false },
-      ],
-    },
-    {
-      id: "hospitals_management",
-      name: "صلاحيات إدارة المستشفيات",
-      description: "إدارة المستشفيات البيطرية والتحكم في عملياتها",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "hospital_create", name: "إنشاء مستشفيات جديدة", enabled: false },
-        { id: "hospital_edit", name: "تعديل معلومات المستشفيات", enabled: false },
-        { id: "hospital_delete", name: "حذف المستشفيات", enabled: false },
-        { id: "hospital_announcements", name: "إدارة إعلانات المستشفيات", enabled: false },
-        { id: "hospital_doctors", name: "إدارة أطباء المستشفيات", enabled: false },
-        { id: "hospital_appointments", name: "إدارة مواعيد المستشفيات", enabled: false },
-        { id: "hospital_reports", name: "عرض تقارير المستشفيات", enabled: false },
-        { id: "hospital_settings", name: "إعدادات المستشفيات", enabled: false },
-        { id: "hospital_analytics", name: "إحصائيات المستشفيات", enabled: false },
-        { id: "hospital_users", name: "إدارة مستخدمي المستشفيات", enabled: false },
-      ],
-    },
-    {
-      id: "union_management",
-      name: "صلاحيات إدارة النقابة",
-      description: "إدارة نقابة الأطباء البيطريين وفروعها",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "union_main_settings", name: "إعدادات النقابة الرئيسية", enabled: false },
-        { id: "union_branches", name: "إدارة فروع النقابة", enabled: false },
-        { id: "union_announcements", name: "إدارة إعلانات النقابة", enabled: false },
-        { id: "union_members", name: "إدارة أعضاء النقابة", enabled: false },
-        { id: "union_events", name: "إدارة فعاليات النقابة", enabled: false },
-        { id: "union_certificates", name: "إدارة شهادات النقابة", enabled: false },
-        { id: "union_reports", name: "تقارير النقابة", enabled: false },
-        { id: "union_analytics", name: "إحصائيات النقابة", enabled: false },
-        { id: "union_notifications", name: "إشعارات النقابة", enabled: false },
-        { id: "union_users", name: "إدارة مستخدمي النقابة", enabled: false },
-      ],
-    },
-    {
-      id: "ads_control",
-      name: "صلاحيات الإعلانات",
-      description: "إدارة الإعلانات والتحكم في الصفحة الرئيسية",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "main_ads", name: "الإعلانات الرئيسية", enabled: false },
-        { id: "section_ads", name: "إعلانات الأقسام", enabled: false },
-        { id: "sponsored_content", name: "المحتوى المدعوم", enabled: false },
-      ],
-    },
-    {
-      id: "homepage_control",
-      name: "التحكم في الصفحة الرئيسية",
-      description: "إضافة العيادات والمتاجر وغيرها في الصفحة الرئيسية",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "main_banner", name: "الإعلان الأساسي", enabled: false },
-        { id: "featured_clinics", name: "العيادات المميزة", enabled: false },
-        { id: "featured_stores", name: "المتاجر المميزة", enabled: false },
-        { id: "featured_books", name: "الكتب المميزة", enabled: false },
-        { id: "featured_articles", name: "المقالات المميزة", enabled: false },
-        { id: "featured_tips", name: "النصائح المميزة", enabled: false },
-      ],
-    },
-    {
-      id: "messaging",
-      name: "صلاحيات الرسائل العامة",
-      description: "إرسال رسالة عامة للكل والتواصل معهم",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "broadcast_messages", name: "الرسائل العامة", enabled: false },
-        { id: "notifications", name: "الإشعارات", enabled: false },
-        { id: "direct_messaging", name: "الرسائل المباشرة", enabled: false },
-      ],
-    },
-    {
-      id: "users_management",
-      name: "صلاحيات المستخدمين",
-      description: "حظر وإضافة وتغيير معلومات المستخدمين",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "ban_users", name: "حظر المستخدمين", enabled: false },
-        { id: "edit_users", name: "تعديل معلومات المستخدمين", enabled: false },
-        { id: "delete_users", name: "حذف المستخدمين", enabled: false },
-        { id: "view_user_details", name: "عرض تفاصيل المستخدمين", enabled: false },
-      ],
-    },
-    {
-      id: "store_management",
-      name: "صلاحيات إدارة المتجر",
-      description: "إدارة المتاجر وتحديد نوع المتجر (طبيب أو صاحب حيوان)",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "vet_stores", name: "متاجر الأطباء البيطريين", enabled: false },
-        { id: "pet_owner_stores", name: "متاجر أصحاب الحيوانات", enabled: false },
-        { id: "all_stores", name: "جميع المتاجر", enabled: false },
-        { id: "store_products", name: "إدارة منتجات المتاجر", enabled: false },
-        { id: "store_orders", name: "عرض طلبات المتاجر", enabled: false },
-      ],
-    },
-    {
-      id: "approvals_management",
-      name: "صلاحيات إدارة الموافقات",
-      description: "إدارة موافقات التسجيل والعيادات والمذاخر والحيوانات",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "vet_registration_approvals", name: "موافقات تسجيل الأطباء", enabled: false },
-        { id: "clinic_approvals", name: "موافقة العيادات", enabled: false },
-        { id: "pharmacy_approvals", name: "موافقة المذاخر", enabled: false },
-        { id: "adoption_pet_approvals", name: "موافقات حيوانات للتبني", enabled: false },
-        { id: "breeding_pet_approvals", name: "موافقات حيوانات للتزاوج", enabled: false },
-        { id: "all_approvals", name: "جميع الموافقات", enabled: false },
-      ],
-    },
-    {
-      id: "vet_approvals_management",
-      name: "صلاحيات موافقات الأطباء البيطريين",
-      description: "إدارة طلبات الموافقة على تسجيل الأطباء البيطريين الجدد",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "vet_approvals_view", name: "عرض طلبات موافقة الأطباء", enabled: false },
-        { id: "vet_approvals_approve", name: "الموافقة على الأطباء البيطريين", enabled: false },
-        { id: "vet_approvals_reject", name: "رفض طلبات الأطباء البيطريين", enabled: false },
-        { id: "vet_approvals_manage", name: "إدارة موافقات الأطباء البيطريين", enabled: false },
-        { id: "vet_approvals_notifications", name: "إشعارات موافقات الأطباء", enabled: false },
-      ],
-    },
-    {
-      id: "jobs_management",
-      name: "صلاحيات إدارة الوظائف",
-      description: "إدارة شاملة لنظام الوظائف والتوظيف والإشراف الميداني",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "jobs_view", name: "عرض الوظائف", enabled: false },
-        { id: "jobs_create", name: "إنشاء وظائف جديدة", enabled: false },
-        { id: "jobs_edit", name: "تعديل الوظائف", enabled: false },
-        { id: "jobs_delete", name: "حذف الوظائف", enabled: false },
-        { id: "jobs_applications_view", name: "عرض طلبات التوظيف", enabled: false },
-        { id: "jobs_applications_manage", name: "إدارة طلبات التوظيف", enabled: false },
-        { id: "jobs_notifications", name: "إشعارات الوظائف", enabled: false },
-        { id: "jobs_analytics", name: "إحصائيات الوظائف", enabled: false },
-        { id: "jobs_field_supervision", name: "إشراف ميداني", enabled: false },
-        { id: "jobs_manage_all", name: "إدارة شاملة للوظائف", enabled: false },
-      ],
-    },
-    {
-      id: "courses_management",
-      name: "صلاحيات إدارة الدورات والندوات",
-      description: "إدارة شاملة لنظام الدورات والندوات التدريبية",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "courses_view", name: "عرض الدورات والندوات", enabled: false },
-        { id: "courses_create", name: "إنشاء دورات وندوات جديدة", enabled: false },
-        { id: "courses_edit", name: "تعديل الدورات والندوات", enabled: false },
-        { id: "courses_delete", name: "حذف الدورات والندوات", enabled: false },
-        { id: "courses_registrations_view", name: "عرض تسجيلات الدورات", enabled: false },
-        { id: "courses_registrations_manage", name: "إدارة تسجيلات الدورات", enabled: false },
-        { id: "courses_certificates", name: "إدارة شهادات الدورات", enabled: false },
-        { id: "courses_analytics", name: "إحصائيات الدورات", enabled: false },
-        { id: "courses_manage_all", name: "إدارة شاملة للدورات والندوات", enabled: false },
-      ],
-    },
-    {
-      id: "assignments_management",
-      name: "صلاحيات إدارة التعيين والإشراف",
-      description: "إدارة التعيينات الميدانية والإشراف على الأعمال البيطرية",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "assignments_view", name: "عرض التعيينات الميدانية", enabled: false },
-        { id: "assignments_create", name: "إنشاء تعيينات جديدة", enabled: false },
-        { id: "assignments_edit", name: "تعديل التعيينات", enabled: false },
-        { id: "assignments_delete", name: "حذف التعيينات", enabled: false },
-        { id: "assignments_approve", name: "الموافقة على التعيينات", enabled: false },
-        { id: "assignments_supervise", name: "الإشراف الميداني", enabled: false },
-        { id: "assignments_reports", name: "تقارير التعيينات", enabled: false },
-        { id: "assignments_analytics", name: "إحصائيات التعيينات", enabled: false },
-        { id: "assignments_manage_all", name: "إدارة شاملة للتعيين والإشراف", enabled: false },
-      ],
-    },
-    {
-      id: "pet_approvals_management",
-      name: "صلاحيات إدارة موافقات الحيوانات",
-      description: "إدارة طلبات الموافقة على إضافة الحيوانات للتبني والتزاوج والمفقودة",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "pet_approvals_view", name: "عرض طلبات موافقة الحيوانات", enabled: false },
-        { id: "pet_approvals_approve", name: "الموافقة على الحيوانات", enabled: false },
-        { id: "pet_approvals_reject", name: "رفض طلبات الحيوانات", enabled: false },
-        { id: "pet_approvals_edit", name: "تعديل طلبات الحيوانات", enabled: false },
-        { id: "pet_approvals_delete", name: "حذف طلبات الحيوانات", enabled: false },
-        { id: "pet_approvals_notifications", name: "إشعارات موافقات الحيوانات", enabled: false },
-        { id: "pet_approvals_analytics", name: "إحصائيات موافقات الحيوانات", enabled: false },
-        { id: "pet_approvals_manage_all", name: "إدارة شاملة لموافقات الحيوانات", enabled: false },
-      ],
-    },
-    {
-      id: "orders_management",
-      name: "صلاحيات إدارة الطلبات",
-      description: "إدارة طلبات المنتجات من المتاجر ومتابعة حالة الطلبات",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "orders_view", name: "عرض الطلبات", enabled: false },
-        { id: "orders_approve", name: "الموافقة على الطلبات", enabled: false },
-        { id: "orders_reject", name: "رفض الطلبات", enabled: false },
-        { id: "orders_edit", name: "تعديل الطلبات", enabled: false },
-        { id: "orders_delete", name: "حذف الطلبات", enabled: false },
-        { id: "orders_track", name: "تتبع الطلبات", enabled: false },
-        { id: "orders_notifications", name: "إشعارات الطلبات", enabled: false },
-        { id: "orders_analytics", name: "إحصائيات الطلبات", enabled: false },
-        { id: "orders_reports", name: "تقارير الطلبات", enabled: false },
-        { id: "orders_refunds", name: "إدارة المرتجعات", enabled: false },
-        { id: "orders_manage_all", name: "إدارة شاملة للطلبات", enabled: false },
-      ],
-    },
-    {
-      id: "super_admin",
-      name: "صلاحيات فائقة",
-      description: "مثل الأدمن الأساسي (يمكن للأدمن حذف هذه الصلاحيات)",
-      enabled: false,
-      expanded: false,
-      subOptions: [
-        { id: "all_permissions", name: "جميع الصلاحيات", enabled: false },
-        { id: "manage_admins", name: "إدارة المشرفين", enabled: false },
-        { id: "system_settings", name: "إعدادات النظام", enabled: false },
-        { id: "vet_approvals_super", name: "صلاحيات فائقة لموافقات الأطباء", enabled: false },
-        { id: "jobs_super", name: "صلاحيات فائقة لإدارة الوظائف", enabled: false },
-        { id: "courses_super", name: "صلاحيات فائقة لإدارة الدورات والندوات", enabled: false },
-        { id: "assignments_super", name: "صلاحيات فائقة للتعيين والإشراف", enabled: false },
-        { id: "pet_approvals_super", name: "صلاحيات فائقة لموافقات الحيوانات", enabled: false },
-      ],
-    },
-  ]);
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
+  const [permissionCategories, setPermissionCategories] = useState<PermissionCategory[]>([]);
 
-  // Get all users using the new syntax and the `users.list` procedure
+  // Fetch all users
   const {
-    data: rawUsers,
-    isLoading,
-    error,
+    data: usersResponse,
+    isLoading: usersLoading,
+    error: usersError,
     refetch,
   } = useQuery(
     trpc.users.list.queryOptions({
       limit: 100,
-      // The generic users.list might not support filtering by userType, so this is commented out
-      // userType: selectedUserType === 'all' ? undefined : selectedUserType,
+      userType: selectedUserType === "all" ? undefined : selectedUserType,
+      search: searchQuery.length > 2 ? searchQuery : undefined,
     })
   );
 
-  const usersData = useMemo(() => (rawUsers as any)?.usersData, [rawUsers]);
+  // Search users
+  const { data: searchResponse, isLoading: searchLoading } = useQuery({
+    ...trpc.admin.users.search.queryOptions({
+      query: searchQuery,
+      adminId: currentAdminId,
+      limit: 50,
+    }),
+    enabled: searchQuery.length > 2,
+  });
 
-  // Search users using the new syntax
-  const { data: rawSearchResult, isLoading: searchLoading } = useQuery(
-    trpc.admin.users.search.queryOptions(
-      {
-        query: searchQuery,
-        adminId: currentAdminId,
-        limit: 50,
-      },
-      {
-        enabled: searchQuery.length > 2,
+  // Get supervisors
+  const {
+    data: supervisorsResponse,
+    isLoading: supervisorsLoading,
+    refetch: refetchSupervisors,
+  } = useQuery(
+    trpc.admin.users.getSupervisors.queryOptions({
+      limit: 20,
+      offset: 0,
+    })
+  );
+
+  // Get all permissions grouped
+  const { data: permissionsResponse, isLoading: permissionsLoading } = useQuery(
+    trpc.admin.permissions.getAllPermissionsGrouped.queryOptions()
+  );
+
+  // Get user permissions when modal opens
+  const { data: userPermissionsData, refetch: refetchUserPermissions } = useQuery({
+    ...trpc.admin.permissions.getUserPermissions.queryOptions({
+      userId: selectedUser?.id || 0,
+    }),
+    enabled: !!selectedUser && showPermissionsModal,
+  });
+
+  // Ban/Unban user mutation
+  const banUserMutation = useMutation(trpc.admin.users.ban.mutationOptions());
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation(trpc.admin.users.delete.mutationOptions());
+
+  // Assign permissions mutation
+  const assignPermissionsMutation = useMutation(trpc.admin.permissions.assignPermissions.mutationOptions());
+
+  // Send message mutation
+  const sendMessageMutation = useMutation(trpc.admin.permissions.sendMessageToUser.mutationOptions());
+
+  const supervisors = useMemo(() => supervisorsResponse?.supervisors || [], [supervisorsResponse]);
+
+  // Process users data
+  const displayUsers: UserData[] = useMemo(() => {
+    if (searchQuery.length > 2 && searchResponse) {
+      return searchResponse.map((user) => ({
+        ...user,
+        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
+        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
+      })) as UserData[];
+    }
+
+    if (usersResponse?.users) {
+      return usersResponse.users.map((user) => ({
+        ...user,
+        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
+        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
+      })) as UserData[];
+    }
+
+    return [];
+  }, [usersResponse, searchResponse, searchQuery]);
+
+  const isLoadingData = usersLoading || searchLoading;
+
+  // Initialize permission categories when permissions are loaded
+  useEffect(() => {
+    if (permissionsResponse?.grouped) {
+      const categories = Object.entries(permissionsResponse.grouped).map(([categoryName, permissions]) => ({
+        name: categoryName,
+        permissions: (permissions as any[]).map((p) => ({
+          ...p,
+          enabled: false,
+        })),
+        expanded: false,
+      }));
+      setPermissionCategories(categories);
+    }
+  }, [permissionsResponse]);
+
+  // Load user's existing permissions when modal opens
+  useEffect(() => {
+    if (userPermissionsData && showPermissionsModal) {
+      const enabledPermissionNames = userPermissionsData.permissions.map((p) => p.permissionName);
+
+      // Update categories with enabled permissions
+      setPermissionCategories((prev) =>
+        prev.map((category) => ({
+          ...category,
+          permissions: category.permissions.map((p) => ({
+            ...p,
+            enabled: enabledPermissionNames.includes(p.name),
+          })),
+        }))
+      );
+
+      // Set selected permission IDs
+      if (permissionsResponse?.permissions) {
+        const enabledIds = permissionsResponse.permissions
+          .filter((p) => enabledPermissionNames.includes(p.name))
+          .map((p) => p.id);
+        setSelectedPermissions(enabledIds);
       }
-    )
-  );
-
-  const searchResults = useMemo(() => (rawSearchResult as any)?.searchResult, [rawSearchResult]);
-
-  // Ban/Unban user mutation using the new syntax
-  const banUserMutation = useMutation(
-    trpc.admin.users.ban.mutationOptions({
-      onSuccess: () => {
-        refetch();
-        Alert.alert("نجح", "تم تحديث حالة المستخدم بنجاح");
-      },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message || "فشل في تحديث حالة المستخدم");
-      },
-    })
-  );
-
-  // Delete user mutation using the new syntax
-  const deleteUserMutation = useMutation(
-    trpc.admin.users.delete.mutationOptions({
-      onSuccess: () => {
-        refetch();
-        Alert.alert("نجح", "تم حذف المستخدم بنجاح");
-      },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message || "فشل في حذف المستخدم");
-      },
-    })
-  );
-
-  // Mock moderators data
-  // const mockModerators = [
-  //   {
-  //     id: 101,
-  //     name: "د. سارة المشرفة",
-  //     email: "moderator@petapp.com",
-  //     phone: "+964770300001",
-  //     userType: "admin" as const,
-  //     isActive: true,
-  //     createdAt: new Date().toISOString(),
-  //     updatedAt: new Date().toISOString(),
-  //     permissions: {
-  //       canReplyToConsultations: true,
-  //       canReplyToInquiries: true,
-  //       canManageSections: ["pets", "clinics"],
-  //       canManageAds: false,
-  //       canManageHomePage: false,
-  //       canSendMessages: false,
-  //       canManageUsers: false,
-  //       isSuperModerator: false,
-  //     },
-  //   },
-  //   {
-  //     id: 102,
-  //     name: "د. أحمد المشرف",
-  //     email: "moderator2@petapp.com",
-  //     phone: "+964770300002",
-  //     userType: "admin" as const,
-  //     isActive: true,
-  //     createdAt: new Date().toISOString(),
-  //     updatedAt: new Date().toISOString(),
-  //     permissions: {
-  //       canReplyToConsultations: false,
-  //       canReplyToInquiries: true,
-  //       canManageSections: ["stores", "tips"],
-  //       canManageAds: true,
-  //       canManageHomePage: true,
-  //       canSendMessages: false,
-  //       canManageUsers: false,
-  //       isSuperModerator: false,
-  //     },
-  //   },
-  //   {
-  //     id: 103,
-  //     name: "د. فاطمة المشرفة العامة",
-  //     email: "supermod@petapp.com",
-  //     phone: "+964770300003",
-  //     userType: "admin" as const,
-  //     isActive: true,
-  //     createdAt: new Date().toISOString(),
-  //     updatedAt: new Date().toISOString(),
-  //     permissions: {
-  //       canReplyToConsultations: true,
-  //       canReplyToInquiries: true,
-  //       canManageSections: ["all"],
-  //       canManageAds: true,
-  //       canManageHomePage: true,
-  //       canSendMessages: true,
-  //       canManageUsers: true,
-  //       isSuperModerator: true,
-  //     },
-  //   },
-  // ];
-
-  const { data: supervisorsData, isLoading: supervisorsLoading } = useQuery(
-    trpc.admin.users.getSupervisors.queryOptions({ limit: 20 })
-  );
-
-  const supervisors = useMemo(() => (supervisorsData as any)?.supervisors, [supervisorsData]);
-
-  // Mock data for demo when server fails
-  const mockUsers: UserData[] = [
-    {
-      id: 1,
-      name: "علي أحمد الكاظمي",
-      email: "user1@example.com",
-      phone: "+964770100001",
-      userType: "user",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      name: "فاطمة محمد النجفي",
-      email: "user2@example.com",
-      phone: "+964770100002",
-      userType: "user",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      name: "د. محمد عبد الله - طبيب بيطري",
-      email: "vet1@example.com",
-      phone: "+964770200001",
-      userType: "vet",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 4,
-      name: "د. سعاد حسن - طبيبة بيطرية",
-      email: "vet2@example.com",
-      phone: "+964770200002",
-      userType: "vet",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 5,
-      name: "مشرف اختبار",
-      email: "admin@petapp.com",
-      phone: "+964770000001",
-      userType: "admin",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 6,
-      name: "حسن علي البصري",
-      email: "user3@example.com",
-      phone: "+964770100003",
-      userType: "user",
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 7,
-      name: "زينب حسين الموصلي",
-      email: "user4@example.com",
-      phone: "+964770100004",
-      userType: "user",
-      isActive: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: 8,
-      name: "د. أحمد جاسم - طبيب بيطري",
-      email: "vet3@example.com",
-      phone: "+964770200003",
-      userType: "vet",
-      isActive: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
-
-  // Use real data if available, otherwise use mock data
-  const displayUsers: UserData[] = error
-    ? mockUsers
-    : searchQuery.length > 2
-    ? (searchResults?.map((user) => ({
-        ...user,
-        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
-        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
-      })) as UserData[]) || []
-    : (usersData?.map((user) => ({
-        ...user,
-        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
-        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
-      })) as UserData[]) || [];
-  const isLoadingData = isLoading || searchLoading;
+    }
+  }, [userPermissionsData, showPermissionsModal, permissionsResponse]);
 
   const handleBanUser = (user: UserData) => {
     const action = user.isActive ? "حظر" : "إلغاء حظر";
@@ -578,12 +264,23 @@ export default function AdminUsersList() {
         text: action,
         style: user.isActive ? "destructive" : "default",
         onPress: () => {
-          banUserMutation.mutate({
-            userId: user.id,
-            adminId: currentAdminId,
-            ban: user.isActive,
-            reason: `${action} من قبل المشرف`,
-          });
+          banUserMutation.mutate(
+            {
+              userId: user.id,
+              adminId: currentAdminId,
+              ban: user.isActive,
+              reason: `${action} من قبل المشرف`,
+            } as any,
+            {
+              onSuccess: () => {
+                refetch();
+                Alert.alert("نجح", "تم تحديث حالة المستخدم بنجاح");
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", error.message || "فشل في تحديث حالة المستخدم");
+              },
+            }
+          );
         },
       },
     ]);
@@ -596,11 +293,22 @@ export default function AdminUsersList() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          deleteUserMutation.mutate({
-            userId: user.id,
-            adminId: currentAdminId,
-            reason: "حذف من قبل المشرف",
-          });
+          deleteUserMutation.mutate(
+            {
+              userId: user.id,
+              adminId: currentAdminId,
+              reason: "حذف من قبل المشرف",
+            } as any,
+            {
+              onSuccess: () => {
+                refetch();
+                Alert.alert("نجح", "تم حذف المستخدم بنجاح");
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", error.message || "فشل في حذف المستخدم");
+              },
+            }
+          );
         },
       },
     ]);
@@ -617,20 +325,27 @@ export default function AdminUsersList() {
       return;
     }
 
-    Alert.alert("إرسال رسالة", `سيتم إرسال الرسالة إلى ${messageRecipient.name}`, [
-      { text: "إلغاء", style: "cancel" },
+    sendMessageMutation.mutate(
       {
-        text: "إرسال",
-        onPress: () => {
-          // Here you would send the message to backend
-          console.log("Sending message to:", messageRecipient.id, messageText);
+        recipientId: messageRecipient.id,
+        senderId: currentAdminId,
+        title: "رسالة من الإدارة",
+        content: messageText,
+        type: "info" as const,
+        priority: "normal" as const,
+      },
+      {
+        onSuccess: () => {
           Alert.alert("نجح", "تم إرسال الرسالة بنجاح");
           setShowMessageModal(false);
           setMessageRecipient(null);
           setMessageText("");
         },
-      },
-    ]);
+        onError: (error) => {
+          Alert.alert("خطأ", error.message || "فشل في إرسال الرسالة");
+        },
+      }
+    );
   };
 
   const handleViewProfile = (user: UserData) => {
@@ -650,80 +365,76 @@ export default function AdminUsersList() {
 
   const handleOpenPermissions = (user: UserData) => {
     setSelectedUser(user);
-    // Reset permissions for demo - in real app, load user's current permissions
-    setUserPermissions((prev) => prev.map((p) => ({ ...p, enabled: false })));
+    setSelectedPermissions([]);
     setShowPermissionsModal(true);
   };
 
-  const handleTogglePermission = (permissionId: string) => {
-    setUserPermissions((prev) => prev.map((p) => (p.id === permissionId ? { ...p, enabled: !p.enabled } : p)));
+  const handleTogglePermission = (permissionId: number) => {
+    setSelectedPermissions((prev) => {
+      if (prev.includes(permissionId)) {
+        return prev.filter((id) => id !== permissionId);
+      } else {
+        return [...prev, permissionId];
+      }
+    });
+
+    // Update the local state
+    setPermissionCategories((prev) =>
+      prev.map((category) => ({
+        ...category,
+        permissions: category.permissions.map((p) => (p.id === permissionId ? { ...p, enabled: !p.enabled } : p)),
+      }))
+    );
   };
 
-  const handleExpandPermission = (permissionId: string) => {
-    setUserPermissions((prev) => prev.map((p) => (p.id === permissionId ? { ...p, expanded: !p.expanded } : p)));
-  };
-
-  const handleToggleSubOption = (permissionId: string, subOptionId: string) => {
-    setUserPermissions((prev) =>
-      prev.map((p) =>
-        p.id === permissionId
-          ? {
-              ...p,
-              subOptions: p.subOptions?.map((sub) =>
-                sub.id === subOptionId ? { ...sub, enabled: !sub.enabled } : sub
-              ),
-            }
-          : p
-      )
+  const handleToggleCategory = (categoryName: string) => {
+    setPermissionCategories((prev) =>
+      prev.map((cat) => (cat.name === categoryName ? { ...cat, expanded: !cat.expanded } : cat))
     );
   };
 
   const handleSavePermissions = () => {
     if (!selectedUser) return;
 
-    const enabledPermissions = userPermissions.filter((p) => p.enabled);
-    const enabledSubOptions = userPermissions.flatMap(
-      (p) => p.subOptions?.filter((sub) => sub.enabled).map((sub) => ({ ...sub, parentId: p.id })) || []
-    );
+    const enabledPermissions = permissionCategories.flatMap((cat) => cat.permissions.filter((p) => p.enabled));
 
-    // تطبيق الصلاحيات فعلياً
-    const applyPermissions = () => {
-      console.log("Applying permissions for user:", selectedUser.id);
-      console.log(
-        "Main permissions:",
-        enabledPermissions.map((p) => p.id)
-      );
-      console.log(
-        "Sub permissions:",
-        enabledSubOptions.map((s) => s.id)
-      );
-
-      // هنا يتم حفظ الصلاحيات في قاعدة البيانات
-      // وتحديث حالة المستخدم ليصبح مشرفاً فعالاً
-
-      Alert.alert(
-        "تم بنجاح",
-        `تم منح ${selectedUser.name} الصلاحيات المحددة.\n\nسيتمكن الآن من:\n${enabledPermissions
-          .map((p) => `• ${p.name}`)
-          .join("\n")}\n\nوسيظهر له في لوحة المشرف أزرار الإجراءات السريعة حسب صلاحياته.`,
-        [{ text: "موافق" }]
-      );
-
-      setShowPermissionsModal(false);
-      setSelectedUser(null);
-    };
+    if (enabledPermissions.length === 0) {
+      Alert.alert("تنبيه", "يرجى اختيار صلاحية واحدة على الأقل");
+      return;
+    }
 
     Alert.alert(
       "تأكيد حفظ الصلاحيات",
       `سيتم منح ${selectedUser.name} الصلاحيات التالية:\n\n${enabledPermissions
-        .map((p) => `• ${p.name}`)
-        .join("\n")}\n\nهذا سيجعله مشرفاً فعالاً ويمكنه الوصول للأزرار والصفحات المخصصة حسب صلاحياته.`,
+        .map((p) => `• ${p.displayName}`)
+        .join("\n")}\n\nهذا سيجعله مشرفاً فعالاً.`,
       [
         { text: "إلغاء", style: "cancel" },
         {
           text: "تأكيد وحفظ",
           style: "default",
-          onPress: applyPermissions,
+          onPress: () => {
+            assignPermissionsMutation.mutate(
+              {
+                userId: selectedUser.id,
+                permissionIds: selectedPermissions,
+                assignedBy: currentAdminId,
+              },
+              {
+                onSuccess: () => {
+                  Alert.alert("تم بنجاح", `تم منح ${selectedUser.name} الصلاحيات المحددة بنجاح`);
+                  setShowPermissionsModal(false);
+                  setSelectedUser(null);
+                  setSelectedPermissions([]);
+                  refetch();
+                  refetchSupervisors();
+                },
+                onError: (error) => {
+                  Alert.alert("خطأ", error.message || "فشل في حفظ الصلاحيات");
+                },
+              }
+            );
+          },
         },
       ]
     );
@@ -805,9 +516,6 @@ export default function AdminUsersList() {
         <TouchableOpacity style={styles.actionButton} onPress={() => handleViewProfile(user)}>
           <Eye size={18} color="#4ECDC4" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <Edit size={18} color="#45B7D1" />
-        </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={() => handleOpenPermissions(user)}>
           <Shield size={18} color="#9C27B0" />
         </TouchableOpacity>
@@ -883,24 +591,6 @@ export default function AdminUsersList() {
 
         {showFilters && renderFilters()}
 
-        {/* Test Moderator Login Button */}
-        <TouchableOpacity
-          style={styles.testModeratorButton}
-          onPress={async () => {
-            try {
-              const result = await loginAsModerator();
-              if (result.success) {
-                Alert.alert("نجح", result.message);
-              }
-            } catch (error) {
-              Alert.alert("خطأ", "فشل في تسجيل دخول المشرف التجريبي");
-            }
-          }}
-        >
-          <TestTube size={20} color="#8B5CF6" />
-          <Text style={styles.testModeratorButtonText}>دخول كمشرف وهمي للاختبار</Text>
-        </TouchableOpacity>
-
         {/* Moderators Section Toggle */}
         <TouchableOpacity
           style={styles.moderatorsSectionToggle}
@@ -919,138 +609,53 @@ export default function AdminUsersList() {
           <View style={styles.moderatorsSection}>
             <Text style={styles.moderatorsSectionSubtitle}>قائمة المشرفين والصلاحيات المخصصة لهم</Text>
 
-            {/* إضافة المشرف التجريبي إلى القائمة */}
-            <View style={styles.moderatorCard}>
-              <View style={styles.moderatorHeader}>
-                <View style={styles.moderatorInfo}>
-                  <Text style={styles.moderatorName}>أحمد المشرف - مشرف تجريبي</Text>
-                  <Text style={styles.moderatorEmail}>moderator@test.com</Text>
-                  <Text style={styles.moderatorId}>ID: mod-123</Text>
-                </View>
-                <View style={[styles.moderatorStatusBadge, { backgroundColor: "#45B7D1" }]}>
-                  <Text style={styles.moderatorStatusText}>مشرف تجريبي</Text>
-                </View>
+            {supervisorsLoading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>جاري تحميل المشرفين...</Text>
               </View>
-
-              <View style={styles.permissionsList}>
-                <Text style={styles.permissionsListTitle}>الصلاحيات:</Text>
-
-                <View style={styles.permissionTag}>
-                  <Text style={styles.permissionTagText}>الرد على الاستشارات</Text>
-                </View>
-
-                <View style={styles.permissionTag}>
-                  <Text style={styles.permissionTagText}>الرد على الاستفسارات</Text>
-                </View>
-
-                <View style={styles.permissionTag}>
-                  <Text style={styles.permissionTagText}>إدارة الأقسام (العيادات، النصائح، المقالات)</Text>
-                </View>
+            ) : supervisors.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Shield size={48} color="#ccc" />
+                <Text style={styles.emptyText}>لا يوجد مشرفين</Text>
               </View>
-
-              <View style={styles.moderatorActions}>
-                <TouchableOpacity
-                  style={styles.moderatorActionButton}
-                  onPress={async () => {
-                    try {
-                      const result = await loginAsModerator();
-                      if (result.success) {
-                        Alert.alert("نجح", "تم تسجيل دخول المشرف التجريبي بنجاح. ستظهر القائمة العلوية الآن.");
-                      }
-                    } catch (error) {
-                      Alert.alert("خطأ", "فشل في تسجيل دخول المشرف التجريبي");
-                    }
-                  }}
-                >
-                  <TestTube size={16} color="#8B5CF6" />
-                  <Text style={[styles.moderatorActionText, { color: "#8B5CF6" }]}>تسجيل دخول تجريبي</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {supervisors.map((moderator) => (
-              <View key={moderator.id} style={styles.moderatorCard}>
-                <View style={styles.moderatorHeader}>
-                  <View style={styles.moderatorInfo}>
-                    <Text style={styles.moderatorName}>{moderator.name}</Text>
-                    <Text style={styles.moderatorEmail}>{moderator.email}</Text>
-                    <Text style={styles.moderatorId}>ID: {moderator.id}</Text>
+            ) : (
+              supervisors.map((moderator) => (
+                <View key={moderator.id} style={styles.moderatorCard}>
+                  <View style={styles.moderatorHeader}>
+                    <View style={styles.moderatorInfo}>
+                      <Text style={styles.moderatorName}>{moderator.name}</Text>
+                      <Text style={styles.moderatorEmail}>{moderator.email}</Text>
+                      <Text style={styles.moderatorId}>ID: {moderator.id}</Text>
+                    </View>
+                    <View style={[styles.moderatorStatusBadge, { backgroundColor: "#45B7D1" }]}>
+                      <Text style={styles.moderatorStatusText}>مشرف</Text>
+                    </View>
                   </View>
-                  <View
-                    style={[
-                      styles.moderatorStatusBadge,
-                      { backgroundColor: moderator.permissions.isSuperModerator ? "#8B5CF6" : "#45B7D1" },
-                    ]}
-                  >
-                    <Text style={styles.moderatorStatusText}>
-                      {moderator.permissions.isSuperModerator ? "مشرف عام" : "مشرف"}
-                    </Text>
+
+                  <View style={styles.permissionsList}>
+                    <Text style={styles.permissionsListTitle}>الصلاحيات:</Text>
+
+                    <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
+                      {moderator.permissions?.map((permission) => (
+                        <View key={permission.permissionName} style={styles.permissionTag}>
+                          <Text style={styles.permissionTagText}>{permission.permissionDisplayName}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.moderatorActions}>
+                    <TouchableOpacity
+                      style={styles.moderatorActionButton}
+                      onPress={() => handleOpenPermissions(moderator)}
+                    >
+                      <Edit size={16} color="#45B7D1" />
+                      <Text style={styles.moderatorActionText}>تعديل الصلاحيات</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
-
-                <View style={styles.permissionsList}>
-                  <Text style={styles.permissionsListTitle}>الصلاحيات:</Text>
-
-                  {moderator?.permissions?.canReplyToConsultations && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>الرد على الاستشارات</Text>
-                    </View>
-                  )}
-
-                  {moderator?.permissions?.canReplyToInquiries && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>الرد على الاستفسارات</Text>
-                    </View>
-                  )}
-
-                  {moderator?.permissions?.canManageSections?.length > 0 && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>
-                        إدارة الأقسام (
-                        {moderator?.permissions?.canManageSections?.includes("all")
-                          ? "الكل"
-                          : moderator?.permissions?.canManageSections?.join(", ")}
-                        )
-                      </Text>
-                    </View>
-                  )}
-
-                  {moderator?.permissions?.canManageAds && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>إدارة الإعلانات</Text>
-                    </View>
-                  )}
-
-                  {moderator?.permissions?.canManageHomePage && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>إدارة الصفحة الرئيسية</Text>
-                    </View>
-                  )}
-
-                  {moderator?.permissions?.canSendMessages && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>إرسال الرسائل العامة</Text>
-                    </View>
-                  )}
-
-                  {moderator?.permissions?.canManageUsers && (
-                    <View style={styles.permissionTag}>
-                      <Text style={styles.permissionTagText}>إدارة المستخدمين</Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={styles.moderatorActions}>
-                  <TouchableOpacity
-                    style={styles.moderatorActionButton}
-                    onPress={() => handleOpenPermissions(moderator)}
-                  >
-                    <Edit size={16} color="#45B7D1" />
-                    <Text style={styles.moderatorActionText}>تعديل الصلاحيات</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
+              ))
+            )}
           </View>
         )}
 
@@ -1073,11 +678,11 @@ export default function AdminUsersList() {
           </View>
         </View>
 
-        {/* Error/Demo Warning */}
-        {error && (
+        {/* Error Warning */}
+        {usersError && (
           <View style={styles.demoWarning}>
-            <Text style={styles.demoWarningText}>🧪 وضع التجريب - البيانات وهمية</Text>
-            <Text style={styles.demoWarningSubtext}>خطأ في الاتصال بالخادم</Text>
+            <Text style={styles.demoWarningText}>⚠️ خطأ في تحميل البيانات</Text>
+            <Text style={styles.demoWarningSubtext}>{usersError.message}</Text>
           </View>
         )}
 
@@ -1117,8 +722,14 @@ export default function AdminUsersList() {
                 <X size={24} color="#666" />
               </TouchableOpacity>
               <Text style={styles.modalTitle}>إدارة الصلاحيات</Text>
-              <TouchableOpacity style={styles.modalSaveButton} onPress={handleSavePermissions}>
-                <Text style={styles.modalSaveButtonText}>حفظ</Text>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleSavePermissions}
+                disabled={assignPermissionsMutation.isPending}
+              >
+                <Text style={styles.modalSaveButtonText}>
+                  {assignPermissionsMutation.isPending ? "جاري الحفظ..." : "حفظ"}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -1133,53 +744,48 @@ export default function AdminUsersList() {
             <ScrollView style={styles.permissionsContainer}>
               <Text style={styles.permissionsTitle}>اختر الصلاحيات المطلوبة:</Text>
 
-              {userPermissions.map((permission) => (
-                <View key={permission.id} style={styles.permissionItem}>
-                  <TouchableOpacity
-                    style={styles.permissionContent}
-                    onPress={() => handleTogglePermission(permission.id)}
-                  >
-                    <View style={styles.permissionInfo}>
-                      <Text style={styles.permissionName}>{permission.name}</Text>
-                      <Text style={styles.permissionDescription}>{permission.description}</Text>
-                    </View>
-                    <View style={styles.permissionActions}>
-                      {permission.subOptions && (
-                        <TouchableOpacity
-                          style={styles.expandButton}
-                          onPress={() => handleExpandPermission(permission.id)}
-                        >
-                          {permission.expanded ? (
-                            <ChevronDown size={20} color="#666" />
-                          ) : (
-                            <ChevronRight size={20} color="#666" />
-                          )}
-                        </TouchableOpacity>
-                      )}
-                      <View style={[styles.permissionToggle, permission.enabled && styles.permissionToggleActive]}>
-                        {permission.enabled && <Check size={16} color="#fff" />}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-
-                  {permission.expanded && permission.subOptions && (
-                    <View style={styles.subOptionsContainer}>
-                      {permission.subOptions.map((subOption) => (
-                        <TouchableOpacity
-                          key={subOption.id}
-                          style={styles.subOptionItem}
-                          onPress={() => handleToggleSubOption(permission.id, subOption.id)}
-                        >
-                          <Text style={styles.subOptionName}>{subOption.name}</Text>
-                          <View style={[styles.subOptionToggle, subOption.enabled && styles.subOptionToggleActive]}>
-                            {subOption.enabled && <Check size={14} color="#fff" />}
-                          </View>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  )}
+              {permissionsLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>جاري تحميل الصلاحيات...</Text>
                 </View>
-              ))}
+              ) : (
+                permissionCategories.map((category) => (
+                  <View key={category.name} style={styles.categoryContainer}>
+                    <TouchableOpacity style={styles.categoryHeader} onPress={() => handleToggleCategory(category.name)}>
+                      <Text style={styles.categoryName}>{permissionTranslations[category.name]}</Text>
+                      {category.expanded ? (
+                        <ChevronDown size={20} color="#666" />
+                      ) : (
+                        <ChevronRight size={20} color="#666" />
+                      )}
+                    </TouchableOpacity>
+
+                    {category.expanded && (
+                      <View style={styles.permissionsGroup}>
+                        {category.permissions.map((permission) => (
+                          <TouchableOpacity
+                            key={permission.id}
+                            style={styles.permissionItem}
+                            onPress={() => handleTogglePermission(permission.id)}
+                          >
+                            <View style={styles.permissionInfo}>
+                              <Text style={styles.permissionName}>{permission.displayName}</Text>
+                              {permission.description && (
+                                <Text style={styles.permissionDescription}>{permission.description}</Text>
+                              )}
+                            </View>
+                            <View
+                              style={[styles.permissionToggle, permission.enabled && styles.permissionToggleActive]}
+                            >
+                              {permission.enabled && <Check size={16} color="#fff" />}
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                ))
+              )}
 
               <View style={styles.permissionsNote}>
                 <Text style={styles.permissionsNoteText}>
@@ -1363,6 +969,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 40,
   },
   loadingText: {
     fontSize: 16,
@@ -1421,6 +1028,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontFamily: "System",
   },
+  userBadgesContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   userTypeBadge: {
     alignSelf: "flex-end",
     paddingHorizontal: 8,
@@ -1432,6 +1044,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontFamily: "System",
+  },
+  shieldBadge: {
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  userStatusContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  messageButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: "#f0f8ff",
+    justifyContent: "center",
+    alignItems: "center",
   },
   statusIndicator: {
     width: 12,
@@ -1543,9 +1174,14 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   permissionItem: {
+    flex: 1,
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 12,
     marginBottom: 12,
+    padding: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -1602,6 +1238,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginTop: 16,
+    marginBottom: 70,
     borderWidth: 1,
     borderColor: "#ffeaa7",
   },
@@ -1663,10 +1300,10 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   chevron: {
-    transform: [{ rotate: "0deg" }],
+    transform: [{ rotate: "180deg" }],
   },
   chevronRotated: {
-    transform: [{ rotate: "180deg" }],
+    transform: [{ rotate: "0deg" }],
   },
   moderatorsSection: {
     backgroundColor: "#f8f9fa",
@@ -1780,51 +1417,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontFamily: "System",
   },
-  testModeratorButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f3f4f6",
-    marginHorizontal: 16,
-    marginVertical: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#8B5CF6",
-    borderStyle: "dashed",
-    gap: 12,
-  },
-  testModeratorButtonText: {
-    fontSize: 16,
-    color: "#8B5CF6",
-    fontWeight: "600",
-    textAlign: "right",
-    fontFamily: "System",
-  },
-  userBadgesContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  shieldBadge: {
-    backgroundColor: "#1a1a1a",
-    borderRadius: 12,
-    padding: 4,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userStatusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  messageButton: {
-    padding: 6,
-    borderRadius: 6,
-    backgroundColor: "#f0f8ff",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   messageContainer: {
     flex: 1,
     padding: 16,
@@ -1848,5 +1440,40 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     minHeight: 120,
     fontFamily: "System",
+  },
+
+  categoryContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    paddingVertical: 8,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+
+  categoryHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+
+  categoryName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#444",
+    textAlign: "right",
+  },
+
+  permissionsGroup: {
+    paddingTop: 6,
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
   },
 });

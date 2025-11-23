@@ -1,17 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
 import * as ImagePicker from "expo-image-picker";
@@ -20,24 +12,23 @@ import { Image, ArrowLeft, FileText, Plus, Upload } from "lucide-react-native";
 import Button from "@/components/Button 2";
 
 export default function AddArticleScreen() {
-  const { user } = useApp();
   const router = useRouter();
+  const quiryClient = useQueryClient();
+  const { user } = useApp();
 
   const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    authorTitle: "",
-    content: "",
-    category: "",
+    title: "عنوان المقال",
+    author: "محمد عمر هاشم الماجدي",
+    authorTitle: "كتاب عن تربيه الحيوانات",
+    content: "محتوى الكتاب",
+    category: "التصنيف",
   });
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<any>(null);
 
   // const createArticleMutation = trpc.admin.content.createMagazine.useMutation();
-  const createArticleMutation = useMutation(
-    trpc.admin.content.createArticle.mutationOptions()
-  );
+  const createArticleMutation = useMutation(trpc.admin.content.createMagazine.mutationOptions());
 
   const pickImage = async () => {
     try {
@@ -82,13 +73,18 @@ export default function AddArticleScreen() {
   };
 
   const handleSave = () => {
+    if (!selectedImage) {
+      Alert.alert("خطأ", "صورى الغلاف مطلوبة");
+      return;
+    }
+
     if (!formData.title || !formData.author) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert("خطأ", "عنوان الكتاب مطلوب");
       return;
     }
 
     if (!formData.content && !selectedFile) {
-      Alert.alert("خطأ", "يرجى إدخال محتوى المقال أو رفع ملف");
+      Alert.alert("خطأ", "محتوى الكتاب مطلوب");
       return;
     }
 
@@ -97,15 +93,18 @@ export default function AddArticleScreen() {
         adminId: user?.id ? Number(user.id) : 1,
         title: formData.title,
         description: formData.content || formData.authorTitle,
+        author: formData.author,
+        authorTitle: formData.authorTitle,
         category: formData.category as any,
         coverImage: selectedImage,
         pdfUrl: selectedFile?.uri,
         publishDate: new Date(),
-      },
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم إضافة المقال بنجاح");
           router.back();
+          quiryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "فشل في إضافة المقال");
@@ -123,10 +122,7 @@ export default function AddArticleScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -138,12 +134,8 @@ export default function AddArticleScreen() {
           <View style={styles.imageSection}>
             <View style={styles.imagePlaceholder}>
               <Image size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>
-                {selectedImage ? "تم اختيار الصورة" : "اختر صورة المقال"}
-              </Text>
-              <Text style={styles.imageSubText}>
-                من المعرض أو التقاط صورة جديدة
-              </Text>
+              <Text style={styles.imagePlaceholderText}>{selectedImage ? "تم اختيار الصورة" : "اختر صورة المقال"}</Text>
+              <Text style={styles.imageSubText}>من المعرض أو التقاط صورة جديدة</Text>
             </View>
             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Upload size={16} color={COLORS.white} />
@@ -167,9 +159,7 @@ export default function AddArticleScreen() {
             <TextInput
               style={styles.input}
               value={formData.author}
-              onChangeText={(text) =>
-                setFormData({ ...formData, author: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, author: text })}
               placeholder="أدخل اسم الكاتب"
               textAlign="right"
             />
@@ -180,9 +170,7 @@ export default function AddArticleScreen() {
             <TextInput
               style={styles.input}
               value={formData.authorTitle}
-              onChangeText={(text) =>
-                setFormData({ ...formData, authorTitle: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, authorTitle: text })}
               placeholder="أدخل مسمى الكاتب"
               textAlign="right"
             />
@@ -193,9 +181,7 @@ export default function AddArticleScreen() {
             <TextInput
               style={styles.input}
               value={formData.category}
-              onChangeText={(text) =>
-                setFormData({ ...formData, category: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, category: text })}
               placeholder="أدخل تصنيف المقال"
               textAlign="right"
             />
@@ -205,39 +191,25 @@ export default function AddArticleScreen() {
             <Text style={styles.sectionTitle}>ملف المقال (اختياري)</Text>
             <View style={styles.filePlaceholder}>
               <FileText size={32} color={COLORS.primary} />
-              <Text style={styles.filePlaceholderText}>
-                {selectedFile ? selectedFile.name : "اختر ملف المقال"}
-              </Text>
+              <Text style={styles.filePlaceholderText}>{selectedFile ? selectedFile.name : "اختر ملف المقال"}</Text>
               <Text style={styles.fileSubText}>PDF, DOC, DOCX أو ملف نصي</Text>
               {selectedFile && (
-                <Text style={styles.fileInfo}>
-                  الحجم: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                </Text>
+                <Text style={styles.fileInfo}>الحجم: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Text>
               )}
             </View>
             <TouchableOpacity style={styles.fileButton} onPress={pickDocument}>
               <Upload size={16} color={COLORS.primary} />
-              <Text style={styles.fileButtonText}>
-                {selectedFile ? "تغيير الملف" : "اختيار ملف المقال"}
-              </Text>
+              <Text style={styles.fileButtonText}>{selectedFile ? "تغيير الملف" : "اختيار ملف المقال"}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              محتوى المقال {!selectedFile && "*"}
-            </Text>
+            <Text style={styles.label}>محتوى المقال {!selectedFile && "*"}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
-              onChangeText={(text) =>
-                setFormData({ ...formData, content: text })
-              }
-              placeholder={
-                selectedFile
-                  ? "محتوى اختياري (تم رفع ملف)"
-                  : "أدخل محتوى المقال"
-              }
+              onChangeText={(text) => setFormData({ ...formData, content: text })}
+              placeholder={selectedFile ? "محتوى اختياري (تم رفع ملف)" : "أدخل محتوى المقال"}
               textAlign="right"
               multiline
               numberOfLines={8}
@@ -248,9 +220,7 @@ export default function AddArticleScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={
-            createArticleMutation.isPending ? "جاري الإضافة..." : "إضافة المقال"
-          }
+          title={createArticleMutation.isPending ? "جاري الإضافة..." : "إضافة المقال"}
           onPress={handleSave}
           type="primary"
           size="large"

@@ -178,7 +178,7 @@ export default function AdminDashboard() {
     }
 
     sendMessageMutation.mutate({
-      senderId: currentUserId,
+      senderId: user?.id,
       title: newMessage.title,
       content: newMessage.content,
       type: newMessage.type,
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
       priority: newMessage.priority,
       imageUrl: newMessage.imageUrl,
       linkUrl: newMessage.linkUrl,
-    });
+    } as any);
   };
 
   const toggleCategory = (category: string) => {
@@ -497,12 +497,12 @@ export default function AdminDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
         <View style={styles.actionsGrid}>
-          {hasPermission("assign_roles") && (
+          {/* {hasPermission("assign_roles") && (
             <TouchableOpacity style={styles.actionCard} onPress={() => setShowRoleModal(true)}>
               <Users size={24} color="#4ECDC4" />
               <Text style={styles.actionText}>إدارة الأدوار</Text>
             </TouchableOpacity>
-          )}
+          )} */}
 
           {hasPermission("send_messages") && (
             <TouchableOpacity style={styles.actionCard} onPress={() => setSendMessageModalVisible(true)}>
@@ -532,10 +532,12 @@ export default function AdminDashboard() {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-users-list")}>
-            <Users size={24} color="#FF6B6B" />
-            <Text style={styles.actionText}>عرض جميع المستخدمين</Text>
-          </TouchableOpacity>
+          {hasPermission("assign_roles") && (
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-users-list")}>
+              <Users size={24} color="#FF6B6B" />
+              <Text style={styles.actionText}>عرض جميع المستخدمين</Text>
+            </TouchableOpacity>
+          )}
 
           {hasPermission("manage_approvals") && (
             <TouchableOpacity
@@ -776,7 +778,7 @@ export default function AdminDashboard() {
           </View>
 
           <ScrollView style={styles.supervisorModalScroll}>
-            {supervisors.map((supervisor) => (
+            {supervisors.map((supervisor: any) => (
               <View key={supervisor.id} style={styles.supervisorCard}>
                 <View style={styles.supervisorHeader}>
                   <View style={styles.supervisorInfo}>
@@ -790,7 +792,7 @@ export default function AdminDashboard() {
 
                 <View style={styles.permissionsContainer}>
                   <Text style={styles.permissionsTitle}>الصلاحيات:</Text>
-                  {supervisor.permissions.map((permission, index) => (
+                  {supervisor.permissions.map((permission: any, index: number) => (
                     <View key={index} style={styles.permissionItem}>
                       <View
                         style={[

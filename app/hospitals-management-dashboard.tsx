@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useRouter } from "expo-router";
@@ -37,10 +37,11 @@ export default function HospitalsManagementDashboardScreen() {
     refetch: refetchHospitals,
   } = useQuery(trpc.hospitals.getAll.queryOptions({}));
   const {
-    data: announcements,
+    data: announcementsData,
     isLoading: announcementsLoading,
     error: announcementsError,
   } = useQuery(trpc.announcements.getManagementList.queryOptions({ limit: 10, offset: 0 }));
+  const announcements = useMemo(() => (announcementsData as any)?.announcements, [announcementsData]);
 
   const deleteHospitalMutation = useMutation(trpc.hospitals.delete.mutationOptions());
 

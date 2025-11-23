@@ -1,17 +1,9 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
 import * as ImagePicker from "expo-image-picker";
@@ -20,24 +12,23 @@ import { ArrowLeft, FileText, Image, Plus, Upload } from "lucide-react-native";
 import Button from "@/components/Button 2";
 
 export default function AddBookScreen() {
-  const { user } = useApp();
+  const quiryClient = useQueryClient();
   const router = useRouter();
+  const { user } = useApp();
 
   const [formData, setFormData] = useState({
-    title: "",
-    author: "",
-    description: "",
-    pages: "",
-    category: "",
+    title: "عنوان الكتاب",
+    author: "محمد احمد حسن",
+    description: "تفسير ظهور الكلاب في المناطق السكنية",
+    pages: "300",
+    category: "تصنيف الكتاب",
   });
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<any>(null);
 
   // const createBookMutation = trpc.admin.content.createBook.useMutation();
-  const createBookMutation = useMutation(
-    trpc.admin.content.createBook.mutationOptions()
-  );
+  const createBookMutation = useMutation(trpc.admin.content.createBook.mutationOptions());
 
   const pickImage = async () => {
     try {
@@ -98,7 +89,7 @@ export default function AddBookScreen() {
         title: formData.title,
         author: formData.author,
         description: formData.description,
-        pages: formData.pages ? parseInt(formData.pages) : undefined,
+        pageCount: formData.pages ? parseInt(formData.pages) : undefined,
         category: formData.category as any,
         coverImage: selectedImage || "",
         pdfUrl: selectedFile ? selectedFile.uri : undefined,
@@ -106,6 +97,7 @@ export default function AddBookScreen() {
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم إضافة الكتاب بنجاح");
+          quiryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
           router.back();
         },
         onError: (error) => {
@@ -124,10 +116,7 @@ export default function AddBookScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -139,12 +128,8 @@ export default function AddBookScreen() {
           <View style={styles.imageSection}>
             <View style={styles.imagePlaceholder}>
               <Image size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>
-                {selectedImage ? "تم اختيار الصورة" : "اختر صورة الكتاب"}
-              </Text>
-              <Text style={styles.imageSubText}>
-                من المعرض أو التقاط صورة جديدة
-              </Text>
+              <Text style={styles.imagePlaceholderText}>{selectedImage ? "تم اختيار الصورة" : "اختر صورة الكتاب"}</Text>
+              <Text style={styles.imageSubText}>من المعرض أو التقاط صورة جديدة</Text>
             </View>
             <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Upload size={16} color={COLORS.white} />
@@ -156,23 +141,15 @@ export default function AddBookScreen() {
             <Text style={styles.sectionTitle}>ملف الكتاب *</Text>
             <View style={styles.filePlaceholder}>
               <FileText size={32} color={COLORS.primary} />
-              <Text style={styles.filePlaceholderText}>
-                {selectedFile ? selectedFile.name : "اختر ملف الكتاب"}
-              </Text>
-              <Text style={styles.fileSubText}>
-                PDF, EPUB, DOC, DOCX أو ملف نصي
-              </Text>
+              <Text style={styles.filePlaceholderText}>{selectedFile ? selectedFile.name : "اختر ملف الكتاب"}</Text>
+              <Text style={styles.fileSubText}>PDF, EPUB, DOC, DOCX أو ملف نصي</Text>
               {selectedFile && (
-                <Text style={styles.fileInfo}>
-                  الحجم: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                </Text>
+                <Text style={styles.fileInfo}>الحجم: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Text>
               )}
             </View>
             <TouchableOpacity style={styles.fileButton} onPress={pickDocument}>
               <Upload size={16} color={COLORS.primary} />
-              <Text style={styles.fileButtonText}>
-                {selectedFile ? "تغيير الملف" : "اختيار ملف الكتاب"}
-              </Text>
+              <Text style={styles.fileButtonText}>{selectedFile ? "تغيير الملف" : "اختيار ملف الكتاب"}</Text>
             </TouchableOpacity>
           </View>
 
@@ -192,9 +169,7 @@ export default function AddBookScreen() {
             <TextInput
               style={styles.input}
               value={formData.author}
-              onChangeText={(text) =>
-                setFormData({ ...formData, author: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, author: text })}
               placeholder="أدخل اسم المؤلف"
               textAlign="right"
             />
@@ -205,9 +180,7 @@ export default function AddBookScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) =>
-                setFormData({ ...formData, description: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, description: text })}
               placeholder="أدخل وصف الكتاب"
               textAlign="right"
               multiline
@@ -232,9 +205,7 @@ export default function AddBookScreen() {
             <TextInput
               style={styles.input}
               value={formData.category}
-              onChangeText={(text) =>
-                setFormData({ ...formData, category: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, category: text })}
               placeholder="أدخل تصنيف الكتاب"
               textAlign="right"
             />
@@ -244,9 +215,7 @@ export default function AddBookScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={
-            createBookMutation.isPending ? "جاري الإضافة..." : "إضافة الكتاب"
-          }
+          title={createBookMutation.isPending ? "جاري الإضافة..." : "إضافة الكتاب"}
           onPress={handleSave}
           type="primary"
           size="large"
