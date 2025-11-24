@@ -13,7 +13,20 @@ import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ArrowRight, MapPin, Phone, Clock, Star, Mail, Bell, BellOff, MessageSquare } from "lucide-react-native";
+import {
+  ArrowRight,
+  MapPin,
+  Phone,
+  Clock,
+  Star,
+  Mail,
+  Bell,
+  BellOff,
+  MessageSquare,
+  Earth,
+  Facebook,
+  Instagram,
+} from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { VetStoreProduct } from "../mocks/data"; // Assuming this is still valid for products
@@ -32,7 +45,11 @@ interface Store {
   bannerImage: string | null;
   rating: number;
   isActive: boolean;
-  // Add workingHours and reviewCount if added to schema later
+  workingHours: string;
+  website: string;
+  facebook: string;
+  instagram: string;
+  whatsapp: string;
 }
 
 export default function StoreDetailsScreen() {
@@ -126,6 +143,26 @@ export default function StoreDetailsScreen() {
     }
   };
 
+  // Open external links
+  const handleOpenLink = async (url: string) => {
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("خطأ", "لا يمكن فتح الرابط");
+      }
+    } catch (error) {
+      console.error("Failed to open link:", error);
+    }
+  };
+
+  // Open WhatsApp chat
+  const handleWhatsApp = (phone: string) => {
+    const whatsappUrl = `https://wa.me/${phone}`;
+    handleOpenLink(whatsappUrl);
+  };
+
   // Handle loading and error states
   if (isLoading || isStoreProductsLoading) {
     return <ActivityIndicator size="large" color={COLORS.primary} />;
@@ -205,13 +242,40 @@ export default function StoreDetailsScreen() {
               </TouchableOpacity>
             )}
 
-            {/* Commented out working hours as it's not in schema */}
-            {/* <View style={styles.detailItem}>
-              <Clock size={20} color={COLORS.darkGray} />
-              <Text style={styles.detailText}>
-                {storeData.workingHours.days}: {storeData.workingHours.open} - {storeData.workingHours.close}
-              </Text>
-            </View> */}
+            {storeData?.workingHours && (
+              <View style={styles.detailItem}>
+                <Clock size={20} color={COLORS.darkGray} />
+                <Text style={styles.detailText}>{storeData.workingHours}</Text>
+              </View>
+            )}
+
+            {storeData.website && (
+              <TouchableOpacity style={styles.detailItem} onPress={() => handleOpenLink(storeData.website)}>
+                <Earth size={20} color={COLORS.primary} />
+                <Text style={styles.detailText}>{storeData.website}</Text>
+              </TouchableOpacity>
+            )}
+
+            {storeData.facebook && (
+              <TouchableOpacity style={styles.detailItem} onPress={() => handleOpenLink(storeData.facebook)}>
+                <Facebook size={20} color={COLORS.primary} />
+                <Text style={styles.detailText}>{storeData.facebook}</Text>
+              </TouchableOpacity>
+            )}
+
+            {storeData.instagram && (
+              <TouchableOpacity style={styles.detailItem} onPress={() => handleOpenLink(storeData.instagram)}>
+                <Instagram size={20} color={COLORS.primary} />
+                <Text style={styles.detailText}>{storeData.instagram}</Text>
+              </TouchableOpacity>
+            )}
+
+            {storeData.whatsapp && (
+              <TouchableOpacity style={styles.detailItem} onPress={() => handleWhatsApp(storeData.whatsapp)}>
+                <Image style={{ width: 20, height: 20 }} source={require("../assets/whatsapp.png")} />
+                <Text style={styles.detailText}>{storeData.whatsapp}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.actionsSection}>

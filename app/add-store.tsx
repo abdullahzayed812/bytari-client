@@ -23,6 +23,10 @@ interface StoreFormData {
   licenseImage: string;
   identityImage: string;
   workingHours: string;
+  facebook: string;
+  instagram: string;
+  whatsapp: string;
+  website: string;
 }
 
 export default function AddStoreScreen() {
@@ -42,6 +46,10 @@ export default function AddStoreScreen() {
     licenseImage: "https://example.com/store-license.jpg",
     identityImage: "https://bytari.com/media/identity-image.png",
     workingHours: "من السبت إلى الخميس: 10:00 صباحًا - 10:00 مساءً",
+    facebook: "https://facebook.com/mohamed-ali",
+    instagram: "https://instagram.com/mohamed-ali",
+    whatsapp: "07993322113",
+    website: "https://bytari.com",
   });
 
   const createStoreMutation = useMutation(trpc.stores.create.mutationOptions({}));
@@ -80,6 +88,10 @@ export default function AddStoreScreen() {
         licenseImage: formData.licenseImage,
         identityImage: formData.identityImage,
         workingHours: formData.workingHours,
+        facebook: formData.facebook,
+        instagram: formData.instagram,
+        whatsapp: formData.whatsapp,
+        website: formData.website,
       };
 
       // ✅ Add adminId only if user has admin access
@@ -240,6 +252,62 @@ export default function AddStoreScreen() {
                   onChangeText={(text) => setFormData((prev) => ({ ...prev, workingHours: text }))}
                   placeholder="مثال: السبت - الخميس: 8:00 ص - 10:00 م"
                   textAlign={isRTL ? "right" : "left"}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>الموقع الإلكتروني</Text>
+              <View style={styles.inputWithIcon}>
+                <Clock size={20} color={COLORS.darkGray} />
+                <TextInput
+                  style={styles.inputWithIconText}
+                  value={formData.website}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, website: text }))}
+                  placeholder="موقع العيادة الإكتروني"
+                  placeholderTextColor={COLORS.darkGray}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>صفحة الفيسبوك</Text>
+              <View style={styles.inputWithIcon}>
+                <Clock size={20} color={COLORS.darkGray} />
+                <TextInput
+                  style={styles.inputWithIconText}
+                  value={formData.facebook}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, facebook: text }))}
+                  placeholder="رابط صفحة فيسبوك"
+                  placeholderTextColor={COLORS.darkGray}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>صفحة الانستجرام</Text>
+              <View style={styles.inputWithIcon}>
+                <Clock size={20} color={COLORS.darkGray} />
+                <TextInput
+                  style={styles.inputWithIconText}
+                  value={formData.instagram}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, instagram: text }))}
+                  placeholder="رابط سفحة انستجرام"
+                  placeholderTextColor={COLORS.darkGray}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>رقم واتساب</Text>
+              <View style={styles.inputWithIcon}>
+                <Clock size={20} color={COLORS.darkGray} />
+                <TextInput
+                  style={styles.inputWithIconText}
+                  value={formData.whatsapp}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, whatsapp: text }))}
+                  placeholder="رقم تواصل واتساب"
+                  placeholderTextColor={COLORS.darkGray}
                 />
               </View>
             </View>
