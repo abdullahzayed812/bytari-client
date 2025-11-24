@@ -1,36 +1,29 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { ArrowLeft, Plus, Upload } from "lucide-react-native";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import Button from "../components/Button";
+import * as ImagePicker from "expo-image-picker";
 
 export default function AddTipScreen() {
-  const { user } = useApp();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user } = useApp();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    title: "",
-    content: "",
-    category: "",
+    title: "عنوان النصيحة",
+    content: "محتوى النصيحة",
+    category: "الفئة",
   });
 
   // const createTipMutation = trpc.admin.content.createTip.useMutation();
-  const createTipMutation = useMutation(
-    trpc.admin.content.createTip.mutationOptions()
-  );
+  const createTipMutation = useMutation(trpc.admin.content.createTip.mutationOptions());
 
   const handleSave = () => {
     if (!formData.title || !formData.content) {
@@ -44,10 +37,12 @@ export default function AddTipScreen() {
         title: formData.title,
         content: formData.content,
         category: formData.category,
-      },
+        image: selectedImage,
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم إضافة النصيحة بنجاح");
+          queryClient.invalidateQueries(trpc.content.listTips.queryKey());
           router.back();
         },
         onError: (error: any) => {
@@ -55,6 +50,23 @@ export default function AddTipScreen() {
         },
       }
     );
+  };
+
+  const pickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert("خطأ", "فشل في اختيار الصورة");
+    }
   };
 
   return (
@@ -66,10 +78,7 @@ export default function AddTipScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -83,7 +92,7 @@ export default function AddTipScreen() {
               <Upload size={32} color={COLORS.darkGray} />
               <Text style={styles.imagePlaceholderText}>اختر صورة النصيحة</Text>
             </View>
-            <TouchableOpacity style={styles.uploadButton}>
+            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
               <Upload size={16} color={COLORS.white} />
               <Text style={styles.uploadButtonText}>رفع صورة</Text>
             </TouchableOpacity>
@@ -105,9 +114,7 @@ export default function AddTipScreen() {
             <TextInput
               style={styles.input}
               value={formData.category}
-              onChangeText={(text) =>
-                setFormData({ ...formData, category: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, category: text })}
               placeholder="أدخل تصنيف النصيحة"
               textAlign="right"
             />
@@ -118,9 +125,7 @@ export default function AddTipScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
-              onChangeText={(text) =>
-                setFormData({ ...formData, content: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, content: text })}
               placeholder="أدخل محتوى النصيحة"
               textAlign="right"
               multiline
@@ -132,9 +137,7 @@ export default function AddTipScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={
-            createTipMutation.isPending ? "جاري الإضافة..." : "إضافة النصيحة"
-          }
+          title={createTipMutation.isPending ? "جاري الإضافة..." : "إضافة النصيحة"}
           onPress={handleSave}
           type="primary"
           size="large"

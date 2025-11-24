@@ -1,70 +1,27 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from "react-native";
-import React, { useEffect, useState } from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useRouter } from "expo-router";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Bell,
-  Building2,
-  MessageSquare,
-  AlertCircle,
-} from "lucide-react-native";
+import { ArrowLeft, ArrowRight, Bell, Building2, MessageSquare, AlertCircle } from "lucide-react-native";
 import { Stack } from "expo-router";
 import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
-
-interface Notification {
-  id: string;
-  type: "clinic" | "system";
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  icon?: string;
-}
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function NotificationsScreen() {
   const { t, isRTL } = useI18n();
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { user } = useApp();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const notificationsQuery = useQuery(
-    trpc.notifications.list.queryOptions(
-      { userId: parseInt(user?.id || "0") },
-      {
-        enabled: !!user?.id && !isNaN(parseInt(user.id)),
-        refetchOnMount: true,
-        refetchOnWindowFocus: true,
-      }
-    )
-  );
+  const { data, isLoading } = useQuery({
+    ...trpc.notifications.list.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user?.id,
+  });
+  const notifications: any = useMemo(() => (data as any)?.notifications, [data]);
 
-  useEffect(() => {
-    if (notificationsQuery.data?.success) {
-      const dbNotifications: Notification[] =
-        notificationsQuery.data.notifications.map((notif: any) => ({
-          id: notif.id.toString(),
-          type: notif.type || "system",
-          title: notif.title,
-          message: notif.message || notif.content,
-          time: notif.createdAt,
-          read: notif.isRead,
-        }));
-
-      setNotifications(dbNotifications);
-    }
-  }, [notificationsQuery.data]);
+  const markNotificationAsRead = useMutation(trpc.notifications.markAsRead.mutationOptions());
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -83,9 +40,7 @@ export default function NotificationsScreen() {
     if (!timeString) return "";
     const date = new Date(timeString);
     const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
     if (diffInHours < 1) {
       return "الآن";
@@ -97,17 +52,22 @@ export default function NotificationsScreen() {
     }
   };
 
-  const handleNotificationPress = (notification: Notification) => {
-    console.log("Notification pressed:", notification.id);
-    // Example navigation logic:
+  const handleNotificationPress = (notification: any) => {
+    markNotificationAsRead.mutate({ userId: user?.id, notificationId: notification?.id } as any);
+    queryClient.invalidateQueries(trpc.notifications.list.queryKey);
+
     if (notification?.type === "appointment") {
       router.push("/appointments");
     } else if (notification?.type === "order") {
       router.push("/orders");
     } else if (notification?.type === "inquiry") {
-      router.push("/inquiries");
+      router.push({ pathname: "/inquiry-details", params: { id: notification?.data?.inquiryId } });
+    } else if (notification?.type === "consultation") {
+      router.push({ pathname: "/consultation-details", params: { id: notification?.data?.consultationId } });
     }
   };
+
+  if (isLoading) return <ActivityIndicator size="large" />;
 
   return (
     <View style={styles.container}>
@@ -122,44 +82,27 @@ export default function NotificationsScreen() {
             fontWeight: "bold",
           },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              {isRTL ? (
-                <ArrowRight size={24} color={COLORS.black} />
-              ) : (
-                <ArrowLeft size={24} color={COLORS.black} />
-              )}
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
             </TouchableOpacity>
           ),
         }}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {notificationsQuery.isLoading ? (
+        {isLoading ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>جاري تحميل الإشعارات...</Text>
           </View>
-        ) : notifications.length > 0 ? (
-          notifications.map((notification) => (
+        ) : notifications?.length > 0 ? (
+          notifications?.map((notification: any) => (
             <TouchableOpacity
               key={notification.id}
-              style={[
-                styles.notificationCard,
-                !notification.read && styles.unreadCard,
-              ]}
+              style={[styles.notificationCard, !notification.isRead && styles.unreadCard]}
               onPress={() => handleNotificationPress(notification)}
             >
-              <View
-                style={[
-                  styles.notificationContent,
-                  { flexDirection: isRTL ? "row-reverse" : "row" },
-                ]}
-              >
-                <View style={styles.iconContainer}>
-                  {getNotificationIcon(notification.type)}
-                </View>
+              <View style={[styles.notificationContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                <View style={styles.iconContainer}>{getNotificationIcon(notification.type)}</View>
 
                 <View
                   style={[
@@ -171,34 +114,18 @@ export default function NotificationsScreen() {
                     },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.notificationTitle,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                  >
+                  <Text style={[styles.notificationTitle, { textAlign: isRTL ? "right" : "left" }]}>
                     {notification.title}
                   </Text>
-                  <Text
-                    style={[
-                      styles.notificationMessage,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                    numberOfLines={2}
-                  >
+                  <Text style={[styles.notificationMessage, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                     {notification.message}
                   </Text>
-                  <Text
-                    style={[
-                      styles.notificationTime,
-                      { textAlign: isRTL ? "right" : "left" },
-                    ]}
-                  >
+                  <Text style={[styles.notificationTime, { textAlign: isRTL ? "right" : "left" }]}>
                     {formatTime(notification.time)}
                   </Text>
                 </View>
 
-                {!notification.read && <View style={styles.unreadIndicator} />}
+                {!notification.isRead && <View style={styles.unreadIndicator} />}
               </View>
             </TouchableOpacity>
           ))
@@ -206,9 +133,7 @@ export default function NotificationsScreen() {
           <View style={styles.emptyState}>
             <Bell size={64} color={COLORS.lightGray} />
             <Text style={styles.emptyStateText}>لا توجد إشعارات</Text>
-            <Text style={styles.emptyStateSubtext}>
-              ستظهر الإشعارات هنا عند وصولها
-            </Text>
+            <Text style={styles.emptyStateSubtext}>ستظهر الإشعارات هنا عند وصولها</Text>
           </View>
         )}
       </ScrollView>

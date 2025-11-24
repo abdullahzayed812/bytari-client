@@ -46,7 +46,6 @@ export default function HomeScreen() {
     error: heroError,
   } = useQuery(trpc.admin.ads.getActive.queryOptions({ interface: isVet ? "vet" : "pet_owner" }));
   const heroImages = useMemo(() => (heroImagesData as any)?.ads, [heroImagesData]);
-  console.log(heroImagesData);
 
   const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
   // Real backend data for clinics that should be shown on home screen
@@ -71,15 +70,17 @@ export default function HomeScreen() {
   });
   const consultations = useMemo(() => (consultationsData as any)?.consultations, [consultationsData]);
 
-  const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions());
+  const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions({}));
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
+
+  console.log({ tips });
 
   const { data: articlesData, isLoading: articlesLoading } = useQuery(
     trpc.content.listMagazineArticles.queryOptions({})
   );
   const articles = useMemo(() => (articlesData as any)?.articles, [articlesData]);
 
-  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(trpc.content.listVetBooks.queryOptions());
+  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(trpc.content.listVetBooks.queryOptions({}));
   const vetBooks = useMemo(() => (vetBooksData as any)?.books, [vetBooksData]);
 
   const { data: lostPetsData, isLoading: lostPetsLoading } = useQuery(

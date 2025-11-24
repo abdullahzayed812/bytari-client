@@ -398,11 +398,6 @@ export default function AdminUsersList() {
 
     const enabledPermissions = permissionCategories.flatMap((cat) => cat.permissions.filter((p) => p.enabled));
 
-    if (enabledPermissions.length === 0) {
-      Alert.alert("تنبيه", "يرجى اختيار صلاحية واحدة على الأقل");
-      return;
-    }
-
     Alert.alert(
       "تأكيد حفظ الصلاحيات",
       `سيتم منح ${selectedUser.name} الصلاحيات التالية:\n\n${enabledPermissions
@@ -419,7 +414,7 @@ export default function AdminUsersList() {
                 userId: selectedUser.id,
                 permissionIds: selectedPermissions,
                 assignedBy: currentAdminId,
-              },
+              } as any,
               {
                 onSuccess: () => {
                   Alert.alert("تم بنجاح", `تم منح ${selectedUser.name} الصلاحيات المحددة بنجاح`);

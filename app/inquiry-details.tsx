@@ -232,7 +232,7 @@ export default function InquiryDetailsScreen() {
                       </View>
                       <View>
                         <View style={styles.responderNameRow}>
-                          <Text style={styles.responderName}>{response.responder?.name || "الإدارة"}</Text>
+                          <Text style={styles.responderName}>{"الإدارة"}</Text>
                           {response.isOfficial && (
                             <View style={styles.officialBadge}>
                               <CheckCircle size={12} color={COLORS.white} />
@@ -555,6 +555,7 @@ const styles = StyleSheet.create({
   responderInfo: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
   },
   responderAvatar: {
     width: 40,
