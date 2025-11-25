@@ -184,14 +184,14 @@ export default function SectionsScreen() {
       route: "inquiries",
       badgeCount: consultationsCount,
     },
-    {
-      id: "appointments",
-      title: "المواعيد",
-      icon: <Calendar size={32} color={COLORS.white} />,
-      color: "#3B82F6",
-      route: "/appointments",
-      badgeCount: appointmentsCount,
-    },
+    // {
+    //   id: "appointments",
+    //   title: "المواعيد",
+    //   icon: <Calendar size={32} color={COLORS.white} />,
+    //   color: "#3B82F6",
+    //   route: "/appointments",
+    //   badgeCount: appointmentsCount,
+    // },
     {
       id: "magazine",
       title: "المجلة البيطرية",
@@ -242,13 +242,13 @@ export default function SectionsScreen() {
       color: "#DC2626",
       route: "/job-vacancies",
     },
-    {
-      id: "lessons-lectures",
-      title: "دروس ومحاضرات",
-      icon: <GraduationCap size={32} color={COLORS.white} />,
-      color: "#7C3AED",
-      route: "/lessons-lectures",
-    },
+    // {
+    //   id: "lessons-lectures",
+    //   title: "دروس ومحاضرات",
+    //   icon: <GraduationCap size={32} color={COLORS.white} />,
+    //   color: "#7C3AED",
+    //   route: "/lessons-lectures",
+    // },
     {
       id: "courses-seminars",
       title: "دورات وندوات",

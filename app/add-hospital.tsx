@@ -15,10 +15,11 @@ import { useRouter } from "expo-router";
 import { ArrowRight, Save, MapPin, Phone, Clock, Building2 } from "lucide-react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function AddHospitalScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { t } = useI18n();
 
   // tRPC mutation for creating hospital
@@ -65,10 +66,12 @@ export default function AddHospitalScreen() {
               specialties: specialtiesArray,
               image: formData.image || undefined,
               isMain: formData.isMain,
-            },
+            } as any,
             {
               onSuccess: () => {
                 Alert.alert("تم", "تم إضافة المستشفى بنجاح");
+                queryClient.invalidateQueries(trpc.hospitals.getAll.queryKey);
+                queryClient.invalidateQueries(trpc.hospitals.getMainHospital.queryKey);
                 router.back();
               },
               onError: (error) => {

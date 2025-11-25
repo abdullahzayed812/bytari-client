@@ -190,8 +190,8 @@ export default function AddHospitalAnnouncementScreen() {
               <Calendar size={20} color="#0EA5E9" />
               <TextInput
                 style={[styles.textInput, styles.textInputWithIcon]}
-                value={announcementData.scheduledDate}
-                onChangeText={(text) => setAnnouncementData((prev) => ({ ...prev, scheduledDate: text }))}
+                value={announcementData.scheduledDate.toString()}
+                onChangeText={(text) => setAnnouncementData((prev) => ({ ...prev, scheduledDate: new Date(text) }))}
                 placeholder="YYYY-MM-DD (اتركه فارغاً للنشر الفوري)"
                 placeholderTextColor={COLORS.darkGray}
                 textAlign={isRTL ? "right" : "left"}
@@ -218,7 +218,7 @@ export default function AddHospitalAnnouncementScreen() {
                     {announcementTypes.find((t) => t.id === announcementData.type)?.label || "عام"}
                   </Text>
                 </View>
-                <Text style={styles.previewDate}>{announcementData.scheduledDate}</Text>
+                <Text style={styles.previewDate}>{announcementData.scheduledDate.toISOString()}</Text>
               </View>
 
               <Text style={styles.previewTitle}>{announcementData.title || "عنوان الإعلان"}</Text>

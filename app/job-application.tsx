@@ -13,7 +13,8 @@ import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, UserPlus, User, Mail, Phone, MapPin, GraduationCap, FileText, Send } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useApp } from "../providers/AppProvider";
 
 interface JobApplicationFormData {
   applicantName: string;
@@ -30,102 +31,170 @@ interface JobApplicationFormData {
 
 export default function JobApplicationScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { user } = useApp();
   const { jobId, jobTitle } = useLocalSearchParams<{ jobId?: string; jobTitle?: string }>();
 
-  const [formData, setFormData] = useState<JobApplicationFormData>({
-    applicantName: "",
-    applicantEmail: "",
-    applicantPhone: "",
-    location: "",
-    desiredPosition: "",
-    skills: "",
-    expectedSalary: "",
-    coverLetter: "",
-    experience: "",
-    education: "",
-  });
+  // Decode job title if it was encoded
+  const decodedJobTitle = jobTitle ? decodeURIComponent(jobTitle) : "";
 
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  // Initial form data with sample values
+  const [formData, setFormData] = useState<JobApplicationFormData>({
+    applicantName: "د. أحمد محمد علي",
+    applicantEmail: "ahmed.mohammed@example.com",
+    applicantPhone: "07701234567",
+    location: "بغداد، العراق",
+    desiredPosition: decodedJobTitle || "طبيب بيطري",
+    skills:
+      "خبرة في علاج الحيوانات الأليفة، مهارات تواصل ممتازة، القدرة على العمل تحت الضغط، إتقان استخدام الأجهزة الطبية البيطرية الحديثة",
+    expectedSalary: "800000",
+    coverLetter:
+      "أتقدم بطلب للعمل في منشأتكم الموقرة. لدي خبرة واسعة في مجال الطب البيطري وأرغب في الانضمام إلى فريقكم المتميز للمساهمة في تقديم أفضل الخدمات الطبية للحيوانات.",
+    experience:
+      "5 سنوات خبرة في عيادة الأمل البيطرية - بغداد، متخصص في علاج القطط والكلاب والطيور، إجراء العمليات الجراحية البسيطة والمتوسطة",
+    education: "بكالوريوس الطب البيطري - جامعة بغداد (2018)، دورات تدريبية في الجراحة البيطرية الحديثة",
+  });
 
   const submitApplicationMutation = useMutation(trpc.admin.jobs.submitJobApplication.mutationOptions());
 
+  // Email validation helper
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Phone validation helper (Iraqi phone numbers)
+  const isValidPhone = (phone: string): boolean => {
+    const phoneRegex = /^(07[3-9]\d{8}|(\+964|00964)7[3-9]\d{8})$/;
+    return phoneRegex.test(phone.replace(/\s/g, ""));
+  };
+
   const handleSubmit = () => {
-    // Validate form
-    if (!formData.applicantName.trim()) {
+    // Validate form - trim all inputs
+    const trimmedData = {
+      applicantName: formData.applicantName.trim(),
+      applicantEmail: formData.applicantEmail.trim(),
+      applicantPhone: formData.applicantPhone.trim(),
+      location: formData.location.trim(),
+      desiredPosition: formData.desiredPosition.trim(),
+      skills: formData.skills.trim(),
+      expectedSalary: formData.expectedSalary.trim(),
+      coverLetter: formData.coverLetter.trim(),
+      experience: formData.experience.trim(),
+      education: formData.education.trim(),
+    };
+
+    // Required field validation
+    if (!trimmedData.applicantName) {
       Alert.alert("خطأ", "يرجى إدخال الاسم الكامل");
       return;
     }
 
-    if (!formData.applicantEmail.trim()) {
+    if (!trimmedData.applicantEmail) {
       Alert.alert("خطأ", "يرجى إدخال البريد الإلكتروني");
       return;
     }
 
-    if (!formData.applicantPhone.trim()) {
+    if (!isValidEmail(trimmedData.applicantEmail)) {
+      Alert.alert("خطأ", "يرجى إدخال بريد إلكتروني صحيح");
+      return;
+    }
+
+    if (!trimmedData.applicantPhone) {
       Alert.alert("خطأ", "يرجى إدخال رقم الهاتف");
       return;
     }
 
-    if (!formData.coverLetter.trim()) {
-      Alert.alert("خطأ", "يرجى كتابة رسالة تعريفية");
+    if (!isValidPhone(trimmedData.applicantPhone)) {
+      Alert.alert("خطأ", "يرجى إدخال رقم هاتف صحيح (مثال: 07701234567)");
       return;
     }
 
-    if (!formData.experience.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال معلومات الخبرة");
-      return;
-    }
-
-    if (!formData.education.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال المؤهل التعليمي");
-      return;
-    }
-
-    if (!formData.location.trim()) {
+    if (!trimmedData.location) {
       Alert.alert("خطأ", "يرجى إدخال الموقع");
       return;
     }
 
-    if (!formData.desiredPosition.trim()) {
+    if (!trimmedData.desiredPosition) {
       Alert.alert("خطأ", "يرجى إدخال المنصب المرغوب");
       return;
     }
 
-    if (!formData.skills.trim()) {
+    if (!trimmedData.education) {
+      Alert.alert("خطأ", "يرجى إدخال المؤهل التعليمي");
+      return;
+    }
+
+    if (!trimmedData.experience) {
+      Alert.alert("خطأ", "يرجى إدخال معلومات الخبرة");
+      return;
+    }
+
+    if (!trimmedData.skills) {
       Alert.alert("خطأ", "يرجى إدخال المهارات");
       return;
     }
 
+    if (!trimmedData.coverLetter) {
+      Alert.alert("خطأ", "يرجى كتابة رسالة تعريفية");
+      return;
+    }
+
+    // Check if jobId exists (for direct applications)
     if (!jobId) {
       Alert.alert("خطأ", "معرف الوظيفة غير صحيح");
       return;
     }
 
-    setIsSubmitting(true);
-
+    // Submit application
     submitApplicationMutation.mutate(
       {
-        jobId,
-        ...formData,
-      },
+        jobId: jobId,
+        applicantName: trimmedData.applicantName,
+        applicantEmail: trimmedData.applicantEmail,
+        applicantPhone: trimmedData.applicantPhone,
+        coverLetter: trimmedData.coverLetter,
+        experience: trimmedData.experience,
+        education: trimmedData.education,
+        // Optional: You can add these to the router if needed
+        // cv: "", // URL to uploaded CV
+      } as any,
       {
         onSuccess: (data) => {
           if (data.success) {
-            Alert.alert("تم التقديم بنجاح", data.message, [
+            // Invalidate job applications queries
+            queryClient.invalidateQueries(trpc.admin.jobs.getJobApplications.queryKey);
+
+            // Show success message
+            Alert.alert("تم التقديم بنجاح", data.message || "تم إرسال طلبك بنجاح. سيتم التواصل معك قريباً.", [
               {
                 text: "موافق",
-                onPress: () => router.back(),
+                onPress: () => {
+                  // Reset form
+                  setFormData({
+                    applicantName: "",
+                    applicantEmail: "",
+                    applicantPhone: "",
+                    location: "",
+                    desiredPosition: "",
+                    skills: "",
+                    expectedSalary: "",
+                    coverLetter: "",
+                    experience: "",
+                    education: "",
+                  });
+                  // Navigate back
+                  router.back();
+                },
               },
             ]);
           } else {
-            Alert.alert("خطأ", data.message);
+            Alert.alert("خطأ", data.message || "حدث خطأ أثناء تقديم الطلب");
           }
-          setIsSubmitting(false);
         },
-        onError: (error) => {
+        onError: (error: any) => {
           console.error("Error submitting application:", error);
-          Alert.alert("خطأ", "حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.");
-          setIsSubmitting(false);
+          Alert.alert("خطأ", error?.message || "حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.");
         },
       }
     );
@@ -161,7 +230,9 @@ export default function JobApplicationScreen() {
             <UserPlus size={32} color={COLORS.white} />
           </View>
           <Text style={styles.headerTitle}>تقديم طلب توظيف</Text>
-          <Text style={styles.headerSubtitle}>أضف معلوماتك الشخصية والمهنية</Text>
+          <Text style={styles.headerSubtitle}>
+            {decodedJobTitle ? `للتقديم على: ${decodedJobTitle}` : "أضف معلوماتك الشخصية والمهنية"}
+          </Text>
         </View>
 
         <View style={styles.form}>
@@ -190,6 +261,7 @@ export default function JobApplicationScreen() {
                 placeholder="example@email.com"
                 placeholderTextColor={COLORS.lightGray}
                 keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
           </View>
@@ -202,7 +274,7 @@ export default function JobApplicationScreen() {
                 style={styles.inputText}
                 value={formData.applicantPhone}
                 onChangeText={(text) => updateFormData("applicantPhone", text)}
-                placeholder="05xxxxxxxx"
+                placeholder="07xxxxxxxx"
                 placeholderTextColor={COLORS.lightGray}
                 keyboardType="phone-pad"
               />
@@ -280,14 +352,14 @@ export default function JobApplicationScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>الراتب المتوقع</Text>
+            <Text style={styles.label}>الراتب المتوقع (اختياري)</Text>
             <View style={styles.inputWithIcon}>
-              <Text style={styles.currencySymbol}>ر.س</Text>
+              <Text style={styles.currencySymbol}>د.ع</Text>
               <TextInput
                 style={styles.inputText}
                 value={formData.expectedSalary}
                 onChangeText={(text) => updateFormData("expectedSalary", text)}
-                placeholder="5000"
+                placeholder="800000"
                 placeholderTextColor={COLORS.lightGray}
                 keyboardType="numeric"
               />
@@ -297,21 +369,34 @@ export default function JobApplicationScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>رسالة تعريفية *</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, styles.largeTextArea]}
               value={formData.coverLetter}
               onChangeText={(text) => updateFormData("coverLetter", text)}
               placeholder="اكتب رسالة تعريفية عن نفسك ولماذا تريد العمل في هذا المجال..."
               placeholderTextColor={COLORS.lightGray}
               multiline
-              numberOfLines={4}
+              numberOfLines={5}
               textAlignVertical="top"
             />
           </View>
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <FileText size={20} color={COLORS.white} />
-          <Text style={styles.submitButtonText}>إرسال الطلب</Text>
+        <TouchableOpacity
+          style={[styles.submitButton, submitApplicationMutation.isPending && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={submitApplicationMutation.isPending}
+        >
+          {submitApplicationMutation.isPending ? (
+            <>
+              <ActivityIndicator size="small" color={COLORS.white} />
+              <Text style={styles.submitButtonText}>جاري الإرسال...</Text>
+            </>
+          ) : (
+            <>
+              <Send size={20} color={COLORS.white} />
+              <Text style={styles.submitButtonText}>إرسال الطلب</Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <Text style={styles.note}>
@@ -360,6 +445,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     textAlign: "center",
+    paddingHorizontal: 20,
   },
   form: {
     marginBottom: 24,
@@ -401,6 +487,9 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 80,
   },
+  largeTextArea: {
+    minHeight: 120,
+  },
   submitButton: {
     backgroundColor: "#28a745",
     paddingVertical: 16,
@@ -411,6 +500,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     marginBottom: 16,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   submitButtonText: {
     color: COLORS.white,
@@ -423,6 +515,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontStyle: "italic",
     lineHeight: 20,
+    paddingHorizontal: 16,
   },
   currencySymbol: {
     fontSize: 16,

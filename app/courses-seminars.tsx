@@ -32,8 +32,6 @@ export default function CoursesSeminarsScreen() {
 
   const courses = useMemo(() => (data as any)?.courses, [data]);
 
-  console.log(courses?.map((c: any) => c?.userRegistrationStatus));
-
   const handleRegistration = async (course: CourseSeminar) => {
     if (course.registrationType === "link") {
       if (!course.courseUrl) {

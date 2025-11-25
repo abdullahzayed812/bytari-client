@@ -1,86 +1,142 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import React, { useState } from "react";
 import { Stack, useRouter } from "expo-router";
-import {
-  ArrowLeft,
-  Briefcase,
-  MapPin,
-  DollarSign,
-  Clock,
-  FileText,
-} from "lucide-react-native";
+import { ArrowLeft, Briefcase, MapPin, DollarSign, Clock, FileText } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "../providers/AppProvider";
+
+// Job type options
+const JOB_TYPES = [
+  { value: "full-time", label: "دوام كامل" },
+  { value: "part-time", label: "دوام جزئي" },
+  { value: "contract", label: "عقد" },
+  { value: "internship", label: "تدريب" },
+];
 
 export default function PostJobVacancyScreen() {
   const { user } = useApp();
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Initial form data with sample values
   const [formData, setFormData] = useState({
-    title: "",
-    company: "",
-    location: "",
-    type: "",
-    salary: "",
-    description: "",
-    requirements: "",
-    contactEmail: "",
-    contactPhone: "",
+    title: "طبيب بيطري - عيادة الحيوانات الأليفة",
+    company: "عيادة الرحمة البيطرية",
+    location: "بغداد، العراق",
+    type: "full-time", // Changed to match enum
+    salary: "800000 - 1200000 دينار",
+    description:
+      "نبحث عن طبيب بيطري مؤهل وذو خبرة للانضمام إلى فريقنا في عيادة الرحمة البيطرية. المسؤوليات تشمل فحص وعلاج الحيوانات الأليفة، إجراء العمليات الجراحية البسيطة، وتقديم الاستشارات الطبية لأصحاب الحيوانات.",
+    requirements:
+      "شهادة بكالوريوس في الطب البيطري، خبرة لا تقل عن سنتين في مجال العيادات البيطرية، مهارات تواصل جيدة، القدرة على التعامل مع الحيوانات بلطف ومهنية",
+    contactEmail: "info@alrahma-vet.com",
+    contactPhone: "07701234567",
   });
 
-  // const createJobMutation = trpc.admin.jobs.createJob.useMutation();
-  const createJobMutation = useMutation(
-    trpc.admin.jobs.createJob.mutationOptions()
-  );
+  const [selectedJobType, setSelectedJobType] = useState<string>("full-time");
+
+  const createJobMutation = useMutation(trpc.admin.jobs.createJob.mutationOptions());
 
   const handleSubmit = () => {
+    // Validation
     if (
-      !formData.title ||
-      !formData.company ||
-      !formData.location ||
-      !formData.description
+      !formData.title.trim() ||
+      !formData.company.trim() ||
+      !formData.location.trim() ||
+      !formData.description.trim()
     ) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة (المعلمة بـ *)");
       return;
     }
+
+    if (!selectedJobType) {
+      Alert.alert("خطأ", "يرجى اختيار نوع الوظيفة");
+      return;
+    }
+
+    // Validate email format if provided
+    if (formData.contactEmail && !isValidEmail(formData.contactEmail)) {
+      Alert.alert("خطأ", "يرجى إدخال بريد إلكتروني صحيح");
+      return;
+    }
+
+    // Validate phone format if provided
+    if (formData.contactPhone && !isValidPhone(formData.contactPhone)) {
+      Alert.alert("خطأ", "يرجى إدخال رقم هاتف صحيح");
+      return;
+    }
+
+    // Build contact info string
+    const contactParts = [];
+    if (formData.contactEmail) {
+      contactParts.push(`البريد: ${formData.contactEmail}`);
+    }
+    if (formData.contactPhone) {
+      contactParts.push(`الهاتف: ${formData.contactPhone}`);
+    }
+    const contactInfo = contactParts.length > 0 ? contactParts.join(" | ") : "للتواصل: يرجى التواصل عبر المنصة";
 
     createJobMutation.mutate(
       {
         adminId: user?.id ? Number(user.id) : 1,
-        title: formData.title,
-        company: formData.company,
-        postedBy: formData.company,
-        location: formData.location,
-        jobType: formData.type as any, // Ensure it matches backend enum
-        salary: formData.salary,
-        description: formData.description,
-        requirements: formData.requirements,
-        contactInfo: `${formData.contactEmail || ""} | ${
-          formData.contactPhone || ""
-        }`.trim(),
-      },
+        title: formData.title.trim(),
+        postedBy: formData.company.trim(),
+        location: formData.location.trim(),
+        jobType: selectedJobType as "full-time" | "part-time" | "contract" | "internship",
+        salary: formData.salary.trim() || undefined,
+        description: formData.description.trim(),
+        requirements: formData.requirements.trim() || "لا توجد متطلبات محددة",
+        contactInfo: contactInfo,
+      } as any,
       {
-        onSuccess: () => {
-          Alert.alert(
-            "تم الإرسال",
-            "تم إرسال إعلان الوظيفة للإدارة للمراجعة والموافقة",
-            [{ text: "موافق", onPress: () => router.back() }]
-          );
+        onSuccess: (data) => {
+          // Invalidate jobs queries to refresh the list
+          queryClient.invalidateQueries(trpc.admin.jobs.getAllJobs.queryKey);
+
+          // Show success message
+          Alert.alert("نجح الإرسال", "تم إرسال إعلان الوظيفة بنجاح وسيظهر في قائمة الوظائف المتاحة", [
+            {
+              text: "موافق",
+              onPress: () => {
+                // Reset form
+                setFormData({
+                  title: "",
+                  company: "",
+                  location: "",
+                  type: "",
+                  salary: "",
+                  description: "",
+                  requirements: "",
+                  contactEmail: "",
+                  contactPhone: "",
+                });
+                setSelectedJobType("full-time");
+                // Navigate back
+                router.back();
+              },
+            },
+          ]);
         },
-        onError: (error) => {
-          Alert.alert("فشل الإرسال", error.message);
+        onError: (error: any) => {
+          console.error("Error creating job:", error);
+          Alert.alert("فشل الإرسال", error?.message || "حدث خطأ أثناء إنشاء الوظيفة. يرجى المحاولة مرة أخرى.");
         },
       }
     );
+  };
+
+  // Email validation helper
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Phone validation helper (Iraqi phone numbers)
+  const isValidPhone = (phone: string): boolean => {
+    const phoneRegex = /^(07[3-9]\d{8}|(\+964|00964)7[3-9]\d{8})$/;
+    return phoneRegex.test(phone.replace(/\s/g, ""));
   };
 
   return (
@@ -92,10 +148,7 @@ export default function PostJobVacancyScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -132,9 +185,7 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={styles.input}
               value={formData.company}
-              onChangeText={(text) =>
-                setFormData({ ...formData, company: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, company: text })}
               placeholder="مثال: عيادة الرحمة البيطرية"
               placeholderTextColor={COLORS.lightGray}
             />
@@ -147,28 +198,27 @@ export default function PostJobVacancyScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.location}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, location: text })
-                }
-                placeholder="المدينة، المنطقة"
+                onChangeText={(text) => setFormData({ ...formData, location: text })}
+                placeholder="المدينة، البلد"
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>نوع الوظيفة</Text>
-            <View style={styles.inputWithIcon}>
-              <Clock size={20} color={COLORS.darkGray} />
-              <TextInput
-                style={styles.inputText}
-                value={formData.type}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, type: text })
-                }
-                placeholder="دوام كامل / دوام جزئي / مؤقت"
-                placeholderTextColor={COLORS.lightGray}
-              />
+            <Text style={styles.label}>نوع الوظيفة *</Text>
+            <View style={styles.jobTypeContainer}>
+              {JOB_TYPES.map((jobType) => (
+                <TouchableOpacity
+                  key={jobType.value}
+                  style={[styles.jobTypeButton, selectedJobType === jobType.value && styles.jobTypeButtonActive]}
+                  onPress={() => setSelectedJobType(jobType.value)}
+                >
+                  <Text style={[styles.jobTypeText, selectedJobType === jobType.value && styles.jobTypeTextActive]}>
+                    {jobType.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </View>
 
@@ -179,10 +229,8 @@ export default function PostJobVacancyScreen() {
               <TextInput
                 style={styles.inputText}
                 value={formData.salary}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, salary: text })
-                }
-                placeholder="مثال: 8000 - 12000 ريال"
+                onChangeText={(text) => setFormData({ ...formData, salary: text })}
+                placeholder="مثال: 800000 - 1200000 دينار"
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
@@ -193,9 +241,7 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) =>
-                setFormData({ ...formData, description: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, description: text })}
               placeholder="اكتب وصفاً مفصلاً عن الوظيفة والمهام المطلوبة..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -209,9 +255,7 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.requirements}
-              onChangeText={(text) =>
-                setFormData({ ...formData, requirements: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, requirements: text })}
               placeholder="اذكر المؤهلات والخبرات المطلوبة..."
               placeholderTextColor={COLORS.lightGray}
               multiline
@@ -225,12 +269,11 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={styles.input}
               value={formData.contactEmail}
-              onChangeText={(text) =>
-                setFormData({ ...formData, contactEmail: text })
-              }
+              onChangeText={(text) => setFormData({ ...formData, contactEmail: text })}
               placeholder="example@company.com"
               placeholderTextColor={COLORS.lightGray}
               keyboardType="email-address"
+              autoCapitalize="none"
             />
           </View>
 
@@ -239,25 +282,24 @@ export default function PostJobVacancyScreen() {
             <TextInput
               style={styles.input}
               value={formData.contactPhone}
-              onChangeText={(text) =>
-                setFormData({ ...formData, contactPhone: text })
-              }
-              placeholder="05xxxxxxxx"
+              onChangeText={(text) => setFormData({ ...formData, contactPhone: text })}
+              placeholder="07xxxxxxxx"
               placeholderTextColor={COLORS.lightGray}
               keyboardType="phone-pad"
             />
           </View>
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <TouchableOpacity
+          style={[styles.submitButton, createJobMutation.isPending && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={createJobMutation.isPending}
+        >
           <FileText size={20} color={COLORS.white} />
-          <Text style={styles.submitButtonText}>إرسال للمراجعة</Text>
+          <Text style={styles.submitButtonText}>{createJobMutation.isPending ? "جاري الإرسال..." : "نشر الوظيفة"}</Text>
         </TouchableOpacity>
 
-        <Text style={styles.note}>
-          * سيتم مراجعة إعلان الوظيفة من قبل الإدارة قبل نشره في قائمة الوظائف
-          المتاحة
-        </Text>
+        <Text style={styles.note}>* سيتم نشر الوظيفة مباشرة في قائمة الوظائف المتاحة</Text>
       </ScrollView>
     </View>
   );
@@ -342,6 +384,32 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
   },
+  jobTypeContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  jobTypeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    backgroundColor: COLORS.white,
+  },
+  jobTypeButtonActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  jobTypeText: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+  },
+  jobTypeTextActive: {
+    color: COLORS.white,
+    fontWeight: "600",
+  },
   submitButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
@@ -352,6 +420,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     marginBottom: 16,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   submitButtonText: {
     color: COLORS.white,

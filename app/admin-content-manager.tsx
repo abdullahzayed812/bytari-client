@@ -197,6 +197,7 @@ export default function AdminContentManagerScreen() {
   const { user, isSuperAdmin } = useApp();
   const router = useRouter();
   const params = useLocalSearchParams();
+  const queryClient = useQueryClient();
 
   const [contentType, setContentType] = useState<string>((params.type as string) || "articles");
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
@@ -419,7 +420,7 @@ export default function AdminContentManagerScreen() {
       case "ads":
         return adsQuery.refetch();
       case "courses":
-        return coursesQuery.refetch();
+        return queryClient.invalidateQueries(trpc.courses.getList.queryKey);
       case "clinics":
         return clinicsQuery.refetch();
       case "stores":

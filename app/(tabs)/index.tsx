@@ -73,8 +73,6 @@ export default function HomeScreen() {
   const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions({}));
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
 
-  console.log({ tips });
-
   const { data: articlesData, isLoading: articlesLoading } = useQuery(
     trpc.content.listMagazineArticles.queryOptions({})
   );

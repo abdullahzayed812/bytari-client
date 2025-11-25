@@ -43,12 +43,16 @@ interface Hospital {
 export default function HospitalDetailsScreen() {
   const { isSuperAdmin, isModerator, isAuthenticated } = useApp();
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { hospitalId } = useLocalSearchParams();
   const [isFollowed, setIsFollowed] = useState(false);
 
-  const { data: hospital, isLoading, error } = useQuery(trpc.hospitals.getById.queryOptions({ id: Number(id) }));
+  const {
+    data: hospital,
+    isLoading,
+    error,
+  } = useQuery(trpc.hospitals.getById.queryOptions({ id: Number(hospitalId) }));
   const { data: announcements, isLoading: announcementsLoading } = useQuery(
-    trpc.announcements.getForHospital.queryOptions({ hospitalId: Number(id) })
+    trpc.announcements.getForHospital.queryOptions({ hospitalId: Number(hospitalId) })
   );
 
   const { data: followedHospitalsData, refetch: refetchFollowedHospitals } = useQuery(
@@ -75,10 +79,10 @@ export default function HospitalDetailsScreen() {
 
     try {
       if (isFollowed) {
-        await unfollowMutation.mutateAsync({ hospitalId: hospital.id });
+        await unfollowMutation.mutateAsync({ hospitalId: hospital.id } as any);
         Alert.alert("تم", "تم إلغاء المتابعة بنجاح");
       } else {
-        await followMutation.mutateAsync({ hospitalId: hospital.id });
+        await followMutation.mutateAsync({ hospitalId: hospital.id } as any);
         Alert.alert("تم", "تم متابعة المستشفى بنجاح.");
       }
       refetchFollowedHospitals();
