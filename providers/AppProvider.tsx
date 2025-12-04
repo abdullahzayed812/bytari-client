@@ -32,6 +32,7 @@ interface AppContextType {
   moderatorPermissions: any;
   login: (userData: User, accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => Promise<void>;
   setHasSeenSplash: (seen: boolean) => void;
   toggleUserMode: () => void;
 }
@@ -53,25 +54,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Mock data for now - will be replaced with real backend data
   const pointsHistory = user?.points
     ? [
-        {
-          id: 1,
-          action: "تسجيل دخول يومي",
-          points: 10,
-          date: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          action: "إضافة حيوان أليف",
-          points: 50,
-          date: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          action: "مشاركة التطبيق",
-          points: 25,
-          date: new Date().toISOString(),
-        },
-      ]
+      {
+        id: 1,
+        action: "تسجيل دخول يومي",
+        points: 10,
+        date: new Date().toISOString(),
+      },
+      {
+        id: 2,
+        action: "إضافة حيوان أليف",
+        points: 50,
+        date: new Date().toISOString(),
+      },
+      {
+        id: 3,
+        action: "مشاركة التطبيق",
+        points: 25,
+        date: new Date().toISOString(),
+      },
+    ]
     : [];
 
   useEffect(() => {
@@ -164,6 +165,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     console.log("✅ User mode toggled to:", newMode);
   };
 
+  const updateUser = async (updatedData: Partial<User>) => {
+    try {
+      if (!user) {
+        throw new Error("No user logged in");
+      }
+
+      // Merge updated data with existing user data
+      const updatedUser = { ...user, ...updatedData };
+
+      // Save to AsyncStorage
+      await AsyncStorage.setItem("userData", JSON.stringify(updatedUser));
+
+      // Update state
+      setUser(updatedUser);
+
+      console.log("✅ User data updated successfully", updatedData);
+    } catch (error) {
+      console.error("❌ Error updating user data:", error);
+      throw error;
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -179,6 +202,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         moderatorPermissions,
         login,
         logout,
+        updateUser,
         setHasSeenSplash: setHasSeenSplashWrapper,
         toggleUserMode,
       }}

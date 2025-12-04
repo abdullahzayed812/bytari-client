@@ -6,9 +6,9 @@ import { COLORS } from "../constants/colors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { Image, ArrowLeft, FileText, Plus, Upload } from "lucide-react-native";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
+import { FileUploader } from "@/components/FileUploader";
+import { ArrowLeft, Plus } from "lucide-react-native";
 import Button from "@/components/Button 2";
 
 export default function AddArticleScreen() {
@@ -24,57 +24,19 @@ export default function AddArticleScreen() {
     category: "التصنيف",
   });
 
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string>("");
 
   // const createArticleMutation = trpc.admin.content.createMagazine.useMutation();
   const createArticleMutation = useMutation(trpc.admin.content.createMagazine.mutationOptions());
 
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
+  // Image upload is now handled by ImageUploader component
 
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      Alert.alert("خطأ", "فشل في اختيار الصورة");
-    }
-  };
 
-  const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          "application/pdf",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "text/plain",
-          "text/rtf",
-          "application/rtf",
-        ],
-        copyToCacheDirectory: true,
-        multiple: false,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setSelectedFile(result.assets[0]);
-        Alert.alert("تم", `تم اختيار الملف: ${result.assets[0].name}`);
-      }
-    } catch (error) {
-      console.error("Document picker error:", error);
-      Alert.alert("خطأ", "فشل في اختيار الملف");
-    }
-  };
 
   const handleSave = () => {
-    if (!selectedImage) {
-      Alert.alert("خطأ", "صورى الغلاف مطلوبة");
+    if (selectedImages.length === 0) {
+      Alert.alert("خطأ", "صورة الغلاف مطلوبة");
       return;
     }
 
@@ -83,7 +45,7 @@ export default function AddArticleScreen() {
       return;
     }
 
-    if (!formData.content && !selectedFile) {
+    if (!formData.content && !selectedFileUrl) {
       Alert.alert("خطأ", "محتوى الكتاب مطلوب");
       return;
     }
@@ -96,8 +58,8 @@ export default function AddArticleScreen() {
         author: formData.author,
         authorTitle: formData.authorTitle,
         category: formData.category as any,
-        coverImage: selectedImage,
-        pdfUrl: selectedFile?.uri,
+        coverImage: selectedImages[0],
+        pdfUrl: selectedFileUrl,
         publishDate: new Date(),
       } as any,
       {
@@ -131,16 +93,16 @@ export default function AddArticleScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <View style={styles.imageSection}>
-            <View style={styles.imagePlaceholder}>
-              <Image size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>{selectedImage ? "تم اختيار الصورة" : "اختر صورة المقال"}</Text>
-              <Text style={styles.imageSubText}>من المعرض أو التقاط صورة جديدة</Text>
+          <View style={styles.inputGroup}>
+            <View style={styles.inputGroup}>
+              <ImageGalleryUploader
+                images={selectedImages}
+                onImagesChange={setSelectedImages}
+                maxImages={1}
+                label="صورة غلاف المقال *"
+                aspect={[16, 9]}
+              />
             </View>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.inputGroup}>
@@ -188,28 +150,21 @@ export default function AddArticleScreen() {
           </View>
 
           <View style={styles.fileSection}>
-            <Text style={styles.sectionTitle}>ملف المقال (اختياري)</Text>
-            <View style={styles.filePlaceholder}>
-              <FileText size={32} color={COLORS.primary} />
-              <Text style={styles.filePlaceholderText}>{selectedFile ? selectedFile.name : "اختر ملف المقال"}</Text>
-              <Text style={styles.fileSubText}>PDF, DOC, DOCX أو ملف نصي</Text>
-              {selectedFile && (
-                <Text style={styles.fileInfo}>الحجم: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Text>
-              )}
-            </View>
-            <TouchableOpacity style={styles.fileButton} onPress={pickDocument}>
-              <Upload size={16} color={COLORS.primary} />
-              <Text style={styles.fileButtonText}>{selectedFile ? "تغيير الملف" : "اختيار ملف المقال"}</Text>
-            </TouchableOpacity>
+            <FileUploader
+              fileUrl={selectedFileUrl}
+              onFileChange={setSelectedFileUrl}
+              label="ملف المقال (اختياري)"
+              placeholder="اختيار ملف المقال (PDF)"
+            />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>محتوى المقال {!selectedFile && "*"}</Text>
+            <Text style={styles.label}>محتوى المقال {!selectedFileUrl && "*"}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
               onChangeText={(text) => setFormData({ ...formData, content: text })}
-              placeholder={selectedFile ? "محتوى اختياري (تم رفع ملف)" : "أدخل محتوى المقال"}
+              placeholder={selectedFileUrl ? "محتوى اختياري (تم رفع ملف)" : "أدخل محتوى المقال"}
               textAlign="right"
               multiline
               numberOfLines={8}

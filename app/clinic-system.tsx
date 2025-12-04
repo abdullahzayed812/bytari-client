@@ -30,6 +30,7 @@ import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 
 type ClinicRegistration = {
   name: string;
@@ -190,22 +191,7 @@ export default function ClinicSystemScreen() {
     }));
   };
 
-  const handleImageUpload = (type: "licenseImages" | "images") => {
-    // Mock image upload - in production, implement actual image picker
-    const mockImageUrl = `https://picsum.photos/400/300?random=${Date.now()}`;
-    setRegistrationData((prev) => ({
-      ...prev,
-      [type]: [...prev[type], mockImageUrl],
-    }));
-    Alert.alert("تم", "تم رفع الصورة بنجاح");
-  };
 
-  const removeImage = (type: "licenseImages" | "images", index: number) => {
-    setRegistrationData((prev) => ({
-      ...prev,
-      [type]: prev[type].filter((_, i) => i !== index),
-    }));
-  };
 
   const handleRegisterClinic = async () => {
     if (
@@ -430,31 +416,7 @@ export default function ClinicSystemScreen() {
     setShowFollowUpConfirmation(true);
   };
 
-  const renderImageSection = (title: string, type: "licenseImages" | "images", required: boolean = false) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>
-        {title} {required && <Text style={styles.required}>*</Text>}
-      </Text>
 
-      <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload(type)}>
-        <Upload size={20} color={COLORS.primary} />
-        <Text style={styles.uploadButtonText}>رفع صورة</Text>
-      </TouchableOpacity>
-
-      {registrationData[type]?.length > 0 && (
-        <View style={styles.imageGrid}>
-          {registrationData[type]?.map((imageUrl, index) => (
-            <View key={index} style={styles.imageContainer}>
-              <Image source={{ uri: imageUrl }} style={styles.uploadedImage} />
-              <TouchableOpacity style={styles.removeImageButton} onPress={() => removeImage(type, index)}>
-                <Text style={styles.removeImageText}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      )}
-    </View>
-  );
 
   const submitMedicalRecord = () => {
     if (!medicalRecordData.diagnosis || !medicalRecordData.treatment) {
@@ -820,8 +782,23 @@ export default function ClinicSystemScreen() {
       </View>
 
       {/* Document Uploads */}
-      {renderImageSection("صور الترخيص", "licenseImages", true)}
-      {renderImageSection("صور العيادة", "images")}
+      <View style={styles.section}>
+        <ImageGalleryUploader
+          images={registrationData.licenseImages}
+          onImagesChange={(images) => setRegistrationData({ ...registrationData, licenseImages: images })}
+          maxImages={3}
+          label="صور الترخيص *"
+        />
+      </View>
+
+      <View style={styles.section}>
+        <ImageGalleryUploader
+          images={registrationData.images}
+          onImagesChange={(images) => setRegistrationData({ ...registrationData, images })}
+          maxImages={5}
+          label="صور العيادة"
+        />
+      </View>
 
       {/* Submit Button */}
       <TouchableOpacity
@@ -933,8 +910,8 @@ export default function ClinicSystemScreen() {
                             {animal.status === "active"
                               ? "نشط"
                               : animal.status === "recovered"
-                              ? "متعافي"
-                              : "تحت العلاج"}
+                                ? "متعافي"
+                                : "تحت العلاج"}
                           </Text>
                         </View>
                       </View>

@@ -428,12 +428,15 @@ export default function PetsScreen() {
           )}
         </View>
 
-        <Image
-          source={{
-            uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
-          }}
-          style={styles.clinicImage}
-        />
+        {clinic.images?.[0] ? (
+
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
+            }}
+            style={styles.clinicImage}
+          />
+        ) : null}
         <View style={styles.clinicInfo}>
           <View style={styles.clinicHeader}>
             <Text style={styles.clinicName}>{clinic.name}</Text>
@@ -527,13 +530,15 @@ export default function PetsScreen() {
           )}
         </View>
 
-        <Image
-          source={{
-            uri:
-              store.logo || store.bannerImage || "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=400",
-          }}
-          style={styles.warehouseImage}
-        />
+        {store?.images?.length > 0 ? (
+          <Image
+            source={{
+              uri:
+                store.images[0]
+            }}
+            style={styles.warehouseImage}
+          />
+        ) : null}
         <View style={styles.warehouseInfo}>
           <View style={styles.warehouseHeader}>
             <Text style={styles.warehouseName}>{store.name}</Text>

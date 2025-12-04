@@ -164,10 +164,12 @@ export default function ClinicProfileScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Clinic Header */}
         <View style={styles.clinicHeader}>
-          <Image
-            source={{ uri: clinic.image || "https://via.placeholder.com/800x400?text=Clinic" }}
-            style={styles.clinicHeaderImage}
-          />
+          {clinic.images.length > 0 && (
+            <Image
+              source={{ uri: clinic.images[0] }}
+              style={styles.clinicHeaderImage}
+            />
+          )}
           <View style={styles.clinicHeaderOverlay}>
             <Text style={styles.clinicHeaderName}>{clinic.name}</Text>
             <View style={[styles.statusBadge, !clinic.isActive && styles.closedBadge]}>

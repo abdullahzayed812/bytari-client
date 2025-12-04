@@ -9,8 +9,8 @@ import { Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "l
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { queryClient, trpc } from "../lib/trpc";
-import * as ImagePicker from "expo-image-picker";
 import { useMutation } from "@tanstack/react-query";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 
 interface StoreFormData {
   name: string;
@@ -20,8 +20,9 @@ interface StoreFormData {
   email: string;
   category: string;
   licenseNumber: string;
-  licenseImage: string;
-  identityImage: string;
+  licenseImages: string[];
+  identityImages: string[];
+  images: string[];
   workingHours: string;
   facebook: string;
   instagram: string;
@@ -43,8 +44,9 @@ export default function AddStoreScreen() {
     email: "info@petcarestore.sa",
     category: "متجر مستلزمات حيوانات",
     licenseNumber: "STORE-2025-98765",
-    licenseImage: "https://example.com/store-license.jpg",
-    identityImage: "https://bytari.com/media/identity-image.png",
+    licenseImages: ["http://bytari/media/img1.png"],
+    identityImages: ["http://bytari/media/img1.png"],
+    images: [],
     workingHours: "من السبت إلى الخميس: 10:00 صباحًا - 10:00 مساءً",
     facebook: "https://facebook.com/mohamed-ali",
     instagram: "https://instagram.com/mohamed-ali",
@@ -71,8 +73,12 @@ export default function AddStoreScreen() {
       showToast({ type: "error", message: "رقم الترخيص مطلوب" });
       return;
     }
-    if (!formData.licenseImage.trim()) {
+    if (!formData.licenseImages || formData.licenseImages.length === 0) {
       showToast({ type: "error", message: "صورة الترخيص مطلوبة" });
+      return;
+    }
+    if (!formData.identityImages || formData.identityImages.length === 0) {
+      showToast({ type: "error", message: "صورة الهوية مطلوبة" });
       return;
     }
 
@@ -85,14 +91,16 @@ export default function AddStoreScreen() {
         email: formData.email,
         category: formData.category,
         licenseNumber: formData.licenseNumber,
-        licenseImage: formData.licenseImage,
-        identityImage: formData.identityImage,
+        licenseImage: formData.licenseImages[0],
+        identityImage: formData.identityImages[0],
+        images: formData.images,
         workingHours: formData.workingHours,
         facebook: formData.facebook,
         instagram: formData.instagram,
         whatsapp: formData.whatsapp,
         website: formData.website,
       };
+
 
       // ✅ Add adminId only if user has admin access
       if (isSuperAdmin && user?.id) {
@@ -115,33 +123,7 @@ export default function AddStoreScreen() {
     }
   };
 
-  const handleImageUpload = async (type: "identity" | " license") => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        showToast({ type: "error", message: "نحتاج إلى إذن للوصول إلى الصور" });
-        return;
-      }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setFormData((prev) => ({
-          ...prev,
-          ...(type === "identity" ? { identityImage: result.assets[0].uri } : { licenseImage: result.assets[0].uri }),
-        }));
-        showToast({ type: "success", message: "تم رفع الصورة بنجاح" });
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      showToast({ type: "error", message: "حدث خطأ أثناء اختيار الصورة" });
-    }
-  };
 
   return (
     <>
@@ -327,23 +309,28 @@ export default function AddStoreScreen() {
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>صورة الترخيص *</Text>
-              <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload(" license")}>
-                <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadText}>{formData.licenseImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>
-              </TouchableOpacity>
-              {formData.licenseImage && <Image source={{ uri: formData.licenseImage }} style={styles.previewImage} />}
-            </View>
+            <ImageGalleryUploader
+              images={formData.licenseImages}
+              onImagesChange={(images) => setFormData({ ...formData, licenseImages: images })}
+              maxImages={3}
+              label="صور الترخيص *"
+            />
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>صورة الهوية *</Text>
-              <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload("identity")}>
-                <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadText}>{formData.identityImage ? "تم رفع الصورة" : "رفع صورة الترخيص"}</Text>
-              </TouchableOpacity>
-              {formData.identityImage && <Image source={{ uri: formData.identityImage }} style={styles.previewImage} />}
-            </View>
+            <ImageGalleryUploader
+              images={formData.identityImages}
+              onImagesChange={(images) => setFormData({ ...formData, identityImages: images })}
+              maxImages={2}
+              label="صور الهوية *"
+            />
+          </View>
+
+          <View style={styles.section}>
+            <ImageGalleryUploader
+              images={formData.images}
+              onImagesChange={(images) => setFormData({ ...formData, images })}
+              maxImages={5}
+              label="صور المذخر"
+            />
           </View>
 
           {/* Admin Controls for Subscription */}

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -6,11 +6,11 @@ import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack } from "expo-router";
 import Button from "../components/Button";
 import { Pet } from "../types";
-import { Camera, MapPin } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { MapPin } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
@@ -40,8 +40,7 @@ export default function AddAdoptionPetScreen() {
     vaccinations: "Rabies, DHPP",
     specialRequirements: "",
     price: "",
-    image:
-      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+    images: [] as string[],
   });
 
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
@@ -50,39 +49,7 @@ export default function AddAdoptionPetScreen() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        showToast({
-          type: "error",
-          message: "نحتاج إلى إذن للوصول إلى الصور",
-        });
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.length > 0) {
-        setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
-        showToast({
-          type: "success",
-          message: "تم اختيار الصورة بنجاح",
-        });
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      showToast({
-        type: "error",
-        message: "حدث خطأ أثناء اختيار الصورة",
-      });
-    }
-  };
+  // Image upload is now handled by ImageGalleryUploader component
 
   const handleSubmit = async () => {
     // ✅ Validate required fields
@@ -120,11 +87,11 @@ export default function AddAdoptionPetScreen() {
         gender: formData.gender,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         color: formData.color.trim() || undefined,
-        image: formData.image,
+        image: formData.images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
         ownerId: parseInt(user.id.toString()),
         requestType: formData.listingType,
         description: formData.description.trim(),
-        images: [formData.image],
+        images: formData.images,
         contactInfo: formData.contactInfo.trim() || undefined,
         location: formData.location.trim(),
         price: formData.price ? parseFloat(formData.price) : undefined,
@@ -212,12 +179,15 @@ export default function AddAdoptionPetScreen() {
       />
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Pet Image */}
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: formData.image }} style={styles.petImage} />
-          <TouchableOpacity style={styles.cameraButton} onPress={handleImageUpload}>
-            <Camera size={20} color={COLORS.white} />
-          </TouchableOpacity>
+        {/* Pet Images */}
+        <View style={styles.inputGroup}>
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
+            maxImages={5}
+            label="صور الحيوان *"
+            aspect={[1, 1]}
+          />
         </View>
 
         {/* Listing Type */}

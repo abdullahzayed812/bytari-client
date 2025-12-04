@@ -1,13 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack } from "expo-router";
 import Button from "../components/Button";
-import { MapPin, Plus, X } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { MapPin } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 export default function ReportLostPetScreen() {
   const { user } = useApp();
@@ -22,32 +22,13 @@ export default function ReportLostPetScreen() {
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [contactEmail, setContactEmail] = useState("");
-  const [image, setImage] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create pet approval request mutation
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
-  const handleAddImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    setImage(null);
-  };
+  // Image upload is now handled by ImageGalleryUploader component
 
   const handleSelectLocation = () => {
     router.push({
@@ -71,6 +52,7 @@ export default function ReportLostPetScreen() {
 
     setIsSubmitting(true);
 
+
     try {
       // Create pet approval request for lost pet
       createApprovalMutation.mutate(
@@ -79,18 +61,18 @@ export default function ReportLostPetScreen() {
           type: type.trim(),
           breed: breed.trim() || undefined,
           color: color.trim() || undefined,
-          image:
-            image ||
-            "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+          image: images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
           ownerId: parseInt(user.id.toString()),
           requestType: "lost_pet",
-          description: `${description}\n\nتاريخ الفقدان: ${date}\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${
-            contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
-          }`,
-          images: image ? [image] : [],
+          description: `${description}\n\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
+            }`,
+          images: images,
           contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
-          location: location.trim(),
-        },
+
+          // Required fields for lost pets
+          lastSeenLocation: location.trim(),
+          lastSeenDate: new Date(date),
+        } as any,
         {
           onSuccess: (data) => {
             Alert.alert(
@@ -134,20 +116,13 @@ export default function ReportLostPetScreen() {
         <Text style={styles.title}>{"تقرير حيوان مفقود"}</Text>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>صورة الحيوان</Text>
-          {image ? (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: image }} style={styles.image} />
-              <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
-                <X size={16} color={COLORS.white} />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
-              <Plus size={24} color={COLORS.primary} />
-              <Text style={styles.addImageText}>إضافة صورة</Text>
-            </TouchableOpacity>
-          )}
+          <ImageGalleryUploader
+            images={images}
+            onImagesChange={setImages}
+            maxImages={5}
+            label="صور الحيوان المفقود"
+            aspect={[4, 3]}
+          />
         </View>
 
         <View style={styles.formGroup}>

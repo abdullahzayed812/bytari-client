@@ -6,10 +6,10 @@ import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import Button from "../components/Button";
 import { Pet } from "../types";
-import { Camera, MapPin, Heart } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { MapPin, Heart } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 export default function AddBreedingPetScreen() {
   const { t } = useI18n();
@@ -26,8 +26,7 @@ export default function AddBreedingPetScreen() {
     gender: "male" as Pet["gender"],
     weight: "",
     color: "",
-    image:
-      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+    images: [] as string[],
 
     // Additional breeding-specific info
     location: "",
@@ -56,7 +55,7 @@ export default function AddBreedingPetScreen() {
           gender: existingPet.gender || "male",
           weight: existingPet.weight?.toString() || "",
           color: existingPet.color || "",
-          image: existingPet.image || prev.image,
+          images: existingPet.images || [],
         }));
       }
     }
@@ -64,30 +63,6 @@ export default function AddBreedingPetScreen() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
-    }
   };
 
   const handleSubmit = async () => {
@@ -109,7 +84,8 @@ export default function AddBreedingPetScreen() {
         gender: formData.gender,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         color: formData.color.trim() || undefined,
-        image: formData.image,
+        image: formData.images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
+        images: formData.images,
         ownerId: parseInt(user.id.toString()),
         requestType: "breeding",
         description: `${formData.description}\n\nتاريخ التزاوج السابق: ${formData.breedingHistory}\nالشهادات الصحية: ${formData.healthCertificates}\nرسوم التزاوج: ${formData.studFee}\nفترة التوفر: ${formData.availabilityPeriod}\nطريقة التواصل المفضلة: ${formData.contactPreference}\nمتطلبات خاصة: ${formData.specialRequirements}`,
@@ -209,12 +185,14 @@ export default function AddBreedingPetScreen() {
           <Text style={styles.headerSubtitle}>أضف معلومات إضافية لعرض حيوانك للتزاوج</Text>
         </View>
 
-        {/* Pet Image */}
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: formData.image }} style={styles.petImage} />
-          <TouchableOpacity style={styles.cameraButton} onPress={handleImageUpload}>
-            <Camera size={20} color={COLORS.white} />
-          </TouchableOpacity>
+        {/* Pet Images */}
+        <View style={styles.inputGroup}>
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData({ ...formData, images })}
+            maxImages={5}
+            label="صور الحيوان"
+          />
         </View>
 
         {/* Basic Pet Info Section */}

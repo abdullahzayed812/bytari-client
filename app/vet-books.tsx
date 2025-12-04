@@ -8,7 +8,9 @@ import {
   Alert,
   Linking,
   ActivityIndicator,
+  Platform,
 } from "react-native";
+import { useBookDownload } from "@/hooks/useBookDownload";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -63,11 +65,12 @@ export default function VetBooksScreen() {
   const { isSuperAdmin } = useApp();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("الكل");
+  const { downloadBook, isDownloading } = useBookDownload();
 
-  const { data: vetBooksData, isLoading: vetBooksLoading, error } = useQuery(trpc.content.listVetBooks.queryOptions());
+  const { data: vetBooksData, isLoading: vetBooksLoading, error } = useQuery(trpc.content.listVetBooks.queryOptions({}));
   const books = useMemo(() => {
-    if (!vetBooksData?.books) return [];
-    return vetBooksData.books.map((book: any) => ({
+    if (!(vetBooksData as any)?.books) return [];
+    return (vetBooksData as any).books.map((book: any) => ({
       ...book,
       id: book.id.toString(),
       fileSize: `${(book.pageCount * 0.05).toFixed(1)} MB`, // Mock fileSize (e.g., 0.05 MB per page)
@@ -81,41 +84,19 @@ export default function VetBooksScreen() {
     if (!dbCategories) {
       return selectedCategory === "الكل" ? books : [];
     }
-    return books.filter((book) => dbCategories.includes(book.category));
+    return books.filter((book: any) => dbCategories.includes(book.category));
   }, [books, selectedCategory]);
 
-  const handleDownload = async (bookId: string) => {
-    try {
-      const book = books.find((b) => b.id === bookId);
-      if (!book) return;
+  const handleDownload = (bookId: string) => {
+    const book = books.find((b: any) => b.id === bookId);
+    if (!book) return;
 
-      Alert.alert("تحميل الكتاب", `هل تريد تحميل كتاب "${book.title}"؟\nحجم الملف: ${book.fileSize}`, [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "تحميل",
-          onPress: async () => {
-            try {
-              const downloadUrl = book.filePath.startsWith("http")
-                ? book.filePath
-                : `https://your-backend-domain.com${book.filePath}`; // Replace with your backend domain
-              const supported = await Linking.canOpenURL(downloadUrl);
-              if (supported) {
-                await Linking.openURL(downloadUrl);
-                Alert.alert("نجح", "تم بدء التحميل");
-              } else {
-                Alert.alert("تحميل الكتاب", `تم بدء تحميل كتاب "${book.title}"\nسيتم حفظ الملف في مجلد التحميلات`, [
-                  { text: "موافق" },
-                ]);
-              }
-            } catch (error) {
-              Alert.alert("خطأ", "حدث خطأ أثناء التحميل");
-            }
-          },
-        },
-      ]);
-    } catch (error) {
-      Alert.alert("خطأ", "حدث خطأ أثناء التحميل");
-    }
+    downloadBook({
+      id: book.id,
+      title: book.title,
+      filePath: book.filePath,
+      fileSize: book.fileSize,
+    });
   };
 
   const renderStars = (rating: number) => {
@@ -207,7 +188,7 @@ export default function VetBooksScreen() {
             <Text style={styles.noBooksText}>لا توجد كتب في هذه الفئة</Text>
           ) : (
             <View style={styles.booksGrid}>
-              {filteredBooks.map((book) => (
+              {filteredBooks.map((book: any) => (
                 <TouchableOpacity
                   key={book.id}
                   style={styles.bookCard}
@@ -256,7 +237,9 @@ export default function VetBooksScreen() {
                       activeOpacity={0.8}
                     >
                       <Download size={14} color={COLORS.white} />
-                      <Text style={styles.downloadButtonText}>تحميل</Text>
+                      <Text style={styles.downloadButtonText}>
+                        {isDownloading ? "..." : "تحميل"}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>

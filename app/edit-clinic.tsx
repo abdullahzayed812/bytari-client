@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, Save, Upload } from "lucide-react-native";
+import { ArrowLeft, Save } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import Button from "../components/Button";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 
 export default function EditClinicScreen() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function EditClinicScreen() {
     instagram: "",
     whatsapp: "",
     website: "",
-    images: [],
+    images: [] as string[],
   });
 
   // Load clinic data when fetched
@@ -59,7 +60,7 @@ export default function EditClinicScreen() {
         instagram: c.instagram || "",
         whatsapp: c.whatsapp || "",
         website: c.website || "",
-        images: c.images ? JSON.parse(JSON.stringify(c.images)) : [],
+        images: typeof c.images === "string" ? JSON.parse(c.images) : c.images || [],
       });
     }
   }, [clinicQuery.data]);
@@ -85,7 +86,7 @@ export default function EditClinicScreen() {
             type: "success",
             message: data?.message || "تم تحديث بيانات العيادة بنجاح",
           });
-          queryClient.invalidateQueries(trpc.clinics.getById.queryKey);
+          queryClient.invalidateQueries({ queryKey: [["clinics"]] });
           router.back();
         },
         onError: (error) => {
@@ -131,19 +132,13 @@ export default function EditClinicScreen() {
 
       <ScrollView style={styles.content}>
         <View style={styles.form}>
-          {/* Image */}
-          <View style={styles.imageSection}>
-            <Image
-              source={{
-                uri: formData.images?.[0] || "https://via.placeholder.com/150?text=Clinic",
-              }}
-              style={styles.clinicImage}
-            />
-            <TouchableOpacity style={styles.uploadButton}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>تغيير الصورة</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Clinic Images */}
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData({ ...formData, images })}
+            maxImages={5}
+            label="صور العيادة"
+          />
 
           {/* Input Builder */}
           {renderInput("اسم العيادة", "name")}

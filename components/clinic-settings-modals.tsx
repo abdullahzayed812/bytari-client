@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { COLORS } from "../constants/colors";
 import { X, MapPin, Phone, Mail, Globe, Clock, Users, Trash2, Shield } from "lucide-react-native";
+import { ImageGalleryUploader } from "./ImageGalleryUploader";
 
 // ============== BASIC INFO MODAL ==============
 interface BasicInfoModalProps {
@@ -24,6 +25,7 @@ interface BasicInfoModalProps {
     doctors: string;
     latitude?: number | null;
     longitude?: number | null;
+    images?: string[];
   };
   onSave: (data: any) => void;
   isLoading?: boolean;
@@ -35,6 +37,7 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
   const [doctors, setDoctors] = useState(initialData?.doctors);
   const [latitude, setLatitude] = useState(initialData.latitude?.toString() || "");
   const [longitude, setLongitude] = useState(initialData.longitude?.toString() || "");
+  const [images, setImages] = useState<string[]>(initialData.images || []);
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -52,6 +55,7 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
       doctors: doctors?.trim(),
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
+      images,
     });
   };
 
@@ -119,6 +123,16 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
                   numberOfLines={3}
                 />
               </View>
+            </View>
+
+            {/* Clinic Images */}
+            <View style={styles.inputGroup}>
+              <ImageGalleryUploader
+                images={images}
+                onImagesChange={setImages}
+                maxImages={5}
+                label="صور العيادة"
+              />
             </View>
 
             {/* Location Coordinates */}

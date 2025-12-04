@@ -1,13 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ArrowLeft, Upload, MapPin, Phone, Mail, Clock } from 'lucide-react-native';
+import { ArrowLeft, MapPin, Phone, Mail, Clock } from 'lucide-react-native';
 import { router, useLocalSearchParams, Stack } from 'expo-router';
-
-import * as ImagePicker from 'expo-image-picker';
 import { mockVetStores } from "../mocks/data";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
+import { ImageUploader } from "../components/ImageUploader";
 
 interface StoreFormData {
   name: string;
@@ -16,6 +16,8 @@ interface StoreFormData {
   phone: string;
   email: string;
   licenseImage: string;
+  identityImage: string;
+  images: string[];
   workingHours: string;
 }
 
@@ -29,6 +31,8 @@ export default function EditStoreScreen() {
     phone: '',
     email: '',
     licenseImage: '',
+    identityImage: '',
+    images: [],
     workingHours: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,32 +85,7 @@ export default function EditStoreScreen() {
     }
   };
 
-  const handleImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إلى إذن للوصول إلى الصور');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          licenseImage: result.assets[0].uri
-        }));
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
-    }
-  };
+  // Image upload is now handled by ImageUploader component
 
   if (isLoading) {
     return (
@@ -118,7 +97,7 @@ export default function EditStoreScreen() {
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: 'تعديل المتجر',
           headerStyle: { backgroundColor: COLORS.white },
@@ -131,12 +110,12 @@ export default function EditStoreScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>معلومات المتجر</Text>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>اسم المتجر *</Text>
               <TextInput
@@ -178,7 +157,7 @@ export default function EditStoreScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>معلومات التواصل</Text>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>رقم الهاتف</Text>
               <View style={styles.inputWithIcon}>
@@ -225,19 +204,34 @@ export default function EditStoreScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>صورة المتجر</Text>
-            
+            <Text style={styles.sectionTitle}>صور المتجر</Text>
+
+            {/* Store Images */}
+            <ImageGalleryUploader
+              images={formData.images}
+              onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+              maxImages={5}
+              label="صور المتجر"
+            />
+
+            {/* License Image */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>صورة المتجر</Text>
-              <TouchableOpacity style={styles.uploadButton} onPress={handleImageUpload}>
-                <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadText}>
-                  {formData.licenseImage ? 'تغيير الصورة' : 'رفع صورة المتجر'}
-                </Text>
-              </TouchableOpacity>
-              {formData.licenseImage && (
-                <Image source={{ uri: formData.licenseImage }} style={styles.previewImage} />
-              )}
+              <ImageUploader
+                imageUri={formData.licenseImage}
+                onUploadComplete={(url) => setFormData(prev => ({ ...prev, licenseImage: url }))}
+                label="صورة الترخيص"
+                aspect={[4, 3]}
+              />
+            </View>
+
+            {/* Identity Image */}
+            <View style={styles.inputGroup}>
+              <ImageUploader
+                imageUri={formData.identityImage}
+                onUploadComplete={(url) => setFormData(prev => ({ ...prev, identityImage: url }))}
+                label="صورة الهوية"
+                aspect={[4, 3]}
+              />
             </View>
           </View>
 

@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { ArrowLeft, Plus, Upload } from "lucide-react-native";
+import { ArrowLeft, Plus } from "lucide-react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import Button from "@/components/Button 2";
 import { useToastContext } from "@/providers/ToastProvider";
 import { useApp } from "@/providers/AppProvider";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 
 export default function AddClinicScreen() {
   const { user, isSuperAdmin } = useApp();
@@ -25,7 +26,7 @@ export default function AddClinicScreen() {
     licenseNumber: "191919191919191",
     licenseImages: ["http://bytari/media/img1.png"],
     identityImages: ["http://bytari/media/img1.png"],
-    images: [],
+    images: [] as string[],
   });
   const { showToast } = useToastContext();
 
@@ -59,13 +60,14 @@ export default function AddClinicScreen() {
       email: formData.email || undefined,
       description: formData.description || "",
 
-      licenseNumber: "TEMP123456", // TODO: Replace with actual value from UI when field is added
-      licenseImages: formData.licenseImages, // TODO: Implement image upload for license images
-      identityImages: formData.identityImages, // TODO: Implement image upload for identity images
+      licenseNumber: formData.licenseNumber,
+      licenseImages: formData.licenseImages,
+      identityImages: formData.identityImages,
 
       latitude: 0,
       longitude: 0,
       workingHours: formData.workingHours,
+      images: formData.images,
     };
 
     // ✅ Add adminId only if user has admin access
@@ -104,16 +106,13 @@ export default function AddClinicScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <View style={styles.imageSection}>
-            <View style={styles.imagePlaceholder}>
-              <Upload size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>اختر صورة العيادة</Text>
-            </View>
-            <TouchableOpacity style={styles.uploadButton}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>رفع صورة</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Clinic Images */}
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData({ ...formData, images })}
+            maxImages={5}
+            label="صور العيادة"
+          />
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>اسم العيادة *</Text>
@@ -173,6 +172,22 @@ export default function AddClinicScreen() {
               numberOfLines={4}
             />
           </View>
+
+          {/* License Images */}
+          <ImageGalleryUploader
+            images={formData.licenseImages}
+            onImagesChange={(images) => setFormData({ ...formData, licenseImages: images })}
+            maxImages={3}
+            label="صور الترخيص *"
+          />
+
+          {/* Identity Images */}
+          <ImageGalleryUploader
+            images={formData.identityImages}
+            onImagesChange={(images) => setFormData({ ...formData, identityImages: images })}
+            maxImages={2}
+            label="صور الهوية *"
+          />
         </View>
       </ScrollView>
 

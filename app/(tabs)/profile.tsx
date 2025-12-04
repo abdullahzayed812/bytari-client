@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, FlatList, Platform, Alert } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, FlatList, Platform, Alert, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useRef } from 'react';
@@ -11,7 +11,9 @@ import { Award, ChevronLeft, ChevronRight, Globe, LogOut, MessageSquare, Setting
 import { router, useFocusEffect } from 'expo-router';
 import { Language } from "../../types";
 import { Linking, Share } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { useImageUpload } from '../../hooks/useImageUpload';
+import { useMutation } from '@tanstack/react-query';
+import { trpc } from '../../lib/trpc';
 
 
 const languages = [
@@ -26,13 +28,42 @@ const languages = [
 
 export default function ProfileScreen() {
   const { t, isRTL, changeLanguage, language } = useI18n();
-  const { user, pointsHistory, logout, hasAdminAccess, isSuperAdmin } = useApp();
+  const { user, pointsHistory, logout, hasAdminAccess, isSuperAdmin, updateUser } = useApp();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isPremiumSectionVisible, setIsPremiumSectionVisible] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  
+
+  // Update profile mutation
+  const updateProfileMutation = useMutation(trpc.auth.updateProfile.mutationOptions());
+
+
+  // Image upload hook
+  const { pickAndUploadImage, isLoading: isUploadingImage } = useImageUpload({
+    onUploadSuccess: async (url) => {
+      // Update profile with new avatar
+      updateProfileMutation.mutate(
+        { avatar: url },
+        {
+          onSuccess: async (response) => {
+            Alert.alert('نجح', 'تم تحديث صورة الملف الشخصي بنجاح');
+            // Update local user data
+            if (response.user) {
+              await updateUser({ avatar: response.user.avatar });
+            }
+          },
+          onError: (error) => {
+            Alert.alert('خطأ', error.message || 'فشل تحديث الصورة');
+          },
+        }
+      );
+    },
+    onUploadError: (error) => {
+      Alert.alert('خطأ', `فشل رفع الصورة: ${error}`);
+    },
+  });
+
+
   // Scroll to top when tab is focused
   useFocusEffect(
     React.useCallback(() => {
@@ -90,7 +121,7 @@ export default function ProfileScreen() {
     try {
       const appUrl = 'https://petcare.app'; // Replace with your actual app URL
       const message = `${t('profile.shareAppMessage')} ${appUrl}`;
-      
+
       if (Platform.OS === 'web') {
         // For web, use Web Share API if available, otherwise copy to clipboard
         if (navigator.share) {
@@ -111,7 +142,7 @@ export default function ProfileScreen() {
           url: appUrl,
           title: t('profile.shareAppTitle'),
         });
-        
+
         if (result.action === Share.sharedAction) {
           console.log('App shared successfully');
         }
@@ -139,115 +170,8 @@ export default function ProfileScreen() {
     setShowLanguageModal(false);
   };
 
-  const handleImagePicker = async () => {
-    try {
-      // Request permission
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (permissionResult.granted === false) {
-        Alert.alert('خطأ', 'نحتاج إلى إذن للوصول إلى معرض الصور');
-        return;
-      }
-
-      // Show action sheet for image source selection
-      Alert.alert(
-        'اختر مصدر الصورة',
-        'من أين تريد اختيار الصورة؟',
-        [
-          {
-            text: 'إلغاء',
-            style: 'cancel',
-          },
-          {
-            text: 'الكاميرا',
-            onPress: () => openCamera(),
-          },
-          {
-            text: 'معرض الصور',
-            onPress: () => openImageLibrary(),
-          },
-        ]
-      );
-    } catch (error) {
-      console.error('Error requesting permission:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء طلب الإذن');
-    }
-  };
-
-  const openCamera = async () => {
-    try {
-      const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (cameraPermission.granted === false) {
-        Alert.alert('خطأ', 'نحتاج إلى إذن للوصول إلى الكاميرا');
-        return;
-      }
-
-      setIsUploadingImage(true);
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        await uploadProfileImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error opening camera:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء فتح الكاميرا');
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
-
-  const openImageLibrary = async () => {
-    try {
-      setIsUploadingImage(true);
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        await uploadProfileImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error opening image library:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء فتح معرض الصور');
-    } finally {
-      setIsUploadingImage(false);
-    }
-  };
-
-  const uploadProfileImage = async (imageUri: string) => {
-    try {
-      // Here you would typically upload the image to your server
-      // For now, we'll just update the local user avatar
-      console.log('Uploading image:', imageUri);
-      
-      // TODO: Implement actual image upload to server
-      // const formData = new FormData();
-      // formData.append('avatar', {
-      //   uri: imageUri,
-      //   type: 'image/jpeg',
-      //   name: 'avatar.jpg',
-      // } as any);
-      
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update user avatar locally (in a real app, this would come from the server response)
-      // You would call your user update function here
-      Alert.alert('نجح', 'تم تحديث صورة الملف الشخصي بنجاح');
-      
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء رفع الصورة');
-    }
+  const handleImagePicker = () => {
+    pickAndUploadImage([1, 1]);
   };
 
   const handleSubscribeToPremium = () => {
@@ -279,55 +203,98 @@ export default function ProfileScreen() {
           <Text style={styles.screenTitle}>{t('profile.title')}</Text>
         </View>
         <View style={styles.header}>
-        <View style={styles.profileInfo}>
-          <View style={styles.avatarContainer}>
-            <UserAvatar 
-              uri={user?.avatar}
-              gender={user?.gender}
-              size={80}
+          <View style={styles.profileInfo}>
+            <View style={styles.avatarContainer}>
+              <UserAvatar
+                uri={user?.avatar}
+                gender={user?.gender}
+                size={80}
+              />
+              <TouchableOpacity
+                style={styles.editAvatarButton}
+                onPress={handleImagePicker}
+                disabled={isUploadingImage}
+              >
+                <Camera size={16} color={COLORS.white} />
+              </TouchableOpacity>
+              {isUploadingImage && (
+                <View style={styles.uploadingOverlay}>
+                  <Text style={styles.uploadingText}>جاري الرفع...</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.nameContainer}>
+              <Text style={styles.name}>{user?.name}</Text>
+              <Text style={styles.email}>{user?.email}</Text>
+              <Text style={styles.userId}>ID: {user?.id || '1001'}</Text>
+            </View>
+          </View>
+
+          <View style={styles.pointsCard}>
+            <View style={styles.pointsHeader}>
+              <Text style={styles.pointsTitle}>{t('profile.points')}</Text>
+              <TouchableOpacity onPress={() => {
+                router.push('/points-exchange');
+              }}>
+                <Text style={styles.pointsHistory}>استبدال النقاط</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.pointsValue}>{user?.points}</Text>
+            <Button
+              title={t('common.seeAll')}
+              onPress={() => router.push('/points-history')}
+              type="outline"
+              size="small"
+              style={styles.pointsButton}
             />
-            <TouchableOpacity 
-              style={styles.editAvatarButton}
-              onPress={handleImagePicker}
-              disabled={isUploadingImage}
-            >
-              <Camera size={16} color={COLORS.white} />
-            </TouchableOpacity>
-            {isUploadingImage && (
-              <View style={styles.uploadingOverlay}>
-                <Text style={styles.uploadingText}>جاري الرفع...</Text>
+          </View>
+
+          {!user?.isPremium && isPremiumSectionVisible && (
+            <View style={styles.premiumCard}>
+              {(hasAdminAccess || isSuperAdmin) && (
+                <View style={styles.adminControls}>
+                  <TouchableOpacity
+                    style={styles.adminControlButton}
+                    onPress={handleEditPremiumSection}
+                  >
+                    <Edit3 size={16} color={COLORS.primary} />
+                    <Text style={styles.adminControlText}>تعديل</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.adminControlButton}
+                    onPress={togglePremiumSectionVisibility}
+                  >
+                    <EyeOff size={16} color={COLORS.error} />
+                    <Text style={[styles.adminControlText, { color: COLORS.error }]}>إخفاء</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              <View style={styles.premiumContent}>
+                <Award size={24} color={COLORS.primary} />
+                <View style={styles.premiumTextContainer}>
+                  <Text style={styles.premiumTitle}>{t('premium.title')}</Text>
+                  <Text style={styles.premiumDescription}>
+                    {t('premium.storeDiscounts')} • {t('premium.clinicDiscounts')}
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
-          <View style={styles.nameContainer}>
-            <Text style={styles.name}>{user?.name}</Text>
-            <Text style={styles.email}>{user?.email}</Text>
-            <Text style={styles.userId}>ID: {user?.id || '1001'}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.pointsCard}>
-          <View style={styles.pointsHeader}>
-            <Text style={styles.pointsTitle}>{t('profile.points')}</Text>
-            <TouchableOpacity onPress={() => {
-              router.push('/points-exchange');
-            }}>
-              <Text style={styles.pointsHistory}>استبدال النقاط</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.pointsValue}>{user?.points}</Text>
-          <Button
-            title={t('common.seeAll')}
-            onPress={() => router.push('/points-history')}
-            type="outline"
-            size="small"
-            style={styles.pointsButton}
-          />
-        </View>
-        
-        {!user?.isPremium && isPremiumSectionVisible && (
-          <View style={styles.premiumCard}>
-            {(hasAdminAccess || isSuperAdmin) && (
+              <Button
+                title={t('profile.subscribeToPremium')}
+                onPress={() => router.push('/premium-subscription')}
+                type="primary"
+                size="small"
+                style={styles.premiumButton}
+              />
+            </View>
+          )}
+
+          {/* Admin control to show hidden premium section */}
+          {!user?.isPremium && !isPremiumSectionVisible && (hasAdminAccess || isSuperAdmin) && (
+            <View style={styles.hiddenSectionIndicator}>
+              <View style={styles.hiddenSectionContent}>
+                <EyeOff size={20} color={COLORS.darkGray} />
+                <Text style={styles.hiddenSectionText}>العضوية المميزة (مخفية)</Text>
+              </View>
               <View style={styles.adminControls}>
                 <TouchableOpacity
                   style={styles.adminControlButton}
@@ -340,173 +307,130 @@ export default function ProfileScreen() {
                   style={styles.adminControlButton}
                   onPress={togglePremiumSectionVisibility}
                 >
-                  <EyeOff size={16} color={COLORS.error} />
-                  <Text style={[styles.adminControlText, { color: COLORS.error }]}>إخفاء</Text>
+                  <Eye size={16} color={COLORS.primary} />
+                  <Text style={styles.adminControlText}>إظهار</Text>
                 </TouchableOpacity>
               </View>
-            )}
-            <View style={styles.premiumContent}>
-              <Award size={24} color={COLORS.primary} />
-              <View style={styles.premiumTextContainer}>
-                <Text style={styles.premiumTitle}>{t('premium.title')}</Text>
-                <Text style={styles.premiumDescription}>
-                  {t('premium.storeDiscounts')} • {t('premium.clinicDiscounts')}
-                </Text>
-              </View>
             </View>
-            <Button
-              title={t('profile.subscribeToPremium')}
-              onPress={() => router.push('/premium-subscription')}
-              type="primary"
-              size="small"
-              style={styles.premiumButton}
-            />
-          </View>
-        )}
-        
-        {/* Admin control to show hidden premium section */}
-        {!user?.isPremium && !isPremiumSectionVisible && (hasAdminAccess || isSuperAdmin) && (
-          <View style={styles.hiddenSectionIndicator}>
-            <View style={styles.hiddenSectionContent}>
-              <EyeOff size={20} color={COLORS.darkGray} />
-              <Text style={styles.hiddenSectionText}>العضوية المميزة (مخفية)</Text>
-            </View>
-            <View style={styles.adminControls}>
-              <TouchableOpacity
-                style={styles.adminControlButton}
-                onPress={handleEditPremiumSection}
-              >
-                <Edit3 size={16} color={COLORS.primary} />
-                <Text style={styles.adminControlText}>تعديل</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.adminControlButton}
-                onPress={togglePremiumSectionVisibility}
-              >
-                <Eye size={16} color={COLORS.primary} />
-                <Text style={styles.adminControlText}>إظهار</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-        
-        <View style={styles.menuSection}>
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('/favorites')}
-          >
-            <View style={styles.menuItemLeft}>
-              <Heart size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>المفضلة</Text>
-            </View>
-            <View style={{ width: 20, height: 20 }}>
-              {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('/orders')}
-          >
-            <View style={styles.menuItemLeft}>
-              <ShoppingBag size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>طلباتي</Text>
-            </View>
-            <View style={{ width: 20, height: 20 }}>
-              {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
-            </View>
-          </TouchableOpacity>
-          
-          {/* Show store management for veterinarians */}
-          {user?.userType === 'vet' && (
-            <TouchableOpacity 
+          )}
+
+          <View style={styles.menuSection}>
+            <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => router.push('/add-store')}
+              onPress={() => router.push('/favorites')}
             >
               <View style={styles.menuItemLeft}>
-                <Store size={20} color={COLORS.darkGray} />
-                <Text style={styles.menuItemText}>إضافة مذخر</Text>
+                <Heart size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>المفضلة</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
                 {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
-          )}
-          
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('/settings')}
-          >
-            <View style={styles.menuItemLeft}>
-              <Settings size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>{t('profile.settings')}</Text>
-            </View>
-            <View style={{ width: 20, height: 20 }}>
-              {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.menuItem} onPress={() => setShowLanguageModal(true)}>
-            <View style={styles.menuItemLeft}>
-              <Globe size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>{t('profile.language')}</Text>
-            </View>
-            <View style={styles.languagePreview}>
-              <Text style={styles.languageFlag}>{currentLanguage?.flag}</Text>
-              <Text style={styles.menuItemValue}>{currentLanguage?.name}</Text>
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('/notifications')}
-          >
-            <View style={styles.menuItemLeft}>
-              <MessageSquare size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>{t('profile.notifications')}</Text>
-            </View>
-            <View style={{ width: 20, height: 20 }}>
-              {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.menuItem} onPress={handleShareApp}>
-            <View style={styles.menuItemLeft}>
-              <Share2 size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>{t('profile.shareApp')}</Text>
-            </View>
-            <View style={{ width: 20, height: 20 }}>
-              {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.menuItem}
-            onPress={() => router.push('/contact-us')}
-          >
-            <View style={styles.menuItemLeft}>
-              <Phone size={20} color={COLORS.darkGray} />
-              <Text style={styles.menuItemText}>تواصل معنا</Text>
-            </View>
-            <View style={{ width: 20, height: 20 }}>
-              {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
-            </View>
-          </TouchableOpacity>
-          
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push('/orders')}
+            >
+              <View style={styles.menuItemLeft}>
+                <ShoppingBag size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>طلباتي</Text>
+              </View>
+              <View style={{ width: 20, height: 20 }}>
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
+              </View>
+            </TouchableOpacity>
+
+            {/* Show store management for veterinarians */}
+            {user?.userType === 'veterinarians' && (
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => router.push('/add-store')}
+              >
+                <View style={styles.menuItemLeft}>
+                  <Store size={20} color={COLORS.darkGray} />
+                  <Text style={styles.menuItemText}>إضافة مذخر</Text>
+                </View>
+                <View style={{ width: 20, height: 20 }}>
+                  {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
+                </View>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push('/settings')}
+            >
+              <View style={styles.menuItemLeft}>
+                <Settings size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>{t('profile.settings')}</Text>
+              </View>
+              <View style={{ width: 20, height: 20 }}>
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem} onPress={() => setShowLanguageModal(true)}>
+              <View style={styles.menuItemLeft}>
+                <Globe size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>{t('profile.language')}</Text>
+              </View>
+              <View style={styles.languagePreview}>
+                <Text style={styles.languageFlag}>{currentLanguage?.flag}</Text>
+                <Text style={styles.menuItemValue}>{currentLanguage?.name}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push('/notifications')}
+            >
+              <View style={styles.menuItemLeft}>
+                <MessageSquare size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>{t('profile.notifications')}</Text>
+              </View>
+              <View style={{ width: 20, height: 20 }}>
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem} onPress={handleShareApp}>
+              <View style={styles.menuItemLeft}>
+                <Share2 size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>{t('profile.shareApp')}</Text>
+              </View>
+              <View style={{ width: 20, height: 20 }}>
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => router.push('/contact-us')}
+            >
+              <View style={styles.menuItemLeft}>
+                <Phone size={20} color={COLORS.darkGray} />
+                <Text style={styles.menuItemText}>تواصل معنا</Text>
+              </View>
+              <View style={{ width: 20, height: 20 }}>
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
+              </View>
+            </TouchableOpacity>
 
 
-        </View>
-        
-        <TouchableOpacity 
-          style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]} 
-          onPress={handleLogout}
-          disabled={isLoggingOut}
-        >
-          <LogOut size={20} color={isLoggingOut ? COLORS.darkGray : COLORS.error} />
-          <Text style={[styles.logoutText, isLoggingOut && styles.logoutTextDisabled]}>
-            {isLoggingOut ? 'جاري تسجيل الخروج...' : t('profile.logout')}
-          </Text>
-        </TouchableOpacity>
+
+          </View>
+
+          <TouchableOpacity
+            style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
+            onPress={handleLogout}
+            disabled={isLoggingOut}
+          >
+            <LogOut size={20} color={isLoggingOut ? COLORS.darkGray : COLORS.error} />
+            <Text style={[styles.logoutText, isLoggingOut && styles.logoutTextDisabled]}>
+              {isLoggingOut ? 'جاري تسجيل الخروج...' : t('profile.logout')}
+            </Text>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>
@@ -527,7 +451,7 @@ export default function ProfileScreen() {
               <X size={24} color={COLORS.darkGray} />
             </TouchableOpacity>
           </View>
-          
+
           <FlatList
             data={languages}
             renderItem={renderLanguageItem}

@@ -9,7 +9,9 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
+const { width: screenWidth } = Dimensions.get("window");
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -372,7 +374,21 @@ export default function PetDetailsScreen() {
         {createApprovalMutation.isPending ? <ActivityIndicator size="large" /> : null}
       </View>
       <View style={styles.header}>
-        <Image source={{ uri: pet.image }} style={styles.petImage} />
+        {/* Pet Images Carousel */}
+        {pet.images && pet.images.length > 0 ? (
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={styles.imageCarousel}
+          >
+            {pet.images.map((imageUrl: string, index: number) => (
+              <Image key={index} source={{ uri: imageUrl }} style={styles.petImage} />
+            ))}
+          </ScrollView>
+        ) : (
+          <Image source={{ uri: pet.image }} style={styles.petImage} />
+        )}
         <View style={styles.petInfo}>
           <View style={styles.petNameRow}>
             <Text style={styles.petName}>{pet.name}</Text>
@@ -650,12 +666,12 @@ export default function PetDetailsScreen() {
                       {type === "dog"
                         ? "كلب"
                         : type === "cat"
-                        ? "قطة"
-                        : type === "rabbit"
-                        ? "أرنب"
-                        : type === "bird"
-                        ? "طائر"
-                        : "أخرى"}
+                          ? "قطة"
+                          : type === "rabbit"
+                            ? "أرنب"
+                            : type === "bird"
+                              ? "طائر"
+                              : "أخرى"}
                     </Text>
                   </TouchableOpacity>
                 ))}

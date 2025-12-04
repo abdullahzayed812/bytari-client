@@ -15,7 +15,7 @@ import {
   Building,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   BasicInfoModal,
@@ -83,6 +83,7 @@ export default function ClinicSettings() {
   const staff = staffData?.staff || [];
 
   // Handle basic info save
+  const queryClient = useQueryClient();
   const handleBasicInfoSave = (data: any) => {
     updateBasicInfoMutation.mutate(
       {
@@ -94,6 +95,8 @@ export default function ClinicSettings() {
           Alert.alert("نجح", "تم تحديث المعلومات الأساسية بنجاح");
           setBasicInfoModalVisible(false);
           refetch();
+          // Invalidate queries to refresh data on other screens
+          queryClient.invalidateQueries({ queryKey: [["clinics"]] });
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message);
@@ -537,6 +540,7 @@ export default function ClinicSettings() {
               doctors: clinic.doctors,
               latitude: clinic.latitude,
               longitude: clinic.longitude,
+              images: typeof clinic.images === "string" ? JSON.parse(clinic.images) : clinic.images || [],
             }}
             onSave={handleBasicInfoSave}
             isLoading={updateBasicInfoMutation.isPending}

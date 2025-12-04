@@ -1,18 +1,19 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import React, { useRef } from 'react';
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useRouter, useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
 import { ArrowLeft, ArrowRight, Download, Star, User, BookOpen, FileText, Globe } from 'lucide-react-native';
 import { trpc } from '../lib/trpc';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { useBookDownload } from '@/hooks/useBookDownload';
 
 export default function BookDetailsScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const scrollViewRef = useRef<ScrollView>(null);
-  
+
   // Scroll to top when screen is focused
   useFocusEffect(
     React.useCallback(() => {
@@ -22,20 +23,12 @@ export default function BookDetailsScreen() {
 
   const { data, isLoading, error } = useQuery(trpc.content.getBookById.queryOptions({ id: Number(id) }));
 
-  const downloadMutation = useMutation({
-    mutationFn: trpc.content.downloadBook.mutate,
-    onSuccess: () => {
-      Alert.alert("Success", "Book downloaded successfully!");
-    },
-    onError: (error) => {
-      Alert.alert("Error", "Failed to download the book.");
-    },
-  });
+  const { downloadBook, isDownloading } = useBookDownload();
 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Stack.Screen 
+        <Stack.Screen
           options={{
             title: 'جاري التحميل...',
             headerStyle: { backgroundColor: COLORS.primary },
@@ -47,10 +40,10 @@ export default function BookDetailsScreen() {
     );
   }
 
-  if (error || !data?.book) {
+  if (error || !(data as any)?.book) {
     return (
       <View style={styles.container}>
-        <Stack.Screen 
+        <Stack.Screen
           options={{
             title: 'الكتاب غير موجود',
             headerStyle: { backgroundColor: COLORS.primary },
@@ -59,7 +52,7 @@ export default function BookDetailsScreen() {
         />
         <View style={styles.notFoundContainer}>
           <Text style={styles.notFoundText}>الكتاب غير موجود</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -70,10 +63,15 @@ export default function BookDetailsScreen() {
     );
   }
 
-  const book = data.book;
+  const book = (data as any).book;
 
   const handleDownload = () => {
-    downloadMutation.mutate({ id: book.id });
+    downloadBook({
+      id: book.id,
+      title: book.title,
+      filePath: book.filePath,
+      fileSize: book.fileSize,
+    });
   };
 
   const renderStars = (rating: number) => {
@@ -105,14 +103,14 @@ export default function BookDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: 'تفاصيل الكتاب',
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: 'bold' },
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.back()}
               style={styles.headerButton}
             >
@@ -125,33 +123,33 @@ export default function BookDetailsScreen() {
           ),
         }}
       />
-      
+
       <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Book Header */}
         <View style={styles.bookHeader}>
           <Image source={{ uri: book.coverImage }} style={styles.bookCover} />
-          
+
           <View style={styles.bookInfo}>
             {/* Category Badge */}
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>{book.category}</Text>
             </View>
-            
+
             <Text style={styles.bookTitle}>{book.title}</Text>
-            
+
             {/* Author */}
             <View style={styles.authorSection}>
               <User size={16} color={COLORS.primary} />
               <Text style={styles.authorName}>{book.author}</Text>
             </View>
-            
+
             {/* Rating */}
             <View style={styles.ratingSection}>
               <View style={styles.starsContainer}>
                 {renderStars(book.rating)}
               </View>
               <Text style={styles.ratingText}>{book.rating}</Text>
-              <Text style={styles.downloadsText}>({book.downloads.toLocaleString()} تحميل)</Text>
+              <Text style={styles.downloadsText}>({(book?.downloads || 0)?.toLocaleString()} تحميل)</Text>
             </View>
           </View>
         </View>
@@ -167,7 +165,7 @@ export default function BookDetailsScreen() {
                 <Text style={styles.infoValue}>{book.pages}</Text>
               </View>
             </View>
-            
+
             <View style={styles.infoItem}>
               <FileText size={20} color={COLORS.primary} />
               <View style={styles.infoContent}>
@@ -175,7 +173,7 @@ export default function BookDetailsScreen() {
                 <Text style={styles.infoValue}>{book.fileSize}</Text>
               </View>
             </View>
-            
+
             <View style={styles.infoItem}>
               <Globe size={20} color={COLORS.primary} />
               <View style={styles.infoContent}>
@@ -209,7 +207,7 @@ export default function BookDetailsScreen() {
               </View>
               <View style={styles.detailItem}>
                 <Text style={styles.detailLabel}>عدد التحميلات:</Text>
-                <Text style={styles.detailValue}>{book.downloads.toLocaleString()}</Text>
+                <Text style={styles.detailValue}>{(book?.downloads || 0)?.toLocaleString()}</Text>
               </View>
             </View>
           </View>
@@ -218,10 +216,16 @@ export default function BookDetailsScreen() {
           <TouchableOpacity
             style={styles.downloadButton}
             onPress={handleDownload}
-            activeOpacity={0.8}
+            disabled={isDownloading}
           >
-            <Download size={24} color={COLORS.white} />
-            <Text style={styles.downloadButtonText}>تحميل الكتاب</Text>
+            {isDownloading ? (
+              <ActivityIndicator size="small" color={COLORS.white} />
+            ) : (
+              <Download size={24} color={COLORS.white} />
+            )}
+            <Text style={styles.downloadButtonText}>
+              {isDownloading ? "جاري التحميل..." : "تحميل الكتاب"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

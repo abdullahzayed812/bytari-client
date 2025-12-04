@@ -1,14 +1,14 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { Package, ImageIcon } from "lucide-react-native";
+import { Package } from "lucide-react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
 import { useApp } from "../providers/AppProvider";
-import * as ImagePicker from "expo-image-picker";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 interface StoreProductFormData {
   name: string;
@@ -32,7 +32,7 @@ export default function AddStoreProductScreen() {
     category: "طعام",
     price: "25.00",
     stock: "100",
-    images: ["https://example.com/images/dog-food.jpg"],
+    images: [],
   });
 
   const createProductMutation = useMutation(trpc.stores.products.create.mutationOptions());
@@ -107,96 +107,7 @@ export default function AddStoreProductScreen() {
     );
   };
 
-  const handleAddImage = async () => {
-    try {
-      if (Platform.OS === "web") {
-        // For web, simulate image selection
-        const newImage = `https://images.unsplash.com/photo-${Date.now()}?w=400`;
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, newImage],
-        }));
-      } else {
-        // Request permission for camera/gallery access
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("خطأ", "نحتاج إذن للوصول إلى الصور");
-          return;
-        }
-
-        // Show options for camera or gallery
-        Alert.alert("اختر مصدر الصورة", "من أين تريد اختيار الصورة؟", [
-          {
-            text: "الكاميرا",
-            onPress: () => pickImageFromCamera(),
-          },
-          {
-            text: "المعرض",
-            onPress: () => pickImageFromGallery(),
-          },
-          {
-            text: "إلغاء",
-            style: "cancel",
-          },
-        ]);
-      }
-    } catch {
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
-    }
-  };
-
-  const pickImageFromCamera = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إذن للوصول إلى الكاميرا");
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, result.assets[0].uri],
-        }));
-      }
-    } catch {
-      Alert.alert("خطأ", "حدث خطأ أثناء التقاط الصورة");
-    }
-  };
-
-  const pickImageFromGallery = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, result.assets[0].uri],
-        }));
-      }
-    } catch {
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
+  // Image upload is now handled by ImageGalleryUploader component
 
   return (
     <View style={styles.container}>
@@ -287,21 +198,13 @@ export default function AddStoreProductScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>صور المنتج</Text>
-            <View style={styles.imagesContainer}>
-              {formData.images.map((image, index) => (
-                <View key={index} style={styles.imageItem}>
-                  <Image source={{ uri: image }} style={styles.productImage} />
-                  <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveImage(index)}>
-                    <Text style={styles.removeImageText}>×</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
-                <ImageIcon size={24} color={COLORS.darkGray} />
-                <Text style={styles.addImageText}>إضافة صورة</Text>
-              </TouchableOpacity>
-            </View>
+            <ImageGalleryUploader
+              images={formData.images}
+              onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
+              maxImages={5}
+              label="صور المنتج"
+              aspect={[1, 1]}
+            />
           </View>
         </View>
       </ScrollView>

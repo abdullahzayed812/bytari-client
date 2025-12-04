@@ -4,7 +4,7 @@ import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Shield, Clock, Users, MapPin, Phone, Calendar, RefreshCw, Package } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   StoreBasicInfoModal,
@@ -67,6 +67,7 @@ export default function StoreSettings() {
   const staff = staffData?.staff || [];
 
   // Handle basic info save
+  const queryClient = useQueryClient();
   const handleBasicInfoSave = (data: any) => {
     updateBasicInfoMutation.mutate(
       {
@@ -78,6 +79,8 @@ export default function StoreSettings() {
           Alert.alert("نجح", "تم تحديث المعلومات الأساسية بنجاح");
           setBasicInfoModalVisible(false);
           refetch();
+          // Invalidate queries to refresh data on other screens
+          queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message);
@@ -375,8 +378,8 @@ export default function StoreSettings() {
                     {subscription.status === "expiring_soon"
                       ? "قريب الانتهاء"
                       : subscription.status_under_treatment === "active"
-                      ? "نشط"
-                      : "غير نشط"}
+                        ? "نشط"
+                        : "غير نشط"}
                   </Text>
                 </View>
                 <Text style={styles.subscriptionPlan}>اشتراك المذخر المميز</Text>
@@ -493,6 +496,7 @@ export default function StoreSettings() {
               category: store.category,
               latitude: store.latitude,
               longitude: store.longitude,
+              images: typeof store.images === "string" ? JSON.parse(store.images) : store.images || [],
             }}
             onSave={handleBasicInfoSave}
             isLoading={updateBasicInfoMutation.isPending}

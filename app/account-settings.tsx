@@ -8,43 +8,51 @@ import {
   Alert,
   Switch,
   ActivityIndicator,
+  Image,
+  Modal,
 } from "react-native";
 import React, { useState, useEffect, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { Stack, router } from "expo-router";
-import { ArrowLeft, User, Mail, Phone, Lock, Trash2, Edit3, Save } from "lucide-react-native";
+import { ArrowLeft, User, Mail, Phone, Lock, Trash2, Edit3, Save, X } from "lucide-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
+import { ImageUploader } from "../components/ImageUploader";
 
 export default function AccountSettingsScreen() {
-  const { user } = useApp();
+  const { user, logout } = useApp();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
+  const [avatar, setAvatar] = useState<string>("");
   const [notifications, setNotifications] = useState<boolean>(true);
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
+
+  // Password Change State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   // Fetch user profile data
   const { data, isLoading: isProfileLoading, error: profileError } = useQuery(trpc.auth.getProfile.queryOptions({}));
 
   const profileData = useMemo(() => (data as any)?.user, [data]);
 
-  console.log("profile data------------", profileData);
+  console.log("profile data------------", data);
 
   // Update profile mutation
   const updateProfileMutation = useMutation(trpc.auth.updateProfile.mutationOptions());
-
-  // TODO: Implement these mutations when backend procedures are ready
-  // const changePasswordMutation = trpc.auth.changePassword.useMutation();
-  // const deleteAccountMutation = trpc.auth.deleteAccount.useMutation();
+  const changePasswordMutation = useMutation(trpc.auth.changePassword.mutationOptions());
+  const deleteAccountMutation = useMutation(trpc.auth.deleteAccount.mutationOptions());
 
   useEffect(() => {
     if (profileData) {
       setName(profileData?.name || "");
       setEmail(profileData?.email || "");
       setPhone(profileData?.phone || "");
+      setAvatar(profileData?.avatar || "");
     }
   }, [profileData]);
 
@@ -55,7 +63,7 @@ export default function AccountSettingsScreen() {
     }
 
     updateProfileMutation.mutate(
-      { name, phone },
+      { name, phone, avatar },
       {
         onSuccess: () => {
           Alert.alert("تم الحفظ", "تم تحديث معلوماتك بنجاح");
@@ -69,15 +77,33 @@ export default function AccountSettingsScreen() {
   };
 
   const handleChangePassword = () => {
-    // TODO: Replace with a modal to get current and new password
-    Alert.alert(
-      "تغيير كلمة المرور",
-      "هذه الميزة قيد التطوير."
-      // `سيتم إرسال رابط تغيير كلمة المرور إلى بريدك الإلكتروني`,
-      // [
-      //   { text: 'إلغاء', style: 'cancel' },
-      //   { text: 'إرسال', onPress: () => Alert.alert('تم الإرسال', 'تم إرسال الرابط إلى بريدك الإلكتروني') }
-      // ]
+    setShowPasswordModal(true);
+  };
+
+  const submitChangePassword = () => {
+    if (!currentPassword || !newPassword) {
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      Alert.alert("خطأ", "كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل");
+      return;
+    }
+
+    changePasswordMutation.mutate(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          Alert.alert("تم بنجاح", "تم تغيير كلمة المرور بنجاح");
+          setShowPasswordModal(false);
+          setCurrentPassword("");
+          setNewPassword("");
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message || "فشل تغيير كلمة المرور");
+        },
+      }
     );
   };
 
@@ -88,16 +114,16 @@ export default function AccountSettingsScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          // deleteAccountMutation.mutate(undefined, {
-          //   onSuccess: () => {
-          //     Alert.alert('تم الحذف', 'تم حذف حسابك بنجاح');
-          //     // Log user out and navigate to auth screen
-          //   },
-          //   onError: (error) => {
-          //     Alert.alert('خطأ', error.message || 'فشل حذف الحساب');
-          //   }
-          // })
-          Alert.alert("قيد التطوير", "هذه الميزة لم تنفذ بعد في الخلفية.");
+          deleteAccountMutation.mutate(undefined, {
+            onSuccess: () => {
+              Alert.alert("تم الحذف", "تم حذف حسابك بنجاح");
+              logout(); // Assuming signOut handles navigation to auth screen
+              router.replace("/(auth)/login");
+            },
+            onError: (error) => {
+              Alert.alert("خطأ", error.message || "فشل حذف الحساب");
+            },
+          });
         },
       },
     ]);
@@ -154,7 +180,20 @@ export default function AccountSettingsScreen() {
 
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <User size={40} color={COLORS.white} />
+          {isEditing ? (
+            <ImageUploader
+              imageUri={avatar}
+              onUploadComplete={setAvatar}
+              imageStyle={{ width: 80, height: 80, borderRadius: 40 }}
+              containerStyle={{ marginBottom: 0 }}
+            />
+          ) : (
+            avatar ? (
+              <Image source={{ uri: avatar }} style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 12 }} />
+            ) : (
+              <User size={40} color={COLORS.white} />
+            )
+          )}
           <Text style={styles.headerText}>إدارة معلومات حسابك الشخصي</Text>
         </View>
 
@@ -277,6 +316,61 @@ export default function AccountSettingsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Password Change Modal */}
+      <Modal
+        visible={showPasswordModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPasswordModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>تغيير كلمة المرور</Text>
+              <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
+                <X size={24} color={COLORS.black} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContent}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>كلمة المرور الحالية</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  secureTextEntry
+                  textAlign="right"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>كلمة المرور الجديدة</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry
+                  textAlign="right"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={submitChangePassword}
+                disabled={changePasswordMutation.isPending}
+              >
+                {changePasswordMutation.isPending ? (
+                  <ActivityIndicator color={COLORS.white} />
+                ) : (
+                  <Text style={styles.saveButtonText}>حفظ التغييرات</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -468,5 +562,64 @@ const styles = StyleSheet.create({
   dangerDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    width: "100%",
+    maxWidth: 400,
+    padding: 20,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+  },
+  modalContent: {
+    width: "100%",
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: COLORS.black,
+    textAlign: "right",
+  },
+  saveButton: {
+    backgroundColor: COLORS.primary,
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  saveButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

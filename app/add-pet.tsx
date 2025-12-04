@@ -8,11 +8,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../components/Button";
 import { Pet } from "../types";
-import { Camera, Calendar } from "lucide-react-native";
+import { Calendar } from "lucide-react-native";
 import { Stack } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
-import { useToast } from "@/lib/hooks";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 
 const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
@@ -34,7 +33,7 @@ export default function AddPetScreen() {
     weight: "",
     color: "",
     birthDate: "",
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
+    images: [] as string[],
   });
 
   const createPetMutation = useMutation(trpc.pets.create.mutationOptions({}));
@@ -44,40 +43,7 @@ export default function AddPetScreen() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  /** 🖼️ Handle Image Upload **/
-  const handleImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        showToast({
-          message: "نحتاج إلى إذن للوصول إلى الصور",
-          type: "error",
-        });
-        return;
-      }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.length > 0) {
-        setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
-        showToast({
-          message: "تم اختيار الصورة بنجاح",
-          type: "success",
-        });
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      showToast({
-        message: "حدث خطأ أثناء اختيار الصورة",
-        type: "error",
-      });
-    }
-  };
 
   /** 🐶 Handle Form Submission **/
   const handleSubmit = async () => {
@@ -117,7 +83,8 @@ export default function AddPetScreen() {
         gender: formData.gender,
         weight: formData.weight ? parseFloat(formData.weight) : undefined,
         color: formData.color.trim() || undefined,
-        image: formData.image,
+        image: formData.images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
+        images: formData.images,
       },
       {
         onSuccess: () => {
@@ -170,6 +137,8 @@ export default function AddPetScreen() {
     </View>
   );
 
+
+
   return (
     <>
       <Stack.Screen
@@ -183,12 +152,14 @@ export default function AddPetScreen() {
       />
 
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {/* Pet Image */}
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: formData.image }} style={styles.petImage} />
-          <TouchableOpacity style={styles.cameraButton} onPress={handleImageUpload}>
-            <Camera size={20} color={COLORS.white} />
-          </TouchableOpacity>
+        {/* Pet Images */}
+        <View style={styles.inputGroup}>
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData({ ...formData, images })}
+            maxImages={5}
+            label="صور الحيوان"
+          />
         </View>
 
         {/* Pet Name */}

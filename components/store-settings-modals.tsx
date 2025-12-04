@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { COLORS } from "../constants/colors";
 import { X, Save, MapPin, Phone, Mail, Globe, Clock, Users, Shield, Trash2 } from "lucide-react-native";
+import { ImageGalleryUploader } from "./ImageGalleryUploader";
 
 // ==================== STORE BASIC INFO MODAL ====================
 export const StoreBasicInfoModal = ({
@@ -34,6 +35,7 @@ export const StoreBasicInfoModal = ({
   const [category, setCategory] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [images, setImages] = useState<string[]>([]);
 
   useEffect(() => {
     if (initialData) {
@@ -43,6 +45,7 @@ export const StoreBasicInfoModal = ({
       setCategory(initialData.category || "");
       setLatitude(initialData.latitude?.toString() || "");
       setLongitude(initialData.longitude?.toString() || "");
+      setImages(initialData.images || []);
     }
   }, [initialData]);
 
@@ -63,6 +66,7 @@ export const StoreBasicInfoModal = ({
       category: category.trim(),
       latitude: latitude ? parseFloat(latitude) : undefined,
       longitude: longitude ? parseFloat(longitude) : undefined,
+      images,
     });
   };
 
@@ -147,6 +151,15 @@ export const StoreBasicInfoModal = ({
                   keyboardType="decimal-pad"
                 />
               </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ImageGalleryUploader
+                images={images}
+                onImagesChange={setImages}
+                maxImages={5}
+                label="صور المذخر"
+              />
             </View>
           </ScrollView>
 
@@ -504,10 +517,10 @@ export const ManageStoreStaffModal = ({
                         {member.role === "all"
                           ? "صلاحيات كاملة"
                           : member.role === "view_edit_inventory"
-                          ? "عرض وتعديل المخزون"
-                          : member.role === "view_only"
-                          ? "عرض فقط"
-                          : "إدارة الطلبات"}
+                            ? "عرض وتعديل المخزون"
+                            : member.role === "view_only"
+                              ? "عرض فقط"
+                              : "إدارة الطلبات"}
                       </Text>
                     )}
                   </View>

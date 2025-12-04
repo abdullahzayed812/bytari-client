@@ -8,15 +8,14 @@ import {
   TextInput,
   Modal,
   Alert,
-  Image,
   ActivityIndicator,
 } from "react-native";
 import { Stack } from "expo-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import { trpc } from "@/lib/trpc";
-import { BarChart3, Edit3, Eye, Plus, Trash2, Upload, X } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { BarChart3, Edit3, Eye, Plus, Trash2, X } from "lucide-react-native";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface Advertisement {
   id: number;
@@ -39,6 +38,9 @@ interface Advertisement {
 
 export default function AdminAdsManagement() {
   const { user, userMode } = useApp();
+
+  const queryClient = useQueryClient();
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedAd, setSelectedAd] = useState<Advertisement | null>(null);
@@ -85,24 +87,7 @@ export default function AdminAdsManagement() {
   const updateAdMutation = useMutation(trpc.admin.ads.update.mutationOptions());
   const deleteAdMutation = useMutation(trpc.admin.ads.delete.mutationOptions());
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى معرض الصور");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setFormData({ ...formData, image: result.assets[0].uri });
-    }
-  };
+  // Image upload is now handled by ImageUploader component
 
   const resetForm = () => {
     setFormData({
@@ -133,6 +118,7 @@ export default function AdminAdsManagement() {
           setShowCreateModal(false);
           resetForm();
           refetch();
+          queryClient.invalidateQueries(trpc.admin.ads.getActive.queryKey)
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "فشل في إنشاء الإعلان");
@@ -330,7 +316,7 @@ export default function AdminAdsManagement() {
               </View>
             </View>
 
-            {ad.imageUrl && <Image source={{ uri: ad.imageUrl }} style={styles.adImage} />}
+            {ad.image && <Image source={{ uri: ad.image }} style={styles.adImage} />}
 
             {ad.description && <Text style={styles.adContent}>{ad.description}</Text>}
 
@@ -409,22 +395,12 @@ export default function AdminAdsManagement() {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>صورة الإعلان</Text>
-              <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-                <Upload size={20} color="#4ECDC4" />
-                <Text style={styles.imagePickerText}>{formData.image ? "تغيير الصورة" : "رفع صورة"}</Text>
-              </TouchableOpacity>
-              {formData.image && (
-                <View style={styles.imagePreviewContainer}>
-                  <Image source={{ uri: formData.image }} style={styles.imagePreview} />
-                  <TouchableOpacity
-                    style={styles.removeImageButton}
-                    onPress={() => setFormData({ ...formData, image: "" })}
-                  >
-                    <X size={16} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-              )}
+              <ImageUploader
+                imageUri={formData.image}
+                onUploadComplete={(url) => setFormData({ ...formData, image: url })}
+                label="صورة الإعلان"
+                aspect={[16, 9]}
+              />
             </View>
 
             <View style={styles.formGroup}>
@@ -610,22 +586,12 @@ export default function AdminAdsManagement() {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>صورة الإعلان</Text>
-              <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
-                <Upload size={20} color="#4ECDC4" />
-                <Text style={styles.imagePickerText}>{formData.image ? "تغيير الصورة" : "رفع صورة"}</Text>
-              </TouchableOpacity>
-              {formData.image && (
-                <View style={styles.imagePreviewContainer}>
-                  <Image source={{ uri: formData.image }} style={styles.imagePreview} />
-                  <TouchableOpacity
-                    style={styles.removeImageButton}
-                    onPress={() => setFormData({ ...formData, image: "" })}
-                  >
-                    <X size={16} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-              )}
+              <ImageUploader
+                imageUri={formData.image}
+                onUploadComplete={(url) => setFormData({ ...formData, image: url })}
+                label="صورة الإعلان"
+                aspect={[16, 9]}
+              />
             </View>
 
             <View style={styles.formGroup}>

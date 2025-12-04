@@ -62,6 +62,8 @@ export default function StoreDetailsScreen() {
   const { data, isLoading, error } = useQuery(trpc.stores.getById.queryOptions({ storeId: Number(id) }));
   const storeData = useMemo(() => (data as any)?.store as Store | undefined, [data]);
 
+  console.log({ storeData })
+
   // Fetch store products
   const { data: rawStoreProducts, isLoading: isStoreProductsLoading } = useQuery(
     trpc.stores.products.list.queryOptions({ storeId: Number(id) })
@@ -187,6 +189,8 @@ export default function StoreDetailsScreen() {
     </View>
   );
 
+
+
   return (
     <>
       <Stack.Screen
@@ -197,7 +201,7 @@ export default function StoreDetailsScreen() {
 
       <ScrollView style={styles.container}>
         <Image
-          source={{ uri: storeData.bannerImage || "https://via.placeholder.com/200" }} // Fallback image
+          source={{ uri: storeData?.images[0] || "https://via.placeholder.com/200" }} // Fallback image
           style={styles.storeImage}
         />
 

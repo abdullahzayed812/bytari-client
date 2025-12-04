@@ -6,10 +6,10 @@ import Button from "../components/Button";
 import { ImageIcon } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
-import * as ImagePicker from "expo-image-picker";
 import { trpc } from "@/lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 interface ProductFormData {
   name: string;
@@ -30,7 +30,7 @@ export default function AddProductScreen() {
     price: "5.50",
     stock: "100",
     brand: "شركة فارما",
-    images: ["https://images.unsplash.com/photo-1588776814546-c3a37b2ebd97?auto=format&fit=crop&w=400&q=80"],
+    images: [],
   });
 
   const queryClient = useQueryClient();
@@ -73,7 +73,8 @@ export default function AddProductScreen() {
         price: parseFloat(formData.price),
         quantity: parseInt(formData.stock, 10),
         category: formData.category,
-        image: formData.images[0],
+        brand: formData.brand,
+        images: formData.images,
         inStock: parseInt(formData.stock, 10) > 0,
       } as any,
       {
@@ -89,96 +90,6 @@ export default function AddProductScreen() {
     );
   };
 
-  const handleImageUpload = async () => {
-    try {
-      if (Platform.OS === "web") {
-        // For web, simulate image selection
-        const newImage = `https://images.unsplash.com/photo-${Date.now()}?w=400`;
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, newImage],
-        }));
-      } else {
-        // Request permission for camera/gallery access
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("خطأ", "نحتاج إذن للوصول إلى الصور");
-          return;
-        }
-
-        // Show options for camera or gallery
-        Alert.alert("اختر مصدر الصورة", "من أين تريد اختيار الصورة؟", [
-          {
-            text: "الكاميرا",
-            onPress: () => pickImageFromCamera(),
-          },
-          {
-            text: "المعرض",
-            onPress: () => pickImageFromGallery(),
-          },
-          {
-            text: "إلغاء",
-            style: "cancel",
-          },
-        ]);
-      }
-    } catch {
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
-    }
-  };
-
-  const pickImageFromCamera = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إذن للوصول إلى الكاميرا");
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, result.assets[0].uri],
-        }));
-      }
-    } catch {
-      Alert.alert("خطأ", "حدث خطأ أثناء التقاط الصورة");
-    }
-  };
-
-  const pickImageFromGallery = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setFormData((prev) => ({
-          ...prev,
-          images: [...prev.images, result.assets[0].uri],
-        }));
-      }
-    } catch {
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
 
   return (
     <>
@@ -273,20 +184,12 @@ export default function AddProductScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>صور المنتج</Text>
-              <View style={styles.imagesContainer}>
-                {formData.images.map((image, index) => (
-                  <View key={index} style={styles.imageItem}>
-                    <Image source={{ uri: image }} style={styles.productImage} />
-                    <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveImage(index)}>
-                      <Text style={styles.removeImageText}>×</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-                <TouchableOpacity style={styles.addImageButton} onPress={handleImageUpload}>
-                  <ImageIcon size={24} color={COLORS.darkGray} />
-                  <Text style={styles.addImageText}>إضافة صورة</Text>
-                </TouchableOpacity>
-              </View>
+              <ImageGalleryUploader
+                images={formData.images}
+                onImagesChange={(images: string[]) => setFormData((prev) => ({ ...prev, images }))}
+                maxImages={5}
+                title="صور المنتج"
+              />
             </View>
           </View>
 

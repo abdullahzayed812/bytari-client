@@ -242,7 +242,7 @@ export default function AdminContentManagerScreen() {
 
   // Optimized queries with proper enabled flags
   const magazinesQuery = useQuery({
-    ...trpc.content.listMagazineArticles.queryOptions(),
+    ...trpc.content.listMagazineArticles.queryOptions({}),
     enabled: contentType === "articles",
   });
 
@@ -262,17 +262,17 @@ export default function AdminContentManagerScreen() {
   });
 
   const storesQuery = useQuery({
-    ...trpc.stores.listActive.queryOptions(),
+    ...trpc.stores.listActive.queryOptions({}),
     enabled: contentType === "stores",
   });
 
   const booksQuery = useQuery({
-    ...trpc.content.listVetBooks.queryOptions(),
+    ...trpc.content.listVetBooks.queryOptions({}),
     enabled: contentType === "books",
   });
 
   const tipsQuery = useQuery({
-    ...trpc.content.listTips.queryOptions(),
+    ...trpc.content.listTips.queryOptions({}),
     enabled: contentType === "tips",
   });
 
@@ -502,10 +502,10 @@ export default function AdminContentManagerScreen() {
       setSelectedFile(
         normalizedItem.fileUrl
           ? {
-              uri: normalizedItem.fileUrl,
-              name: normalizedItem.fileName || "file",
-              type: normalizedItem.fileType || "application/pdf",
-            }
+            uri: normalizedItem.fileUrl,
+            name: normalizedItem.fileName || "file",
+            type: normalizedItem.fileType || "application/pdf",
+          }
           : null
       );
       setIsModalVisible(true);
@@ -519,8 +519,8 @@ export default function AdminContentManagerScreen() {
         contentType === "clinics"
           ? `هل أنت متأكد من إلغاء تنشيط "${item.title}"؟`
           : contentType === "stores"
-          ? `هل أنت متأكد من إخفاء "${item.title}" من الصفحة الرئيسية؟`
-          : `هل أنت متأكد من حذف "${item.title}"؟`;
+            ? `هل أنت متأكد من إخفاء "${item.title}" من الصفحة الرئيسية؟`
+            : `هل أنت متأكد من حذف "${item.title}"؟`;
 
       Alert.alert("تأكيد الحذف", deleteMessage, [
         { text: "إلغاء", style: "cancel" },
@@ -532,39 +532,38 @@ export default function AdminContentManagerScreen() {
               contentType === "clinics"
                 ? { adminId: adminId, clinicId: item.id, isActive: false }
                 : contentType === "stores"
-                ? { adminId: adminId, storeId: item.id, showOnVetHome: false }
-                : contentType === "articles"
-                ? { adminId: adminId, magazineId: item.id }
-                : contentType === "books"
-                ? { adminId: adminId, bookId: item.id }
-                : contentType === "tips"
-                ? { adminId: adminId, tipId: item.id }
-                : contentType === "pets"
-                ? { adminId: adminId, petId: item.id }
-                : { adminId: adminId, id: item.id };
+                  ? { adminId: adminId, storeId: item.id, showOnVetHome: false }
+                  : contentType === "articles"
+                    ? { adminId: adminId, magazineId: item.id }
+                    : contentType === "books"
+                      ? { adminId: adminId, bookId: item.id }
+                      : contentType === "tips"
+                        ? { adminId: adminId, tipId: item.id }
+                        : contentType === "pets"
+                          ? { adminId: adminId, petId: item.id }
+                          : { adminId: adminId, id: item.id };
 
             const mutationKey =
               contentType === "articles"
                 ? "deleteMagazine"
                 : contentType === "ads"
-                ? "deleteAd"
-                : contentType === "courses"
-                ? "deleteCourse"
-                : contentType === "books"
-                ? "deleteBook"
-                : contentType === "tips"
-                ? "deleteTip"
-                : contentType === "pets"
-                ? "deletePet"
-                : null;
+                  ? "deleteAd"
+                  : contentType === "courses"
+                    ? "deleteCourse"
+                    : contentType === "books"
+                      ? "deleteBook"
+                      : contentType === "tips"
+                        ? "deleteTip"
+                        : contentType === "pets"
+                          ? "deletePet"
+                          : null;
 
             if (mutationKey && mutations[mutationKey]) {
               mutations[mutationKey].mutate(deleteParams, {
                 onSuccess: () => {
                   Alert.alert(
                     "تم",
-                    `تم ${
-                      contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
+                    `تم ${contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
                     } العنصر بنجاح`
                   );
                   refetchCurrentQuery();
@@ -573,9 +572,8 @@ export default function AdminContentManagerScreen() {
                   Alert.alert(
                     "خطأ",
                     error.message ||
-                      `فشل في ${
-                        contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
-                      } العنصر`
+                    `فشل في ${contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
+                    } العنصر`
                   );
                 },
               });
@@ -624,14 +622,14 @@ export default function AdminContentManagerScreen() {
       contentType === "books"
         ? { ...formData, adminId, bookId: Number(editingItem?.id) }
         : contentType === "tips"
-        ? { ...formData, adminId, tipId: Number(editingItem?.id) }
-        : contentType === "pets"
-        ? { ...formData, adminId, petId: Number(editingItem?.id) }
-        : contentType === "articles"
-        ? { ...formData, adminId, petId: Number(editingItem?.id) }
-        : contentType === "stores"
-        ? { ...formData, adminId, magazineId: Number(editingItem?.id) }
-        : { ...formData, adminId, id: Number(editingItem?.id) };
+          ? { ...formData, adminId, tipId: Number(editingItem?.id) }
+          : contentType === "pets"
+            ? { ...formData, adminId, petId: Number(editingItem?.id) }
+            : contentType === "articles"
+              ? { ...formData, adminId, petId: Number(editingItem?.id) }
+              : contentType === "stores"
+                ? { ...formData, adminId, magazineId: Number(editingItem?.id) }
+                : { ...formData, adminId, id: Number(editingItem?.id) };
 
     if (editingItem) {
       if (contentType === "clinics" || contentType === "stores") {
@@ -643,16 +641,16 @@ export default function AdminContentManagerScreen() {
         contentType === "articles"
           ? "updateMagazine"
           : contentType === "ads"
-          ? "updateAd"
-          : contentType === "courses"
-          ? "updateCourse"
-          : contentType === "books"
-          ? "updateBook"
-          : contentType === "tips"
-          ? "updateTip"
-          : contentType === "pets"
-          ? "updatePet"
-          : null;
+            ? "updateAd"
+            : contentType === "courses"
+              ? "updateCourse"
+              : contentType === "books"
+                ? "updateBook"
+                : contentType === "tips"
+                  ? "updateTip"
+                  : contentType === "pets"
+                    ? "updatePet"
+                    : null;
 
       if (updateKey && mutations[updateKey]) {
         mutations[updateKey].mutate(saveParams as any, {
@@ -675,20 +673,20 @@ export default function AdminContentManagerScreen() {
         contentType === "articles"
           ? "createMagazine"
           : contentType === "ads"
-          ? "createAd"
-          : contentType === "courses"
-          ? "createCourse"
-          : contentType === "clinics"
-          ? "createClinic"
-          : contentType === "stores"
-          ? "createStore"
-          : contentType === "books"
-          ? "createBook"
-          : contentType === "tips"
-          ? "createTip"
-          : contentType === "pets"
-          ? "createPet"
-          : null;
+            ? "createAd"
+            : contentType === "courses"
+              ? "createCourse"
+              : contentType === "clinics"
+                ? "createClinic"
+                : contentType === "stores"
+                  ? "createStore"
+                  : contentType === "books"
+                    ? "createBook"
+                    : contentType === "tips"
+                      ? "createTip"
+                      : contentType === "pets"
+                        ? "createPet"
+                        : null;
 
       if (createKey && mutations[createKey]) {
         mutations[createKey].mutate(saveParams, {
@@ -715,31 +713,31 @@ export default function AdminContentManagerScreen() {
         contentType === "clinics"
           ? { clinicId: item.id, isActive: !item.isActive }
           : contentType === "stores"
-          ? { storeId: item.id, showOnVetHome: !item.isActive }
-          : contentType === "books"
-          ? { bookId: item.id, isPublished: !item.isActive }
-          : contentType === "tips"
-          ? { tipId: item.id, isPublished: !item.isActive }
-          : { id: item.id, isActive: !item.isActive, isPublished: !item.isActive };
+            ? { storeId: item.id, showOnVetHome: !item.isActive }
+            : contentType === "books"
+              ? { bookId: item.id, isPublished: !item.isActive }
+              : contentType === "tips"
+                ? { tipId: item.id, isPublished: !item.isActive }
+                : { id: item.id, isActive: !item.isActive, isPublished: !item.isActive };
 
       const updateKey =
         contentType === "articles"
           ? "updateMagazine"
           : contentType === "ads"
-          ? "updateAd"
-          : contentType === "courses"
-          ? "updateCourse"
-          : contentType === "clinics"
-          ? "updateClinicActivation"
-          : contentType === "stores"
-          ? "updateStoreHomeVisibility"
-          : contentType === "books"
-          ? "updateBook"
-          : contentType === "tips"
-          ? "updateTip"
-          : contentType === "pets"
-          ? "updatePet"
-          : null;
+            ? "updateAd"
+            : contentType === "courses"
+              ? "updateCourse"
+              : contentType === "clinics"
+                ? "updateClinicActivation"
+                : contentType === "stores"
+                  ? "updateStoreHomeVisibility"
+                  : contentType === "books"
+                    ? "updateBook"
+                    : contentType === "tips"
+                      ? "updateTip"
+                      : contentType === "pets"
+                        ? "updatePet"
+                        : null;
 
       if (updateKey && mutations[updateKey]) {
         mutations[updateKey].mutate(toggleParams, {

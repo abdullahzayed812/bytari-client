@@ -127,7 +127,7 @@ export default function HomeBooksManagementScreen() {
   const renderBookCard = (book: Book, isVisible: boolean) => (
     <View key={book.id} style={styles.bookCard}>
       <View style={styles.bookCardContent}>
-        <Image source={{ uri: book.image }} style={styles.bookImage} />
+        <Image source={{ uri: book.coverImage }} style={styles.bookImage} />
 
         <View style={styles.bookDetails}>
           <Text style={styles.bookTitle} numberOfLines={2}>

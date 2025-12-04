@@ -6,9 +6,9 @@ import { COLORS } from "../constants/colors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { ArrowLeft, FileText, Image, Plus, Upload } from "lucide-react-native";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
+import { FileUploader } from "@/components/FileUploader";
+import { ArrowLeft, Plus } from "lucide-react-native";
 import Button from "@/components/Button 2";
 
 export default function AddBookScreen() {
@@ -24,53 +24,13 @@ export default function AddBookScreen() {
     category: "تصنيف الكتاب",
   });
 
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string>("");
 
   // const createBookMutation = trpc.admin.content.createBook.useMutation();
   const createBookMutation = useMutation(trpc.admin.content.createBook.mutationOptions());
 
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
-      });
 
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      Alert.alert("خطأ", "فشل في اختيار الصورة");
-    }
-  };
-
-  const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          "application/pdf",
-          "application/epub+zip",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "text/plain",
-          "text/rtf",
-        ],
-        copyToCacheDirectory: true,
-        multiple: false,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        setSelectedFile(result.assets[0]);
-        Alert.alert("تم", `تم اختيار الملف: ${result.assets[0].name}`);
-      }
-    } catch (error) {
-      console.error("Document picker error:", error);
-      Alert.alert("خطأ", "فشل في اختيار الملف");
-    }
-  };
 
   const handleSave = () => {
     if (!formData.title || !formData.author) {
@@ -91,9 +51,9 @@ export default function AddBookScreen() {
         description: formData.description,
         pageCount: formData.pages ? parseInt(formData.pages) : undefined,
         category: formData.category as any,
-        coverImage: selectedImage || "",
-        pdfUrl: selectedFile ? selectedFile.uri : undefined,
-      },
+        coverImage: selectedImages[0] || "",
+        pdfUrl: selectedFileUrl || undefined,
+      } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم إضافة الكتاب بنجاح");
@@ -125,32 +85,23 @@ export default function AddBookScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <View style={styles.imageSection}>
-            <View style={styles.imagePlaceholder}>
-              <Image size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>{selectedImage ? "تم اختيار الصورة" : "اختر صورة الكتاب"}</Text>
-              <Text style={styles.imageSubText}>من المعرض أو التقاط صورة جديدة</Text>
-            </View>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-            </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <ImageGalleryUploader
+              images={selectedImages}
+              onImagesChange={setSelectedImages}
+              maxImages={1}
+              label="صورة الكتاب"
+              aspect={[3, 4]}
+            />
           </View>
 
           <View style={styles.fileSection}>
-            <Text style={styles.sectionTitle}>ملف الكتاب *</Text>
-            <View style={styles.filePlaceholder}>
-              <FileText size={32} color={COLORS.primary} />
-              <Text style={styles.filePlaceholderText}>{selectedFile ? selectedFile.name : "اختر ملف الكتاب"}</Text>
-              <Text style={styles.fileSubText}>PDF, EPUB, DOC, DOCX أو ملف نصي</Text>
-              {selectedFile && (
-                <Text style={styles.fileInfo}>الحجم: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</Text>
-              )}
-            </View>
-            <TouchableOpacity style={styles.fileButton} onPress={pickDocument}>
-              <Upload size={16} color={COLORS.primary} />
-              <Text style={styles.fileButtonText}>{selectedFile ? "تغيير الملف" : "اختيار ملف الكتاب"}</Text>
-            </TouchableOpacity>
+            <FileUploader
+              fileUrl={selectedFileUrl}
+              onFileChange={setSelectedFileUrl}
+              label="ملف الكتاب *"
+              placeholder="اختيار ملف الكتاب (PDF/EPUB)"
+            />
           </View>
 
           <View style={styles.inputGroup}>
