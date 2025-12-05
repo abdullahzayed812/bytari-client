@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Dimensions, Alert } from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Dimensions, Alert, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { COUNTRIES, CITIES, DEFAULT_COUNTRY } from "../constants/currency";
@@ -12,6 +12,7 @@ import { ChevronDown, Upload, FileText, User, Stethoscope, Globe, MessageCircle 
 import * as DocumentPicker from "expo-document-picker";
 import { API_URL, trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { useImageUpload } from "../hooks/useImageUpload";
 
 const { height } = Dimensions.get("window");
 
@@ -44,6 +45,8 @@ export default function AuthScreen() {
 
   const [idFrontImage, setIdFrontImage] = useState<any>(null);
   const [idBackImage, setIdBackImage] = useState<any>(null);
+  const [idFrontImageUrl, setIdFrontImageUrl] = useState<string>("");
+  const [idBackImageUrl, setIdBackImageUrl] = useState<string>("");
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -58,7 +61,32 @@ export default function AuthScreen() {
   const vetApplicationMutation = useMutation(trpc.admin.veterinarianApprovals.submitApplication.mutationOptions());
   // const forgotPasswordMutation = trpc.auth.forgotPassword.useMutation(); // Uncomment when backend procedure is created
 
-  const isLoading = loginMutation.isPending || registerMutation.isPending || vetApplicationMutation.isPending;
+  // Image upload hooks
+  const idFrontUpload = useImageUpload({
+    onUploadSuccess: (url) => {
+      setIdFrontImageUrl(url);
+      if (errors.idFront) {
+        setErrors((prev) => ({ ...prev, idFront: "" }));
+      }
+    },
+    onUploadError: (error) => {
+      Alert.alert("خطأ في رفع الصورة", error);
+    },
+  });
+
+  const idBackUpload = useImageUpload({
+    onUploadSuccess: (url) => {
+      setIdBackImageUrl(url);
+      if (errors.idBack) {
+        setErrors((prev) => ({ ...prev, idBack: "" }));
+      }
+    },
+    onUploadError: (error) => {
+      Alert.alert("خطأ في رفع الصورة", error);
+    },
+  });
+
+  const isLoading = loginMutation.isPending || registerMutation.isPending || vetApplicationMutation.isPending || idFrontUpload.isLoading || idBackUpload.isLoading;
 
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
@@ -214,10 +242,10 @@ export default function AuthScreen() {
           city: selectedLocationCountry,
           province: selectedProvince,
           gender: selectedGender as "male" | "female",
-          idFrontImage: "", // Assuming URI is the path to the uploaded file
-          idBackImage: "",
+          idFrontImage: idFrontImageUrl,
+          idBackImage: idBackImageUrl,
           veterinarianType,
-        },
+        } as any,
         {
           onSuccess: () => {
             Alert.alert(t("auth.requestSent"), t("auth.registrationPending"), [
@@ -236,6 +264,8 @@ export default function AuthScreen() {
                   setSelectedGender("");
                   setIdFrontImage(null);
                   setIdBackImage(null);
+                  setIdFrontImageUrl("");
+                  setIdBackImageUrl("");
                   setErrors({});
                 },
               },
@@ -259,7 +289,7 @@ export default function AuthScreen() {
           country: selectedLocationCountry,
           province: selectedProvince,
           gender: selectedGender as "male" | "female",
-        },
+        } as any,
         {
           onSuccess: async (data) => {
             await login(data?.user, data?.tokens?.accessToken);
@@ -354,9 +384,8 @@ export default function AuthScreen() {
 
       if (!result.canceled && result.assets[0]) {
         setIdFrontImage(result.assets[0]);
-        if (errors.idFront) {
-          setErrors((prev) => ({ ...prev, idFront: "" }));
-        }
+        // Upload the image immediately
+        await idFrontUpload.pickAndUploadImage([4, 3]);
       }
     } catch (error) {
       console.error("ID front pick error:", error);
@@ -373,12 +402,10 @@ export default function AuthScreen() {
         copyToCacheDirectory: true,
       });
 
-      console.log(result.assets[0].uri);
       if (!result.canceled && result.assets[0]) {
         setIdBackImage(result.assets[0]);
-        if (errors.idBack) {
-          setErrors((prev) => ({ ...prev, idBack: "" }));
-        }
+        // Upload the image immediately
+        await idBackUpload.pickAndUploadImage([4, 3]);
       }
     } catch (error) {
       console.error("ID back pick error:", error);
@@ -786,9 +813,22 @@ export default function AuthScreen() {
                   <TouchableOpacity
                     style={[styles.documentButton, errors.idFront && styles.inputError]}
                     onPress={handleIdFrontPick}
+                    disabled={idFrontUpload.isLoading}
                   >
                     <View style={styles.documentButtonContent}>
-                      {idFrontImage ? (
+                      {idFrontUpload.isLoading ? (
+                        <>
+                          <ActivityIndicator size="small" color={COLORS.primary} />
+                          <Text style={styles.documentButtonText}>جاري رفع الصورة...</Text>
+                        </>
+                      ) : idFrontImageUrl ? (
+                        <>
+                          <FileText size={20} color={COLORS.success} />
+                          <Text style={[styles.documentButtonText, { color: COLORS.success }]}>
+                            تم رفع صورة وجه الهوية ✓
+                          </Text>
+                        </>
+                      ) : idFrontImage ? (
                         <>
                           <FileText size={20} color={COLORS.primary} />
                           <Text style={styles.documentButtonText}>{idFrontImage.name}</Text>
@@ -811,11 +851,24 @@ export default function AuthScreen() {
                     {veterinarianType === "student" ? t("auth.studentIdBack") : t("auth.doctorIdBack")}
                   </Text>
                   <TouchableOpacity
-                    style={[+styles.documentButton, errors.idBack && styles.inputError]}
+                    style={[styles.documentButton, errors.idBack && styles.inputError]}
                     onPress={handleIdBackPick}
+                    disabled={idBackUpload.isLoading}
                   >
                     <View style={styles.documentButtonContent}>
-                      {idBackImage ? (
+                      {idBackUpload.isLoading ? (
+                        <>
+                          <ActivityIndicator size="small" color={COLORS.primary} />
+                          <Text style={styles.documentButtonText}>جاري رفع الصورة...</Text>
+                        </>
+                      ) : idBackImageUrl ? (
+                        <>
+                          <FileText size={20} color={COLORS.success} />
+                          <Text style={[styles.documentButtonText, { color: COLORS.success }]}>
+                            تم رفع صورة ظهر الهوية ✓
+                          </Text>
+                        </>
+                      ) : idBackImage ? (
                         <>
                           <FileText size={20} color={COLORS.primary} />
                           <Text style={styles.documentButtonText}>{idBackImage.name}</Text>

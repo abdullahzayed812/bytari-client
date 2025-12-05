@@ -7,6 +7,7 @@ import { ArrowLeft, Save, Upload } from "lucide-react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import Button from "../components/Button";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 export default function EditTipScreen() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function EditTipScreen() {
     content: "",
     summary: "",
     category: "",
-    image: "",
+    images: [] as string[],
   });
 
   // Fetch tip
@@ -31,15 +32,12 @@ export default function EditTipScreen() {
     if (data?.tip) {
       const tip = data.tip;
 
-      const images = tip.images ? JSON.parse(tip.images) : [];
-      const image = images[0] || "";
-
       setFormData({
         title: tip.title,
         content: tip.content,
         summary: tip.summary || "",
         category: tip.category,
-        image,
+        images: tip.images || [],
       });
     }
   }, [data]);
@@ -52,7 +50,7 @@ export default function EditTipScreen() {
         content: formData.content,
         summary: formData.summary,
         category: formData.category,
-        images: [formData.image], // server expects array
+        images: formData.images,
       } as any,
       {
         onSuccess: () => {
@@ -93,19 +91,12 @@ export default function EditTipScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          {/* Image Section */}
-          <View style={styles.imageSection}>
-            <Image
-              source={{
-                uri: formData.image || "https://placehold.co/200x120?text=No+Image",
-              }}
-              style={styles.tipImage}
-            />
-            <TouchableOpacity style={styles.uploadButton}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>تغيير الصورة</Text>
-            </TouchableOpacity>
-          </View>
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData({ ...formData, images })}
+            maxImages={5}
+            label="صور النصيحة"
+          />
 
           {/* Title */}
           <View style={styles.inputGroup}>

@@ -19,14 +19,14 @@ export default function UserAvatar({ uri, gender, size = 80, style }: UserAvatar
     if (uri) {
       return { uri };
     }
-    
+
     // Use gender-specific default avatar
     if (gender === 'male') {
       return { uri: DEFAULT_AVATARS.male };
     } else if (gender === 'female') {
       return { uri: DEFAULT_AVATARS.female };
     }
-    
+
     // Default to male avatar if no gender specified
     return { uri: DEFAULT_AVATARS.male };
   };

@@ -23,9 +23,10 @@ export default function TipsListScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   const { data: tipsData, isLoading: tipsLoading } = useQuery(
-    trpc.content.listTips.queryOptions()
+    trpc.content.listTips.queryOptions({})
   );
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
+
 
   // Scroll to top when screen is focused
   useFocusEffect(
@@ -90,7 +91,12 @@ export default function TipsListScreen() {
               router.push(`/tip-details?id=${tip.id}`);
             }}
           >
-            <Image source={{ uri: tip.images[0] }} style={styles.tipImage} />
+            <Image
+              source={{
+                uri: tip.images?.[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1'
+              }}
+              style={styles.tipImage}
+            />
             <View style={styles.tipContent}>
               <Text
                 style={[

@@ -89,7 +89,7 @@ export const useImageUpload = (options: UseImageUploadOptions = {}) => {
             setError(msg);
             options.onUploadError?.(msg);
             console.error("❌ Image upload error:", err);
-            console.error("Server URL was:", process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.6:3001");
+            console.error("Server URL was:", API_URL || "http://192.168.1.6:3001");
         } finally {
             setIsLoading(false);
         }

@@ -26,7 +26,7 @@ interface PetApprovalRequest {
   requestType: "adoption" | "breeding" | "lost_pet";
   title: string;
   description?: string | null;
-  images: any; // This will be parsed from JSON
+  images: string[]; // This will be parsed from JSON
   contactInfo?: string | null;
   location?: string | null;
   price?: number | null;
@@ -327,38 +327,38 @@ export default function AdminPetApprovals() {
                 selectedRequest.location ||
                 selectedRequest.price ||
                 selectedRequest.specialRequirements) && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>معلومات إضافية</Text>
+                  <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>معلومات إضافية</Text>
 
-                  {selectedRequest.contactInfo && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>معلومات التواصل:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.contactInfo}</Text>
-                    </View>
-                  )}
+                    {selectedRequest.contactInfo && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>معلومات التواصل:</Text>
+                        <Text style={styles.infoValue}>{selectedRequest.contactInfo}</Text>
+                      </View>
+                    )}
 
-                  {selectedRequest.location && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>الموقع:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.location}</Text>
-                    </View>
-                  )}
+                    {selectedRequest.location && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>الموقع:</Text>
+                        <Text style={styles.infoValue}>{selectedRequest.location}</Text>
+                      </View>
+                    )}
 
-                  {selectedRequest.price && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>السعر:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.price} ريال</Text>
-                    </View>
-                  )}
+                    {selectedRequest.price && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>السعر:</Text>
+                        <Text style={styles.infoValue}>{selectedRequest.price} ريال</Text>
+                      </View>
+                    )}
 
-                  {selectedRequest.specialRequirements && (
-                    <View style={styles.descriptionContainer}>
-                      <Text style={styles.infoLabel}>متطلبات خاصة:</Text>
-                      <Text style={styles.descriptionText}>{selectedRequest.specialRequirements}</Text>
-                    </View>
-                  )}
-                </View>
-              )}
+                    {selectedRequest.specialRequirements && (
+                      <View style={styles.descriptionContainer}>
+                        <Text style={styles.infoLabel}>متطلبات خاصة:</Text>
+                        <Text style={styles.descriptionText}>{selectedRequest.specialRequirements}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
 
               {/* Images */}
               {selectedRequest.images && selectedRequest.images.length > 0 && (
@@ -472,11 +472,21 @@ export default function AdminPetApprovals() {
     >
       <View style={styles.requestHeader}>
         <View style={styles.requestInfo}>
-          <Text style={styles.requestTitle}>{item?.title}</Text>
-          <Text style={styles.petInfo}>
-            {getPetTypeText(item?.petType || "")} - {item?.petName || "غير محدد"}
-          </Text>
-          <Text style={styles.ownerInfo}>المالك: {item?.ownerName || "غير محدد"}</Text>
+          {/* Pet Image Thumbnail */}
+          {(item.petImage || (item.images && item.images.length > 0)) && (
+            <Image
+              source={{ uri: item.petImage || item.images[0] }}
+              style={styles.thumbnailImage}
+              resizeMode="cover"
+            />
+          )}
+          <View style={styles.textInfo}>
+            <Text style={styles.requestTitle}>{item?.title}</Text>
+            <Text style={styles.petInfo}>
+              {getPetTypeText(item?.petType || "")} - {item?.petName || "غير محدد"}
+            </Text>
+            <Text style={styles.ownerInfo}>المالك: {item?.ownerName || "غير محدد"}</Text>
+          </View>
         </View>
 
         <View style={styles.requestMeta}>
@@ -668,6 +678,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   requestInfo: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  thumbnailImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 10,
+    backgroundColor: "#eee",
+  },
+  textInfo: {
     flex: 1,
   },
   requestTitle: {

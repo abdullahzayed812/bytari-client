@@ -35,6 +35,7 @@ import {
 } from "lucide-react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 // Interface for content items
 type ContentItem = {
@@ -1099,30 +1100,42 @@ export default function AdminContentManagerScreen() {
           />
         </View>
 
-        <View style={styles.formField}>
-          <Text style={styles.fieldLabel}>الصورة</Text>
-          {selectedImage ? (
-            <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-              <View style={styles.imageActions}>
-                <TouchableOpacity style={styles.changeImageButton} onPress={pickImage}>
-                  <Camera size={16} color={COLORS.white} />
-                  <Text style={styles.imageActionText}>تغيير</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
-                  <X size={16} color={COLORS.white} />
-                  <Text style={styles.imageActionText}>حذف</Text>
-                </TouchableOpacity>
+        {/* Image Upload - Use ImageGalleryUploader for tips */}
+        {contentType === "tips" ? (
+          <View style={styles.formField}>
+            <ImageGalleryUploader
+              images={formData.images || []}
+              onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
+              maxImages={5}
+              label="صور النصيحة"
+            />
+          </View>
+        ) : (
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>الصورة</Text>
+            {selectedImage ? (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                <View style={styles.imageActions}>
+                  <TouchableOpacity style={styles.changeImageButton} onPress={pickImage}>
+                    <Camera size={16} color={COLORS.white} />
+                    <Text style={styles.imageActionText}>تغيير</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
+                    <X size={16} color={COLORS.white} />
+                    <Text style={styles.imageActionText}>حذف</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Upload size={24} color={COLORS.primary} />
-              <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-              <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط جديدة</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            ) : (
+              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                <Upload size={24} color={COLORS.primary} />
+                <Text style={styles.uploadButtonText}>اختيار صورة</Text>
+                <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط جديدة</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     );
   }, [formData, contentType, selectedImage, pickImage, removeImage]);

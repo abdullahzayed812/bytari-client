@@ -8,18 +8,18 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import Button from "../components/Button";
-import * as ImagePicker from "expo-image-picker";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 export default function AddTipScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useApp();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    title: "عنوان النصيحة",
-    content: "محتوى النصيحة",
-    category: "الفئة",
+    title: "",
+    content: "",
+    category: "",
+    images: [] as string[],
   });
 
   // const createTipMutation = trpc.admin.content.createTip.useMutation();
@@ -37,7 +37,7 @@ export default function AddTipScreen() {
         title: formData.title,
         content: formData.content,
         category: formData.category,
-        image: selectedImage,
+        images: formData.images,
       } as any,
       {
         onSuccess: () => {
@@ -52,22 +52,7 @@ export default function AddTipScreen() {
     );
   };
 
-  const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
-      });
 
-      if (!result.canceled && result.assets[0]) {
-        setSelectedImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      Alert.alert("خطأ", "فشل في اختيار الصورة");
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -87,16 +72,12 @@ export default function AddTipScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
-          <View style={styles.imageSection}>
-            <View style={styles.imagePlaceholder}>
-              <Upload size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>اختر صورة النصيحة</Text>
-            </View>
-            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>رفع صورة</Text>
-            </TouchableOpacity>
-          </View>
+          <ImageGalleryUploader
+            images={formData.images}
+            onImagesChange={(images) => setFormData({ ...formData, images })}
+            maxImages={5}
+            label="صور النصيحة"
+          />
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>عنوان النصيحة *</Text>

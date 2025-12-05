@@ -12,7 +12,7 @@ export default function TipDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const scrollViewRef = useRef<ScrollView>(null);
-  
+
   // Scroll to top when screen is focused
   useFocusEffect(
     React.useCallback(() => {
@@ -35,9 +35,9 @@ export default function TipDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Stack.Screen 
+        <Stack.Screen
           options={{
-            title: 'جاري التحميل...', 
+            title: 'جاري التحميل...',
             headerStyle: { backgroundColor: COLORS.white },
             headerTitleStyle: { color: COLORS.black },
           }}
@@ -50,7 +50,7 @@ export default function TipDetailsScreen() {
   if (error || !data?.tip) {
     return (
       <View style={styles.container}>
-        <Stack.Screen 
+        <Stack.Screen
           options={{
             title: 'النصيحة غير موجودة',
             headerStyle: { backgroundColor: COLORS.white },
@@ -59,7 +59,7 @@ export default function TipDetailsScreen() {
         />
         <View style={styles.notFoundContainer}>
           <Text style={styles.notFoundText}>النصيحة غير موجودة</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
@@ -83,13 +83,13 @@ export default function TipDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: 'النصيحة',
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black },
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.back()}
               style={styles.headerButton}
             >
@@ -102,13 +102,13 @@ export default function TipDetailsScreen() {
           ),
           headerRight: () => (
             <View style={styles.headerActions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={handleLike}
                 style={styles.headerButton}
               >
                 <Heart size={24} color={COLORS.primary} />
               </TouchableOpacity>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={handleShare}
                 style={styles.headerButton}
               >
@@ -118,27 +118,32 @@ export default function TipDetailsScreen() {
           ),
         }}
       />
-      
+
       <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
-        <Image source={{ uri: tip.image }} style={styles.heroImage} />
-        
+        <Image
+          source={{
+            uri: tip.images?.[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1'
+          }}
+          style={styles.heroImage}
+        />
+
         {/* Content */}
         <View style={styles.contentContainer}>
           {/* Category Badge */}
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryText}>
-              {tip.category === 'grooming' ? 'العناية' : 
-               tip.category === 'training' ? 'التدريب' : 
-               tip.category === 'nutrition' ? 'التغذية' : tip.category}
+              {tip.category === 'grooming' ? 'العناية' :
+                tip.category === 'training' ? 'التدريب' :
+                  tip.category === 'nutrition' ? 'التغذية' : tip.category}
             </Text>
           </View>
-          
+
           {/* Title */}
           <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>
             {tip.title}
           </Text>
-          
+
           {/* Meta Info */}
           <View style={styles.metaInfo}>
             <View style={styles.metaItem}>
@@ -150,13 +155,13 @@ export default function TipDetailsScreen() {
               <Text style={styles.metaText}>5 دقائق قراءة</Text>
             </View>
           </View>
-          
+
           {/* Content */}
           <View style={styles.textContent}>
             <Text style={[styles.contentText, { textAlign: isRTL ? 'right' : 'left' }]}>
               {tip.content}
             </Text>
-            
+
             {/* Additional Tips Section */}
             <View style={styles.additionalTips}>
               <Text style={styles.sectionTitle}>نصائح إضافية:</Text>
@@ -175,7 +180,7 @@ export default function TipDetailsScreen() {
                 </View>
               </View>
             </View>
-            
+
             {/* Warning Section */}
             <View style={styles.warningSection}>
               <Text style={styles.warningTitle}>تنبيه مهم:</Text>

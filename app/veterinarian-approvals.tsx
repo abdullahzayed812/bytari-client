@@ -47,14 +47,14 @@ export default function VeterinarianApprovalsScreen() {
         style: "default",
         onPress: () => {
           approveMutation.mutate(
-            { applicationId: applicationId, adminId: user?.id ? Number(user.id) : 0 },
+            { applicationId: applicationId, adminId: user?.id ? Number(user.id) : 0 } as any,
             {
               onSuccess: () => {
                 Alert.alert("تم بنجاح", "تم الموافقة على الطلب وإرسال إشعار للمستخدم.");
                 refetch();
                 setShowDetails(false);
               },
-              onError: (error) => {
+              onError: (error: Error) => {
                 Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
               },
             }
@@ -75,14 +75,14 @@ export default function VeterinarianApprovalsScreen() {
           style: "destructive",
           onPress: (reason) => {
             rejectMutation.mutate(
-              { applicationId: applicationId, reason: reason || "", adminId: user?.id ? Number(user.id) : 0 },
+              { applicationId: applicationId, reason: reason || "", adminId: user?.id ? Number(user.id) : 0 } as any,
               {
                 onSuccess: () => {
                   Alert.alert("تم بنجاح", "تم رفض الطلب وإرسال إشعار للمستخدم.");
                   refetch();
                   setShowDetails(false);
                 },
-                onError: (error) => {
+                onError: (error: Error) => {
                   Alert.alert("خطأ", error.message || "فشل في رفض الطلب");
                 },
               }
@@ -139,8 +139,8 @@ export default function VeterinarianApprovalsScreen() {
       : "https://r2-pub.rork.com/generated-images/f12a7eec-1aa3-414d-a6ca-79ff1c250b2f.png";
   };
 
-  const pendingApplications = applications?.filter((app) => app?.status === "pending");
-  const processedApplications = applications?.filter((app) => app?.status !== "pending");
+  const pendingApplications = applications?.filter((app: VeterinarianApplication) => app?.status === "pending");
+  const processedApplications = applications?.filter((app: VeterinarianApplication) => app?.status !== "pending");
 
   if (showDetails && selectedApplication) {
     return (
@@ -255,7 +255,7 @@ export default function VeterinarianApprovalsScreen() {
               <Text style={styles.emptyStateText}>لا توجد طلبات معلقة</Text>
             </View>
           ) : (
-            pendingApplications?.map((application) => (
+            pendingApplications?.map((application: VeterinarianApplication) => (
               <TouchableOpacity
                 key={application.id}
                 style={styles.applicationCard}
@@ -267,6 +267,14 @@ export default function VeterinarianApprovalsScreen() {
                 <View style={styles.cardHeader}>
                   <View style={styles.applicantInfo}>
                     <Image source={{ uri: getGenderIcon(application.gender) }} style={styles.avatar} />
+                    {/* ID Image Thumbnail */}
+                    {application.idFrontImage && (
+                      <Image
+                        source={{ uri: application.idFrontImage }}
+                        style={styles.thumbnailImage}
+                        resizeMode="cover"
+                      />
+                    )}
                     <View style={styles.applicantDetails}>
                       <Text style={styles.applicantName}>{application.name}</Text>
                       <Text style={styles.applicantEmail}>{application.email}</Text>
@@ -320,7 +328,7 @@ export default function VeterinarianApprovalsScreen() {
         {/* Processed Applications */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الطلبات المُعالجة ({processedApplications?.length})</Text>
-          {processedApplications?.map((application) => (
+          {processedApplications?.map((application: VeterinarianApplication) => (
             <TouchableOpacity
               key={application.id}
               style={[styles.applicationCard, styles.processedCard]}
@@ -443,6 +451,13 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     marginRight: 12,
+  },
+  thumbnailImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: COLORS.lightGray,
   },
   applicantDetails: {
     flex: 1,

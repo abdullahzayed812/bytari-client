@@ -10,13 +10,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function HomeTipsManagementScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Fetch Tips
   const { data: tipsData, isLoading } = useQuery(trpc.content.listTips.queryOptions({}));
 
   const tips = tipsData?.tips || [];
 
-  const queryClient = useQueryClient();
+
 
   // Toggle visibility
   const toggleVisibilityMutation = useMutation(trpc.content.toggleTipHomeVisibility.mutationOptions());
@@ -66,10 +67,10 @@ export default function HomeTipsManagementScreen() {
     <View key={tip.id} style={styles.tipCard}>
       <View style={styles.tipCardContent}>
         {tip.images?.length > 0 ? (
-          <></>
+
+          <Image source={{ uri: tip.images[0] }} style={styles.tipImage} />
         ) : (
-          // <Image source={{ uri: JSON.parse(tip.images)[0] }} style={styles.tipImage} />
-          <Image source={{ uri: "https://placehold.co/100x100/png" }} style={styles.tipImage} />
+          null
         )}
 
         <View style={styles.tipDetails}>

@@ -23,6 +23,7 @@ import { UserModeToggle } from "../../components/UserModeToggle";
 import AutoScrollView from "../../components/AutoScrollView";
 import { useBookDownload } from "@/hooks/useBookDownload";
 import { useQuery } from "@tanstack/react-query";
+import UserAvatar from "@/components/UserAvatar";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -30,6 +31,8 @@ export default function HomeScreen() {
   const { t, isRTL } = useI18n();
   const { user, userMode, isSuperAdmin } = useApp();
   const router = useRouter();
+  const { downloadBook, isDownloading } = useBookDownload();
+
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   // Mock data for notifications and messages count (will be replaced with real data later)
   const [notificationsCount, setNotificationsCount] = useState<number>(5);
@@ -72,7 +75,6 @@ export default function HomeScreen() {
   });
   const consultations = useMemo(() => (consultationsData as any)?.consultations, [consultationsData]);
 
-  const { downloadBook, isDownloading } = useBookDownload();
   const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions({}));
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
 
@@ -107,6 +109,13 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (heroImages && heroImages.length > 0) {
+      startAutoSlide();
+    }
+    return () => stopAutoSlide();
+  }, [heroImages]);
+
   // Scroll to top when tab is focused
   useFocusEffect(
     React.useCallback(() => {
@@ -140,12 +149,7 @@ export default function HomeScreen() {
     }
   };
 
-  useEffect(() => {
-    if (heroImages && heroImages.length > 0) {
-      startAutoSlide();
-    }
-    return () => stopAutoSlide();
-  }, [heroImages]);
+
 
   // Remove this useEffect as we handle scrolling directly in startAutoSlide
   // useEffect(() => {
@@ -239,11 +243,10 @@ export default function HomeScreen() {
         <View style={[styles.userInfoContainer, { flexDirection: "row" }]}>
           <TouchableOpacity style={styles.profileButton} onPress={() => router.push("/(tabs)/profile")}>
 
-            <Image
-              source={{
-                uri: user?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-              }}
-              style={styles.profileImage}
+            <UserAvatar
+              uri={user?.avatar}
+              gender={user?.gender}
+              size={36}
             />
 
           </TouchableOpacity>
@@ -603,8 +606,8 @@ export default function HomeScreen() {
             }}
           />
           <AutoScrollView
-            itemWidth={336}
-            autoScrollInterval={5000}
+            itemWidth={300}
+            autoScrollInterval={1000}
             contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian"
@@ -966,7 +969,7 @@ export default function HomeScreen() {
                 <Card
                   key={tip.id}
                   title={tip.title}
-                  image={tip.image}
+                  image={tip.images?.[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1'}
                   style={[styles.tipCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() => {
                     router.push(`/tip-details?id=${tip.id}`);
@@ -991,7 +994,7 @@ export default function HomeScreen() {
             />
             <AutoScrollView
               itemWidth={316}
-              autoScrollInterval={7000}
+              autoScrollInterval={1000}
               contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
             >
               {adoptionPetsLoading ? (
