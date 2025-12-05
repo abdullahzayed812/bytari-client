@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Alert } from "react-native";
 import { Order } from "../types"; // define this type as needed
+import { useToastContext } from "./ToastProvider";
 
 type OrdersContextType = {
   orders: Order[];
@@ -11,16 +11,17 @@ type OrdersContextType = {
 const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
 export const OrdersProvider = ({ children }: { children: ReactNode }) => {
+  const { showToast } = useToastContext();
   const [orders, setOrders] = useState<Order[]>([]);
 
   const addOrder = (order: Order) => {
     setOrders((prev) => [...prev, order]);
-    Alert.alert("تم الطلب", "تمت إضافة الطلب بنجاح");
+    showToast({ type: "success", message: "تمت إضافة الطلب بنجاح" });
   };
 
   const clearOrders = () => {
     setOrders([]);
-    Alert.alert("تم الحذف", "تم حذف جميع الطلبات");
+    showToast({ type: "success", message: "تم حذف جميع الطلبات" });
   };
 
   return <OrdersContext.Provider value={{ orders, addOrder, clearOrders }}>{children}</OrdersContext.Provider>;

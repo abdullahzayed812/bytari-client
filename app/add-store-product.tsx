@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Platform } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Platform } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -9,6 +9,7 @@ import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
+import { useToastContext } from "../providers/ToastProvider";
 
 interface StoreProductFormData {
   name: string;
@@ -21,6 +22,7 @@ interface StoreProductFormData {
 
 export default function AddStoreProductScreen() {
   useI18n();
+  const { showToast } = useToastContext();
   const { userMode } = useApp();
   const { storeId, storeType } = useLocalSearchParams<{ storeId?: string; storeType?: string }>();
 
@@ -64,15 +66,15 @@ export default function AddStoreProductScreen() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      Alert.alert("خطأ", "اسم المنتج مطلوب");
+      showToast({ type: "error", message: "اسم المنتج مطلوب" });
       return;
     }
     if (!formData.price.trim()) {
-      Alert.alert("خطأ", "السعر مطلوب");
+      showToast({ type: "error", message: "السعر مطلوب" });
       return;
     }
     if (!formData.stock.trim()) {
-      Alert.alert("خطأ", "الكمية مطلوبة");
+      showToast({ type: "error", message: "الكمية مطلوبة" });
       return;
     }
 
@@ -94,14 +96,15 @@ export default function AddStoreProductScreen() {
       {
         onSuccess: (response: any) => {
           if (response.success) {
-            Alert.alert("تم بنجاح", response.message, [{ text: "موافق", onPress: () => router.back() }]);
+            showToast({ type: "success", message: response.message || "تم إضافة المنتج بنجاح" });
+            router.back();
           } else {
-            Alert.alert("خطأ", "حدث خطأ أثناء إضافة المنتج");
+            showToast({ type: "error", message: "حدث خطأ أثناء إضافة المنتج" });
           }
         },
         onError: (error: any) => {
           console.error(error);
-          Alert.alert("خطأ", error.message || "حدث خطأ أثناء إضافة المنتج");
+          showToast({ type: "error", message: error.message || "حدث خطأ أثناء إضافة المنتج" });
         },
       }
     );

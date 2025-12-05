@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -24,7 +24,7 @@ export default function AdminReplyForm({ type, itemId, moderatorId, onReplySucce
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) {
-      Alert.alert("خطأ", "يرجى كتابة الرد");
+      showToast({ type: "error", message: "يرجى كتابة الرد" });
       return;
     }
 
@@ -70,7 +70,7 @@ export default function AdminReplyForm({ type, itemId, moderatorId, onReplySucce
       }
     } catch (error) {
       console.error("Error submitting reply:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء إرسال الرد");
+      showToast({ type: "error", message: "حدث خطأ أثناء إرسال الرد" });
     } finally {
       setIsSubmitting(false);
     }

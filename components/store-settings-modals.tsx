@@ -9,11 +9,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Switch,
-  Alert,
 } from "react-native";
 import { COLORS } from "../constants/colors";
 import { X, Save, MapPin, Phone, Mail, Globe, Clock, Users, Shield, Trash2 } from "lucide-react-native";
 import { ImageGalleryUploader } from "./ImageGalleryUploader";
+import { useToastContext } from "../providers/ToastProvider";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 // ==================== STORE BASIC INFO MODAL ====================
 export const StoreBasicInfoModal = ({
@@ -29,6 +30,7 @@ export const StoreBasicInfoModal = ({
   onSave: (data: any) => void;
   isLoading: boolean;
 }) => {
+  const { showToast } = useToastContext();
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [description, setDescription] = useState("");
@@ -51,11 +53,11 @@ export const StoreBasicInfoModal = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("خطأ", "اسم المذخر مطلوب");
+      showToast({ type: "error", message: "اسم المذخر مطلوب" });
       return;
     }
     if (!address.trim()) {
-      Alert.alert("خطأ", "العنوان مطلوب");
+      showToast({ type: "error", message: "العنوان مطلوب" });
       return;
     }
 
@@ -199,6 +201,7 @@ export const StoreContactInfoModal = ({
   onSave: (data: any) => void;
   isLoading: boolean;
 }) => {
+  const { showToast } = useToastContext();
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
@@ -213,7 +216,7 @@ export const StoreContactInfoModal = ({
 
   const handleSave = () => {
     if (!phone.trim()) {
-      Alert.alert("خطأ", "رقم الهاتف مطلوب");
+      showToast({ type: "error", message: "رقم الهاتف مطلوب" });
       return;
     }
 
@@ -398,11 +401,12 @@ export const AddStoreStaffModal = ({
   onSave: (data: any) => void;
   isLoading: boolean;
 }) => {
+  const { showToast } = useToastContext();
   const [email, setEmail] = useState("vet1@example.com");
 
   const handleSave = () => {
     if (!email.trim()) {
-      Alert.alert("خطأ", "البريد الإلكتروني مطلوب");
+      showToast({ type: "error", message: "البريد الإلكتروني مطلوب" });
       return;
     }
 
@@ -477,15 +481,30 @@ export const ManageStoreStaffModal = ({
   onRemove: (employeeId: number) => void;
   isLoading: boolean;
 }) => {
+  const { showToast } = useToastContext();
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; employeeId: number | null; name: string }>({
+    visible: false,
+    employeeId: null,
+    name: "",
+  });
+
   const handleRemove = (employeeId: number, name: string) => {
-    Alert.alert("تأكيد الإزالة", `هل تريد إزالة ${name} من المذخر؟`, [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "إزالة",
-        style: "destructive",
-        onPress: () => onRemove(employeeId),
-      },
-    ]);
+    setConfirmModal({ visible: true, employeeId, name });
+  };
+
+  const confirmRemove = () => {
+    if (confirmModal.employeeId) {
+      onRemove(confirmModal.employeeId);
+      showToast({
+        type: "success",
+        message: `تم إزالة ${confirmModal.name} من المذخر`
+      });
+    }
+    setConfirmModal({ visible: false, employeeId: null, name: "" });
+  };
+
+  const cancelRemove = () => {
+    setConfirmModal({ visible: false, employeeId: null, name: "" });
   };
 
   return (
@@ -537,6 +556,18 @@ export const ManageStoreStaffModal = ({
           </ScrollView>
         </View>
       </View>
+
+      <ConfirmationModal
+        visible={confirmModal.visible}
+        title="تأكيد الإزالة"
+        message={`هل تريد إزالة ${confirmModal.name} من المذخر؟`}
+        type="warning"
+        confirmText="إزالة"
+        cancelText="إلغاء"
+        onConfirm={confirmRemove}
+        onCancel={cancelRemove}
+        isLoading={isLoading}
+      />
     </Modal>
   );
 };

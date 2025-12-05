@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, Text, TextInput, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, Text, TextInput } from 'react-native';
 import { Star, X } from 'lucide-react-native';
 import { COLORS } from '@/constants/colors';
 import Button from './Button';
+import { useToastContext } from '@/providers/ToastProvider';
 
 // Simple rating component for inline use
 interface SimpleRatingProps {
@@ -13,9 +14,9 @@ interface SimpleRatingProps {
   maxRating?: number;
 }
 
-export function SimpleRating({ 
-  currentRating, 
-  onRatingChange, 
+export function SimpleRating({
+  currentRating,
+  onRatingChange,
   size = 20,
   readonly = false,
   maxRating = 5
@@ -58,31 +59,32 @@ interface RatingModalProps {
   entityName: string;
 }
 
-export default function RatingComponent({ 
+export default function RatingComponent({
   visible,
   onClose,
   onSubmit,
   title,
   entityName
 }: RatingModalProps) {
+  const { showToast } = useToastContext();
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      Alert.alert('تنبيه', 'يرجى اختيار تقييم أولاً');
+      showToast({ type: 'warning', message: 'يرجى اختيار تقييم أولاً' });
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onSubmit(rating, comment);
-      Alert.alert('شكراً لك', 'تم إرسال تقييمك بنجاح');
+      showToast({ type: 'success', message: 'تم إرسال تقييمك بنجاح' });
       handleClose();
     } catch (error) {
       console.error('Error submitting rating:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء إرسال التقييم');
+      showToast({ type: 'error', message: 'حدث خطأ أثناء إرسال التقييم' });
     } finally {
       setIsSubmitting(false);
     }
@@ -133,13 +135,13 @@ export default function RatingComponent({
 
         <View style={styles.modalContent}>
           <Text style={styles.entityName}>{entityName}</Text>
-          
+
           <Text style={styles.ratingLabel}>كيف تقيم تجربتك؟</Text>
-          
+
           <View style={styles.starsContainer}>
             {renderStars()}
           </View>
-          
+
           {rating > 0 && (
             <Text style={styles.ratingText}>
               {rating === 1 && 'ضعيف جداً'}
@@ -149,7 +151,7 @@ export default function RatingComponent({
               {rating === 5 && 'ممتاز'}
             </Text>
           )}
-          
+
           <Text style={styles.commentLabel}>أضف تعليقاً (اختياري)</Text>
           <TextInput
             style={styles.commentInput}
@@ -161,7 +163,7 @@ export default function RatingComponent({
             textAlign="right"
             maxLength={500}
           />
-          
+
           <View style={styles.modalActions}>
             <Button
               title="إلغاء"

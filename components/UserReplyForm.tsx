@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { Send } from "lucide-react-native";
+import { useToastContext } from "@/providers/ToastProvider";
 
 interface UserReplyFormProps {
   type: "inquiry" | "consultation";
@@ -20,6 +21,7 @@ export default function UserReplyForm({
   isConversationOpen,
   onReplySuccess,
 }: UserReplyFormProps) {
+  const { showToast } = useToastContext();
   const [replyContent, setReplyContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +39,7 @@ export default function UserReplyForm({
 
   const handleSubmitReply = async () => {
     if (!replyContent.trim()) {
-      Alert.alert("خطأ", "يرجى كتابة الرد");
+      showToast({ type: "error", message: "يرجى كتابة الرد" });
       return;
     }
 
@@ -58,19 +60,16 @@ export default function UserReplyForm({
         } as any);
       }
 
-      Alert.alert("تم الإرسال", "تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص.", [
-        {
-          text: "موافق",
-          onPress: () => {
-            setReplyContent("");
-            onReplySuccess?.();
-          },
-        },
-      ]);
+      showToast({
+        type: "success",
+        message: "تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص."
+      });
+      setReplyContent("");
+      onReplySuccess?.();
     } catch (error: any) {
       console.error("Error submitting user reply:", error);
       const errorMessage = error?.message || "حدث خطأ أثناء إرسال الرد";
-      Alert.alert("خطأ", errorMessage);
+      showToast({ type: "error", message: errorMessage });
     } finally {
       setIsSubmitting(false);
     }

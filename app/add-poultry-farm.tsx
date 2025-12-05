@@ -26,8 +26,8 @@ import {
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as ImagePicker from "expo-image-picker";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
 type FarmType = "broiler" | "layer" | "breeder" | "mixed";
 type HealthStatus = "healthy" | "quarantine" | "sick";
@@ -57,7 +57,7 @@ export default function AddPoultryFarmScreen() {
     address: "شارع النحاس بغداد البرصرة",
     latitude: "122.1",
     longitude: "33.2",
-    licenseImage: "Licence image test",
+    licenseImage: "",
     images: [] as string[],
   });
 
@@ -108,53 +108,6 @@ export default function AddPoultryFarmScreen() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const pickImage = async (type: "license" | "farm") => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const imageUri = result.assets[0].uri;
-
-        if (type === "license") {
-          setFormData((prev) => ({ ...prev, licenseImage: imageUri }));
-        } else {
-          if (formData.images.length < 5) {
-            setFormData((prev) => ({
-              ...prev,
-              images: [...prev.images, imageUri],
-            }));
-          } else {
-            showToast({
-              type: "warning",
-              message: "يمكنك إضافة 5 صور كحد أقصى",
-            });
-          }
-        }
-      }
-    } catch (error) {
-      showToast({
-        type: "error",
-        message: "فشل في اختيار الصورة",
-      });
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
-  };
-
-  const removeLicenseImage = () => {
-    setFormData((prev) => ({ ...prev, licenseImage: "" }));
   };
 
   const handleSubmit = async () => {
@@ -208,7 +161,7 @@ export default function AddPoultryFarmScreen() {
         images: formData.images.length > 0 ? formData.images : undefined,
       };
 
-      createFarmMutation.mutate(farmData, {
+      createFarmMutation.mutate(farmData as any, {
         onSuccess: (data) => {
           showToast({
             type: "success",
@@ -640,24 +593,13 @@ export default function AddPoultryFarmScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <View style={styles.inputHeader}>
-                <ImageIcon size={20} color={COLORS.primary} />
-                <Text style={styles.inputLabel}>صورة الترخيص</Text>
-              </View>
-
-              {formData.licenseImage ? (
-                <View style={styles.licenseImageContainer}>
-                  <Image source={{ uri: formData.licenseImage }} style={styles.licenseImage} />
-                  <TouchableOpacity style={styles.removeImageButton} onPress={removeLicenseImage}>
-                    <X size={20} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.uploadButton} onPress={() => pickImage("license")}>
-                  <Upload size={24} color={COLORS.primary} />
-                  <Text style={styles.uploadButtonText}>اضغط لرفع صورة الترخيص</Text>
-                </TouchableOpacity>
-              )}
+              <ImageGalleryUploader
+                images={formData.licenseImage ? [formData.licenseImage] : []}
+                onImagesChange={(images) => setFormData(prev => ({ ...prev, licenseImage: images[0] || "" }))}
+                maxImages={1}
+                label="صورة الترخيص"
+                aspect={[4, 3]}
+              />
             </View>
           </View>
 
@@ -668,23 +610,13 @@ export default function AddPoultryFarmScreen() {
               <Text style={styles.sectionTitle}>صور الحقل (حتى 5 صور)</Text>
             </View>
 
-            <View style={styles.imagesGrid}>
-              {formData.images.map((image, index) => (
-                <View key={index} style={styles.imageContainer}>
-                  <Image source={{ uri: image }} style={styles.farmImage} />
-                  <TouchableOpacity style={styles.removeImageButtonSmall} onPress={() => removeImage(index)}>
-                    <X size={16} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-
-              {formData.images.length < 5 && (
-                <TouchableOpacity style={styles.addImageButton} onPress={() => pickImage("farm")}>
-                  <Upload size={32} color={COLORS.primary} />
-                  <Text style={styles.addImageText}>إضافة صورة</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            <ImageGalleryUploader
+              images={formData.images}
+              onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+              maxImages={5}
+              label="صور الحقل"
+              aspect={[4, 3]}
+            />
           </View>
 
           <View style={styles.noteContainer}>

@@ -8,12 +8,13 @@ import {
   TouchableOpacity,
   TextInput,
   Switch,
-  Alert,
   Platform,
 } from "react-native";
 import { COLORS } from "../constants/colors";
 import { X, MapPin, Phone, Mail, Globe, Clock, Users, Trash2, Shield } from "lucide-react-native";
 import { ImageGalleryUploader } from "./ImageGalleryUploader";
+import { useToastContext } from "../providers/ToastProvider";
+import { ConfirmationModal } from "./ConfirmationModal";
 
 // ============== BASIC INFO MODAL ==============
 interface BasicInfoModalProps {
@@ -32,6 +33,7 @@ interface BasicInfoModalProps {
 }
 
 export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose, initialData, onSave, isLoading }) => {
+  const { showToast } = useToastContext();
   const [name, setName] = useState(initialData.name);
   const [address, setAddress] = useState(initialData.address);
   const [doctors, setDoctors] = useState(initialData?.doctors);
@@ -41,11 +43,11 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
 
   const handleSave = () => {
     if (!name.trim()) {
-      Alert.alert("خطأ", "اسم العيادة مطلوب");
+      showToast({ type: "error", message: "اسم العيادة مطلوب" });
       return;
     }
     if (!address.trim()) {
-      Alert.alert("خطأ", "العنوان مطلوب");
+      showToast({ type: "error", message: "العنوان مطلوب" });
       return;
     }
 
@@ -203,6 +205,7 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
   onSave,
   isLoading,
 }) => {
+  const { showToast } = useToastContext();
   const [phone, setPhone] = useState(initialData.phone || "");
   const [email, setEmail] = useState(initialData.email || "");
   const [website, setWebsite] = useState(initialData.website || "");
@@ -212,12 +215,12 @@ export const ContactInfoModal: React.FC<ContactInfoModalProps> = ({
 
   const handleSave = () => {
     if (!phone.trim()) {
-      Alert.alert("خطأ", "رقم الهاتف مطلوب");
+      showToast({ type: "error", message: "رقم الهاتف مطلوب" });
       return;
     }
 
     if (email && !email.includes("@")) {
-      Alert.alert("خطأ", "البريد الإلكتروني غير صحيح");
+      showToast({ type: "error", message: "البريد الإلكتروني غير صحيح" });
       return;
     }
 
@@ -492,11 +495,12 @@ interface AddStaffModalProps {
 }
 
 export const AddStaffModal: React.FC<AddStaffModalProps> = ({ visible, onClose, onSave, isLoading }) => {
+  const { showToast } = useToastContext();
   const [email, setEmail] = useState("vet1@example.com");
 
   const handleSave = () => {
     if (!email.trim() || !email.includes("@")) {
-      Alert.alert("خطأ", "البريد الإلكتروني مطلوب وغير صحيح");
+      showToast({ type: "error", message: "البريد الإلكتروني مطلوب وغير صحيح" });
       return;
     }
 
@@ -602,15 +606,29 @@ const permissionTypes = [
 ];
 
 export const ManageStaffModal: React.FC<ManageStaffModalProps> = ({ visible, onClose, staff, onRemove, isLoading }) => {
+  const { showToast } = useToastContext();
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; staffMember: any | null }>({
+    visible: false,
+    staffMember: null
+  });
+
   const handleRemove = (staffMember: any) => {
-    Alert.alert("تأكيد الحذف", `هل تريد إزالة ${staffMember.name} من العيادة؟`, [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "إزالة",
-        style: "destructive",
-        onPress: () => onRemove(staffMember.id),
-      },
-    ]);
+    setConfirmModal({ visible: true, staffMember });
+  };
+
+  const confirmRemove = () => {
+    if (confirmModal.staffMember) {
+      onRemove(confirmModal.staffMember.id);
+      showToast({
+        type: "success",
+        message: `تم إزالة ${confirmModal.staffMember.name} من العيادة`
+      });
+    }
+    setConfirmModal({ visible: false, staffMember: null });
+  };
+
+  const cancelRemove = () => {
+    setConfirmModal({ visible: false, staffMember: null });
   };
 
   const getMemberRole = (role: string | boolean): string => {
@@ -673,6 +691,18 @@ export const ManageStaffModal: React.FC<ManageStaffModalProps> = ({ visible, onC
           </View>
         </View>
       </View>
+
+      <ConfirmationModal
+        visible={confirmModal.visible}
+        title="تأكيد الحذف"
+        message={`هل تريد إزالة ${confirmModal.staffMember?.name} من العيادة؟`}
+        type="warning"
+        confirmText="إزالة"
+        cancelText="إلغاء"
+        onConfirm={confirmRemove}
+        onCancel={cancelRemove}
+        isLoading={isLoading}
+      />
     </Modal>
   );
 };

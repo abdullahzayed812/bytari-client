@@ -42,7 +42,6 @@ export default function WarehouseManagementScreen() {
   const queryClient = useQueryClient();
   const { showToast } = useToastContext();
   const { canEdit, isOwner } = useLocalSearchParams();
-  console.log({ canEdit, isOwner });
 
   const { data, isLoading, error } = useQuery(trpc.stores.getUserStores.queryOptions({ userId: user?.id }));
   const warehouses = useMemo(() => (data as any)?.stores, [data]);
@@ -244,7 +243,7 @@ export default function WarehouseManagementScreen() {
     return (
       <View key={product.id} style={styles.productCard}>
         <View style={styles.productHeader}>
-          <Image source={{ uri: product.image }} style={styles.productImage} />
+          <Image source={{ uri: product.images[0] }} style={styles.productImage} />
           <View style={styles.productInfo}>
             <Text style={styles.productName} numberOfLines={2}>
               {product.name}

@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Alert } from "react-native";
-import React from "react";
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image } from "react-native";
+import React, { useState } from "react";
 import { Stack, router } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { formatPrice } from "../constants/currency";
@@ -9,10 +9,17 @@ import { CartItem } from "../types";
 import Button from "../components/Button";
 import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from "lucide-react-native";
 import { useCart } from "@/providers/CartProvider";
+import { useToastContext } from "@/providers/ToastProvider";
+import { ConfirmationModal } from "@/components/ConfirmationModal";
 
 export default function CartScreen() {
   const { t } = useI18n();
+  const { showToast } = useToastContext();
   const { cart, removeFromCart, clearCart } = useCart();
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; type: 'remove' | 'clear'; productId?: string }>({
+    visible: false,
+    type: 'remove'
+  });
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
@@ -20,20 +27,29 @@ export default function CartScreen() {
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity < 1) {
-      Alert.alert("حذف المنتج", "هل تريد حذف هذا المنتج من السلة؟", [
-        { text: "إلغاء", style: "cancel" },
-        { text: "حذف", style: "destructive", onPress: () => removeFromCart(productId) },
-      ]);
+      setConfirmModal({ visible: true, type: 'remove', productId });
     } else {
       // updateCartQuantity(productId, newQuantity);
     }
   };
 
   const handleClearCart = () => {
-    Alert.alert("إفراغ السلة", "هل تريد إفراغ السلة بالكامل؟", [
-      { text: "إلغاء", style: "cancel" },
-      { text: "إفراغ", style: "destructive", onPress: clearCart },
-    ]);
+    setConfirmModal({ visible: true, type: 'clear' });
+  };
+
+  const handleConfirm = () => {
+    if (confirmModal.type === 'remove' && confirmModal.productId) {
+      removeFromCart(confirmModal.productId);
+      showToast({ type: "success", message: "تم حذف المنتج من السلة" });
+    } else if (confirmModal.type === 'clear') {
+      clearCart();
+      showToast({ type: "success", message: "تم إفراغ السلة" });
+    }
+    setConfirmModal({ visible: false, type: 'remove' });
+  };
+
+  const handleCancel = () => {
+    setConfirmModal({ visible: false, type: 'remove' });
   };
 
   const handleCheckout = () => {
@@ -114,6 +130,17 @@ export default function CartScreen() {
         </View>
         <Button title="إتمام الشراء" onPress={handleCheckout} type="primary" style={styles.checkoutButton} />
       </View>
+
+      <ConfirmationModal
+        visible={confirmModal.visible}
+        title={confirmModal.type === 'remove' ? "حذف المنتج" : "إفراغ السلة"}
+        message={confirmModal.type === 'remove' ? "هل تريد حذف هذا المنتج من السلة؟" : "هل تريد إفراغ السلة بالكامل؟"}
+        type="warning"
+        confirmText={confirmModal.type === 'remove' ? "حذف" : "إفراغ"}
+        cancelText="إلغاء"
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
     </View>
   );
 }

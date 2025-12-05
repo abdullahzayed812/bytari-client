@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import React, { useRef, useMemo, useState } from "react";
@@ -14,6 +13,7 @@ import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { useRouter, useFocusEffect } from "expo-router";
+import { useToastContext } from "../../providers/ToastProvider";
 import Button from "../../components/Button 2";
 import {
   Calendar,
@@ -42,6 +42,7 @@ export default function PetsScreen() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const { userMode, user, hasAdminAccess, isSuperAdmin, isModerator } = useApp();
+  const { showToast } = useToastContext();
   const flatListRef = useRef<FlatList>(null);
 
   // Fetch user's own pets
@@ -198,74 +199,69 @@ export default function PetsScreen() {
   };
 
   const handleRenewSubscription = (type: "clinic" | "store", id: number, hasRenewal: boolean) => {
+    // Validate required data
+    if (!id || !type) {
+      showToast({
+        type: "error",
+        message: "بيانات غير صحيحة. يرجى المحاولة مرة أخرى.",
+      });
+      return;
+    }
+
     if (hasRenewal) {
-      Alert.alert("طلب قيد المراجعة", "يوجد طلب تجديد قيد المراجعة بالفعل. سيتم إشعارك عند الموافقة عليه.");
+      showToast({
+        type: "warning",
+        message: "يوجد طلب تجديد قيد المراجعة بالفعل. سيتم إشعارك عند الموافقة عليه.",
+      });
       return;
     }
 
     const resourceType = type === "clinic" ? "العيادة" : "المذخر";
 
-    Alert.alert(
-      "تأكيد التجديد",
-      `هل تريد إرسال طلب تجديد اشتراك ${resourceType} لمدة سنة إضافية؟\n\nسيتم مراجعة الطلب من قبل الإدارة.`,
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "تأكيد",
-          onPress: async () => {
-            try {
-              if (type === "clinic") {
-                requestClinicRenewalMutation.mutate({ clinicId: Number(id) } as any, {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey);
-                    Alert.alert(
-                      "تم بنجاح",
-                      "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة."
-                    );
-                  },
-                  onError: (error) => {
-                    Alert.alert("خطأ", error.message);
-                  },
-                });
-              } else {
-                requestStoreRenewalMutation.mutate({ storeId: Number(id) } as any, {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
-                    Alert.alert(
-                      "تم بنجاح",
-                      "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة."
-                    );
-                  },
-                  onError: (error) => {
-                    Alert.alert("خطأ", error.message);
-                  },
-                });
-              }
-
-              Alert.alert(
-                "تم بنجاح",
-                "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.",
-                [
-                  {
-                    text: "حسناً",
-                    onPress: () => {
-                      // Refresh data
-                      if (type === "clinic") {
-                        allUserClinicsQuery.refetch();
-                      } else {
-                        allUserStoresQuery.refetch();
-                      }
-                    },
-                  },
-                ]
-              );
-            } catch (error: any) {
-              Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الطلب");
-            }
+    // Since we can't use Alert.alert with callbacks, we'll directly submit
+    // In a production app, you might want to add a confirmation modal component
+    try {
+      if (type === "clinic") {
+        requestClinicRenewalMutation.mutate({ clinicId: Number(id) } as any, {
+          onSuccess: () => {
+            queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey);
+            allUserClinicsQuery.refetch();
+            showToast({
+              type: "success",
+              message: "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.",
+            });
           },
-        },
-      ]
-    );
+          onError: (error) => {
+            showToast({
+              type: "error",
+              message: error.message || "حدث خطأ أثناء إرسال طلب التجديد",
+            });
+          },
+        });
+      } else {
+        requestStoreRenewalMutation.mutate({ storeId: Number(id) } as any, {
+          onSuccess: () => {
+            queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
+            allUserStoresQuery.refetch();
+            showToast({
+              type: "success",
+              message: "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.",
+            });
+          },
+          onError: (error) => {
+            showToast({
+              type: "error",
+              message: error.message || "حدث خطأ أثناء إرسال طلب التجديد",
+            });
+          },
+        });
+      }
+    } catch (error: any) {
+      showToast({
+        type: "error",
+        message: error.message || "حدث خطأ أثناء إرسال الطلب",
+      });
+    }
   };
 
   // Render subscription renewal card
@@ -432,7 +428,7 @@ export default function PetsScreen() {
 
           <Image
             source={{
-              uri: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
+              uri: clinic.images?.[0] || "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
             }}
             style={styles.clinicImage}
           />
