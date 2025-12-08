@@ -118,21 +118,21 @@ export default function PoultryFarmDetailsScreen() {
         status: farmData.status,
         assignedVet: farmData.assignedVetId
           ? {
-              id: farmData.assignedVetId.toString(),
-              name: farmData.assignedVetName || "",
-              phone: farmData.assignedVetPhone || "",
-              specialization: "طب الدواجن",
-              assignedAt: farmData.updatedAt.toISOString(),
-            }
+            id: farmData.assignedVetId.toString(),
+            name: farmData.assignedVetName || "",
+            phone: farmData.assignedVetPhone || "",
+            specialization: "طب الدواجن",
+            assignedAt: farmData.updatedAt.toISOString(),
+          }
           : undefined,
         assignedSupervisor: farmData.assignedSupervisorId
           ? {
-              id: farmData.assignedSupervisorId.toString(),
-              name: farmData.assignedSupervisorName || "",
-              phone: farmData.assignedSupervisorPhone || "",
-              experience: "5 سنوات",
-              assignedAt: farmData.updatedAt.toISOString(),
-            }
+            id: farmData.assignedSupervisorId.toString(),
+            name: farmData.assignedSupervisorName || "",
+            phone: farmData.assignedSupervisorPhone || "",
+            experience: "5 سنوات",
+            assignedAt: farmData.updatedAt.toISOString(),
+          }
           : undefined,
       });
 
@@ -261,19 +261,19 @@ export default function PoultryFarmDetailsScreen() {
 
     const treatments = dailyDataForm.treatments
       ? dailyDataForm.treatments
-          .split(",")
-          .map((t, index) => ({
-            id: `treatment${Date.now()}_${index}`,
-            name: t.trim(),
-            dosage: "",
-            frequency: "",
-            duration: 0,
-            administeredBy: "owner",
-            cost: 0,
-            reason: "preventive",
-            notes: "",
-          }))
-          .filter((t) => t.name.length > 0)
+        .split(",")
+        .map((t, index) => ({
+          id: `treatment${Date.now()}_${index}`,
+          name: t.trim(),
+          dosage: "",
+          frequency: "",
+          duration: 0,
+          administeredBy: "owner",
+          cost: 0,
+          reason: "preventive",
+          notes: "",
+        }))
+        .filter((t) => t.name.length > 0)
       : [];
 
     addDailyDataMutation.mutate(
@@ -282,9 +282,9 @@ export default function PoultryFarmDetailsScreen() {
         mortality,
         mortalityReasons: dailyDataForm.mortalityReasons
           ? dailyDataForm.mortalityReasons
-              .split(",")
-              .map((r) => r.trim())
-              .filter((r) => r.length > 0)
+            .split(",")
+            .map((r) => r.trim())
+            .filter((r) => r.length > 0)
           : [],
         feedConsumption,
         averageWeight,
@@ -602,10 +602,10 @@ export default function PoultryFarmDetailsScreen() {
               {currentBatch.status === "active"
                 ? "نشط"
                 : currentBatch.status === "completed"
-                ? "مكتمل"
-                : currentBatch.status === "sold"
-                ? "مباع"
-                : "غير محدد"}
+                  ? "مكتمل"
+                  : currentBatch.status === "sold"
+                    ? "مباع"
+                    : "غير محدد"}
             </Text>
           </View>
         </View>
@@ -846,7 +846,7 @@ export default function PoultryFarmDetailsScreen() {
                     <Text style={styles.batchItemStatValue}>
                       {Math.ceil(
                         (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
-                          (1000 * 60 * 60 * 24)
+                        (1000 * 60 * 60 * 24)
                       )}{" "}
                       يوم
                     </Text>
@@ -1037,7 +1037,7 @@ export default function PoultryFarmDetailsScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>السعر (دينار عراقي) *</Text>
+                <Text style={styles.inputLabel}>السعر (د.ع عراقي) *</Text>
                 <TextInput
                   style={styles.input}
                   value={batchForm.pricePerChick}
@@ -1254,11 +1254,11 @@ export default function PoultryFarmDetailsScreen() {
                   <Text style={styles.weekReportDays}>عدد الأيام المسجلة: {week.days.length}</Text>
                 </View>
               )) || (
-                <View style={styles.emptyReport}>
-                  <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
-                  <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
-                </View>
-              )}
+                  <View style={styles.emptyReport}>
+                    <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
+                    <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
+                  </View>
+                )}
             </ScrollView>
 
             <View style={styles.modalActions}>
@@ -1314,7 +1314,7 @@ export default function PoultryFarmDetailsScreen() {
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
                 />
-                <Text style={styles.inputHint}>الربح الفعلي من بيع الدفعة بالدينار العراقي</Text>
+                <Text style={styles.inputHint}>الربح الفعلي من بيع الدفعة بالد.ع العراقي</Text>
               </View>
 
               <View style={styles.infoBox}>

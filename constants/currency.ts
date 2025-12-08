@@ -1,7 +1,7 @@
 export const CURRENCY = {
   symbol: "د.ع",
   code: "IQD",
-  name: "دينار عراقي",
+  name: "د.ع عراقي",
   nameEn: "Iraqi Dinar",
 } as const;
 

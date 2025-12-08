@@ -13,12 +13,10 @@ import { trpc } from "../lib/trpc";
 interface Message {
   id: string;
   type: "system" | "consultation" | "clinic";
-  sender: string;
-  subject: string;
-  preview: string;
-  time: string;
+  title: string;
+  content: string;
+  sentAt: string;
   read: boolean;
-  avatar?: string;
 }
 
 export default function MessagesScreen() {
@@ -130,27 +128,23 @@ export default function MessagesScreen() {
           >
             <View style={[styles.messageContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <View style={styles.avatarContainer}>
-                {message.avatar ? (
-                  <Image source={{ uri: message.avatar }} style={styles.avatar} />
-                ) : (
-                  <View style={styles.iconContainer}>{getMessageIcon(message.type)}</View>
-                )}
+                <View style={styles.iconContainer}>{getMessageIcon(message.type)}</View>
               </View>
 
               <View
                 style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
               >
                 <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                  <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>{message.sender}</Text>
+                  <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>System</Text>
                   <Text style={[styles.messageTime, { textAlign: isRTL ? "left" : "right" }]}>
-                    {formatTime(message.time)}
+                    {formatTime(message.sentAt)}
                   </Text>
                 </View>
 
-                <Text style={[styles.messageSubject, { textAlign: isRTL ? "right" : "left" }]}>{message.subject}</Text>
+                <Text style={[styles.messageSubject, { textAlign: isRTL ? "right" : "left" }]}>{message.title}</Text>
 
                 <Text style={[styles.messagePreview, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
-                  {message.preview}
+                  {message.content}
                 </Text>
               </View>
 

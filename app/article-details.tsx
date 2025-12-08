@@ -1,17 +1,33 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
-import React, { useRef } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TextInput,
+  FlatList,
+} from "react-native";
+import React, { useRef, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useRouter, useLocalSearchParams, Stack, useFocusEffect } from "expo-router";
-import { ArrowLeft, ArrowRight, Heart, MessageCircle, Eye, User, Calendar, Share } from "lucide-react-native";
+import { ArrowLeft, ArrowRight, Heart, MessageCircle, Eye, User, Calendar, Share, Send, X } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function ArticleDetailsScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { id } = useLocalSearchParams();
+  const articleId = Number(id);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [commentModalVisible, setCommentModalVisible] = useState(false);
+  const [commentText, setCommentText] = useState("");
 
   // Scroll to top when screen is focused
   useFocusEffect(
@@ -20,17 +36,57 @@ export default function ArticleDetailsScreen() {
     }, [])
   );
 
-  const { data, isLoading, error } = useQuery(trpc.content.getArticleById.queryOptions({ id: Number(id) }));
+  const { data, isLoading, error } = useQuery(trpc.content.getArticleById.queryOptions({ id: articleId }));
+  const statsQuery = useQuery(trpc.content.getArticleStats.queryOptions({ articleId }));
+  const commentsQuery = useQuery(trpc.content.getComments.queryOptions({ articleId }));
 
-  const likeMutation = useMutation({
-    mutationFn: trpc.content.likeArticle.mutate,
-    onSuccess: () => {
-      Alert.alert("Success", "You liked this article!");
-    },
-    onError: (error) => {
-      Alert.alert("Error", "Failed to like this article.");
-    },
-  });
+  const likeMutation = useMutation(trpc.content.toggleLike.mutationOptions());
+  const addCommentMutation = useMutation(trpc.content.addComment.mutationOptions());
+
+  const article = data?.article;
+  const stats = statsQuery?.data;
+  const comments = commentsQuery?.data?.comments || [];
+
+  const handleLike = () => {
+    likeMutation.mutate(
+      { articleId },
+      {
+        onSuccess: () => {
+          statsQuery.refetch();
+          queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+        },
+      }
+    );
+  };
+
+  const sendComment = () => {
+    if (!commentText.trim()) return;
+    addCommentMutation.mutate(
+      { articleId, content: commentText },
+      {
+        onSuccess: () => {
+          setCommentModalVisible(false);
+          setCommentText("");
+          commentsQuery.refetch();
+          statsQuery.refetch();
+          queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+          Alert.alert("نجح", "تم إضافة التعليق بنجاح");
+        },
+        onError: () => {
+          Alert.alert("خطأ", "فشل إضافة التعليق");
+        },
+      }
+    );
+  };
+
+  const handleShare = () => {
+    console.log("Share article:", article.title);
+    // TODO: Implement share functionality
+  };
+
+  const handleComment = () => {
+    setCommentModalVisible(true);
+  };
 
   if (isLoading) {
     return (
@@ -66,22 +122,6 @@ export default function ArticleDetailsScreen() {
       </View>
     );
   }
-
-  const article = data.article;
-
-  const handleLike = () => {
-    likeMutation.mutate({ id: article.id });
-  };
-
-  const handleShare = () => {
-    console.log("Share article:", article.title);
-    // TODO: Implement share functionality
-  };
-
-  const handleComment = () => {
-    console.log("Comment on article:", article.title);
-    // TODO: Implement comment functionality
-  };
 
   return (
     <View style={styles.container}>
@@ -148,12 +188,16 @@ export default function ArticleDetailsScreen() {
           {/* Article Stats */}
           <View style={styles.statsSection}>
             <View style={styles.statItem}>
-              <Heart size={18} color={COLORS.error} />
-              <Text style={styles.statText}>{article.likes ?? 0}</Text>
+              <Heart
+                size={18}
+                color={stats?.isLiked ? COLORS.error : COLORS.darkGray}
+                fill={stats?.isLiked ? COLORS.error : "none"}
+              />
+              <Text style={styles.statText}>{stats?.likes ?? 0}</Text>
             </View>
             <View style={styles.statItem}>
               <MessageCircle size={18} color={COLORS.primary} />
-              <Text style={styles.statText}>{article.comments ?? 0}</Text>
+              <Text style={styles.statText}>{stats?.comments ?? 0}</Text>
             </View>
             <View style={styles.statItem}>
               <Eye size={18} color={COLORS.darkGray} />
@@ -169,17 +213,72 @@ export default function ArticleDetailsScreen() {
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             <TouchableOpacity style={[styles.actionButton, styles.likeButton]} onPress={handleLike}>
-              <Heart size={20} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>إعجاب ({article.likes ?? 0})</Text>
+              <Heart size={20} color={COLORS.white} fill={stats?.isLiked ? COLORS.white : "none"} />
+              <Text style={styles.actionButtonText}>
+                {stats?.isLiked ? "أعجبني" : "إعجاب"} ({stats?.likes ?? 0})
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.actionButton, styles.commentButton]} onPress={handleComment}>
               <MessageCircle size={20} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>تعليق ({article.comments ?? 0})</Text>
+              <Text style={styles.actionButtonText}>تعليق ({stats?.comments ?? 0})</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Comments Section */}
+          <View style={styles.commentsSection}>
+            <Text style={styles.sectionTitle}>التعليقات</Text>
+            {comments.length > 0 ? (
+              comments.map((comment: any) => (
+                <View key={comment.id} style={styles.commentItem}>
+                  <View style={styles.commentHeader}>
+                    <Text style={styles.commentUser}>{comment.user?.name || "مستخدم"}</Text>
+                    <Text style={styles.commentDate}>{new Date(comment.createdAt).toLocaleDateString()}</Text>
+                  </View>
+                  <Text style={styles.commentContent}>{comment.content}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noCommentsText}>لا توجد تعليقات بعد. كن أول من يعلق!</Text>
+            )}
           </View>
         </View>
       </ScrollView>
+
+      {/* Comment Modal */}
+      <Modal
+        visible={commentModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setCommentModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>إضافة تعليق</Text>
+              <TouchableOpacity onPress={() => setCommentModalVisible(false)}>
+                <X size={24} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="اكتب تعليقك هنا..."
+              value={commentText}
+              onChangeText={setCommentText}
+              multiline
+              textAlignVertical="top"
+            />
+            <TouchableOpacity
+              style={[styles.sendButton, !commentText.trim() && styles.sendButtonDisabled]}
+              onPress={sendComment}
+              disabled={!commentText.trim() || addCommentMutation.isPending}
+            >
+              <Send size={20} color={COLORS.white} />
+              <Text style={styles.sendButtonText}>{addCommentMutation.isPending ? "جاري الإرسال..." : "إرسال"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -352,5 +451,92 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  commentsSection: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginBottom: 16,
+    textAlign: "right",
+  },
+  commentItem: {
+    backgroundColor: COLORS.white,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  commentUser: {
+    fontWeight: "bold",
+    color: COLORS.black,
+  },
+  commentDate: {
+    fontSize: 12,
+    color: COLORS.gray,
+  },
+  commentContent: {
+    color: COLORS.darkGray,
+    textAlign: "right",
+  },
+  noCommentsText: {
+    textAlign: "center",
+    color: COLORS.gray,
+    marginTop: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    minHeight: 300,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 12,
+    padding: 16,
+    height: 120,
+    textAlign: "right",
+    marginBottom: 20,
+  },
+  sendButton: {
+    backgroundColor: COLORS.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: COLORS.gray,
+  },
+  sendButtonText: {
+    color: COLORS.white,
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

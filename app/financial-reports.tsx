@@ -230,7 +230,7 @@ export default function FinancialReportsScreen() {
               <Text style={styles.expenseCategory}>{expense.category}</Text>
             </View>
             <View style={styles.expenseAmounts}>
-              <Text style={styles.expenseAmount}>{expense.amount.toLocaleString()} ر.س</Text>
+              <Text style={styles.expenseAmount}>{expense.amount.toLocaleString()} د.ع</Text>
               <Text style={styles.expensePercentage}>{expense.percentage}%</Text>
             </View>
           </View>
@@ -249,7 +249,7 @@ export default function FinancialReportsScreen() {
           </Text>
         </View>
       </View>
-      
+
       <View style={styles.cycleStats}>
         <View style={styles.cycleStat}>
           <Text style={styles.cycleStatLabel}>إجمالي الطيور</Text>
@@ -258,7 +258,7 @@ export default function FinancialReportsScreen() {
         <View style={styles.cycleStat}>
           <Text style={styles.cycleStatLabel}>صافي الربح</Text>
           <Text style={[styles.cycleStatValue, { color: cycle.netProfit > 0 ? COLORS.success : COLORS.error }]}>
-            {cycle.netProfit.toLocaleString()} ر.س
+            {cycle.netProfit.toLocaleString()} د.ع
           </Text>
         </View>
         <View style={styles.cycleStat}>
@@ -300,9 +300,9 @@ export default function FinancialReportsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الملخص المالي</Text>
           <View style={styles.summaryGrid}>
-            {renderSummaryCard('إجمالي الإيرادات', `${summary.totalRevenue.toLocaleString()} ر.س`, <DollarSign size={20} color={COLORS.success} />, COLORS.success, 'up')}
-            {renderSummaryCard('إجمالي المصروفات', `${summary.totalExpenses.toLocaleString()} ر.س`, <TrendingDown size={20} color={COLORS.error} />, COLORS.error)}
-            {renderSummaryCard('صافي الربح', `${summary.netProfit.toLocaleString()} ر.س`, <Target size={20} color={COLORS.primary} />, COLORS.primary, 'up')}
+            {renderSummaryCard('إجمالي الإيرادات', `${summary.totalRevenue.toLocaleString()} د.ع`, <DollarSign size={20} color={COLORS.success} />, COLORS.success, 'up')}
+            {renderSummaryCard('إجمالي المصروفات', `${summary.totalExpenses.toLocaleString()} د.ع`, <TrendingDown size={20} color={COLORS.error} />, COLORS.error)}
+            {renderSummaryCard('صافي الربح', `${summary.netProfit.toLocaleString()} د.ع`, <Target size={20} color={COLORS.primary} />, COLORS.primary, 'up')}
             {renderSummaryCard('هامش الربح', `${summary.profitMargin.toFixed(1)}%`, <BarChart3 size={20} color={COLORS.info} />, COLORS.info)}
           </View>
         </View>
@@ -313,8 +313,8 @@ export default function FinancialReportsScreen() {
           <View style={styles.summaryGrid}>
             {renderSummaryCard('معدل التحويل', summary.averageFCR.toFixed(2), <Activity size={20} color={COLORS.purple} />, COLORS.purple)}
             {renderSummaryCard('معدل النفوق', `${summary.mortalityRate}%`, <AlertTriangle size={20} color={COLORS.warning} />, COLORS.warning)}
-            {renderSummaryCard('تكلفة العلف', `${summary.feedCosts.toLocaleString()} ر.س`, <Package size={20} color={COLORS.orange} />, COLORS.orange)}
-            {renderSummaryCard('تكلفة الأدوية', `${summary.medicationCosts.toLocaleString()} ر.س`, <Zap size={20} color={COLORS.yellow} />, COLORS.yellow)}
+            {renderSummaryCard('تكلفة العلف', `${summary.feedCosts.toLocaleString()} د.ع`, <Package size={20} color={COLORS.orange} />, COLORS.orange)}
+            {renderSummaryCard('تكلفة الأدوية', `${summary.medicationCosts.toLocaleString()} د.ع`, <Zap size={20} color={COLORS.yellow} />, COLORS.yellow)}
           </View>
         </View>
 

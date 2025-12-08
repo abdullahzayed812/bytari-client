@@ -35,54 +35,79 @@ export default function JobManagementScreen() {
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const { data, isLoading, error, refetch } = useQuery(trpc.admin.jobs.getAllJobs.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
-  const requests = useMemo(() => (data as any)?.jobs, [data]);
+  const { data, isLoading, error, refetch } = useQuery(trpc.admin.jobs.getAllRequests.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
+  const requests = useMemo(() => (data as any)?.requests, [data]);
 
-  const approveMutation = useMutation(trpc.admin.jobs.approve.mutationOptions());
-  const rejectMutation = useMutation(trpc.admin.jobs.reject.mutationOptions());
+  const updateJobMutation = useMutation(trpc.admin.jobs.updateJob.mutationOptions());
+  const manageApplicationMutation = useMutation(trpc.admin.jobs.manageJobApplication.mutationOptions());
+  const manageSupervisionMutation = useMutation(trpc.admin.jobs.manageFieldSupervisionRequest.mutationOptions());
 
-  const handleApprove = (id: string) => {
+  const handleApprove = (request: JobRequest) => {
     Alert.alert("تأكيد الموافقة", "هل أنت متأكد من الموافقة على هذا الطلب؟", [
       { text: "إلغاء", style: "cancel" },
       {
         text: "موافق",
         onPress: () => {
-          approveMutation.mutate(
-            { id },
-            {
-              onSuccess: () => {
-                Alert.alert("تم", "تم الموافقة على الطلب بنجاح");
-                refetch();
-              },
-              onError: (error) => {
-                Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
-              },
-            }
-          );
+          const onSuccess = () => {
+            Alert.alert("تم", "تم الموافقة على الطلب بنجاح");
+            refetch();
+          };
+          const onError = (error: any) => {
+            Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
+          };
+
+          if (request.type === "job_posting") {
+            updateJobMutation.mutate(
+              { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "active" },
+              { onSuccess, onError }
+            );
+          } else if (request.type === "job_application") {
+            manageApplicationMutation.mutate(
+              { adminId: user?.id ? Number(user.id) : 0, applicationId: request.id, action: "approve" },
+              { onSuccess, onError }
+            );
+          } else if (request.type === "field_supervision") {
+            manageSupervisionMutation.mutate(
+              { adminId: user?.id ? Number(user.id) : 0, requestId: request.id, action: "approve" },
+              { onSuccess, onError }
+            );
+          }
         },
       },
     ]);
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = (request: JobRequest) => {
     Alert.alert("تأكيد الرفض", "هل أنت متأكد من رفض هذا الطلب؟", [
       { text: "إلغاء", style: "cancel" },
       {
         text: "رفض",
         style: "destructive",
         onPress: () => {
-          rejectMutation.mutate(
-            { id },
-            {
-              onSuccess: () => {
-                Alert.alert("تم", "تم رفض الطلب");
-                refetch();
-              },
-              onError: (error) => {
-                Alert.alert("خطأ", error.message || "فشل في رفض الطلب");
-              },
-            }
-          );
+          const onSuccess = () => {
+            Alert.alert("تم", "تم رفض الطلب");
+            refetch();
+          };
+          const onError = (error: any) => {
+            Alert.alert("خطأ", error.message || "فشل في رفض الطلب");
+          };
+
+          if (request.type === "job_posting") {
+            updateJobMutation.mutate(
+              { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "inactive" },
+              { onSuccess, onError }
+            );
+          } else if (request.type === "job_application") {
+            manageApplicationMutation.mutate(
+              { adminId: user?.id ? Number(user.id) : 0, applicationId: request.id, action: "reject" },
+              { onSuccess, onError }
+            );
+          } else if (request.type === "field_supervision") {
+            manageSupervisionMutation.mutate(
+              { adminId: user?.id ? Number(user.id) : 0, requestId: request.id, action: "reject" },
+              { onSuccess, onError }
+            );
+          }
         },
       },
     ]);
@@ -338,11 +363,11 @@ export default function JobManagementScreen() {
                     <Eye size={16} color={COLORS.primary} />
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(request.id)}>
+                  <TouchableOpacity style={styles.approveButton} onPress={() => handleApprove(request)}>
                     <Check size={16} color={COLORS.white} />
                   </TouchableOpacity>
 
-                  <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(request.id)}>
+                  <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(request)}>
                     <X size={16} color={COLORS.white} />
                   </TouchableOpacity>
                 </View>

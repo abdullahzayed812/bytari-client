@@ -58,7 +58,7 @@ export default function VetHomeScreen() {
       title: 'الأرباح',
       icon: TrendingUp,
       color: COLORS.warning,
-      count: '2,450 ر.س',
+      count: '2,450 د.ع',
       onPress: () => router.push('/vet-dashboard')
     }
   ];
@@ -99,7 +99,7 @@ export default function VetHomeScreen() {
         {/* Clinic Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>عيادتي</Text>
-          
+
           <TouchableOpacity
             style={styles.clinicCard}
             onPress={() => router.push('/clinic-dashboard')}
@@ -116,31 +116,31 @@ export default function VetHomeScreen() {
                   </View>
                 )}
               </View>
-              
+
               <View style={styles.clinicInfoRow}>
                 <MapPin size={14} color={COLORS.darkGray} />
                 <Text style={styles.clinicInfoText}>{mockClinic.address}</Text>
               </View>
-              
+
               <View style={styles.clinicInfoRow}>
                 <Phone size={14} color={COLORS.darkGray} />
                 <Text style={styles.clinicInfoText}>{mockClinic.phone}</Text>
               </View>
-              
+
               <View style={styles.clinicInfoRow}>
                 <Clock size={14} color={mockClinic.isOpen ? COLORS.success : COLORS.error} />
                 <Text style={[styles.clinicInfoText, { color: mockClinic.isOpen ? COLORS.success : COLORS.error }]}>
                   {mockClinic.isOpen ? 'مفتوح الآن' : 'مغلق'} - {mockClinic.openingHours}
                 </Text>
               </View>
-              
+
               <View style={styles.ratingContainer}>
                 <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
                 <Text style={styles.ratingText}>{mockClinic.rating} ({mockClinic.reviewsCount} تقييم)</Text>
               </View>
             </View>
           </TouchableOpacity>
-          
+
           <View style={styles.clinicActions}>
             <Button
               title="إضافة عيادة جديدة"
@@ -150,7 +150,7 @@ export default function VetHomeScreen() {
               icon={<Plus size={16} color={COLORS.primary} />}
               style={styles.actionButtonStyle}
             />
-            
+
             <Button
               title="إضافة مذخر بيطري"
               onPress={() => router.push('/add-store')}
@@ -193,7 +193,7 @@ export default function VetHomeScreen() {
               <Text style={styles.viewAllText}>عرض الكل</Text>
             </TouchableOpacity>
           </View>
-          
+
           {todaySchedule.map((appointment) => (
             <View key={appointment.id} style={styles.appointmentCard}>
               <View style={styles.appointmentTime}>
@@ -212,15 +212,15 @@ export default function VetHomeScreen() {
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>إجراءات سريعة</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={() => router.push('/new-inquiry')}
           >
             <MessageCircle size={20} color={COLORS.white} />
             <Text style={styles.actionButtonText}>بدء استشارة جديدة</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: COLORS.info }]}
             onPress={() => router.push('/vet-dashboard')}
           >

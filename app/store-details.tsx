@@ -62,8 +62,6 @@ export default function StoreDetailsScreen() {
   const { data, isLoading, error } = useQuery(trpc.stores.getById.queryOptions({ storeId: Number(id) }));
   const storeData = useMemo(() => (data as any)?.store as Store | undefined, [data]);
 
-  console.log({ storeData })
-
   // Fetch store products
   const { data: rawStoreProducts, isLoading: isStoreProductsLoading } = useQuery(
     trpc.stores.products.list.queryOptions({ storeId: Number(id) })
@@ -180,11 +178,11 @@ export default function StoreDetailsScreen() {
 
   const renderProductCard = (product: VetStoreProduct) => (
     <View key={product.id} style={styles.productCard}>
-      <Image source={{ uri: product.image }} style={styles.productImage} />
+      <Image source={{ uri: product.images[0] }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{product.name}</Text>
         <Text style={styles.productCategory}>{product.category}</Text>
-        <Text style={styles.productPrice}>{product.price} ر.س</Text>
+        <Text style={styles.productPrice}>{product.price} د.ع</Text>
       </View>
     </View>
   );

@@ -182,7 +182,7 @@ export default function FeedManagementScreen() {
     try {
       console.log('Adding feed consumption:', formData);
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       Alert.alert('تم بنجاح', 'تم إضافة سجل العلف');
       setShowAddForm(false);
       setFormData({
@@ -233,7 +233,7 @@ export default function FeedManagementScreen() {
             </Text>
           </View>
         </View>
-        
+
         <View style={styles.stockDetails}>
           <View style={styles.stockDetail}>
             <Scale size={16} color={COLORS.primary} />
@@ -241,7 +241,7 @@ export default function FeedManagementScreen() {
           </View>
           <View style={styles.stockDetail}>
             <DollarSign size={16} color={COLORS.success} />
-            <Text style={styles.stockDetailText}>{stock.costPerKg} ر.س/كجم</Text>
+            <Text style={styles.stockDetailText}>{stock.costPerKg} د.ع/كجم</Text>
           </View>
           <View style={styles.stockDetail}>
             <Calendar size={16} color={COLORS.darkGray} />
@@ -261,7 +261,7 @@ export default function FeedManagementScreen() {
 
   const renderConsumptionCard = (consumption: FeedConsumption) => {
     const feedInfo = getFeedTypeInfo(consumption.feedType);
-    
+
     return (
       <View key={consumption.id} style={styles.consumptionCard}>
         <View style={styles.consumptionHeader}>
@@ -271,7 +271,7 @@ export default function FeedManagementScreen() {
           </View>
           <View style={styles.consumptionAmounts}>
             <Text style={styles.consumptionQuantity}>{consumption.quantity} كجم</Text>
-            <Text style={styles.consumptionCost}>{consumption.cost.toLocaleString()} ر.س</Text>
+            <Text style={styles.consumptionCost}>{consumption.cost.toLocaleString()} د.ع</Text>
           </View>
         </View>
       </View>
@@ -285,8 +285,8 @@ export default function FeedManagementScreen() {
           <ArrowRight size={24} color={COLORS.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>إدارة العلف</Text>
-        <TouchableOpacity 
-          style={styles.addButton} 
+        <TouchableOpacity
+          style={styles.addButton}
           onPress={() => setShowAddForm(!showAddForm)}
         >
           <Plus size={20} color={COLORS.white} />
@@ -388,7 +388,7 @@ export default function FeedManagementScreen() {
                   <DollarSign size={20} color={COLORS.success} />
                   <TextInput
                     style={styles.textInput}
-                    placeholder="التكلفة (ر.س)"
+                    placeholder="التكلفة (د.ع)"
                     value={formData.cost}
                     onChangeText={(value) => handleInputChange('cost', value)}
                     keyboardType="numeric"
@@ -470,7 +470,7 @@ export default function FeedManagementScreen() {
                 <DollarSign size={24} color={COLORS.warning} />
                 <Text style={styles.analyticsTitle}>تكلفة العلف الشهرية</Text>
               </View>
-              <Text style={styles.analyticsValue}>54,000 ر.س</Text>
+              <Text style={styles.analyticsValue}>54,000 د.ع</Text>
               <Text style={styles.analyticsSubtext}>91% من إجمالي التكاليف</Text>
             </View>
 

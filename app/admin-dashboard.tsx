@@ -137,17 +137,7 @@ export default function AdminDashboard() {
 
   const supervisors = useMemo(() => (supervisorsData as any)?.supervisors, [supervisorsData]);
 
-  const sendMessageMutation = useMutation({
-    mutationFn: trpc.admin.messages.sendSystemMessage.mutate,
-    onSuccess: () => {
-      Alert.alert("تم الإرسال", "تم إرسال الرسالة بنجاح");
-      setSendMessageModalVisible(false);
-      resetMessageForm();
-    },
-    onError: () => {
-      Alert.alert("خطأ", "حدث خطأ أثناء إرسال الرسالة");
-    },
-  });
+  const sendMessageMutation = useMutation(trpc.admin.messages.sendSystemMessage.mutationOptions());
 
   const hasPermission = (permission: string): boolean => {
     return userPermissions?.permissions?.some((p: any) => p.permissionName === permission) ?? false;
@@ -177,17 +167,29 @@ export default function AdminDashboard() {
       return;
     }
 
-    sendMessageMutation.mutate({
-      senderId: user?.id,
-      title: newMessage.title,
-      content: newMessage.content,
-      type: newMessage.type,
-      targetAudience: newMessage.targetAudience,
-      targetCategories: newMessage.targetAudience === "multiple" ? newMessage.targetCategories : undefined,
-      priority: newMessage.priority,
-      imageUrl: newMessage.imageUrl,
-      linkUrl: newMessage.linkUrl,
-    } as any);
+    sendMessageMutation.mutate(
+      {
+        senderId: user?.id,
+        title: newMessage.title,
+        content: newMessage.content,
+        type: newMessage.type,
+        targetAudience: newMessage.targetAudience,
+        targetCategories: newMessage.targetAudience === "multiple" ? newMessage.targetCategories : undefined,
+        priority: newMessage.priority,
+        imageUrl: newMessage.imageUrl,
+        linkUrl: newMessage.linkUrl,
+      } as any,
+      {
+        onSuccess: () => {
+          Alert.alert("تم الإرسال", "تم إرسال الرسالة بنجاح");
+          setSendMessageModalVisible(false);
+          resetMessageForm();
+        },
+        onError: () => {
+          Alert.alert("خطأ", "حدث خطأ أثناء إرسال الرسالة");
+        },
+      }
+    );
   };
 
   const toggleCategory = (category: string) => {

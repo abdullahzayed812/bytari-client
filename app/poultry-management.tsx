@@ -218,7 +218,7 @@ export default function PoultryManagementScreen() {
       alerts: '/alerts',
       analytics: '/analytics',
     };
-    
+
     if (routes[action]) {
       router.push(routes[action]);
     } else {
@@ -441,7 +441,7 @@ export default function PoultryManagementScreen() {
           {renderStatsCard('إجمالي المزارع', stats.totalFarms.toString(), <MapPin size={20} color={COLORS.primary} />, COLORS.primary)}
           {renderStatsCard('إجمالي الطيور', stats.totalBirds.toLocaleString(), <Users size={20} color={COLORS.success} />, COLORS.success)}
           {renderStatsCard('الدفعات النشطة', stats.activeBatches.toString(), <Package size={20} color={COLORS.warning} />, COLORS.warning)}
-          {renderStatsCard('الربح الشهري', `${stats.monthlyProfit.toLocaleString()} ر.س`, <DollarSign size={20} color={COLORS.info} />, COLORS.info)}
+          {renderStatsCard('الربح الشهري', `${stats.monthlyProfit.toLocaleString()} د.ع`, <DollarSign size={20} color={COLORS.info} />, COLORS.info)}
         </View>
         <View style={styles.statsGrid}>
           {renderStatsCard('معدل النفوق', `${stats.mortalityRate}%`, <AlertTriangle size={20} color={COLORS.error} />, COLORS.error)}

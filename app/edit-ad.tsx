@@ -53,7 +53,7 @@ export default function EditAdScreen() {
 
   useEffect(() => {
     if (adQuery.data) {
-      const ad = adQuery.data;
+      const ad = adQuery.data as any;
       setFormData({
         title: ad.title,
         content: ad.content || "",
@@ -89,6 +89,7 @@ export default function EditAdScreen() {
         link: formData.link || undefined,
         type: formData.type,
         position: formData.position || undefined,
+        clickAction: formData.link ? ("open_link" as const) : ("none" as const),
         startDate: formData.startDate,
         endDate: formData.endDate,
         isActive: formData.isActive,

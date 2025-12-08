@@ -66,7 +66,7 @@ export default function StoreProductsScreen() {
   const renderProductCard = (product: VetStoreProduct, index: number) => {
     return (
       <TouchableOpacity key={product.id} style={styles.productCard} onPress={() => handleProductPress(product)}>
-        <Image source={{ uri: product.image }} style={styles.productImage} />
+        <Image source={{ uri: product.images[0] }} style={styles.productImage} />
         <View style={styles.productInfo}>
           <Text style={styles.productName} numberOfLines={1}>
             {product.name}
@@ -78,7 +78,7 @@ export default function StoreProductsScreen() {
             </Text>
           )}
           <View style={styles.productFooter}>
-            <Text style={styles.productPrice}>{product.price} ر.س</Text>
+            <Text style={styles.productPrice}>{product.price} د.ع</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -126,8 +126,8 @@ export default function StoreProductsScreen() {
               </View>
 
               <View style={styles.priceContainer}>
-                <Text style={styles.modalProductPrice}>{selectedProduct.price} ر.س</Text>
-                <Text style={styles.originalPrice}>{(selectedProduct.price * 1.2).toFixed(0)} ر.س</Text>
+                <Text style={styles.modalProductPrice}>{selectedProduct.price} د.ع</Text>
+                <Text style={styles.originalPrice}>{(selectedProduct.price * 1.2).toFixed(0)} د.ع</Text>
               </View>
 
               <View style={styles.descriptionContainer}>

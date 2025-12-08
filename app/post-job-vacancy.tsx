@@ -26,7 +26,7 @@ export default function PostJobVacancyScreen() {
     company: "عيادة الرحمة البيطرية",
     location: "بغداد، العراق",
     type: "full-time", // Changed to match enum
-    salary: "800000 - 1200000 دينار",
+    salary: "800000 - 1200000 د.ع",
     description:
       "نبحث عن طبيب بيطري مؤهل وذو خبرة للانضمام إلى فريقنا في عيادة الرحمة البيطرية. المسؤوليات تشمل فحص وعلاج الحيوانات الأليفة، إجراء العمليات الجراحية البسيطة، وتقديم الاستشارات الطبية لأصحاب الحيوانات.",
     requirements:
@@ -230,7 +230,7 @@ export default function PostJobVacancyScreen() {
                 style={styles.inputText}
                 value={formData.salary}
                 onChangeText={(text) => setFormData({ ...formData, salary: text })}
-                placeholder="مثال: 800000 - 1200000 دينار"
+                placeholder="مثال: 800000 - 1200000 د.ع"
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>

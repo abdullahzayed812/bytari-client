@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { Stack } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -20,11 +21,11 @@ import { ImageUploader } from "@/components/ImageUploader";
 interface Advertisement {
   id: number;
   title: string;
-  content?: string;
-  image?: string;
-  link?: string;
+  description?: string;
+  imageUrl?: string;
+  targetUrl?: string;
   type: "banner" | "popup" | "inline" | "image_only" | "image_with_link";
-  position?: string;
+  // position?: string;
   interface: "pet_owner" | "vet" | "both";
   clickAction: "none" | "open_link" | "open_file";
   startDate: Date;
@@ -49,23 +50,23 @@ export default function AdminAdsManagement() {
   // Form state
   const [formData, setFormData] = useState<{
     title: string;
-    content: string;
-    image: string;
-    link: string;
+    description: string;
+    imageUrl: string;
+    targetUrl: string;
     type: "banner" | "popup" | "inline" | "image_only" | "image_with_link";
-    position: string;
+    // position: string;
     interface: "pet_owner" | "vet" | "both";
     clickAction: "none" | "open_link" | "open_file";
     startDate: string;
     endDate: string;
   }>({
     title: "عنوان الاعلان",
-    content: "محتوى الاعلان",
-    image:
+    description: "محتوى الاعلان",
+    imageUrl:
       "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2126&q=80",
-    link: "رابط الاعلان",
+    targetUrl: "https://gitnub.com",
     type: "banner",
-    position: "اسفل",
+    // position: "اسفل",
     interface: "both",
     clickAction: "none",
     startDate: new Date().toISOString().split("T")[0],
@@ -92,11 +93,11 @@ export default function AdminAdsManagement() {
   const resetForm = () => {
     setFormData({
       title: "",
-      content: "",
-      image: "",
-      link: "",
+      description: "",
+      imageUrl: "",
+      targetUrl: "",
       type: "banner",
-      position: "",
+      // position: "",
       interface: "both",
       clickAction: "none",
       startDate: new Date().toISOString().split("T")[0],
@@ -118,7 +119,7 @@ export default function AdminAdsManagement() {
           setShowCreateModal(false);
           resetForm();
           refetch();
-          queryClient.invalidateQueries(trpc.admin.ads.getActive.queryKey)
+          queryClient.invalidateQueries(trpc.admin.ads.getActive.queryKey as any);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "فشل في إنشاء الإعلان");
@@ -145,6 +146,7 @@ export default function AdminAdsManagement() {
           setSelectedAd(null);
           resetForm();
           refetch();
+          queryClient.invalidateQueries(trpc.admin.ads.getActive.queryKey as any);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "فشل في تحديث الإعلان");
@@ -176,11 +178,12 @@ export default function AdminAdsManagement() {
 
   const openEditModal = (ad: Advertisement) => {
     setSelectedAd(ad);
+    // console.log(ad);
     setFormData({
       title: ad.title,
-      content: ad.content || "",
-      image: ad.image || "",
-      link: ad.link || "",
+      description: ad.description || "",
+      imageUrl: ad.imageUrl || "",
+      targetUrl: ad.targetUrl || "",
       type: ad.type,
       position: ad.position || "",
       interface: ad.interface,
@@ -287,7 +290,7 @@ export default function AdminAdsManagement() {
 
       {/* Ads List */}
       <View style={styles.adsContainer}>
-        {ads.map((ad) => (
+        {ads?.map((ad) => (
           <View key={ad.id} style={styles.adCard}>
             <View style={styles.adHeader}>
               <View style={styles.adInfo}>
@@ -316,22 +319,22 @@ export default function AdminAdsManagement() {
               </View>
             </View>
 
-            {ad.image && <Image source={{ uri: ad.image }} style={styles.adImage} />}
+            {ad.imageUrl && <Image source={{ uri: ad.imageUrl }} style={styles.adImage} />}
 
             {ad.description && <Text style={styles.adContent}>{ad.description}</Text>}
 
             <View style={styles.adStats}>
               <View style={styles.statItem}>
                 <Eye size={16} color="#666" />
-                <Text style={styles.statText}>{ad.impressions} مشاهدة</Text>
+                <Text style={styles.statText}>{ad.impressionCount} مشاهدة</Text>
               </View>
               <View style={styles.statItem}>
                 <BarChart3 size={16} color="#666" />
-                <Text style={styles.statText}>{ad.clicks} نقرة</Text>
+                <Text style={styles.statText}>{ad.clickCount} نقرة</Text>
               </View>
               <View style={styles.statItem}>
                 <Text style={styles.statText}>
-                  معدل النقر: {ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(1) : 0}%
+                  معدل النقر: {ad.impressionCount > 0 ? ((ad.clickCount / ad.impressionCount) * 100).toFixed(1) : 0}%
                 </Text>
               </View>
             </View>
@@ -385,8 +388,8 @@ export default function AdminAdsManagement() {
               <Text style={styles.formLabel}>المحتوى</Text>
               <TextInput
                 style={[styles.formInput, styles.textArea]}
-                value={formData.content}
-                onChangeText={(text) => setFormData({ ...formData, content: text })}
+                value={formData.description}
+                onChangeText={(text) => setFormData({ ...formData, description: text })}
                 placeholder="أدخل محتوى الإعلان"
                 placeholderTextColor="#999"
                 multiline
@@ -396,8 +399,8 @@ export default function AdminAdsManagement() {
 
             <View style={styles.formGroup}>
               <ImageUploader
-                imageUri={formData.image}
-                onUploadComplete={(url) => setFormData({ ...formData, image: url })}
+                imageUri={formData.imageUrl}
+                onUploadComplete={(url) => setFormData({ ...formData, imageUrl: url })}
                 label="صورة الإعلان"
                 aspect={[16, 9]}
               />
@@ -407,8 +410,8 @@ export default function AdminAdsManagement() {
               <Text style={styles.formLabel}>الرابط</Text>
               <TextInput
                 style={styles.formInput}
-                value={formData.link}
-                onChangeText={(text) => setFormData({ ...formData, link: text })}
+                value={formData.targetUrl}
+                onChangeText={(text) => setFormData({ ...formData, targetUrl: text })}
                 placeholder="https://example.com"
                 placeholderTextColor="#999"
               />
@@ -488,7 +491,7 @@ export default function AdminAdsManagement() {
               </View>
             </View>
 
-            <View style={styles.formGroup}>
+            {/* <View style={styles.formGroup}>
               <Text style={styles.formLabel}>الموقع</Text>
               <TextInput
                 style={styles.formInput}
@@ -497,7 +500,7 @@ export default function AdminAdsManagement() {
                 placeholder="مثل: home_top, sidebar, footer"
                 placeholderTextColor="#999"
               />
-            </View>
+            </View> */}
 
             <View style={styles.formRow}>
               <View style={styles.formGroup}>
@@ -576,8 +579,8 @@ export default function AdminAdsManagement() {
               <Text style={styles.formLabel}>المحتوى</Text>
               <TextInput
                 style={[styles.formInput, styles.textArea]}
-                value={formData.content}
-                onChangeText={(text) => setFormData({ ...formData, content: text })}
+                value={formData.description}
+                onChangeText={(text) => setFormData({ ...formData, description: text })}
                 placeholder="أدخل محتوى الإعلان"
                 placeholderTextColor="#999"
                 multiline
@@ -587,8 +590,8 @@ export default function AdminAdsManagement() {
 
             <View style={styles.formGroup}>
               <ImageUploader
-                imageUri={formData.image}
-                onUploadComplete={(url) => setFormData({ ...formData, image: url })}
+                imageUri={formData.imageUrl}
+                onUploadComplete={(url) => setFormData({ ...formData, imageUrl: url })}
                 label="صورة الإعلان"
                 aspect={[16, 9]}
               />
@@ -598,8 +601,8 @@ export default function AdminAdsManagement() {
               <Text style={styles.formLabel}>الرابط</Text>
               <TextInput
                 style={styles.formInput}
-                value={formData.link}
-                onChangeText={(text) => setFormData({ ...formData, link: text })}
+                value={formData.targetUrl}
+                onChangeText={(text) => setFormData({ ...formData, targetUrl: text })}
                 placeholder="https://example.com"
                 placeholderTextColor="#999"
               />
@@ -678,7 +681,7 @@ export default function AdminAdsManagement() {
                 </View>
               </View>
             </View>
-
+            {/* 
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>الموقع</Text>
               <TextInput
@@ -688,7 +691,7 @@ export default function AdminAdsManagement() {
                 placeholder="مثل: home_top, sidebar, footer"
                 placeholderTextColor="#999"
               />
-            </View>
+            </View> */}
 
             <View style={styles.formRow}>
               <View style={styles.formGroup}>

@@ -23,7 +23,7 @@
     "@trpc/react-query": "^11.4.3",
     "@trpc/server": "^11.4.3",
     "@trpc/tanstack-react-query": "^11.6.0",
-    "drizzle-kit": "^0.31.4",
+    "drizzle-kit": "^0.18.1",
     "drizzle-orm": "^0.44.4",
     "expo": "^53.0.20",
     "expo-blur": "~14.1.4",

@@ -3,13 +3,17 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { COLORS } from "../constants/colors";
-import { ArrowLeft, Plus, Upload, FileText, X } from 'lucide-react-native';
-import Button from "../components/Button";
-import * as DocumentPicker from 'expo-document-picker';
+import { ArrowLeft, Plus } from 'lucide-react-native';
+import Button from "../components/Button 2";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpc } from "../lib/trpc";
+import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
+import { FileUploader } from "@/components/FileUploader";
 
 export default function AddVetBookScreen() {
   const router = useRouter();
-  
+  const queryClient = useQueryClient();
+
   const [formData, setFormData] = useState({
     title: '',
     author: '',
@@ -17,45 +21,51 @@ export default function AddVetBookScreen() {
     pages: '',
     category: '',
     language: 'العربية',
-    bookFile: null as any
   });
+
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedFileUrl, setSelectedFileUrl] = useState<string>("");
 
   const categories = ['تشريح', 'أمراض', 'جراحة', 'صيدلة', 'تغذية', 'طب وقائي', 'تشخيص'];
 
-  const handlePickFile = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'application/epub+zip', 'application/x-mobipocket-ebook'],
-        copyToCacheDirectory: true,
-      });
-      
-      if (!result.canceled && result.assets[0]) {
-        setFormData({...formData, bookFile: result.assets[0]});
-      }
-    } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الملف');
+  const createBookMutation = useMutation(trpc.content.createBook.mutationOptions({
+    onSuccess: () => {
+      Alert.alert('نجح', 'تم إضافة الكتاب بنجاح');
+      queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
+      router.back();
+    },
+    onError: (error: any) => {
+      Alert.alert('خطأ', error.message || 'فشل في إضافة الكتاب');
     }
-  };
-
-  const handleRemoveFile = () => {
-    setFormData({...formData, bookFile: null});
-  };
+  }));
 
   const handleSave = () => {
     if (!formData.title || !formData.author || !formData.category) {
       Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
       return;
     }
-    
-    // Here you would upload the file and save the book data to the main books section
-    console.log('Vet book data:', formData);
-    Alert.alert('نجح', 'تم إضافة الكتاب إلى القسم الأساسي بنجاح');
-    router.back();
+
+    if (!selectedFileUrl) {
+      Alert.alert('خطأ', 'يرجى رفع ملف الكتاب');
+      return;
+    }
+
+    createBookMutation.mutate({
+      title: formData.title,
+      author: formData.author,
+      description: formData.description,
+      pageCount: formData.pages ? parseInt(formData.pages) : undefined,
+      category: formData.category,
+      language: formData.language,
+      coverImage: selectedImages[0] || "",
+      filePath: selectedFileUrl,
+      isPublished: false, // Default to false, waiting for approval? Or true? Schema defaults to false.
+    } as any);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: 'إضافة كتاب للقسم الأساسي',
           headerStyle: { backgroundColor: COLORS.white },
@@ -68,18 +78,17 @@ export default function AddVetBookScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
           <View style={styles.imageSection}>
-            <View style={styles.imagePlaceholder}>
-              <Upload size={32} color={COLORS.darkGray} />
-              <Text style={styles.imagePlaceholderText}>اختر صورة الكتاب</Text>
-            </View>
-            <TouchableOpacity style={styles.uploadButton}>
-              <Upload size={16} color={COLORS.white} />
-              <Text style={styles.uploadButtonText}>رفع صورة</Text>
-            </TouchableOpacity>
+            <ImageGalleryUploader
+              images={selectedImages}
+              onImagesChange={setSelectedImages}
+              maxImages={1}
+              label="صورة الكتاب"
+              aspect={[3, 4]}
+            />
           </View>
 
           <View style={styles.inputGroup}>
@@ -87,7 +96,7 @@ export default function AddVetBookScreen() {
             <TextInput
               style={styles.input}
               value={formData.title}
-              onChangeText={(text) => setFormData({...formData, title: text})}
+              onChangeText={(text) => setFormData({ ...formData, title: text })}
               placeholder="أدخل عنوان الكتاب"
               textAlign="right"
             />
@@ -98,7 +107,7 @@ export default function AddVetBookScreen() {
             <TextInput
               style={styles.input}
               value={formData.author}
-              onChangeText={(text) => setFormData({...formData, author: text})}
+              onChangeText={(text) => setFormData({ ...formData, author: text })}
               placeholder="أدخل اسم المؤلف"
               textAlign="right"
             />
@@ -114,7 +123,7 @@ export default function AddVetBookScreen() {
                     styles.categoryButton,
                     formData.category === category && styles.selectedCategoryButton
                   ]}
-                  onPress={() => setFormData({...formData, category})}
+                  onPress={() => setFormData({ ...formData, category })}
                 >
                   <Text style={[
                     styles.categoryButtonText,
@@ -132,7 +141,7 @@ export default function AddVetBookScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
-              onChangeText={(text) => setFormData({...formData, description: text})}
+              onChangeText={(text) => setFormData({ ...formData, description: text })}
               placeholder="أدخل وصف الكتاب"
               textAlign="right"
               multiline
@@ -145,7 +154,7 @@ export default function AddVetBookScreen() {
             <TextInput
               style={styles.input}
               value={formData.pages}
-              onChangeText={(text) => setFormData({...formData, pages: text})}
+              onChangeText={(text) => setFormData({ ...formData, pages: text })}
               placeholder="أدخل عدد الصفحات"
               textAlign="right"
               keyboardType="numeric"
@@ -162,7 +171,7 @@ export default function AddVetBookScreen() {
                     styles.languageButton,
                     formData.language === lang && styles.selectedLanguageButton
                   ]}
-                  onPress={() => setFormData({...formData, language: lang})}
+                  onPress={() => setFormData({ ...formData, language: lang })}
                 >
                   <Text style={[
                     styles.languageButtonText,
@@ -177,39 +186,24 @@ export default function AddVetBookScreen() {
 
           {/* File Upload Section */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>ملف الكتاب *</Text>
-            {formData.bookFile ? (
-              <View style={styles.fileContainer}>
-                <View style={styles.fileInfo}>
-                  <FileText size={20} color={COLORS.primary} />
-                  <View style={styles.fileDetails}>
-                    <Text style={styles.fileName}>{formData.bookFile.name}</Text>
-                    <Text style={styles.fileSize}>
-                      {(formData.bookFile.size / (1024 * 1024)).toFixed(2)} MB
-                    </Text>
-                  </View>
-                </View>
-                <TouchableOpacity onPress={handleRemoveFile} style={styles.removeFileButton}>
-                  <X size={20} color={COLORS.error} />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.fileUploadButton} onPress={handlePickFile}>
-                <Upload size={20} color={COLORS.primary} />
-                <Text style={styles.fileUploadText}>اختر ملف الكتاب (PDF, EPUB)</Text>
-              </TouchableOpacity>
-            )}
+            <FileUploader
+              fileUrl={selectedFileUrl}
+              onFileChange={setSelectedFileUrl}
+              label="ملف الكتاب *"
+              placeholder="اختر ملف الكتاب (PDF, EPUB)"
+            />
           </View>
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <Button
-          title="إضافة الكتاب للقسم الأساسي"
+          title={createBookMutation.isPending ? "جاري الإضافة..." : "إضافة الكتاب للقسم الأساسي"}
           onPress={handleSave}
           type="primary"
           size="large"
           icon={<Plus size={20} color={COLORS.white} />}
+          disabled={createBookMutation.isPending}
         />
       </View>
     </SafeAreaView>
@@ -236,38 +230,6 @@ const styles = StyleSheet.create({
   imageSection: {
     alignItems: 'center',
     marginBottom: 24,
-  },
-  imagePlaceholder: {
-    width: 120,
-    height: 160,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: COLORS.lightGray,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    backgroundColor: COLORS.background,
-  },
-  imagePlaceholderText: {
-    fontSize: 12,
-    color: COLORS.darkGray,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
-  },
-  uploadButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '600',
   },
   inputGroup: {
     marginBottom: 20,
@@ -348,55 +310,5 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
-  },
-  fileContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: COLORS.lightGray,
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: COLORS.background,
-  },
-  fileInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
-  fileDetails: {
-    flex: 1,
-  },
-  fileName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.black,
-    textAlign: 'right',
-  },
-  fileSize: {
-    fontSize: 12,
-    color: COLORS.darkGray,
-    textAlign: 'right',
-  },
-  removeFileButton: {
-    padding: 4,
-  },
-  fileUploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    borderStyle: 'dashed',
-    borderRadius: 8,
-    padding: 16,
-    gap: 8,
-    backgroundColor: COLORS.background,
-  },
-  fileUploadText: {
-    fontSize: 14,
-    color: COLORS.primary,
-    fontWeight: '600',
   },
 });

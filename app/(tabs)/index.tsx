@@ -8,6 +8,8 @@ import {
   Dimensions,
   Platform,
   ActivityIndicator,
+  Linking,
+  Alert,
 } from "react-native";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { COLORS } from "../../constants/colors";
@@ -22,7 +24,7 @@ import { Bell, Calendar, MapPin, MessageCircle, Phone, Star, Search, Heart, Down
 import { UserModeToggle } from "../../components/UserModeToggle";
 import AutoScrollView from "../../components/AutoScrollView";
 import { useBookDownload } from "@/hooks/useBookDownload";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import UserAvatar from "@/components/UserAvatar";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -64,7 +66,6 @@ export default function HomeScreen() {
 
   const vetStores = useMemo(() => (rawVetStores as any)?.stores, [rawVetStores]);
 
-
   const { data: inquiriesData, isLoading: inquiriesLoading } = useQuery(
     trpc.inquiries.listForUser.queryOptions({ userId: user?.id })
   );
@@ -93,21 +94,21 @@ export default function HomeScreen() {
 
   const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(trpc.pets.getApproved.queryOptions({}));
   const adoptionPets = useMemo(() => (adoptionPetsData as any)?.pets, [adoptionPetsData]);
+  const trackImpressionMutation = useMutation(trpc.admin.ads.trackImpression.mutationOptions());
+  const [trackedImpressions, setTrackedImpressions] = useState<number[]>([]);
 
-  // Simulate real-time updates
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly update counts to simulate real-time data
-      if (Math.random() > 0.7) {
-        setNotificationsCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
-      }
-      if (Math.random() > 0.7) {
-        setMessagesCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
-      }
-    }, 15000); // Update every 15 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+    if (heroImages && heroImages.length > 0) {
+      const impressionTimeout = setTimeout(() => {
+        const ad = heroImages[currentImageIndex];
+        if (ad && !trackedImpressions.includes(ad.id)) {
+          trackImpressionMutation.mutate({ adId: ad.id });
+          setTrackedImpressions([...trackedImpressions, ad.id]);
+        }
+      }, 2000); // Track impression after 2 seconds
+      return () => clearTimeout(impressionTimeout);
+    }
+  }, [currentImageIndex, heroImages]);
 
   useEffect(() => {
     if (heroImages && heroImages.length > 0) {
@@ -148,8 +149,6 @@ export default function HomeScreen() {
       autoSlideRef.current = null;
     }
   };
-
-
 
   // Remove this useEffect as we handle scrolling directly in startAutoSlide
   // useEffect(() => {
@@ -199,6 +198,35 @@ export default function HomeScreen() {
     }, restartDelay);
   };
 
+  const trackClickMutation = useMutation(trpc.admin.ads.trackClick.mutationOptions());
+
+  const handleAdClick = async (ad: any) => {
+    const { clickAction, targetUrl, id } = ad;
+
+    trackClickMutation.mutate({ adId: Number(id) });
+
+    if (!targetUrl) return;
+
+    // If action is open_link OR open_file
+    if (clickAction === "open_link") {
+      try {
+        // Check if device can open this URL
+        const supported = await Linking.canOpenURL(targetUrl);
+
+        if (supported) {
+          await Linking.openURL(targetUrl);
+          return;
+        } else {
+          Alert.alert("Cannot open link", "This link is not supported on your device.");
+        }
+      } catch (err) {
+        Alert.alert("Error", "Something went wrong while trying to open the link.");
+      }
+    } else if (clickAction === "open_file") {
+      router.push(`/ad-details?id=${id}`);
+    }
+  };
+
   const handleSendConsultation = () => {
     if (userMode === "veterinarian") {
       router.push("/new-inquiry");
@@ -242,13 +270,7 @@ export default function HomeScreen() {
         {/* Left side - User info */}
         <View style={[styles.userInfoContainer, { flexDirection: "row" }]}>
           <TouchableOpacity style={styles.profileButton} onPress={() => router.push("/(tabs)/profile")}>
-
-            <UserAvatar
-              uri={user?.avatar}
-              gender={user?.gender}
-              size={36}
-            />
-
+            <UserAvatar uri={user?.avatar} gender={user?.gender} size={36} />
           </TouchableOpacity>
 
           <View style={[styles.userTextContainer, { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 }]}>
@@ -333,77 +355,76 @@ export default function HomeScreen() {
             <View style={{ height: 20 }} />
           )}
 
-          <View style={styles.adContainer}>
-            <ScrollView
-              ref={adScrollViewRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onScroll={handleAdScroll}
-              onScrollBeginDrag={handleAdScrollBegin}
-              onScrollEndDrag={handleAdScrollEnd}
-              onMomentumScrollBegin={handleAdMomentumScrollBegin}
-              onMomentumScrollEnd={handleAdMomentumScrollEnd}
-              scrollEventThrottle={Platform.OS === "android" ? 32 : 16}
-              contentContainerStyle={styles.adScrollContent}
-              decelerationRate={Platform.OS === "android" ? "normal" : "fast"}
-              removeClippedSubviews={Platform.OS === "android"}
-              overScrollMode="never"
-              nestedScrollEnabled={false}
-            >
-              {heroImagesLoading ? (
-                <View style={styles.adImageWrapper}>
-                  <ActivityIndicator size="large" color={COLORS.primary} />
-                </View>
-              ) : (
-                heroImages?.map((ad, index) => (
-                  <TouchableOpacity
-                    key={ad.id}
-                    style={styles.adImageWrapper}
-                    onPress={() => {
-                      // Navigate to ad details page
-                      router.push(`/ad-details?id=${ad.id}`);
-                    }}
-                    activeOpacity={0.9}
-                  >
-                    <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
-                    {/* Ad Text Overlay - Direct on image without background */}
-                    <View style={styles.adTextOverlay}>
-                      <Text style={styles.adTitle}>{ad.title}</Text>
-                      <Text style={styles.adSubtitle}>{ad.description}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              )}
-            </ScrollView>
+          {heroImages?.length > 0 ? (
+            <View style={styles.adContainer}>
+              <ScrollView
+                ref={adScrollViewRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onScroll={handleAdScroll}
+                onScrollBeginDrag={handleAdScrollBegin}
+                onScrollEndDrag={handleAdScrollEnd}
+                onMomentumScrollBegin={handleAdMomentumScrollBegin}
+                onMomentumScrollEnd={handleAdMomentumScrollEnd}
+                scrollEventThrottle={Platform.OS === "android" ? 32 : 16}
+                contentContainerStyle={styles.adScrollContent}
+                decelerationRate={Platform.OS === "android" ? "normal" : "fast"}
+                removeClippedSubviews={Platform.OS === "android"}
+                overScrollMode="never"
+                nestedScrollEnabled={false}
+              >
+                {heroImagesLoading ? (
+                  <View style={styles.adImageWrapper}>
+                    <ActivityIndicator size="large" color={COLORS.primary} />
+                  </View>
+                ) : (
+                  heroImages?.map((ad, index) => (
+                    <TouchableOpacity
+                      key={ad.id}
+                      style={styles.adImageWrapper}
+                      onPress={() => handleAdClick(ad)}
+                      activeOpacity={0.9}
+                    >
+                      <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
+                      {/* Ad Text Overlay - Direct on image without background */}
+                      <View style={styles.adTextOverlay}>
+                        <Text style={styles.adTitle}>{ad.title}</Text>
+                        <Text style={styles.adSubtitle}>{ad.description}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
 
-            {heroImages && (
-              <View style={styles.paginationContainer}>
-                {heroImages?.map((_, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.paginationDot,
-                      index === currentImageIndex ? styles.paginationDotActive : styles.paginationDotInactive,
-                    ]}
-                    onPress={() => {
-                      setCurrentImageIndex(index);
-                      // Scroll to the selected image immediately
-                      if (adScrollViewRef.current) {
-                        adScrollViewRef.current.scrollTo({
-                          x: index * screenWidth,
-                          animated: true,
-                        });
-                      }
-                      // Restart auto slide after a longer delay to avoid interference
-                      const restartDelay = Platform.OS === "android" ? 4000 : 2000;
-                      setTimeout(() => startAutoSlide(), restartDelay);
-                    }}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
+              {heroImages?.length > 0 ? (
+                <View style={styles.paginationContainer}>
+                  {heroImages?.map((_, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.paginationDot,
+                        index === currentImageIndex ? styles.paginationDotActive : styles.paginationDotInactive,
+                      ]}
+                      onPress={() => {
+                        setCurrentImageIndex(index);
+                        // Scroll to the selected image immediately
+                        if (adScrollViewRef.current) {
+                          adScrollViewRef.current.scrollTo({
+                            x: index * screenWidth,
+                            animated: true,
+                          });
+                        }
+                        // Restart auto slide after a longer delay to avoid interference
+                        const restartDelay = Platform.OS === "android" ? 4000 : 2000;
+                        setTimeout(() => startAutoSlide(), restartDelay);
+                      }}
+                    />
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
         </View>
 
         {/* Consultation Section */}
@@ -457,16 +478,16 @@ export default function HomeScreen() {
                             inquiry.status === "pending"
                               ? styles.statusPending
                               : inquiry.status === "answered"
-                                ? styles.statusAnswered
-                                : styles.statusClosed,
+                              ? styles.statusAnswered
+                              : styles.statusClosed,
                           ]}
                         />
                         <Text style={styles.statusText}>
                           {inquiry.status === "pending"
                             ? "قيد المراجعة"
                             : inquiry.status === "answered"
-                              ? "تم الرد"
-                              : "مغلق"}
+                            ? "تم الرد"
+                            : "مغلق"}
                         </Text>
                       </View>
 
@@ -523,8 +544,8 @@ export default function HomeScreen() {
                           con.status === "pending"
                             ? styles.statusPending
                             : con.status === "answered"
-                              ? styles.statusAnswered
-                              : styles.statusClosed,
+                            ? styles.statusAnswered
+                            : styles.statusClosed,
                         ]}
                       />
                       <Text style={styles.statusText}>
@@ -561,8 +582,8 @@ export default function HomeScreen() {
                               con.urgencyLevel === "emergency"
                                 ? COLORS.error
                                 : con.urgencyLevel === "high"
-                                  ? COLORS.warning
-                                  : COLORS.darkGray,
+                                ? COLORS.warning
+                                : COLORS.darkGray,
                             textAlign: isRTL ? "left" : "right",
                           },
                         ]}
@@ -571,10 +592,10 @@ export default function HomeScreen() {
                         {con.urgencyLevel === "emergency"
                           ? "طارئ"
                           : con.urgencyLevel === "high"
-                            ? "عالي"
-                            : con.urgencyLevel === "medium"
-                              ? "متوسط"
-                              : "منخفض"}
+                          ? "عالي"
+                          : con.urgencyLevel === "medium"
+                          ? "متوسط"
+                          : "منخفض"}
                       </Text>
 
                       <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
@@ -612,250 +633,252 @@ export default function HomeScreen() {
           >
             {userMode === "veterinarian"
               ? vetStores?.map((store) => (
-                <TouchableOpacity
-                  key={store.id}
-                  style={[
-                    styles.clinicCardNew,
-                    {
-                      marginRight: isRTL ? 0 : 16,
-                      marginLeft: isRTL ? 16 : 0,
-                    },
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/store-details",
-                      params: { id: store.id },
-                    })
-                  }
-                >
-                  <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    {/* Store Info */}
-                    <View
-                      style={[
-                        styles.clinicDetails,
-                        {
-                          flex: 1,
-                          marginRight: isRTL ? 0 : 12,
-                          marginLeft: isRTL ? 12 : 0,
-                        },
-                      ]}
-                    >
-                      {/* Active Badge */}
-                      {store.isActive && (
-                        <View
-                          style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                        >
-                          <View style={styles.premiumBadge}>
-                            <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                            <Text style={styles.premiumBadgeText}>نشط</Text>
+                  <TouchableOpacity
+                    key={store.id}
+                    style={[
+                      styles.clinicCardNew,
+                      {
+                        marginRight: isRTL ? 0 : 16,
+                        marginLeft: isRTL ? 16 : 0,
+                      },
+                    ]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/store-details",
+                        params: { id: store.id },
+                      })
+                    }
+                  >
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      {/* Store Info */}
+                      <View
+                        style={[
+                          styles.clinicDetails,
+                          {
+                            flex: 1,
+                            marginRight: isRTL ? 0 : 12,
+                            marginLeft: isRTL ? 12 : 0,
+                          },
+                        ]}
+                      >
+                        {/* Active Badge */}
+                        {store.isActive && (
+                          <View
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
+                          >
+                            <View style={styles.premiumBadge}>
+                              <Star size={12} color={COLORS.white} fill={COLORS.white} />
+                              <Text style={styles.premiumBadgeText}>نشط</Text>
+                            </View>
                           </View>
+                        )}
+
+                        {/* Store Name */}
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{store.name}</Text>
+
+                        {/* Location */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                          <MapPin size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {store.address}
+                          </Text>
                         </View>
+
+                        {/* Phone */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                          <Phone size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {store.phone}
+                          </Text>
+                        </View>
+
+                        {/* Rating */}
+                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                          <Text
+                            style={[
+                              styles.clinicRatingText,
+                              {
+                                marginRight: isRTL ? 0 : 4,
+                                marginLeft: isRTL ? 4 : 0,
+                              },
+                            ]}
+                          >
+                            {store.rating}
+                          </Text>
+                          <Star size={16} color="#FFD700" fill="#FFD700" />
+                        </View>
+                      </View>
+
+                      {/* Store Image */}
+                      {store.images.length > 0 && (
+                        <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />
                       )}
-
-                      {/* Store Name */}
-                      <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{store.name}</Text>
-
-                      {/* Location */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <MapPin size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {store.address}
-                        </Text>
-                      </View>
-
-                      {/* Phone */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <Phone size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {store.phone}
-                        </Text>
-                      </View>
-
-                      {/* Rating */}
-                      <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <Text
-                          style={[
-                            styles.clinicRatingText,
-                            {
-                              marginRight: isRTL ? 0 : 4,
-                              marginLeft: isRTL ? 4 : 0,
-                            },
-                          ]}
-                        >
-                          {store.rating}
-                        </Text>
-                        <Star size={16} color="#FFD700" fill="#FFD700" />
-                      </View>
                     </View>
 
-                    {/* Store Image */}
-                    {store.images.length > 0 && (
-                      <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />
-                    )}
-                  </View>
-
-                  {/* Action Buttons */}
-                  <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    <TouchableOpacity
-                      style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
-                      onPress={() => {
-                        console.log(`Call store ${store.id}: ${store.phone}`);
-                        // TODO: Implement phone call functionality
-                      }}
-                    >
-                      <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.clinicActionButton}
-                      onPress={() => {
-                        console.log(`View store products ${store.id}`);
-                        router.push({
-                          pathname: "/store-products",
-                          params: { id: store.id },
-                        });
-                      }}
-                    >
-                      <Text style={styles.clinicActionButtonText}>المنتجات</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))
+                    {/* Action Buttons */}
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <TouchableOpacity
+                        style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
+                        onPress={() => {
+                          console.log(`Call store ${store.id}: ${store.phone}`);
+                          // TODO: Implement phone call functionality
+                        }}
+                      >
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.clinicActionButton}
+                        onPress={() => {
+                          console.log(`View store products ${store.id}`);
+                          router.push({
+                            pathname: "/store-products",
+                            params: { id: store.id },
+                          });
+                        }}
+                      >
+                        <Text style={styles.clinicActionButtonText}>المنتجات</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ))
               : clinics?.map((clinic) => (
-                <TouchableOpacity
-                  key={clinic.id}
-                  style={[
-                    styles.clinicCardNew,
-                    {
-                      marginRight: isRTL ? 0 : 16,
-                      marginLeft: isRTL ? 16 : 0,
-                    },
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/clinic-profile",
-                      params: { id: clinic.id },
-                    })
-                  }
-                >
-                  <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    {/* Clinic Info */}
-                    <View
-                      style={[
-                        styles.clinicDetails,
-                        {
-                          flex: 1,
-                          marginRight: isRTL ? 0 : 12,
-                          marginLeft: isRTL ? 12 : 0,
-                        },
-                      ]}
-                    >
-                      {/* Premium Badge */}
-                      {clinic.isPremium && (
-                        <View
-                          style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                        >
-                          <View style={styles.premiumBadge}>
-                            <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                            <Text style={styles.premiumBadgeText}>مميز</Text>
+                  <TouchableOpacity
+                    key={clinic.id}
+                    style={[
+                      styles.clinicCardNew,
+                      {
+                        marginRight: isRTL ? 0 : 16,
+                        marginLeft: isRTL ? 16 : 0,
+                      },
+                    ]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/clinic-profile",
+                        params: { id: clinic.id },
+                      })
+                    }
+                  >
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      {/* Clinic Info */}
+                      <View
+                        style={[
+                          styles.clinicDetails,
+                          {
+                            flex: 1,
+                            marginRight: isRTL ? 0 : 12,
+                            marginLeft: isRTL ? 12 : 0,
+                          },
+                        ]}
+                      >
+                        {/* Premium Badge */}
+                        {clinic.isPremium && (
+                          <View
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
+                          >
+                            <View style={styles.premiumBadge}>
+                              <Star size={12} color={COLORS.white} fill={COLORS.white} />
+                              <Text style={styles.premiumBadgeText}>مميز</Text>
+                            </View>
                           </View>
+                        )}
+
+                        {/* Clinic Name */}
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{clinic.name}</Text>
+
+                        {/* Location */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                          <MapPin size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {clinic.address}
+                          </Text>
                         </View>
-                      )}
 
-                      {/* Clinic Name */}
-                      <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{clinic.name}</Text>
+                        {/* Phone */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                          <Phone size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {clinic.phone}
+                          </Text>
+                        </View>
 
-                      {/* Location */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <MapPin size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {clinic.address}
-                        </Text>
+                        {/* Rating */}
+                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                          <Text
+                            style={[
+                              styles.clinicRatingText,
+                              {
+                                marginRight: isRTL ? 0 : 4,
+                                marginLeft: isRTL ? 4 : 0,
+                              },
+                            ]}
+                          >
+                            {clinic.rating}
+                          </Text>
+                          <Star size={16} color="#FFD700" fill="#FFD700" />
+                        </View>
                       </View>
 
-                      {/* Phone */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <Phone size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {clinic.phone}
-                        </Text>
-                      </View>
-
-                      {/* Rating */}
-                      <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <Text
-                          style={[
-                            styles.clinicRatingText,
-                            {
-                              marginRight: isRTL ? 0 : 4,
-                              marginLeft: isRTL ? 4 : 0,
-                            },
-                          ]}
-                        >
-                          {clinic.rating}
-                        </Text>
-                        <Star size={16} color="#FFD700" fill="#FFD700" />
-                      </View>
+                      {/* Clinic Image */}
+                      {clinic.images[0] ? (
+                        <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
+                      ) : null}
                     </View>
 
-                    {/* Clinic Image */}
-                    <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
-                  </View>
-
-                  {/* Action Buttons */}
-                  <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    <TouchableOpacity
-                      style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
-                      onPress={() => {
-                        console.log(`Call clinic ${clinic.id}: ${clinic.phone}`);
-                        // TODO: Implement phone call functionality
-                      }}
-                    >
-                      <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.clinicActionButton}
-                      onPress={() => {
-                        console.log(`Show map for clinic ${clinic.id}`);
-                        // TODO: Implement map functionality
-                      }}
-                    >
-                      <Text style={styles.clinicActionButtonText}>الخريطة</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))}
+                    {/* Action Buttons */}
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <TouchableOpacity
+                        style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
+                        onPress={() => {
+                          console.log(`Call clinic ${clinic.id}: ${clinic.phone}`);
+                          // TODO: Implement phone call functionality
+                        }}
+                      >
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.clinicActionButton}
+                        onPress={() => {
+                          console.log(`Show map for clinic ${clinic.id}`);
+                          // TODO: Implement map functionality
+                        }}
+                      >
+                        <Text style={styles.clinicActionButtonText}>الخريطة</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ))}
           </AutoScrollView>
         </View>
 
@@ -969,7 +992,7 @@ export default function HomeScreen() {
                 <Card
                   key={tip.id}
                   title={tip.title}
-                  image={tip.images?.[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1'}
+                  image={tip.images?.[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1"}
                   style={[styles.tipCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                   onPress={() => {
                     router.push(`/tip-details?id=${tip.id}`);
@@ -1170,9 +1193,7 @@ export default function HomeScreen() {
                       router.push(`/book-details?id=${book.id}`);
                     }}
                   >
-                    {book.coverImage ? (
-                      <Image source={{ uri: book.coverImage }} style={styles.bookImage} />
-                    ) : null}
+                    {book.coverImage ? <Image source={{ uri: book.coverImage }} style={styles.bookImage} /> : null}
                     <View style={styles.bookContent}>
                       <Text style={[styles.bookTitle, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                         {book.title}
@@ -1217,9 +1238,7 @@ export default function HomeScreen() {
                         ) : (
                           <Download size={16} color={COLORS.white} />
                         )}
-                        <Text style={styles.downloadButtonText}>
-                          {isDownloading ? "..." : "تحميل"}
-                        </Text>
+                        <Text style={styles.downloadButtonText}>{isDownloading ? "..." : "تحميل"}</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>

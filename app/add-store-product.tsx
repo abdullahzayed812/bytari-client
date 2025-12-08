@@ -177,7 +177,7 @@ export default function AddStoreProductScreen() {
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-              <Text style={styles.label}>السعر (دينار عراقي) *</Text>
+              <Text style={styles.label}>السعر (د.ع) *</Text>
               <TextInput
                 style={styles.input}
                 placeholder="0.00"

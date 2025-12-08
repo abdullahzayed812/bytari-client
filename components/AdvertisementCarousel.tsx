@@ -35,6 +35,7 @@ interface Advertisement {
   link?: string | null;
   type: string;
   position?: string | null;
+  clickAction?: "none" | "open_link" | "open_file";
 }
 
 interface AdvertisementCarouselProps {
@@ -79,7 +80,7 @@ export default function AdvertisementCarousel({
       {
         retry: 1,
         refetchOnWindowFocus: false,
-        select: (data) => {
+        select: (data: any) => {
           console.log("📊 Ads query data received:", data);
           if (!data || !Array.isArray(data)) {
             console.log("⚠️ Invalid ads data, returning empty array");
@@ -134,6 +135,7 @@ export default function AdvertisementCarousel({
         image: ad.image || undefined,
         link: ad.link || undefined,
         position: ad.position || undefined,
+        clickAction: ad.clickAction || "none",
       }));
       console.log("✅ Setting advertisements:", formattedAds);
       setAdvertisements(formattedAds);
@@ -173,7 +175,7 @@ export default function AdvertisementCarousel({
         const currentAd = advertisements[realIndex];
         if (!trackImpressionRef.current.has(currentAd.id)) {
           trackImpressionRef.current.add(currentAd.id);
-          trackImpressionMutation.mutate({ adId: currentAd.id });
+          trackImpressionMutation.mutate({ adId: currentAd.id } as any);
         }
       }
     }
@@ -376,20 +378,27 @@ export default function AdvertisementCarousel({
 
   const handleAdPress = async (ad: Advertisement) => {
     try {
-      await trackClickMutation.mutateAsync({ adId: ad.id });
+      await trackClickMutation.mutateAsync({ adId: ad.id } as any);
     } catch (error) {
       console.error("Failed to track ad click:", error);
     }
 
     if (onAdClick) {
       onAdClick(ad);
-    } else if (ad.link) {
+    } else if (ad.clickAction === "open_link" && ad.link) {
       try {
         await Linking.openURL(ad.link);
       } catch (error) {
         console.error("Failed to open ad link:", error);
       }
+    } else if (ad.clickAction === "open_file") {
+      // Handle open file if needed
+      Alert.alert("تنبيه", "فتح الملف غير مدعوم حالياً");
+    } else if (ad.clickAction === "none") {
+      // Do nothing
+      return;
     } else {
+      // Default fallback
       router.push(`/ad-details?id=${ad.id}&position=${position}`);
     }
   };
@@ -409,7 +418,7 @@ export default function AdvertisementCarousel({
         style: "destructive",
         onPress: async () => {
           try {
-            await deleteAdMutation.mutateAsync({ adminId: 1, adId: ad.id });
+            await deleteAdMutation.mutateAsync({ adminId: 1, adId: ad.id } as any);
           } catch (error) {
             console.error("Failed to delete ad:", error);
             Alert.alert("خطأ", "فشل في حذف الإعلان");

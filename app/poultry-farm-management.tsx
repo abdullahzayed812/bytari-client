@@ -40,7 +40,7 @@ interface WeeklyData {
 export default function PoultryFarmManagementScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  
+
   const [currentWeek, setCurrentWeek] = useState<number>(1);
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
 
@@ -50,7 +50,7 @@ export default function PoultryFarmManagementScreen() {
   const [showSupervisorModal, setShowSupervisorModal] = useState<boolean>(false);
   const [assignedVet] = useState<string>('');
   const [assignedSupervisor] = useState<string>('');
-  
+
   const [newWeekData, setNewWeekData] = useState<Partial<WeeklyData>>({
     count: 0,
     weight: 0,
@@ -192,7 +192,7 @@ export default function PoultryFarmManagementScreen() {
           <View style={styles.weekCard}>
             <Text style={styles.weekTitle}>الأسبوع {getCurrentWeekData()?.week}</Text>
             <Text style={styles.weekDate}>{getCurrentWeekData()?.date}</Text>
-            
+
             <View style={styles.weekDataGrid}>
               <View style={styles.weekDataItem}>
                 <Text style={styles.weekDataLabel}>العدد</Text>
@@ -208,7 +208,7 @@ export default function PoultryFarmManagementScreen() {
               </View>
               <View style={styles.weekDataItem}>
                 <Text style={styles.weekDataLabel}>سعر الفرد</Text>
-                <Text style={styles.weekDataValue}>{farmInfo.pricePerChick} دينار عراقي</Text>
+                <Text style={styles.weekDataValue}>{farmInfo.pricePerChick} د.ع عراقي</Text>
               </View>
             </View>
 
@@ -276,14 +276,14 @@ export default function PoultryFarmManagementScreen() {
         {/* Supervision Section */}
         <View style={styles.supervisionCard}>
           <Text style={styles.supervisionTitle}>المتابعة والإشراف</Text>
-          
+
           {assignedVet && (
             <View style={styles.assignedItem}>
               <Stethoscope size={20} color="#10B981" />
               <Text style={styles.assignedText}>الطبيب المتابع: {assignedVet}</Text>
             </View>
           )}
-          
+
           {assignedSupervisor && (
             <View style={styles.assignedItem}>
               <Users size={20} color="#3B82F6" />
@@ -300,7 +300,7 @@ export default function PoultryFarmManagementScreen() {
               icon={<Stethoscope size={16} color={COLORS.white} />}
               style={styles.vetButton}
             />
-            
+
             <Button
               title="طلب إشراف"
               onPress={() => setShowSupervisorModal(true)}
@@ -318,14 +318,14 @@ export default function PoultryFarmManagementScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>إضافة الأسبوع {currentWeek + 1}</Text>
-            
+
             <ScrollView style={styles.modalForm}>
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>العدد</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={newWeekData.count?.toString() || ''}
-                  onChangeText={(value) => setNewWeekData({...newWeekData, count: parseInt(value) || 0})}
+                  onChangeText={(value) => setNewWeekData({ ...newWeekData, count: parseInt(value) || 0 })}
                   keyboardType="numeric"
                   placeholder="أدخل العدد"
                 />
@@ -336,7 +336,7 @@ export default function PoultryFarmManagementScreen() {
                 <TextInput
                   style={styles.modalInput}
                   value={newWeekData.weight?.toString() || ''}
-                  onChangeText={(value) => setNewWeekData({...newWeekData, weight: parseInt(value) || 0})}
+                  onChangeText={(value) => setNewWeekData({ ...newWeekData, weight: parseInt(value) || 0 })}
                   keyboardType="numeric"
                   placeholder="أدخل الوزن"
                 />
@@ -347,7 +347,7 @@ export default function PoultryFarmManagementScreen() {
                 <TextInput
                   style={styles.modalInput}
                   value={newWeekData.feedConsumption?.toString() || ''}
-                  onChangeText={(value) => setNewWeekData({...newWeekData, feedConsumption: parseInt(value) || 0})}
+                  onChangeText={(value) => setNewWeekData({ ...newWeekData, feedConsumption: parseInt(value) || 0 })}
                   keyboardType="numeric"
                   placeholder="أدخل كمية العلف"
                 />
@@ -358,7 +358,7 @@ export default function PoultryFarmManagementScreen() {
                 <TextInput
                   style={styles.modalInput}
                   value={newWeekData.mortality?.toString() || ''}
-                  onChangeText={(value) => setNewWeekData({...newWeekData, mortality: parseInt(value) || 0})}
+                  onChangeText={(value) => setNewWeekData({ ...newWeekData, mortality: parseInt(value) || 0 })}
                   keyboardType="numeric"
                   placeholder="أدخل عدد النفوق"
                 />
@@ -369,7 +369,7 @@ export default function PoultryFarmManagementScreen() {
                 <TextInput
                   style={styles.modalInput}
                   value={newWeekData.mortalityReason || ''}
-                  onChangeText={(value) => setNewWeekData({...newWeekData, mortalityReason: value})}
+                  onChangeText={(value) => setNewWeekData({ ...newWeekData, mortalityReason: value })}
                   placeholder="أدخل سبب النفوق"
                 />
               </View>
@@ -379,7 +379,7 @@ export default function PoultryFarmManagementScreen() {
                 <TextInput
                   style={styles.modalInput}
                   value={newWeekData.estimatedProfit?.toString() || ''}
-                  onChangeText={(value) => setNewWeekData({...newWeekData, estimatedProfit: parseInt(value) || 0})}
+                  onChangeText={(value) => setNewWeekData({ ...newWeekData, estimatedProfit: parseInt(value) || 0 })}
                   keyboardType="numeric"
                   placeholder="أدخل الربح المقدر"
                 />

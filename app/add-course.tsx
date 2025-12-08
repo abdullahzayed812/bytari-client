@@ -109,15 +109,25 @@ export default function AddCourseScreen() {
       Alert.alert("خطأ", "يرجى إدخال وصف الدورة");
       return;
     }
-    if (formData.registrationType === "link" && !formData.courseUrl.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال رابط التسجيل");
-      return;
+    if (formData.registrationType === "link") {
+      if (!formData.courseUrl.trim()) {
+        Alert.alert("خطأ", "يرجى إدخال رابط التسجيل");
+        return;
+      }
+
+      // Strict URL validation
+      const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+      if (!urlPattern.test(formData.courseUrl.trim())) {
+        Alert.alert("خطأ", "يرجى إدخال رابط صحيح (يبدأ بـ http:// أو https://)");
+        return;
+      }
     }
 
     try {
       await createCourseMutation.mutateAsync(formData);
     } catch (error) {
       // Error is already handled in onError
+      console.error("Mutation error:", error);
     }
   };
 

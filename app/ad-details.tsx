@@ -16,14 +16,14 @@ import { trpc } from "@/lib/trpc";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { ArrowRight, ArrowLeft, ExternalLink, Calendar, MapPin, Eye, CheckCircle, Circle } from "lucide-react-native";
-import Button from "../components/Button";
+import Button from "../components/Button 2";
 
 export default function AdDetailsScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string; position: string }>();
-  const adId = parseInt(id || "1");
+  const adId = parseInt(id);
 
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [deviceId] = useState(() => Math.random().toString(36).substring(7));
@@ -41,7 +41,7 @@ export default function AdDetailsScreen() {
   // Fetch poll data
   const { data: rawPollData, isLoading: pollLoading } = useQuery({
     ...trpc.polls.getByAdId.queryOptions({ adId }),
-    enabled: !!ad,
+    // enabled: !!adId,
   });
 
   const pollData: any = useMemo(() => rawPollData, [rawPollData]);
@@ -67,31 +67,13 @@ export default function AdDetailsScreen() {
   const pollResults: any = useMemo(() => rawPollResults, [rawPollResults]);
 
   // Track impression on mount
-  const trackImpressionMutation = useMutation({
-    mutationFn: trpc.admin.ads.trackImpression.mutate,
-  });
+  const trackImpressionMutation = useMutation(trpc.admin.ads.trackImpression.mutationOptions());
 
   // Track click mutation
-  const trackClickMutation = useMutation({
-    mutationFn: trpc.admin.ads.trackClick.mutate,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin.ads.getById", { id: adId }] });
-    },
-  });
+  const trackClickMutation = useMutation(trpc.admin.ads.trackClick.mutationOptions());
 
   // Vote mutation
-  const voteMutation = useMutation({
-    mutationFn: trpc.polls.vote.mutate,
-    onSuccess: () => {
-      Alert.alert("نجاح", "تم تسجيل تصويتك بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["polls.hasVoted"] });
-      queryClient.invalidateQueries({ queryKey: ["polls.getResults"] });
-      setSelectedOptions([]);
-    },
-    onError: (error: any) => {
-      Alert.alert("خطأ", error.message || "فشل في تسجيل التصويت");
-    },
-  });
+  const voteMutation = useMutation(trpc.polls.vote.mutationOptions());
 
   React.useEffect(() => {
     if (adId) {
@@ -100,11 +82,15 @@ export default function AdDetailsScreen() {
   }, [adId]);
 
   const handleOpenLink = async () => {
-    if (!ad?.link) return;
+    if (!ad?.targetUrl) return;
 
     try {
-      await trackClickMutation.mutateAsync({ adId });
-      await Linking.openURL(ad.link);
+      await trackClickMutation.mutateAsync({ adId } as any, {
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.admin.ads.getById.queryKey as any);
+        },
+      });
+      await Linking.openURL(ad.targetUrl);
     } catch (error) {
       console.error("Failed to open link:", error);
       Alert.alert("خطأ", "فشل في فتح الرابط");
@@ -131,12 +117,25 @@ export default function AdDetailsScreen() {
 
     if (!pollData?.id) return;
 
-    voteMutation.mutate({
-      pollId: pollData.id,
-      optionIds: selectedOptions,
-      userId: currentUserId,
-      deviceId,
-    });
+    voteMutation.mutate(
+      {
+        pollId: pollData.id,
+        optionIds: selectedOptions,
+        userId: currentUserId,
+        deviceId,
+      } as any,
+      {
+        onSuccess: () => {
+          Alert.alert("نجاح", "تم تسجيل تصويتك بنجاح");
+          queryClient.invalidateQueries({ queryKey: ["polls.hasVoted"] });
+          queryClient.invalidateQueries({ queryKey: ["polls.getResults"] });
+          setSelectedOptions([]);
+        },
+        onError: (error: any) => {
+          Alert.alert("خطأ", error.message || "فشل في تسجيل التصويت");
+        },
+      }
+    );
   };
 
   if (adLoading || pollLoading) {
@@ -181,9 +180,9 @@ export default function AdDetailsScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Ad Image */}
-        {ad.image && (
+        {ad.imageUrl && (
           <View style={styles.imageContainer}>
-            <Image source={{ uri: ad.image }} style={styles.adImage} resizeMode="cover" />
+            <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
           </View>
         )}
 
@@ -201,7 +200,7 @@ export default function AdDetailsScreen() {
               </Text>
             </View>
 
-            {ad.position && (
+            {/* {ad.position && (
               <View style={[styles.metaRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                 <MapPin size={16} color={COLORS.darkGray} />
                 <Text style={[styles.metaText, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
@@ -212,21 +211,21 @@ export default function AdDetailsScreen() {
                     : ad.position}
                 </Text>
               </View>
-            )}
+            )} */}
 
             <View style={[styles.metaRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <Eye size={16} color={COLORS.darkGray} />
               <Text style={[styles.metaText, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
-                {ad.impressions || 0} مشاهدة • {ad.clicks || 0} نقرة
+                {ad.impressionCount || 0} مشاهدة • {ad.clickCount || 0} نقرة
               </Text>
             </View>
           </View>
 
           {/* Content */}
-          {ad.content && (
+          {ad.description && (
             <View style={styles.descriptionContainer}>
               <Text style={styles.sectionTitle}>الوصف</Text>
-              <Text style={[styles.description, { textAlign: isRTL ? "right" : "left" }]}>{ad.content}</Text>
+              <Text style={[styles.description, { textAlign: isRTL ? "right" : "left" }]}>{ad.description}</Text>
             </View>
           )}
 
@@ -316,7 +315,7 @@ export default function AdDetailsScreen() {
 
           {/* Action Buttons */}
           <View style={styles.actionsContainer}>
-            {ad.link && (
+            {ad.targetUrl && (
               <Button
                 title="فتح الرابط"
                 onPress={handleOpenLink}

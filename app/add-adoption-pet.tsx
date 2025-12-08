@@ -302,7 +302,7 @@ export default function AddAdoptionPetScreen() {
         {/* Price (for breeding) */}
         {/* {formData.listingType === "breeding" && (
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>السعر (دينار)</Text>
+            <Text style={styles.label}>السعر (د.ع)</Text>
             <TextInput
               style={styles.input}
               value={formData.price}

@@ -137,7 +137,7 @@ export interface PoultryDay {
 
   // Feed consumption
   feedConsumption: number; // استهلاك العلف (كيلو)
-  feedCost: number; // تكلفة العلف (دينار)
+  feedCost: number; // تكلفة العلف (د.ع)
   feedType?: string; // نوع العلف
 
   // Weight tracking
