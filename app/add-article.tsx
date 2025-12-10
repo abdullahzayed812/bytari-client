@@ -28,11 +28,9 @@ export default function AddArticleScreen() {
   const [selectedFileUrl, setSelectedFileUrl] = useState<string>("");
 
   // const createArticleMutation = trpc.admin.content.createMagazine.useMutation();
-  const createArticleMutation = useMutation(trpc.admin.content.createMagazine.mutationOptions());
+  const createArticleMutation = useMutation(trpc.content.createArticle.mutationOptions());
 
   // Image upload is now handled by ImageUploader component
-
-
 
   const handleSave = () => {
     if (selectedImages.length === 0) {
@@ -52,14 +50,13 @@ export default function AddArticleScreen() {
 
     createArticleMutation.mutate(
       {
-        adminId: user?.id ? Number(user.id) : 1,
         title: formData.title,
         description: formData.content || formData.authorTitle,
         author: formData.author,
         authorTitle: formData.authorTitle,
         category: formData.category as any,
         coverImage: selectedImages[0],
-        pdfUrl: selectedFileUrl,
+        filePath: selectedFileUrl,
         publishDate: new Date(),
       } as any,
       {
@@ -234,7 +231,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   fileSection: {
-    alignItems: "center",
+    // alignItems: "center",
     marginBottom: 24,
     paddingTop: 20,
     borderTopWidth: 1,

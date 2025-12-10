@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { ArrowLeft, Plus } from 'lucide-react-native';
+import { ArrowLeft, Plus } from "lucide-react-native";
 import Button from "../components/Button 2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
@@ -15,38 +15,40 @@ export default function AddVetBookScreen() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    title: '',
-    author: '',
-    description: '',
-    pages: '',
-    category: '',
-    language: 'العربية',
+    title: "",
+    author: "",
+    description: "",
+    pages: "",
+    category: "",
+    language: "العربية",
   });
 
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string>("");
 
-  const categories = ['تشريح', 'أمراض', 'جراحة', 'صيدلة', 'تغذية', 'طب وقائي', 'تشخيص'];
+  const categories = ["تشريح", "أمراض", "جراحة", "صيدلة", "تغذية", "طب وقائي", "تشخيص"];
 
-  const createBookMutation = useMutation(trpc.content.createBook.mutationOptions({
-    onSuccess: () => {
-      Alert.alert('نجح', 'تم إضافة الكتاب بنجاح');
-      queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
-      router.back();
-    },
-    onError: (error: any) => {
-      Alert.alert('خطأ', error.message || 'فشل في إضافة الكتاب');
-    }
-  }));
+  const createBookMutation = useMutation(
+    trpc.admin.content.createBook.mutationOptions({
+      onSuccess: () => {
+        Alert.alert("نجح", "تم إضافة الكتاب بنجاح");
+        queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
+        router.back();
+      },
+      onError: (error: any) => {
+        Alert.alert("خطأ", error.message || "فشل في إضافة الكتاب");
+      },
+    })
+  );
 
   const handleSave = () => {
     if (!formData.title || !formData.author || !formData.category) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
     if (!selectedFileUrl) {
-      Alert.alert('خطأ', 'يرجى رفع ملف الكتاب');
+      Alert.alert("خطأ", "يرجى رفع ملف الكتاب");
       return;
     }
 
@@ -59,18 +61,18 @@ export default function AddVetBookScreen() {
       language: formData.language,
       coverImage: selectedImages[0] || "",
       filePath: selectedFileUrl,
-      isPublished: false, // Default to false, waiting for approval? Or true? Schema defaults to false.
-    } as any);
+      isPublished: false,
+    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'إضافة كتاب للقسم الأساسي',
+          title: "إضافة كتاب للقسم الأساسي",
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -119,16 +121,15 @@ export default function AddVetBookScreen() {
               {categories.map((category) => (
                 <TouchableOpacity
                   key={category}
-                  style={[
-                    styles.categoryButton,
-                    formData.category === category && styles.selectedCategoryButton
-                  ]}
+                  style={[styles.categoryButton, formData.category === category && styles.selectedCategoryButton]}
                   onPress={() => setFormData({ ...formData, category })}
                 >
-                  <Text style={[
-                    styles.categoryButtonText,
-                    formData.category === category && styles.selectedCategoryButtonText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.categoryButtonText,
+                      formData.category === category && styles.selectedCategoryButtonText,
+                    ]}
+                  >
                     {category}
                   </Text>
                 </TouchableOpacity>
@@ -164,19 +165,15 @@ export default function AddVetBookScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>اللغة</Text>
             <View style={styles.languageContainer}>
-              {['العربية', 'الإنجليزية', 'الفرنسية'].map((lang) => (
+              {["العربية", "الإنجليزية", "الفرنسية"].map((lang) => (
                 <TouchableOpacity
                   key={lang}
-                  style={[
-                    styles.languageButton,
-                    formData.language === lang && styles.selectedLanguageButton
-                  ]}
+                  style={[styles.languageButton, formData.language === lang && styles.selectedLanguageButton]}
                   onPress={() => setFormData({ ...formData, language: lang })}
                 >
-                  <Text style={[
-                    styles.languageButtonText,
-                    formData.language === lang && styles.selectedLanguageButtonText
-                  ]}>
+                  <Text
+                    style={[styles.languageButtonText, formData.language === lang && styles.selectedLanguageButtonText]}
+                  >
                     {lang}
                   </Text>
                 </TouchableOpacity>
@@ -228,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   imageSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   inputGroup: {
@@ -236,9 +233,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
   },
   input: {
@@ -253,10 +250,10 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   categoryScroll: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   categoryButton: {
     paddingHorizontal: 16,
@@ -274,13 +271,13 @@ const styles = StyleSheet.create({
   categoryButtonText: {
     fontSize: 14,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   selectedCategoryButtonText: {
     color: COLORS.white,
   },
   languageContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: "row-reverse",
     gap: 8,
   },
   languageButton: {
@@ -291,7 +288,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
-    alignItems: 'center',
+    alignItems: "center",
   },
   selectedLanguageButton: {
     backgroundColor: COLORS.primary,
@@ -300,7 +297,7 @@ const styles = StyleSheet.create({
   languageButtonText: {
     fontSize: 14,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   selectedLanguageButtonText: {
     color: COLORS.white,

@@ -36,6 +36,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
+import { FileUploader } from "@/components/FileUploader";
 
 // Interface for content items
 type ContentItem = {
@@ -503,10 +504,10 @@ export default function AdminContentManagerScreen() {
       setSelectedFile(
         normalizedItem.fileUrl
           ? {
-            uri: normalizedItem.fileUrl,
-            name: normalizedItem.fileName || "file",
-            type: normalizedItem.fileType || "application/pdf",
-          }
+              uri: normalizedItem.fileUrl,
+              name: normalizedItem.fileName || "file",
+              type: normalizedItem.fileType || "application/pdf",
+            }
           : null
       );
       setIsModalVisible(true);
@@ -520,8 +521,8 @@ export default function AdminContentManagerScreen() {
         contentType === "clinics"
           ? `هل أنت متأكد من إلغاء تنشيط "${item.title}"؟`
           : contentType === "stores"
-            ? `هل أنت متأكد من إخفاء "${item.title}" من الصفحة الرئيسية؟`
-            : `هل أنت متأكد من حذف "${item.title}"؟`;
+          ? `هل أنت متأكد من إخفاء "${item.title}" من الصفحة الرئيسية؟`
+          : `هل أنت متأكد من حذف "${item.title}"؟`;
 
       Alert.alert("تأكيد الحذف", deleteMessage, [
         { text: "إلغاء", style: "cancel" },
@@ -533,38 +534,39 @@ export default function AdminContentManagerScreen() {
               contentType === "clinics"
                 ? { adminId: adminId, clinicId: item.id, isActive: false }
                 : contentType === "stores"
-                  ? { adminId: adminId, storeId: item.id, showOnVetHome: false }
-                  : contentType === "articles"
-                    ? { adminId: adminId, magazineId: item.id }
-                    : contentType === "books"
-                      ? { adminId: adminId, bookId: item.id }
-                      : contentType === "tips"
-                        ? { adminId: adminId, tipId: item.id }
-                        : contentType === "pets"
-                          ? { adminId: adminId, petId: item.id }
-                          : { adminId: adminId, id: item.id };
+                ? { adminId: adminId, storeId: item.id, showOnVetHome: false }
+                : contentType === "articles"
+                ? { adminId: adminId, magazineId: item.id }
+                : contentType === "books"
+                ? { adminId: adminId, bookId: item.id }
+                : contentType === "tips"
+                ? { adminId: adminId, tipId: item.id }
+                : contentType === "pets"
+                ? { adminId: adminId, petId: item.id }
+                : { adminId: adminId, id: item.id };
 
             const mutationKey =
               contentType === "articles"
                 ? "deleteMagazine"
                 : contentType === "ads"
-                  ? "deleteAd"
-                  : contentType === "courses"
-                    ? "deleteCourse"
-                    : contentType === "books"
-                      ? "deleteBook"
-                      : contentType === "tips"
-                        ? "deleteTip"
-                        : contentType === "pets"
-                          ? "deletePet"
-                          : null;
+                ? "deleteAd"
+                : contentType === "courses"
+                ? "deleteCourse"
+                : contentType === "books"
+                ? "deleteBook"
+                : contentType === "tips"
+                ? "deleteTip"
+                : contentType === "pets"
+                ? "deletePet"
+                : null;
 
             if (mutationKey && mutations[mutationKey]) {
               mutations[mutationKey].mutate(deleteParams, {
                 onSuccess: () => {
                   Alert.alert(
                     "تم",
-                    `تم ${contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
+                    `تم ${
+                      contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
                     } العنصر بنجاح`
                   );
                   refetchCurrentQuery();
@@ -573,8 +575,9 @@ export default function AdminContentManagerScreen() {
                   Alert.alert(
                     "خطأ",
                     error.message ||
-                    `فشل في ${contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
-                    } العنصر`
+                      `فشل في ${
+                        contentType === "clinics" ? "إلغاء تنشيط" : contentType === "stores" ? "إخفاء" : "حذف"
+                      } العنصر`
                   );
                 },
               });
@@ -621,16 +624,14 @@ export default function AdminContentManagerScreen() {
 
     const saveParams =
       contentType === "books"
-        ? { ...formData, adminId, bookId: Number(editingItem?.id) }
+        ? { ...formData, adminId, bookId: Number(editingItem?.id), coverImage: selectedImage, filePath: formData.fileUrl }
         : contentType === "tips"
-          ? { ...formData, adminId, tipId: Number(editingItem?.id) }
-          : contentType === "pets"
-            ? { ...formData, adminId, petId: Number(editingItem?.id) }
-            : contentType === "articles"
-              ? { ...formData, adminId, petId: Number(editingItem?.id) }
-              : contentType === "stores"
-                ? { ...formData, adminId, magazineId: Number(editingItem?.id) }
-                : { ...formData, adminId, id: Number(editingItem?.id) };
+        ? { ...formData, adminId, tipId: Number(editingItem?.id) }
+        : contentType === "pets"
+        ? { ...formData, adminId, petId: Number(editingItem?.id) }
+        : contentType === "articles"
+        ? { ...formData, adminId, magazineId: Number(editingItem?.id), coverImage: selectedImage, filePath: formData.fileUrl }
+        : { ...formData, adminId, id: Number(editingItem?.id), coverImage: selectedImage };
 
     if (editingItem) {
       if (contentType === "clinics" || contentType === "stores") {
@@ -642,16 +643,16 @@ export default function AdminContentManagerScreen() {
         contentType === "articles"
           ? "updateMagazine"
           : contentType === "ads"
-            ? "updateAd"
-            : contentType === "courses"
-              ? "updateCourse"
-              : contentType === "books"
-                ? "updateBook"
-                : contentType === "tips"
-                  ? "updateTip"
-                  : contentType === "pets"
-                    ? "updatePet"
-                    : null;
+          ? "updateAd"
+          : contentType === "courses"
+          ? "updateCourse"
+          : contentType === "books"
+          ? "updateBook"
+          : contentType === "tips"
+          ? "updateTip"
+          : contentType === "pets"
+          ? "updatePet"
+          : null;
 
       if (updateKey && mutations[updateKey]) {
         mutations[updateKey].mutate(saveParams as any, {
@@ -674,20 +675,20 @@ export default function AdminContentManagerScreen() {
         contentType === "articles"
           ? "createMagazine"
           : contentType === "ads"
-            ? "createAd"
-            : contentType === "courses"
-              ? "createCourse"
-              : contentType === "clinics"
-                ? "createClinic"
-                : contentType === "stores"
-                  ? "createStore"
-                  : contentType === "books"
-                    ? "createBook"
-                    : contentType === "tips"
-                      ? "createTip"
-                      : contentType === "pets"
-                        ? "createPet"
-                        : null;
+          ? "createAd"
+          : contentType === "courses"
+          ? "createCourse"
+          : contentType === "clinics"
+          ? "createClinic"
+          : contentType === "stores"
+          ? "createStore"
+          : contentType === "books"
+          ? "createBook"
+          : contentType === "tips"
+          ? "createTip"
+          : contentType === "pets"
+          ? "createPet"
+          : null;
 
       if (createKey && mutations[createKey]) {
         mutations[createKey].mutate(saveParams, {
@@ -714,31 +715,31 @@ export default function AdminContentManagerScreen() {
         contentType === "clinics"
           ? { clinicId: item.id, isActive: !item.isActive }
           : contentType === "stores"
-            ? { storeId: item.id, showOnVetHome: !item.isActive }
-            : contentType === "books"
-              ? { bookId: item.id, isPublished: !item.isActive }
-              : contentType === "tips"
-                ? { tipId: item.id, isPublished: !item.isActive }
-                : { id: item.id, isActive: !item.isActive, isPublished: !item.isActive };
+          ? { storeId: item.id, showOnVetHome: !item.isActive }
+          : contentType === "books"
+          ? { bookId: item.id, isPublished: !item.isActive }
+          : contentType === "tips"
+          ? { tipId: item.id, isPublished: !item.isActive }
+          : { id: item.id, isActive: !item.isActive, isPublished: !item.isActive };
 
       const updateKey =
         contentType === "articles"
           ? "updateMagazine"
           : contentType === "ads"
-            ? "updateAd"
-            : contentType === "courses"
-              ? "updateCourse"
-              : contentType === "clinics"
-                ? "updateClinicActivation"
-                : contentType === "stores"
-                  ? "updateStoreHomeVisibility"
-                  : contentType === "books"
-                    ? "updateBook"
-                    : contentType === "tips"
-                      ? "updateTip"
-                      : contentType === "pets"
-                        ? "updatePet"
-                        : null;
+          ? "updateAd"
+          : contentType === "courses"
+          ? "updateCourse"
+          : contentType === "clinics"
+          ? "updateClinicActivation"
+          : contentType === "stores"
+          ? "updateStoreHomeVisibility"
+          : contentType === "books"
+          ? "updateBook"
+          : contentType === "tips"
+          ? "updateTip"
+          : contentType === "pets"
+          ? "updatePet"
+          : null;
 
       if (updateKey && mutations[updateKey]) {
         mutations[updateKey].mutate(toggleParams, {
@@ -750,64 +751,6 @@ export default function AdminContentManagerScreen() {
     },
     [contentType, mutations, refetchCurrentQuery]
   );
-
-  const pickImage = useCallback(async () => {
-    try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert("خطأ", "يجب السماح بالوصول إلى المعرض لاختيار الصور");
-        return;
-      }
-
-      Alert.alert("اختيار الصورة", "كيف تريد إضافة الصورة؟", [
-        {
-          text: "من المعرض",
-          onPress: async () => {
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              allowsEditing: true,
-              aspect: [4, 3],
-              quality: 0.8,
-            });
-
-            if (!result.canceled && result.assets[0]) {
-              setSelectedImage(result.assets[0].uri);
-              setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
-            }
-          },
-        },
-        {
-          text: "التقاط صورة",
-          onPress: async () => {
-            const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-            if (!cameraPermission.granted) {
-              Alert.alert("خطأ", "يجب السماح بالوصول إلى الكاميرا");
-              return;
-            }
-
-            const result = await ImagePicker.launchCameraAsync({
-              allowsEditing: true,
-              aspect: [4, 3],
-              quality: 0.8,
-            });
-
-            if (!result.canceled && result.assets[0]) {
-              setSelectedImage(result.assets[0].uri);
-              setFormData((prev) => ({ ...prev, image: result.assets[0].uri }));
-            }
-          },
-        },
-        { text: "إلغاء", style: "cancel" },
-      ]);
-    } catch (error: any) {
-      Alert.alert("خطأ", `حدث خطأ أثناء اختيار الصورة: ${error.message}`);
-    }
-  }, []);
-
-  const removeImage = useCallback(() => {
-    setSelectedImage(null);
-    setFormData((prev) => ({ ...prev, image: undefined }));
-  }, []);
 
   // Render item for FlatList
   const renderItem = useCallback(
@@ -1113,32 +1056,30 @@ export default function AdminContentManagerScreen() {
         ) : (
           <View style={styles.formField}>
             <Text style={styles.fieldLabel}>الصورة</Text>
-            {selectedImage ? (
-              <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-                <View style={styles.imageActions}>
-                  <TouchableOpacity style={styles.changeImageButton} onPress={pickImage}>
-                    <Camera size={16} color={COLORS.white} />
-                    <Text style={styles.imageActionText}>تغيير</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
-                    <X size={16} color={COLORS.white} />
-                    <Text style={styles.imageActionText}>حذف</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-                <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط جديدة</Text>
-              </TouchableOpacity>
-            )}
+            <ImageGalleryUploader
+              images={selectedImage ? [selectedImage] : []}
+              onImagesChange={(images) => {
+                setSelectedImage(images[0] || null);
+                setFormData((prev) => ({ ...prev, image: images[0] || undefined }));
+              }}
+              maxImages={1}
+              label="صورة العنصر"
+              aspect={[4, 3]}
+            />
           </View>
         )}
+
+        <View style={styles.formField}>
+          <FileUploader
+            fileUrl={formData.fileUrl || ""}
+            onFileChange={(url) => setFormData((prev) => ({ ...prev, fileUrl: url }))}
+            label="ملف"
+            placeholder="اختيار ملف"
+          />
+        </View>
       </View>
     );
-  }, [formData, contentType, selectedImage, pickImage, removeImage]);
+  }, [formData, contentType, selectedImage]);
 
   if (!isSuperAdmin) {
     return null;

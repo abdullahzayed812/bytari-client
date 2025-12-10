@@ -24,7 +24,7 @@ import { Bell, Calendar, MapPin, MessageCircle, Phone, Star, Search, Heart, Down
 import { UserModeToggle } from "../../components/UserModeToggle";
 import AutoScrollView from "../../components/AutoScrollView";
 import { useBookDownload } from "@/hooks/useBookDownload";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import UserAvatar from "@/components/UserAvatar";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -33,6 +33,8 @@ export default function HomeScreen() {
   const { t, isRTL } = useI18n();
   const { user, userMode, isSuperAdmin } = useApp();
   const router = useRouter();
+  const queryClient = useQueryClient();
+
   const { downloadBook, isDownloading } = useBookDownload();
 
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
@@ -80,11 +82,13 @@ export default function HomeScreen() {
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
 
   const { data: articlesData, isLoading: articlesLoading } = useQuery(
-    trpc.content.listMagazineArticles.queryOptions({})
+    trpc.content.listMagazineArticles.queryOptions({ isPublished: true })
   );
   const articles = useMemo(() => (articlesData as any)?.articles, [articlesData]);
 
-  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(trpc.content.listVetBooks.queryOptions({}));
+  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(
+    trpc.content.listVetBooks.queryOptions({ isPublished: true })
+  );
   const vetBooks = useMemo(() => (vetBooksData as any)?.books, [vetBooksData]);
 
   const { data: lostPetsData, isLoading: lostPetsLoading } = useQuery(
@@ -96,6 +100,9 @@ export default function HomeScreen() {
   const adoptionPets = useMemo(() => (adoptionPetsData as any)?.pets, [adoptionPetsData]);
   const trackImpressionMutation = useMutation(trpc.admin.ads.trackImpression.mutationOptions());
   const [trackedImpressions, setTrackedImpressions] = useState<number[]>([]);
+
+  const watchArticleMutation = useMutation(trpc.content.watchArticle.mutationOptions());
+  const watchBookMutation = useMutation(trpc.content.watchBook.mutationOptions());
 
   useEffect(() => {
     if (heroImages && heroImages.length > 0) {
@@ -225,6 +232,26 @@ export default function HomeScreen() {
     } else if (clickAction === "open_file") {
       router.push(`/ad-details?id=${id}`);
     }
+  };
+
+  const handleArticleCardPress = (articleId?: string) => {
+    if (!articleId) return;
+    watchArticleMutation.mutate({ id: Number(articleId) } as any, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey as any);
+      },
+    });
+    router.push(`/article-details?id=${articleId}`);
+  };
+
+  const handleBookCardPress = (bookId?: string) => {
+    if (!bookId) return;
+    watchBookMutation.mutate({ id: Number(bookId) } as any, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey as any);
+      },
+    });
+    router.push({ pathname: "/book-details", params: { id: bookId } });
   };
 
   const handleSendConsultation = () => {
@@ -916,9 +943,7 @@ export default function HomeScreen() {
                         marginLeft: isRTL ? 16 : 0,
                       },
                     ]}
-                    onPress={() => {
-                      router.push(`/article-details?id=${article.id}`);
-                    }}
+                    onPress={() => handleArticleCardPress(article?.id)}
                   >
                     <Image source={{ uri: article.coverImage }} style={styles.articleImage} />
                     <View style={styles.articleContent}>
@@ -1189,9 +1214,7 @@ export default function HomeScreen() {
                         marginLeft: isRTL ? 16 : 0,
                       },
                     ]}
-                    onPress={() => {
-                      router.push(`/book-details?id=${book.id}`);
-                    }}
+                    onPress={() => handleBookCardPress(book?.id)}
                   >
                     {book.coverImage ? <Image source={{ uri: book.coverImage }} style={styles.bookImage} /> : null}
                     <View style={styles.bookContent}>
@@ -1216,14 +1239,15 @@ export default function HomeScreen() {
                               },
                             ]}
                           >
-                            {book.downloads}
+                            {(book?.downloadCount || 0)?.toLocaleString()}
                           </Text>
                         </View>
-                        <Text style={styles.bookPages}>{book.pages} صفحة</Text>
+                        <Text style={styles.bookPages}>{book.pageCount} صفحة</Text>
                       </View>
                       <TouchableOpacity
                         style={styles.downloadButton}
                         onPress={() => {
+                          // console.log(book);
                           downloadBook({
                             id: book.id,
                             title: book.title,

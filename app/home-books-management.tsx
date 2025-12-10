@@ -14,10 +14,11 @@ type Book = {
   title: string;
   author: string;
   description: string;
-  image: string;
-  downloads: number;
-  pages: number;
-  isSelectedForHome: boolean;
+  coverImage: string;
+  downloadCount: number;
+  watchCount: number;
+  pageCount: number;
+  isPublished: boolean;
 };
 
 export default function HomeBooksManagementScreen() {
@@ -36,9 +37,13 @@ export default function HomeBooksManagementScreen() {
   const handleToggleHomeVisibility = (bookId: string) => {
     toggleVisibilityMutation.mutate({ id: Number(bookId) } as any, {
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey());
+        queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey as any);
       },
     });
+  };
+
+  const handleBookCardPress = (bookId: string) => {
+    router.push({ pathname: "/book-details", params: { id: bookId } });
   };
 
   const handleDeleteBook = (bookId: string) => {
@@ -50,7 +55,7 @@ export default function HomeBooksManagementScreen() {
         onPress: () => {
           deleteBookMutation.mutate({ id: Number(bookId) } as any, {
             onSuccess: () => {
-              queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey());
+              queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey as any);
             },
           });
         },
@@ -125,7 +130,7 @@ export default function HomeBooksManagementScreen() {
   const hiddenBooks = books?.filter((book) => !book.isPublished);
 
   const renderBookCard = (book: Book, isVisible: boolean) => (
-    <View key={book.id} style={styles.bookCard}>
+    <TouchableOpacity key={book.id} style={styles.bookCard} onPress={() => handleBookCardPress(book.id)}>
       <View style={styles.bookCardContent}>
         <Image source={{ uri: book.coverImage }} style={styles.bookImage} />
 
@@ -142,10 +147,14 @@ export default function HomeBooksManagementScreen() {
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Download size={14} color="#10B981" />
-              <Text style={styles.statText}>{book.downloads}</Text>
+              <Eye size={14} color="#10B981" />
+              <Text style={styles.statText}>{book.watchCount}</Text>
             </View>
-            <Text style={styles.pagesText}>{book.pages} صفحة</Text>
+            <View style={styles.statItem}>
+              <Download size={14} color="#10B981" />
+              <Text style={styles.statText}>{book.downloadCount}</Text>
+            </View>
+            <Text style={styles.pagesText}>{book.pageCount} صفحة</Text>
           </View>
         </View>
       </View>
@@ -169,7 +178,7 @@ export default function HomeBooksManagementScreen() {
           <Text style={styles.actionButtonText}>حذف</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (

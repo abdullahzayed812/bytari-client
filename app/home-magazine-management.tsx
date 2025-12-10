@@ -16,6 +16,7 @@ type Article = {
   image: string;
   likes: number;
   comments: number;
+  watchCount: number;
   isSelectedForHome: boolean;
 };
 
@@ -37,9 +38,13 @@ export default function HomeMagazineManagementScreen() {
   const handleToggleHomeVisibility = (articleId: string) => {
     toggleVisibilityMutation.mutate({ id: Number(articleId) } as any, {
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+        queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey as any);
       },
     });
+  };
+
+  const handleArticleCardPress = (articleId: string) => {
+    router.push({ pathname: "/article-details", params: { id: articleId } });
   };
 
   const handleDeleteArticle = (articleId: string) => {
@@ -51,7 +56,7 @@ export default function HomeMagazineManagementScreen() {
         onPress: () => {
           deleteMutation.mutate({ id: Number(articleId) } as any, {
             onSuccess: () => {
-              queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+              queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey as any);
             },
           });
         },
@@ -91,11 +96,11 @@ export default function HomeMagazineManagementScreen() {
     );
   };
 
-  const visibleArticles = articles.filter((article) => article.isPublished);
-  const hiddenArticles = articles.filter((article) => !article.isPublished);
+  const visibleArticles = articles?.filter((article) => article.isPublished);
+  const hiddenArticles = articles?.filter((article) => !article.isPublished);
 
   const renderArticleCard = (article: Article, isVisible: boolean) => (
-    <View key={article.id} style={styles.articleCard}>
+    <TouchableOpacity key={article.id} style={styles.articleCard} onPress={() => handleArticleCardPress(article.id)}>
       <View style={styles.articleCardContent}>
         <Image source={{ uri: article.image }} style={styles.articleImage} />
 
@@ -114,6 +119,10 @@ export default function HomeMagazineManagementScreen() {
           </Text>
 
           <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Eye size={14} color="#10B981" />
+              <Text style={styles.statText}>{article.watchCount}</Text>
+            </View>
             <View style={styles.statItem}>
               <Heart size={14} color="#EF4444" />
               <Text style={styles.statText}>{article.likes}</Text>
@@ -151,7 +160,7 @@ export default function HomeMagazineManagementScreen() {
           <Text style={styles.actionButtonText}>حذف</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -201,9 +210,9 @@ export default function HomeMagazineManagementScreen() {
 
         {/* Visible Articles Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>المقالات المعروضة في الصفحة الرئيسية ({visibleArticles.length})</Text>
-          {visibleArticles.length > 0 ? (
-            visibleArticles.map((article) => renderArticleCard(article, true))
+          <Text style={styles.sectionTitle}>المقالات المعروضة في الصفحة الرئيسية ({visibleArticles?.length})</Text>
+          {visibleArticles?.length > 0 ? (
+            visibleArticles?.map((article) => renderArticleCard(article, true))
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>لا توجد مقالات معروضة في الصفحة الرئيسية</Text>
@@ -213,9 +222,9 @@ export default function HomeMagazineManagementScreen() {
 
         {/* Hidden Articles Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>المقالات المخفية ({hiddenArticles.length})</Text>
-          {hiddenArticles.length > 0 ? (
-            hiddenArticles.map((article) => renderArticleCard(article, false))
+          <Text style={styles.sectionTitle}>المقالات المخفية ({hiddenArticles?.length})</Text>
+          {hiddenArticles?.length > 0 ? (
+            hiddenArticles?.map((article) => renderArticleCard(article, false))
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>لا توجد مقالات مخفية</Text>

@@ -15,9 +15,22 @@ import React, { useRef, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useRouter, useLocalSearchParams, Stack, useFocusEffect } from "expo-router";
-import { ArrowLeft, ArrowRight, Heart, MessageCircle, Eye, User, Calendar, Share, Send, X } from "lucide-react-native";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Heart,
+  MessageCircle,
+  Eye,
+  User,
+  Calendar,
+  Share,
+  Send,
+  X,
+  Download,
+} from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useBookDownload } from "@/hooks/useBookDownload";
 
 export default function ArticleDetailsScreen() {
   const { isRTL } = useI18n();
@@ -43,9 +56,11 @@ export default function ArticleDetailsScreen() {
   const likeMutation = useMutation(trpc.content.toggleLike.mutationOptions());
   const addCommentMutation = useMutation(trpc.content.addComment.mutationOptions());
 
-  const article = data?.article;
-  const stats = statsQuery?.data;
-  const comments = commentsQuery?.data?.comments || [];
+  const { downloadBook, isDownloading } = useBookDownload();
+
+  const article: any = data?.article;
+  const stats: any = statsQuery?.data;
+  const comments: any = commentsQuery?.data?.comments || [];
 
   const handleLike = () => {
     likeMutation.mutate(
@@ -53,10 +68,18 @@ export default function ArticleDetailsScreen() {
       {
         onSuccess: () => {
           statsQuery.refetch();
-          queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+          queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey as any);
         },
       }
     );
+  };
+
+  const handleDownload = () => {
+    downloadBook({
+      id: article.id,
+      title: article.title,
+      filePath: article.filePath,
+    });
   };
 
   const sendComment = () => {
@@ -69,7 +92,7 @@ export default function ArticleDetailsScreen() {
           setCommentText("");
           commentsQuery.refetch();
           statsQuery.refetch();
-          queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
+          queryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey as any);
           Alert.alert("نجح", "تم إضافة التعليق بنجاح");
         },
         onError: () => {
@@ -201,8 +224,12 @@ export default function ArticleDetailsScreen() {
             </View>
             <View style={styles.statItem}>
               <Eye size={18} color={COLORS.darkGray} />
-              <Text style={styles.statText}>{article.views ?? 0}</Text>
+              <Text style={styles.statText}>{article.watchCount ?? 0}</Text>
             </View>
+            <TouchableOpacity style={styles.statItem} onPress={handleDownload}>
+              <Download size={18} color={COLORS.darkGray} />
+              <Text style={styles.statText}>{article.downloadCount ?? 0}</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Content */}
@@ -222,6 +249,11 @@ export default function ArticleDetailsScreen() {
             <TouchableOpacity style={[styles.actionButton, styles.commentButton]} onPress={handleComment}>
               <MessageCircle size={20} color={COLORS.white} />
               <Text style={styles.actionButtonText}>تعليق ({stats?.comments ?? 0})</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.actionButton, styles.downloadButton]} onPress={handleDownload}>
+              <Download size={20} color={COLORS.white} />
+              <Text style={styles.actionButtonText}>تحميل ({article.downloadCount ?? 0})</Text>
             </TouchableOpacity>
           </View>
 
@@ -257,7 +289,7 @@ export default function ArticleDetailsScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>إضافة تعليق</Text>
               <TouchableOpacity onPress={() => setCommentModalVisible(false)}>
-                <X size={24} color={COLORS.gray} />
+                <X size={24} color={COLORS.error} />
               </TouchableOpacity>
             </View>
             <TextInput
@@ -423,6 +455,9 @@ const styles = StyleSheet.create({
   },
   commentButton: {
     backgroundColor: COLORS.primary,
+  },
+  downloadButton: {
+    backgroundColor: COLORS.success,
   },
   actionButtonText: {
     color: COLORS.white,

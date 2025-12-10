@@ -54,7 +54,7 @@ export default function VetMagazineScreen() {
   const [selectedCategory, setSelectedCategory] = useState("الكل");
 
   const { data: articlesData, isLoading: articlesLoading } = useQuery(
-    trpc.content.listMagazineArticles.queryOptions({})
+    trpc.content.listMagazineArticles.queryOptions({ isPublished: true })
   );
   const articles = useMemo(() => {
     if (!articlesData?.articles) return [];

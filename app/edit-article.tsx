@@ -53,7 +53,7 @@ export default function EditArticleScreen() {
         category: article.category,
       });
       setSelectedImages(article.coverImage ? [article.coverImage] : []);
-      setSelectedFileUrl(article.pdfUrl || "");
+      setSelectedFileUrl(article.filePath || "");
     }
   }, [article]);
 
@@ -65,7 +65,7 @@ export default function EditArticleScreen() {
         id: articleId,
         ...formData,
         coverImage: selectedImages[0],
-        pdfUrl: selectedFileUrl,
+        filePath: selectedFileUrl,
       } as any,
       {
         onSuccess: () => {

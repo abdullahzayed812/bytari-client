@@ -3,18 +3,16 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
+import { ArrowLeft, Plus } from "lucide-react-native";
+import Button from "../components/Button 2";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
-import { useApp } from "../providers/AppProvider";
 import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 import { FileUploader } from "@/components/FileUploader";
-import { ArrowLeft, Plus } from "lucide-react-native";
-import Button from "@/components/Button 2";
 
 export default function AddBookScreen() {
-  const quiryClient = useQueryClient();
   const router = useRouter();
-  const { user } = useApp();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     title: "عنوان الكتاب",
@@ -22,45 +20,45 @@ export default function AddBookScreen() {
     description: "تفسير ظهور الكلاب في المناطق السكنية",
     pages: "300",
     category: "تصنيف الكتاب",
+    language: "العربية",
   });
 
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [selectedFileUrl, setSelectedFileUrl] = useState<string>("");
 
-  // const createBookMutation = trpc.admin.content.createBook.useMutation();
-  const createBookMutation = useMutation(trpc.admin.content.createBook.mutationOptions());
+  const categories = ["تشريح", "أمراض", "جراحة", "صيدلة", "تغذية", "طب وقائي", "تشخيص"];
 
-
+  const createBookMutation = useMutation(trpc.content.createBook.mutationOptions());
 
   const handleSave = () => {
-    if (!formData.title || !formData.author) {
+    if (!formData.title || !formData.author || !formData.category) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
-    // if (!selectedFile) {
-    //   Alert.alert("خطأ", "يرجى اختيار ملف الكتاب");
-    //   return;
-    // }
+    if (!selectedFileUrl) {
+      Alert.alert("خطأ", "يرجى رفع ملف الكتاب");
+      return;
+    }
 
     createBookMutation.mutate(
       {
-        adminId: user?.id ? Number(user.id) : 1,
         title: formData.title,
         author: formData.author,
         description: formData.description,
         pageCount: formData.pages ? parseInt(formData.pages) : undefined,
-        category: formData.category as any,
+        category: formData.category,
+        language: formData.language,
         coverImage: selectedImages[0] || "",
-        pdfUrl: selectedFileUrl || undefined,
+        filePath: selectedFileUrl,
       } as any,
       {
         onSuccess: () => {
           Alert.alert("نجح", "تم إضافة الكتاب بنجاح");
-          quiryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
+          queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey as any);
           router.back();
         },
-        onError: (error) => {
+        onError: (error: any) => {
           Alert.alert("خطأ", error.message || "فشل في إضافة الكتاب");
         },
       }
@@ -95,15 +93,6 @@ export default function AddBookScreen() {
             />
           </View>
 
-          <View style={styles.fileSection}>
-            <FileUploader
-              fileUrl={selectedFileUrl}
-              onFileChange={setSelectedFileUrl}
-              label="ملف الكتاب *"
-              placeholder="اختيار ملف الكتاب (PDF/EPUB)"
-            />
-          </View>
-
           <View style={styles.inputGroup}>
             <Text style={styles.label}>عنوان الكتاب *</Text>
             <TextInput
@@ -124,6 +113,28 @@ export default function AddBookScreen() {
               placeholder="أدخل اسم المؤلف"
               textAlign="right"
             />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>التصنيف *</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  style={[styles.categoryButton, formData.category === category && styles.selectedCategoryButton]}
+                  onPress={() => setFormData({ ...formData, category })}
+                >
+                  <Text
+                    style={[
+                      styles.categoryButtonText,
+                      formData.category === category && styles.selectedCategoryButtonText,
+                    ]}
+                  >
+                    {category}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
 
           <View style={styles.inputGroup}>
@@ -152,13 +163,31 @@ export default function AddBookScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>التصنيف</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.category}
-              onChangeText={(text) => setFormData({ ...formData, category: text })}
-              placeholder="أدخل تصنيف الكتاب"
-              textAlign="right"
+            <Text style={styles.label}>اللغة</Text>
+            <View style={styles.languageContainer}>
+              {["العربية", "الإنجليزية", "الفرنسية"].map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[styles.languageButton, formData.language === lang && styles.selectedLanguageButton]}
+                  onPress={() => setFormData({ ...formData, language: lang })}
+                >
+                  <Text
+                    style={[styles.languageButtonText, formData.language === lang && styles.selectedLanguageButtonText]}
+                  >
+                    {lang}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* File Upload Section */}
+          <View style={styles.inputGroup}>
+            <FileUploader
+              fileUrl={selectedFileUrl}
+              onFileChange={setSelectedFileUrl}
+              label="ملف الكتاب *"
+              placeholder="اختر ملف الكتاب (PDF, EPUB)"
             />
           </View>
         </View>
@@ -329,5 +358,59 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
+  },
+
+  categoryScroll: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  categoryButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    marginRight: 8,
+    backgroundColor: COLORS.white,
+  },
+  selectedCategoryButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  categoryButtonText: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+  },
+  selectedCategoryButtonText: {
+    color: COLORS.white,
+    fontWeight: "600",
+  },
+
+  languageContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    gap: 10,
+  },
+  languageButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  selectedLanguageButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  languageButtonText: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+  },
+  selectedLanguageButtonText: {
+    color: COLORS.white,
+    fontWeight: "600",
   },
 });

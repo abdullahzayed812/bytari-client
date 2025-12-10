@@ -67,7 +67,11 @@ export default function VetBooksScreen() {
   const [selectedCategory, setSelectedCategory] = useState("الكل");
   const { downloadBook, isDownloading } = useBookDownload();
 
-  const { data: vetBooksData, isLoading: vetBooksLoading, error } = useQuery(trpc.content.listVetBooks.queryOptions({}));
+  const {
+    data: vetBooksData,
+    isLoading: vetBooksLoading,
+    error,
+  } = useQuery(trpc.content.listVetBooks.queryOptions({ isPublished: true }));
   const books = useMemo(() => {
     if (!(vetBooksData as any)?.books) return [];
     return (vetBooksData as any).books.map((book: any) => ({
@@ -237,9 +241,7 @@ export default function VetBooksScreen() {
                       activeOpacity={0.8}
                     >
                       <Download size={14} color={COLORS.white} />
-                      <Text style={styles.downloadButtonText}>
-                        {isDownloading ? "..." : "تحميل"}
-                      </Text>
+                      <Text style={styles.downloadButtonText}>{isDownloading ? "..." : "تحميل"}</Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
