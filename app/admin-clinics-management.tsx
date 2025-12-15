@@ -14,12 +14,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { Building2, CheckCircle, XCircle, Eye, Ban, Trash2, Search, Phone, Clock, Star } from "lucide-react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Clinic {
-  id: string;
+  id: number;
   name: string;
   address: string;
   phone: string;
@@ -65,8 +66,11 @@ export default function AdminClinicsManagement() {
   const [actionReason, setActionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const queryClient = useQueryClient();
   const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
   const clinics: Clinic[] = useMemo(() => (data as any)?.clinics || [], [data]);
+
+  const deleteClinicMutation = useMutation(trpc.clinics.deleteClinic.mutationOptions());
 
   // Define getFilteredClinics BEFORE using it in useMemo
   const getFilteredClinics = useCallback(
@@ -188,6 +192,41 @@ export default function AdminClinicsManagement() {
       return;
     }
 
+    if (actionType === "delete") {
+      Alert.alert(
+        "تأكيد الحذف",
+        `هل أنت متأكد أنك تريد حذف عيادة "${selectedClinic.name}"? لا يمكن التراجع عن هذا الإجراء.`,
+        [
+          {
+            text: "إلغاء",
+            style: "cancel",
+          },
+          {
+            text: "حذف",
+            onPress: () => {
+              deleteClinicMutation.mutate(
+                { clinicId: selectedClinic.id },
+                {
+                  onSuccess: (data) => {
+                    queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey as any);
+                    Alert.alert("نجاح", "تم حذف العيادة بنجاح.");
+                    setShowActionModal(false);
+                    setShowDetailModal(false);
+                    setActionReason("");
+                  },
+                  onError: (error) => {
+                    Alert.alert("خطأ", `فشل حذف العيادة: ${error.message}`);
+                  },
+                }
+              );
+            },
+            style: "destructive",
+          },
+        ]
+      );
+      return; // Stop execution here, the mutation handles the rest
+    }
+
     let message = "";
     switch (actionType) {
       case "activate":
@@ -199,20 +238,20 @@ export default function AdminClinicsManagement() {
       case "unban":
         message = "تم إلغاء حظر العيادة بنجاح";
         break;
-      case "delete":
-        message = "تم حذف العيادة بنجاح";
-        break;
+      // case "delete":
+      //   message = "تم حذف العيادة بنجاح";
+      //   break;
       case "suspend":
         message = "تم إيقاف العيادة مؤقتاً";
         break;
     }
 
-    console.log(`${actionType} clinic:`, selectedClinic.id, "Reason:", actionReason);
-    Alert.alert("تم", message);
-    setShowActionModal(false);
-    setShowDetailModal(false);
-    setActionReason("");
-  }, [selectedClinic, actionType, actionReason]);
+    // console.log(`${actionType} clinic:`, selectedClinic.id, "Reason:", actionReason);
+    // Alert.alert("تم", message);
+    // setShowActionModal(false);
+    // setShowDetailModal(false);
+    // setActionReason("");
+  }, [selectedClinic, actionType, actionReason, deleteClinicMutation]);
 
   // Early returns AFTER all hooks
   if (clinicsLoading) {
@@ -328,11 +367,11 @@ export default function AdminClinicsManagement() {
               <View style={styles.servicesSection}>
                 <Text style={styles.sectionTitle}>الخدمات المتاحة</Text>
                 <View style={styles.servicesContainer}>
-                  {selectedClinic.services.map((service, index) => (
+                  {/* {selectedClinic.services.map((service, index) => (
                     <View key={index} style={styles.serviceTag}>
                       <Text style={styles.serviceText}>{service}</Text>
                     </View>
-                  ))}
+                  ))} */}
                 </View>
               </View>
 
@@ -527,12 +566,12 @@ export default function AdminClinicsManagement() {
       </View>
 
       <View style={styles.clinicFooter}>
-        <View style={styles.servicesPreview}>
+        {/* <View style={styles.servicesPreview}>
           <Text style={styles.servicesText}>
-            {item.services.slice(0, 2).join("، ")}
-            {item.services.length > 2 && ` +${item.services.length - 2} أخرى`}
+            {item?.services?.slice(0, 2)?.join("، ")}
+            {item?.services?.length > 2 && ` +${item.services.length - 2} أخرى`}
           </Text>
-        </View>
+        </View> */}
 
         <TouchableOpacity style={styles.viewButton}>
           <Eye size={16} color="#666" />

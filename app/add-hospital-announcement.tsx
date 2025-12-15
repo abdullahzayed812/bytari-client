@@ -8,6 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { ImageUploader } from "@/components/ImageUploader";
 
 export default function AddHospitalAnnouncementScreen() {
   const { isRTL } = useI18n();
@@ -167,8 +168,15 @@ export default function AddHospitalAnnouncementScreen() {
           {/* Image */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>صورة الإعلان (اختياري)</Text>
+            <ImageUploader
+              imageUri={announcementData?.image!}
+              onUploadComplete={(url) => setAnnouncementData((prev) => ({ ...prev, image: url }))}
+              containerStyle={{ marginBottom: 16 }}
+              aspect={[16, 9]}
+              imageStyle={{ width: 250, height: 180, borderRadius: 12 }}
+            />
 
-            {announcementData.image ? (
+            {/* {announcementData.image ? (
               <View style={styles.imageContainer}>
                 <Image source={{ uri: announcementData.image }} style={styles.announcementImage} />
                 <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
@@ -180,7 +188,7 @@ export default function AddHospitalAnnouncementScreen() {
                 <Camera size={24} color="#0EA5E9" />
                 <Text style={styles.uploadButtonText}>اختر صورة</Text>
               </TouchableOpacity>
-            )}
+            )} */}
           </View>
 
           {/* Scheduled Date */}

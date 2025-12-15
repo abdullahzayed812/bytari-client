@@ -44,9 +44,12 @@ export default function UserProfileScreen() {
 
   // Determine which query to use
   const isAdminView = !!params.userId;
-  const ownProfileQuery = useQuery(trpc.auth.getProfile.queryOptions(undefined, { enabled: !isAdminView }));
+  const ownProfileQuery = useQuery(trpc.auth.getProfile.queryOptions({ enabled: !isAdminView }));
   const userProfileQuery = useQuery(
-    trpc.admin.users.getProfile.queryOptions({ userId: +params.userId!, adminId: user?.id }, { enabled: isAdminView })
+    trpc.admin.users.getProfile.queryOptions(
+      { userId: +params.userId!, adminId: Number(user?.id) },
+      { enabled: isAdminView }
+    )
   );
 
   const { data, isLoading, error } = isAdminView ? userProfileQuery : ownProfileQuery;

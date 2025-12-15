@@ -27,6 +27,7 @@ import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface CourseFormData {
   title: string;
@@ -41,6 +42,7 @@ interface CourseFormData {
   courseUrl: string;
   registrationType: "link" | "internal";
   status: "active" | "inactive";
+  thumbnailImage?: string;
 }
 
 // Mock data for editing
@@ -133,7 +135,7 @@ export default function EditCourseScreen() {
     try {
       await updateCourseMutation.mutateAsync({
         id: String(id),
-        ...formData,
+        data: formData,
       });
     } catch (error) {
       Alert.alert("خطأ", "حدث خطأ أثناء تحديث الدورة");
@@ -175,6 +177,14 @@ export default function EditCourseScreen() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <ImageUploader
+            imageUri={formData.thumbnailImage}
+            onUploadComplete={(url) => updateFormData("thumbnailImage", url)}
+            label="صورة مصغرة للدورة"
+            containerStyle={{ marginBottom: 16 }}
+            aspect={[16, 9]}
+            imageStyle={{ width: "100%", height: 180, borderRadius: 12 }}
+          />
           {/* Course Type Selection */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>نوع الفعالية</Text>

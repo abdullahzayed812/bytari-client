@@ -26,6 +26,7 @@ import {
 import { useRouter, Stack } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useMutation } from "@tanstack/react-query";
+import { ImageUploader } from "@/components/ImageUploader";
 import { trpc } from "@/lib/trpc";
 
 interface CourseFormData {
@@ -41,6 +42,7 @@ interface CourseFormData {
   courseUrl: string;
   registrationType: "link" | "internal";
   status: "active" | "inactive";
+  thumbnailImage?: string;
 }
 
 export default function AddCourseScreen() {
@@ -58,6 +60,7 @@ export default function AddCourseScreen() {
     courseUrl: "",
     registrationType: "internal",
     status: "active",
+    thumbnailImage: "",
   });
 
   const createCourseMutation = useMutation(
@@ -154,6 +157,16 @@ export default function AddCourseScreen() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Image Uploader */}
+          <ImageUploader
+            imageUri={formData.thumbnailImage}
+            onUploadComplete={(url) => updateFormData("thumbnailImage", url)}
+            label="صورة مصغرة للدورة"
+            containerStyle={{ marginBottom: 16 }}
+            aspect={[16, 9]}
+            imageStyle={{ width: "100%", height: 180, borderRadius: 12 }}
+          />
+
           {/* Course Type Selection */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>نوع الفعالية</Text>

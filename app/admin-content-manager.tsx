@@ -33,8 +33,6 @@ import {
   Upload,
   X,
 } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 import { FileUploader } from "@/components/FileUploader";
 
@@ -624,13 +622,30 @@ export default function AdminContentManagerScreen() {
 
     const saveParams =
       contentType === "books"
-        ? { ...formData, adminId, bookId: Number(editingItem?.id), coverImage: selectedImage, filePath: formData.fileUrl }
+        ? {
+            ...formData,
+            adminId,
+            bookId: Number(editingItem?.id),
+            coverImage: selectedImage,
+            filePath: formData.fileUrl,
+          }
         : contentType === "tips"
         ? { ...formData, adminId, tipId: Number(editingItem?.id) }
         : contentType === "pets"
         ? { ...formData, adminId, petId: Number(editingItem?.id) }
         : contentType === "articles"
-        ? { ...formData, adminId, magazineId: Number(editingItem?.id), coverImage: selectedImage, filePath: formData.fileUrl }
+        ? {
+            ...formData,
+            adminId,
+            magazineId: Number(editingItem?.id),
+            coverImage: selectedImage,
+            filePath: formData.fileUrl,
+          }
+        : contentType === "courses"
+        ? {
+            ...formData,
+            thumbnailImage: selectedImage,
+          }
         : { ...formData, adminId, id: Number(editingItem?.id), coverImage: selectedImage };
 
     if (editingItem) {
@@ -971,27 +986,16 @@ export default function AdminContentManagerScreen() {
           {/* Thumbnail Image */}
           <View style={styles.formField}>
             <Text style={styles.fieldLabel}>صورة الغلاف</Text>
-            {selectedImage ? (
-              <View style={styles.imagePreviewContainer}>
-                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-                <View style={styles.imageActions}>
-                  <TouchableOpacity style={styles.changeImageButton} onPress={pickImage}>
-                    <Camera size={16} color={COLORS.white} />
-                    <Text style={styles.imageActionText}>تغيير</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.removeImageButton} onPress={removeImage}>
-                    <X size={16} color={COLORS.white} />
-                    <Text style={styles.imageActionText}>حذف</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Upload size={24} color={COLORS.primary} />
-                <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-                <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط صورة جديدة</Text>
-              </TouchableOpacity>
-            )}
+            <ImageGalleryUploader
+              images={selectedImage ? [selectedImage] : []}
+              onImagesChange={(images) => {
+                setSelectedImage(images[0] || null);
+                setFormData((prev) => ({ ...prev, image: images[0] || undefined }));
+              }}
+              maxImages={1}
+              label="صورة العنصر"
+              aspect={[4, 3]}
+            />
           </View>
         </View>
       );

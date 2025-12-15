@@ -35,8 +35,12 @@ export default function JobManagementScreen() {
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const { data, isLoading, error, refetch } = useQuery(trpc.admin.jobs.getAllRequests.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
+  const { data, isLoading, error, refetch } = useQuery(
+    trpc.admin.jobs.getAllRequests.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
+  );
   const requests = useMemo(() => (data as any)?.requests, [data]);
+
+  console.log("-", requests);
 
   const updateJobMutation = useMutation(trpc.admin.jobs.updateJob.mutationOptions());
   const manageApplicationMutation = useMutation(trpc.admin.jobs.manageJobApplication.mutationOptions());

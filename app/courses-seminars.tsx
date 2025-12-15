@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Linking } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Linking, Image } from "react-native";
 import React, { useMemo, useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, UserCheck, Calendar, MapPin, Users, Clock, Plus, Edit3, ExternalLink } from "lucide-react-native";
@@ -23,6 +23,7 @@ interface CourseSeminar {
   courseUrl?: string;
   registrationType: "link" | "internal";
   userRegistrationStatus?: string;
+  thumbnailImage?: string;
 }
 
 export default function CoursesSeminarsScreen() {
@@ -70,6 +71,8 @@ export default function CoursesSeminarsScreen() {
   const renderEventCard = (item: CourseSeminar) => {
     const availableSpots = item.capacity - item.registered;
     const isAlmostFull = availableSpots <= 5;
+    const placeholderImage =
+      "https://images.unsplash.com/photo-1593642532400-2682810df593?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
 
     // Determine button text based on registration status
     const getButtonText = () => {
@@ -90,6 +93,7 @@ export default function CoursesSeminarsScreen() {
 
     return (
       <TouchableOpacity key={item.id} style={styles.eventCard} activeOpacity={0.8}>
+        <Image source={{ uri: item.thumbnailImage || placeholderImage }} style={styles.eventImage} />
         <View style={styles.eventHeader}>
           <View style={styles.eventTitleContainer}>
             <Text style={styles.eventTitle}>{item.title}</Text>
@@ -266,9 +270,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   eventCard: {
+    padding: 15,
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 16,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -277,12 +281,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: "hidden", // to contain the image border radius
+  },
+  eventImage: {
+    width: "100%",
+    height: 150,
   },
   eventHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
+    padding: 16,
+    paddingBottom: 12,
   },
   eventTitleContainer: {
     flex: 1,

@@ -17,12 +17,12 @@ import {
   Package,
   TrendingUp,
 } from "lucide-react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
 
 interface StoreData {
-  id: string;
+  id: number;
   name: string;
   address: string;
   phone: string;
@@ -83,6 +83,8 @@ const StoreProducts = ({ storeId }: { storeId: string }) => {
 };
 
 export default function AdminStoresManagement() {
+  const queryClient = useQueryClient();
+
   const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "pending" | "banned" | "premium">("all");
   const [selectedStore, setSelectedStore] = useState<StoreData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -97,6 +99,8 @@ export default function AdminStoresManagement() {
     error: storesError,
   } = useQuery(trpc.stores.listActive.queryOptions({}));
   const stores: StoreData[] = useMemo(() => (storesData as any)?.stores, [storesData]);
+
+  const deleteStoreMutation = useMutation(trpc.stores.delete.mutationOptions());
 
   const storeTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = [
     {
@@ -223,6 +227,37 @@ export default function AdminStoresManagement() {
       return;
     }
 
+    if (actionType === "delete") {
+      Alert.alert(
+        "تأكيد الحذف",
+        `هل أنت متأكد أنك تريد حذف متجر "${selectedStore.name}"؟ سيتم حذف جميع المنتجات المرتبطة به.`,
+        [
+          { text: "إلغاء", style: "cancel" },
+          {
+            text: "حذف",
+            onPress: () =>
+              deleteStoreMutation.mutate(
+                { id: selectedStore.id },
+                {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
+                    Alert.alert("نجاح", "تم حذف المتجر بنجاح.");
+                    setShowActionModal(false);
+                    setShowDetailModal(false);
+                    setActionReason("");
+                  },
+                  onError: (error) => {
+                    Alert.alert("خطأ", `فشل حذف المتجر: ${error.message}`);
+                  },
+                }
+              ),
+            style: "destructive",
+          },
+        ]
+      );
+      return; // Stop execution here
+    }
+
     let message = "";
     switch (actionType) {
       case "activate":
@@ -234,19 +269,19 @@ export default function AdminStoresManagement() {
       case "unban":
         message = "تم إلغاء حظر المتجر بنجاح";
         break;
-      case "delete":
-        message = "تم حذف المتجر بنجاح";
-        break;
+      // case "delete":
+      //   message = "تم حذف المتجر بنجاح";
+      //   break;
       case "suspend":
         message = "تم إيقاف المتجر مؤقتاً";
         break;
     }
 
-    console.log(`${actionType} store:`, selectedStore.id, "Reason:", actionReason);
-    Alert.alert("تم", message);
-    setShowActionModal(false);
-    setShowDetailModal(false);
-    setActionReason("");
+    // console.log(`${actionType} store:`, selectedStore.id, "Reason:", actionReason);
+    // Alert.alert("تم", message);
+    // setShowActionModal(false);
+    // setShowDetailModal(false);
+    // setActionReason("");
   };
 
   const renderDetailModal = () => {

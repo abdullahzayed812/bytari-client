@@ -43,7 +43,7 @@ interface Hospital {
 export default function HospitalDetailsScreen() {
   const { isSuperAdmin, isModerator, isAuthenticated } = useApp();
   const router = useRouter();
-  const { hospitalId } = useLocalSearchParams();
+  const { id: hospitalId } = useLocalSearchParams();
   const [isFollowed, setIsFollowed] = useState(false);
 
   const {

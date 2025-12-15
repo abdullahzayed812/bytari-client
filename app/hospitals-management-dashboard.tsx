@@ -1,4 +1,13 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  Image,
+} from "react-native";
 import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -169,70 +178,78 @@ export default function HospitalsManagementDashboardScreen() {
 
         {hospitalsData?.hospitals?.map((hospital) => (
           <View key={hospital.id} style={styles.hospitalCard}>
-            <View style={styles.hospitalHeader}>
-              <View style={styles.hospitalInfo}>
-                <Text style={styles.hospitalName}>{hospital.name}</Text>
-                <View style={styles.hospitalMeta}>
-                  <MapPin size={14} color={COLORS.darkGray} />
-                  <Text style={styles.hospitalLocation}>{hospital.location}</Text>
-                  {hospital.isMain && (
-                    <View style={styles.mainBadge}>
-                      <Text style={styles.mainBadgeText}>رئيسي</Text>
-                    </View>
-                  )}
+            <Image
+              source={{
+                uri: hospital.image || "https://images.unsplash.com/photo-1516919569045-e2b7c42516f4?auto=format&fit=crop&w=1350&q=80",
+              }}
+              style={styles.hospitalImage}
+            />
+            <View style={styles.hospitalContent}>
+              <View style={styles.hospitalHeader}>
+                <View style={styles.hospitalInfo}>
+                  <Text style={styles.hospitalName}>{hospital.name}</Text>
+                  <View style={styles.hospitalMeta}>
+                    <MapPin size={14} color={COLORS.darkGray} />
+                    <Text style={styles.hospitalLocation}>{hospital.location}</Text>
+                    {hospital.isMain && (
+                      <View style={styles.mainBadge}>
+                        <Text style={styles.mainBadgeText}>رئيسي</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+
+                <View
+                  style={[styles.statusBadge, { backgroundColor: hospital.status === "active" ? "#10B981" : "#EF4444" }]}
+                >
+                  <Text style={styles.statusText}>{hospital.status === "active" ? "نشط" : "غير نشط"}</Text>
                 </View>
               </View>
 
-              <View
-                style={[styles.statusBadge, { backgroundColor: hospital.status === "active" ? "#10B981" : "#EF4444" }]}
-              >
-                <Text style={styles.statusText}>{hospital.status === "active" ? "نشط" : "غير نشط"}</Text>
+              <View style={styles.hospitalStats}>
+                <View style={styles.statItem}>
+                  <FileText size={16} color="#0EA5E9" />
+                  <Text style={styles.statItemText}>{hospital.announcementsCount} إعلان</Text>
+                </View>
+
+                <View style={styles.statItem}>
+                  <Users size={16} color="#10B981" />
+                  <Text style={styles.statItemText}>{hospital.followersCount} متابع</Text>
+                </View>
               </View>
-            </View>
 
-            <View style={styles.hospitalStats}>
-              <View style={styles.statItem}>
-                <FileText size={16} color="#0EA5E9" />
-                <Text style={styles.statItemText}>{hospital.announcementsCount} إعلان</Text>
-              </View>
-
-              <View style={styles.statItem}>
-                <Users size={16} color="#10B981" />
-                <Text style={styles.statItemText}>{hospital.followersCount} متابع</Text>
-              </View>
-            </View>
-
-            <View style={styles.hospitalActions}>
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#0EA5E9" }]}
-                onPress={() => handleViewHospital(hospital.id)}
-              >
-                <Eye size={16} color={COLORS.white} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#F59E0B" }]}
-                onPress={() => handleEditHospital(hospital.id)}
-              >
-                <Edit size={16} color={COLORS.white} />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: "#10B981" }]}
-                onPress={() => handleManageAnnouncements(hospital.id)}
-              >
-                <FileText size={16} color={COLORS.white} />
-              </TouchableOpacity>
-
-              {!hospital.isMain && (
+              <View style={styles.hospitalActions}>
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: "#EF4444" }]}
-                  onPress={() => handleDeleteHospital(hospital.id, hospital.name)}
-                  disabled={deleteHospitalMutation.isPending}
+                  style={[styles.actionButton, { backgroundColor: "#0EA5E9" }]}
+                  onPress={() => handleViewHospital(hospital.id)}
                 >
-                  <Trash2 size={16} color={COLORS.white} />
+                  <Eye size={16} color={COLORS.white} />
                 </TouchableOpacity>
-              )}
+
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: "#F59E0B" }]}
+                  onPress={() => handleEditHospital(hospital.id)}
+                >
+                  <Edit size={16} color={COLORS.white} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: "#10B981" }]}
+                  onPress={() => handleManageAnnouncements(hospital.id)}
+                >
+                  <FileText size={16} color={COLORS.white} />
+                </TouchableOpacity>
+
+                {!hospital.isMain && (
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: "#EF4444" }]}
+                    onPress={() => handleDeleteHospital(hospital.id, hospital.name)}
+                    disabled={deleteHospitalMutation.isPending}
+                  >
+                    <Trash2 size={16} color={COLORS.white} />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         ))}
@@ -482,13 +499,20 @@ const styles = StyleSheet.create({
   hospitalCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    padding: 16,
     marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: "hidden",
+  },
+  hospitalImage: {
+    width: "100%",
+    height: 150,
+  },
+  hospitalContent: {
+    padding: 16,
   },
   hospitalHeader: {
     flexDirection: "row",

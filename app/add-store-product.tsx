@@ -80,7 +80,7 @@ export default function AddStoreProductScreen() {
 
     createProductMutation.mutate(
       {
-        storeId: storeId,
+        storeId: Number(storeId),
         name: formData.name,
         description: formData.description || undefined,
         category: formData.category as any, // Ensure it matches backend enum

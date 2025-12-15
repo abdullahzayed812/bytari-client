@@ -1,15 +1,5 @@
 import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  FlatList,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import {
@@ -50,20 +40,12 @@ export default function AdminPetsManagement() {
   const router = useRouter();
   const { user } = useApp();
   const [selectedFilter, setSelectedFilter] = useState<
-    | "all"
-    | "active"
-    | "banned"
-    | "reported"
-    | "lost"
-    | "breeding"
-    | "pending_approval"
+    "all" | "active" | "banned" | "reported" | "lost" | "breeding" | "pending_approval"
   >("all");
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
-  const [actionType, setActionType] = useState<
-    "ban" | "unban" | "delete" | null
-  >(null);
+  const [actionType, setActionType] = useState<"ban" | "unban" | "delete" | null>(null);
   const [actionReason, setActionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -79,37 +61,15 @@ export default function AdminPetsManagement() {
     })
   );
   const { data: searchResultsData, isLoading: isSearching } = useQuery(
-    trpc.admin.pets.search.queryOptions(
-      { query: searchQuery },
-      { enabled: !!searchQuery }
-    )
+    trpc.admin.pets.search.queryOptions({ query: searchQuery }, { enabled: !!searchQuery })
   );
   const allPets = useMemo(() => (allPetsData as any)?.pets, [allPetsData]);
-  const searchResults = useMemo(
-    () => (searchResultsData as any)?.pets,
-    [searchResultsData]
-  );
+  const searchResults = useMemo(() => (searchResultsData as any)?.pets, [searchResultsData]);
 
   // tRPC Mutations
-  const deletePetMutation = useMutation(
-    trpc.admin.pets.delete.mutationOptions({
-      onSuccess: () => {
-        refetch();
-        Alert.alert("نجح", "تم حذف الحيوان بنجاح");
-      },
-      onError: (err) => Alert.alert("خطأ", err.message),
-    })
-  );
+  const deletePetMutation = useMutation(trpc.admin.pets.delete.mutationOptions());
 
-  const updatePetMutation = useMutation(
-    trpc.admin.pets.updateProfile.mutationOptions({
-      onSuccess: () => {
-        refetch();
-        Alert.alert("نجح", "تم تحديث حالة الحيوان بنجاح");
-      },
-      onError: (err) => Alert.alert("خطأ", err.message),
-    })
-  );
+  const updatePetMutation = useMutation(trpc.admin.pets.updateProfile.mutationOptions());
 
   const getFilteredPets = () => {
     const petsSource = searchQuery.trim() ? searchResults : allPets;
@@ -183,23 +143,47 @@ export default function AdminPetsManagement() {
   const confirmAction = () => {
     if (!selectedPet || !actionType) return;
 
-    if (
-      (actionType === "ban" || actionType === "delete") &&
-      !actionReason.trim()
-    ) {
+    if ((actionType === "ban" || actionType === "delete") && !actionReason.trim()) {
       Alert.alert("خطأ", "يرجى إدخال سبب الإجراء");
       return;
     }
 
     switch (actionType) {
       case "ban":
-        updatePetMutation.mutate({ petId: selectedPet.id, status: "banned" });
+        updatePetMutation.mutate(
+          { petId: +selectedPet.id, ...(user?.accountType === "admin" && { adminId: user?.id }) },
+          {
+            onSuccess: () => {
+              refetch();
+              Alert.alert("نجح", "تم تحديث حالة الحيوان بنجاح");
+            },
+            onError: (err) => Alert.alert("خطأ", err.message),
+          }
+        );
         break;
       case "unban":
-        updatePetMutation.mutate({ petId: selectedPet.id, status: "active" });
+        updatePetMutation.mutate(
+          { petId: +selectedPet.id, ...(user?.accountType === "admin" && { adminId: user?.id }) },
+          {
+            onSuccess: () => {
+              refetch();
+              Alert.alert("نجح", "تم تحديث حالة الحيوان بنجاح");
+            },
+            onError: (err) => Alert.alert("خطأ", err.message),
+          }
+        );
         break;
       case "delete":
-        deletePetMutation.mutate({ petId: selectedPet.id });
+        deletePetMutation.mutate(
+          { petId: +selectedPet.id, ...(user?.accountType === "admin" && { adminId: user?.id }) },
+          {
+            onSuccess: () => {
+              refetch();
+              Alert.alert("نجح", "تم حذف الحيوان بنجاح");
+            },
+            onError: (err) => Alert.alert("خطأ", err.message),
+          }
+        );
         break;
     }
 
@@ -217,10 +201,7 @@ export default function AdminPetsManagement() {
           <View style={styles.detailModalContent}>
             <View style={styles.detailModalHeader}>
               <Text style={styles.modalTitle}>تفاصيل الحيوان</Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => setShowDetailModal(false)}
-              >
+              <TouchableOpacity style={styles.closeButton} onPress={() => setShowDetailModal(false)}>
                 <Text style={styles.closeButtonText}>×</Text>
               </TouchableOpacity>
             </View>
@@ -236,9 +217,7 @@ export default function AdminPetsManagement() {
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>النوع:</Text>
-                  <Text style={styles.infoValue}>
-                    {getPetTypeText(selectedPet.type)}
-                  </Text>
+                  <Text style={styles.infoValue}>{getPetTypeText(selectedPet.type)}</Text>
                 </View>
 
                 {selectedPet.breed && (
@@ -258,23 +237,14 @@ export default function AdminPetsManagement() {
                 {selectedPet.gender && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>الجنس:</Text>
-                    <Text style={styles.infoValue}>
-                      {selectedPet.gender === "male" ? "ذكر" : "أنثى"}
-                    </Text>
+                    <Text style={styles.infoValue}>{selectedPet.gender === "male" ? "ذكر" : "أنثى"}</Text>
                   </View>
                 )}
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>الحالة:</Text>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: getStatusColor(selectedPet.status) },
-                    ]}
-                  >
-                    <Text style={styles.statusText}>
-                      {getStatusText(selectedPet.status)}
-                    </Text>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedPet.status) }]}>
+                    <Text style={styles.statusText}>{getStatusText(selectedPet.status)}</Text>
                   </View>
                 </View>
               </View>
@@ -298,20 +268,14 @@ export default function AdminPetsManagement() {
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>تاريخ التسجيل:</Text>
-                  <Text style={styles.infoValue}>
-                    {new Date(selectedPet.createdAt).toLocaleDateString(
-                      "ar-SA"
-                    )}
-                  </Text>
+                  <Text style={styles.infoValue}>{new Date(selectedPet.createdAt).toLocaleDateString("ar-SA")}</Text>
                 </View>
 
                 {selectedPet.lastActivity && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>آخر نشاط:</Text>
                     <Text style={styles.infoValue}>
-                      {new Date(selectedPet.lastActivity).toLocaleDateString(
-                        "ar-SA"
-                      )}
+                      {new Date(selectedPet.lastActivity).toLocaleDateString("ar-SA")}
                     </Text>
                   </View>
                 )}
@@ -322,10 +286,7 @@ export default function AdminPetsManagement() {
                     style={[
                       styles.infoValue,
                       {
-                        color:
-                          selectedPet.reportCount && selectedPet.reportCount > 0
-                            ? "#E74C3C"
-                            : "#27AE60",
+                        color: selectedPet.reportCount && selectedPet.reportCount > 0 ? "#E74C3C" : "#27AE60",
                       },
                     ]}
                   >
@@ -351,29 +312,20 @@ export default function AdminPetsManagement() {
 
             <View style={styles.actionButtons}>
               {selectedPet.status === "active" && (
-                <TouchableOpacity
-                  style={styles.banButton}
-                  onPress={() => handleAction(selectedPet, "ban")}
-                >
+                <TouchableOpacity style={styles.banButton} onPress={() => handleAction(selectedPet, "ban")}>
                   <Ban size={20} color="#fff" />
                   <Text style={styles.actionButtonText}>حظر</Text>
                 </TouchableOpacity>
               )}
 
               {selectedPet.status === "banned" && (
-                <TouchableOpacity
-                  style={styles.unbanButton}
-                  onPress={() => handleAction(selectedPet, "unban")}
-                >
+                <TouchableOpacity style={styles.unbanButton} onPress={() => handleAction(selectedPet, "unban")}>
                   <CheckCircle size={20} color="#fff" />
                   <Text style={styles.actionButtonText}>إلغاء الحظر</Text>
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleAction(selectedPet, "delete")}
-              >
+              <TouchableOpacity style={styles.deleteButton} onPress={() => handleAction(selectedPet, "delete")}>
                 <Trash2 size={20} color="#fff" />
                 <Text style={styles.actionButtonText}>حذف</Text>
               </TouchableOpacity>
@@ -407,17 +359,10 @@ export default function AdminPetsManagement() {
             />
           )}
 
-          {actionType === "unban" && (
-            <Text style={styles.confirmText}>
-              هل أنت متأكد من إلغاء حظر هذا الحيوان؟
-            </Text>
-          )}
+          {actionType === "unban" && <Text style={styles.confirmText}>هل أنت متأكد من إلغاء حظر هذا الحيوان؟</Text>}
 
           <View style={styles.actionModalButtons}>
-            <TouchableOpacity
-              style={styles.confirmActionButton}
-              onPress={confirmAction}
-            >
+            <TouchableOpacity style={styles.confirmActionButton} onPress={confirmAction}>
               <Text style={styles.confirmActionButtonText}>تأكيد</Text>
             </TouchableOpacity>
 
@@ -454,12 +399,7 @@ export default function AdminPetsManagement() {
         </View>
 
         <View style={styles.petMeta}>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusColor(item.status) },
-            ]}
-          >
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
             <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
           </View>
 
@@ -543,152 +483,72 @@ export default function AdminPetsManagement() {
       </View>
 
       {/* Filter Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterTabs}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterTabs}>
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "all" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "all" && styles.activeFilterTab]}
           onPress={() => setSelectedFilter("all")}
         >
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "all" && styles.activeFilterTabText,
-            ]}
-          >
+          <Text style={[styles.filterTabText, selectedFilter === "all" && styles.activeFilterTabText]}>
             الكل ({allPets?.length || 0})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "active" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "active" && styles.activeFilterTab]}
           onPress={() => setSelectedFilter("active")}
         >
-          <CheckCircle
-            size={16}
-            color={selectedFilter === "active" ? "#fff" : "#27AE60"}
-          />
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "active" && styles.activeFilterTabText,
-            ]}
-          >
+          <CheckCircle size={16} color={selectedFilter === "active" ? "#fff" : "#27AE60"} />
+          <Text style={[styles.filterTabText, selectedFilter === "active" && styles.activeFilterTabText]}>
             نشط ({allPets?.filter((p) => p.status === "active").length || 0})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "reported" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "reported" && styles.activeFilterTab]}
           onPress={() => setSelectedFilter("reported")}
         >
-          <AlertTriangle
-            size={16}
-            color={selectedFilter === "reported" ? "#fff" : "#F39C12"}
-          />
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "reported" && styles.activeFilterTabText,
-            ]}
-          >
-            مبلغ عنه (
-            {allPets?.filter((p) => p.status === "reported").length || 0})
+          <AlertTriangle size={16} color={selectedFilter === "reported" ? "#fff" : "#F39C12"} />
+          <Text style={[styles.filterTabText, selectedFilter === "reported" && styles.activeFilterTabText]}>
+            مبلغ عنه ({allPets?.filter((p) => p.status === "reported").length || 0})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "banned" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "banned" && styles.activeFilterTab]}
           onPress={() => setSelectedFilter("banned")}
         >
-          <Ban
-            size={16}
-            color={selectedFilter === "banned" ? "#fff" : "#E74C3C"}
-          />
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "banned" && styles.activeFilterTabText,
-            ]}
-          >
+          <Ban size={16} color={selectedFilter === "banned" ? "#fff" : "#E74C3C"} />
+          <Text style={[styles.filterTabText, selectedFilter === "banned" && styles.activeFilterTabText]}>
             محظور ({allPets?.filter((p) => p.status === "banned").length || 0})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "lost" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "lost" && styles.activeFilterTab]}
           onPress={() => setSelectedFilter("lost")}
         >
-          <AlertTriangle
-            size={16}
-            color={selectedFilter === "lost" ? "#fff" : "#E74C3C"}
-          />
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "lost" && styles.activeFilterTabText,
-            ]}
-          >
+          <AlertTriangle size={16} color={selectedFilter === "lost" ? "#fff" : "#E74C3C"} />
+          <Text style={[styles.filterTabText, selectedFilter === "lost" && styles.activeFilterTabText]}>
             مفقود ({allPets?.filter((p) => p.isLost).length || 0})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "breeding" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "breeding" && styles.activeFilterTab]}
           onPress={() => setSelectedFilter("breeding")}
         >
-          <Heart
-            size={16}
-            color={selectedFilter === "breeding" ? "#fff" : "#9B59B6"}
-          />
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "breeding" && styles.activeFilterTabText,
-            ]}
-          >
+          <Heart size={16} color={selectedFilter === "breeding" ? "#fff" : "#9B59B6"} />
+          <Text style={[styles.filterTabText, selectedFilter === "breeding" && styles.activeFilterTabText]}>
             تزاوج ({allPets?.filter((p) => p.isForBreeding).length || 0})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.filterTab,
-            selectedFilter === "pending_approval" && styles.activeFilterTab,
-          ]}
+          style={[styles.filterTab, selectedFilter === "pending_approval" && styles.activeFilterTab]}
           onPress={() => router.push("/admin-pet-approvals")}
         >
-          <UserCheck
-            size={16}
-            color={selectedFilter === "pending_approval" ? "#fff" : "#3498DB"}
-          />
-          <Text
-            style={[
-              styles.filterTabText,
-              selectedFilter === "pending_approval" &&
-                styles.activeFilterTabText,
-            ]}
-          >
+          <UserCheck size={16} color={selectedFilter === "pending_approval" ? "#fff" : "#3498DB"} />
+          <Text style={[styles.filterTabText, selectedFilter === "pending_approval" && styles.activeFilterTabText]}>
             طلبات الموافقة
           </Text>
         </TouchableOpacity>
@@ -706,9 +566,7 @@ export default function AdminPetsManagement() {
             <Heart size={48} color="#ccc" />
             <Text style={styles.emptyText}>لا توجد حيوانات</Text>
             <Text style={styles.emptySubtext}>
-              {searchQuery
-                ? "لا توجد نتائج للبحث"
-                : "لا توجد حيوانات في هذه الفئة"}
+              {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد حيوانات في هذه الفئة"}
             </Text>
           </View>
         }

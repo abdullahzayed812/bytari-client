@@ -42,7 +42,7 @@ export default function JobVacanciesScreen() {
     refetch,
   } = useQuery(
     trpc.admin.jobs.getAllJobs.queryOptions({
-      adminId: user?.id || 0,
+      adminId: Number(user?.id),
       limit: 50,
       offset: 0,
       status: "active",
@@ -199,13 +199,13 @@ export default function JobVacanciesScreen() {
             <Text style={styles.actionButtonText}>إعلان وظيفة</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.actionButton, styles.applicationButton]}
             onPress={() => router.push("/job-application")}
           >
             <UserPlus size={20} color={COLORS.white} />
             <Text style={styles.actionButtonText}>تقديم طلب توظيف</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[styles.actionButton, styles.supervisionButton]}

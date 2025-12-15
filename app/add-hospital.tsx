@@ -16,6 +16,7 @@ import { ArrowRight, Save, MapPin, Phone, Clock, Building2 } from "lucide-react-
 import { SafeAreaView } from "react-native-safe-area-context";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImageUploader } from "@/components/ImageUploader";
 
 export default function AddHospitalScreen() {
   const router = useRouter();
@@ -235,30 +236,16 @@ export default function AddHospitalScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>رابط الصورة (اختياري)</Text>
-            <TextInput
-              style={[styles.input, styles.textInput]}
-              value={formData.image}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, image: text }))}
-              placeholder="أدخل رابط صورة المستشفى"
-              placeholderTextColor={COLORS.lightGray}
-              textAlign="right"
+            <Text style={styles.label}>الصورة (اختياري)</Text>
+            <ImageUploader
+              imageUri={formData.image}
+              onUploadComplete={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+              containerStyle={{ marginBottom: 16 }}
+              aspect={[16, 9]}
+              imageStyle={{ width: 250, height: 180, borderRadius: 12 }}
             />
           </View>
         </View>
-
-        {/* Save Button at bottom
-        <TouchableOpacity
-          style={[styles.saveBottomButton, createHospitalMutation.isLoading && styles.saveButtonDisabled]}
-          onPress={handleSave}
-          disabled={createHospitalMutation.isLoading}
-        >
-          {createHospitalMutation.isLoading ? (
-            <ActivityIndicator size="small" color={COLORS.white} />
-          ) : (
-            <Text style={styles.saveBottomButtonText}>حفظ المستشفى</Text>
-          )}
-        </TouchableOpacity> */}
       </ScrollView>
     </SafeAreaView>
   );

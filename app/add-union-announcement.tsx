@@ -23,7 +23,7 @@ interface Announcement {
 }
 
 export default function AddUnionAnnouncementScreen() {
-  const { isSuperAdmin, hasAdminAccess, isModerator, moderatorPermissions, user, sendUnionNotification } = useApp();
+  const { isSuperAdmin, hasAdminAccess, isModerator, moderatorPermissions, user } = useApp();
   const router = useRouter();
   const { branchId } = useLocalSearchParams();
 
