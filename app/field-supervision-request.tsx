@@ -52,7 +52,7 @@ export default function FieldSupervisionRequestScreen() {
   // Initial form data with sample values
   const [formData, setFormData] = useState<FieldSupervisionFormData>({
     fullName: "د. حسن علي محمد",
-    email: "hassan.ali@example.com",
+    email: "vet2@example.com",
     phone: "07701234567",
     location: "بغداد - الكرخ",
     education: "بكالوريوس الطب البيطري - جامعة بغداد",
@@ -167,6 +167,7 @@ export default function FieldSupervisionRequestScreen() {
         farmLocation: trimmedData.farmLocation,
         ownerName: trimmedData.fullName,
         ownerPhone: trimmedData.phone,
+        ownerEmail: trimmedData.email,
         requestType: requestTypeMap[trimmedData.requestType] as "routine_inspection" | "emergency" | "consultation",
         description: description,
         preferredDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 7 days from now
@@ -175,7 +176,7 @@ export default function FieldSupervisionRequestScreen() {
         onSuccess: (data) => {
           if (data.success) {
             // Invalidate field supervision requests queries
-            queryClient.invalidateQueries(trpc.admin.jobs.getFieldSupervisionRequests.queryKey);
+            queryClient.invalidateQueries(trpc.admin.jobs.getFieldSupervisionRequests.queryKey as any);
 
             const requestTypeText = getRequestTypeText(trimmedData.requestType);
 

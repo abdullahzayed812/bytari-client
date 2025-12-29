@@ -1,16 +1,20 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
-import React, { useMemo, useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Linking,
+  Alert,
+} from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack } from "expo-router";
 import {
   Users,
-  Award,
-  Calendar,
-  FileText,
-  Phone,
-  Mail,
-  MapPin,
   ExternalLink,
   Plus,
   Edit3,
@@ -18,9 +22,15 @@ import {
   Building2,
   Heart,
   Bell,
+  Award,
+  Calendar,
+  FileText,
+  Phone,
+  Mail,
+  MapPin,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface UnionService {
   id: string;
@@ -30,17 +40,10 @@ interface UnionService {
   color: string;
 }
 
-interface News {
-  id: string;
-  title: string;
-  date: string;
-  summary: string;
-}
-
 export default function VetUnionScreen() {
   const { isSuperAdmin, isAuthenticated, isModerator, moderatorPermissions } = useApp();
   const router = useRouter();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery(trpc.union.main.get.queryOptions());
   const unionInfo = data?.union;
@@ -52,59 +55,61 @@ export default function VetUnionScreen() {
     }));
   }, [unionInfo]);
 
-  const news: News[] = [
-    {
-      id: "1",
-      title: "المؤتمر العلمي السنوي الثامن والثلاثون لنقابة الأطباء البيطريين العراقية",
-      date: "2024-11-15",
-      summary:
-        'تدعو نقابة الأطباء البيطريين العراقية جميع الزملاء لحضور المؤتمر العلمي السنوي الذي سيقام في فندق بابل الدولي ببغداد تحت شعار "الطب البيطري الحديث وتحديات المستقبل" بمشاركة خبراء محليين وعرب...',
-    },
-    {
-      id: "2",
-      title: "حملة التطعيم الوطنية ضد إنفلونزا الطيور في العراق",
-      date: "2024-10-20",
-      summary:
-        "بالتنسيق مع وزارة الزراعة ودائرة البيطرة، أطلقت النقابة حملة شاملة للتطعيم ضد إنفلونزا الطيور في جميع المحافظات العراقية لحماية الثروة الداجنة والوقاية من انتشار المرض...",
-    },
-    {
-      id: "3",
-      title: "دورة تدريبية في جراحة الحيوانات الصغيرة والتخدير الحديث",
-      date: "2024-09-10",
-      summary:
-        "نظمت النقابة بالتعاون مع كلية الطب البيطري جامعة بغداد دورة تدريبية متخصصة في جراحة الحيوانات الصغيرة وتقنيات التخدير الحديثة بمشاركة 120 طبيب بيطري من مختلف المحافظات...",
-    },
-    {
-      id: "4",
-      title: "إقرار لائحة آداب وسلوك مهنة الطب البيطري المحدثة",
-      date: "2024-08-25",
-      summary:
-        "أقر مجلس النقابة اللائحة المحدثة لآداب وسلوك مهنة الطب البيطري في العراق والتي تتضمن المعايير المهنية الحديثة وقواعد الممارسة الأخلاقية للأطباء البيطريين وفقاً للمعايير الدولية...",
-    },
-  ];
+  const [isFollowing, setIsFollowing] = useState(unionInfo?.isFollowing || false);
 
-  const handleServicePress = (serviceId: string) => {
-    console.log("Service pressed:", serviceId);
-  };
+  useEffect(() => {
+    if (unionInfo) {
+      setIsFollowing(unionInfo.isFollowing);
+    }
+  }, [unionInfo]);
 
-  const handleContactPress = (type: "phone" | "email" | "website") => {
-    console.log("Contact pressed:", type);
-  };
+  const followMutation = useMutation(
+    trpc.union.follow.toggle.mutationOptions({
+      onSuccess: (data) => {
+        setIsFollowing(data.isFollowing);
+        queryClient.invalidateQueries(trpc.union.main.get.queryKey as any);
+      },
+      onError: (error) => {
+        // Handle error
+      },
+    })
+  );
 
-  const handleFollowPress = async () => {
+  const handleFollowPress = () => {
     if (!isAuthenticated) {
       router.push("/auth");
       return;
     }
+    if (unionInfo) {
+      followMutation.mutate({ mainUnionId: unionInfo.id });
+    }
+  };
 
-    // const newFollowStatus = await followUnion();
-    // setIsFollowing(newFollowStatus || false);
+  const handleContactPress = async (type: "phone" | "email" | "website", value: string | undefined) => {
+    if (!value) return;
 
-    // if (newFollowStatus) {
-    //   console.log("تم متابعة النقابة بنجاح");
-    // } else {
-    //   console.log("تم إلغاء متابعة النقابة");
-    // }
+    let url;
+    switch (type) {
+      case "phone":
+        url = `tel:${value}`;
+        break;
+      case "email":
+        url = `mailto:${value}`;
+        break;
+      case "website":
+        url = value.startsWith("http") ? value : `https://${value}`;
+        break;
+      default:
+        return;
+    }
+
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      console.error(`Don't know how to open this URL: ${url}`);
+      Alert.alert("خطأ", "لا يمكن فتح الرابط");
+    }
   };
 
   if (isLoading) {
@@ -213,26 +218,14 @@ export default function VetUnionScreen() {
               </TouchableOpacity>
             )}
           </View>
-          <View style={styles.announcementBox}>
-            <View style={styles.announcementIcon}>
-              <Megaphone size={24} color={COLORS.primary} />
-            </View>
-            <View style={styles.announcementContent}>
-              <Text style={styles.announcementTitle}>إعلان مهم من النقابة</Text>
-              <Text style={styles.announcementText}>
-                تدعو نقابة الأطباء البيطريين العراقية جميع الأعضاء لحضور الاجتماع العام الذي سيعقد يوم الأحد الموافق
-                15/12/2024 في مقر النقابة ببغداد لمناقشة آخر التطورات والقرارات المهمة.
-              </Text>
-              <Text style={styles.announcementDate}>تاريخ النشر: 2024-12-01</Text>
-            </View>
-          </View>
+          <AnnouncementsList mainUnionId={unionInfo?.id} />
         </View>
 
         {/* Services */}
         <View style={styles.servicesSection}>
           <Text style={styles.sectionTitle}>الخدمات</Text>
           <View style={styles.servicesGrid}>
-            {services.map((service) => (
+            {services?.map((service) => (
               <TouchableOpacity
                 key={service.id}
                 style={[styles.serviceCard, { backgroundColor: service.color }]}
@@ -269,22 +262,6 @@ export default function VetUnionScreen() {
             </View>
             <ExternalLink size={20} color={COLORS.white} />
           </TouchableOpacity>
-        </View>
-
-        {/* News & Updates */}
-        <View style={styles.newsSection}>
-          <Text style={styles.sectionTitle}>الأخبار والإعلانات</Text>
-          {news.map((item) => (
-            <View key={item.id} style={styles.newsCard}>
-              <Text style={styles.newsDate}>{item.date}</Text>
-              <Text style={styles.newsTitle}>{item.title}</Text>
-              <Text style={styles.newsSummary}>{item.summary}</Text>
-              <TouchableOpacity style={styles.readMoreButton}>
-                <Text style={styles.readMoreText}>اقرأ المزيد</Text>
-                <ExternalLink size={16} color={COLORS.primary} />
-              </TouchableOpacity>
-            </View>
-          ))}
         </View>
 
         {/* Contact Information */}
@@ -334,6 +311,38 @@ export default function VetUnionScreen() {
           </View>
         </View>
       </ScrollView>
+    </View>
+  );
+}
+
+// ... inside the component, add this new component
+function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
+  const { data: announcements, isLoading } = useQuery(trpc.union.announcement.list.queryOptions({ mainUnionId }));
+
+  if (isLoading) {
+    return <ActivityIndicator />;
+  }
+
+  if (!announcements || announcements.length === 0) {
+    return <Text>لا توجد إعلانات حالياً</Text>;
+  }
+
+  return (
+    <View>
+      {announcements.map((announcement) => (
+        <View key={announcement.id} style={styles.announcementBox}>
+          <View style={styles.announcementIcon}>
+            <Megaphone size={24} color={COLORS.primary} />
+          </View>
+          <View style={styles.announcementContent}>
+            <Text style={styles.announcementTitle}>{announcement.title}</Text>
+            <Text style={styles.announcementText}>{announcement.content}</Text>
+            <Text style={styles.announcementDate}>
+              تاريخ النشر: {new Date(announcement?.createdAt).toLocaleDateString()}
+            </Text>
+          </View>
+        </View>
+      ))}
     </View>
   );
 }
@@ -560,6 +569,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginBottom: 5,
   },
   announcementIcon: {
     marginRight: 12,

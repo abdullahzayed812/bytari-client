@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
-import { Save, X, Upload, Camera, Link, Calendar, MessageSquare } from "lucide-react-native";
+import { Save, X, Camera, Link, Calendar, MessageSquare } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface Announcement {
   id: string;
@@ -34,13 +35,14 @@ export default function AddUnionAnnouncementScreen() {
     date: new Date().toISOString().split("T")[0],
     type: "general",
     isImportant: false,
-    image: "",
+    image: "", // Initialize image as empty string
     link: "",
     linkText: "",
     author: user?.name || "النقابة البيطرية العراقية",
     branchId: branchId as string,
   });
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  // selectedImage state is no longer needed if ImageUpload component handles it
+  // const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const createAnnouncementMutation = useMutation(trpc.union.announcement.create.mutationOptions());
 
@@ -94,7 +96,7 @@ export default function AddUnionAnnouncementScreen() {
       content: formData.content,
       type: formData.type as "general" | "urgent" | "event" | "meeting",
       isImportant: formData.isImportant || false,
-      image: selectedImage || formData.image,
+      image: formData.image, // Use formData.image directly
       link: formData.link,
       linkText: formData.linkText,
       author: formData.author,
@@ -145,14 +147,15 @@ export default function AddUnionAnnouncementScreen() {
     }
   };
 
-  const handleImagePicker = () => {
-    // In a real app, this would open image picker
-    Alert.alert("اختيار صورة", "اختر مصدر الصورة", [
-      { text: "إلغاء", style: "cancel" },
-      { text: "المعرض", onPress: () => console.log("Open gallery") },
-      { text: "الكاميرا", onPress: () => console.log("Open camera") },
-    ]);
-  };
+  // handleImagePicker is no longer needed
+  // const handleImagePicker = () => {
+  //   // In a real app, this would open image picker
+  //   Alert.alert("اختيار صورة", "اختر مصدر الصورة", [
+  //     { text: "إلغاء", style: "cancel" },
+  //     { text: "المعرض", onPress: () => console.log("Open gallery") },
+  //     { text: "الكاميرا", onPress: () => console.log("Open camera") },
+  //   ]);
+  // };
 
   const getAnnouncementTypeLabel = (type: string) => {
     switch (type) {
@@ -324,33 +327,10 @@ export default function AddUnionAnnouncementScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>صورة الإعلان</Text>
 
-          {selectedImage ? (
-            <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
-              <View style={styles.imageActions}>
-                <TouchableOpacity style={styles.changeImageButton} onPress={handleImagePicker}>
-                  <Camera size={16} color={COLORS.white} />
-                  <Text style={styles.imageActionText}>تغيير الصورة</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={() => {
-                    setSelectedImage(null);
-                    setFormData((prev) => ({ ...prev, image: "" }));
-                  }}
-                >
-                  <X size={16} color={COLORS.white} />
-                  <Text style={styles.imageActionText}>حذف الصورة</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.uploadButton} onPress={handleImagePicker}>
-              <Upload size={32} color={COLORS.primary} />
-              <Text style={styles.uploadButtonText}>اختيار صورة للإعلان</Text>
-              <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط صورة جديدة (اختياري)</Text>
-            </TouchableOpacity>
-          )}
+          <ImageUploader
+            onUploadComplete={(url) => setFormData((prev) => ({ ...prev, image: url }))}
+            imageUri={formData.image}
+          />
         </View>
 
         {/* Preview Section */}

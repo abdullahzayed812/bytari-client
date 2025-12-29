@@ -110,6 +110,8 @@ export default function TabLayout() {
   const { t, isRTL } = useI18n();
   const { isAuthenticated, isLoading, userMode, hasAdminAccess, isSuperAdmin } = useApp();
 
+  const isDev = process.env.NODE_ENV === "development";
+
   if (isLoading) {
     return null;
   }
@@ -121,7 +123,7 @@ export default function TabLayout() {
   return (
     <View style={styles.container}>
       {/* القائمة العلوية للإدارة - تظهر فقط للمستخدمين الذين لديهم صلاحيات إدارية */}
-      <View style={styles.greenBar} />
+      {isDev ? <View style={styles.greenBar} /> : null}
       {hasAdminAccess ? <AdminTopBar /> : null}
 
       <Tabs

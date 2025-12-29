@@ -86,7 +86,7 @@ export default function CoursesManagementScreen() {
   const courses = useMemo(() => (rawCourses as any)?.courses, [rawCourses]);
   const registrations = useMemo(() => (rawRegistrations as any)?.registrations, [rawRegistrations]);
 
-  const deleteCourseMutation = useMutation(trpc.courses.delete.mutationOptions());
+  const deleteCourseMutation = useMutation(trpc.admin.courses.delete.mutationOptions());
 
   const updateRegistrationStatusMutation = useMutation(trpc.admin.courses.updateRegistrationStatus.mutationOptions());
 
@@ -109,15 +109,18 @@ export default function CoursesManagementScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          deleteCourseMutation.mutate(courseId, {
-            onSuccess: () => {
-              refetchCourses();
-              Alert.alert("تم الحذف", "تم حذف الدورة بنجاح");
-            },
-            onError: () => {
-              Alert.alert("خطأ", "حدث خطأ أثناء حذف الدورة");
-            },
-          });
+          deleteCourseMutation.mutate(
+            { id: Number(courseId) },
+            {
+              onSuccess: () => {
+                refetchCourses();
+                Alert.alert("تم الحذف", "تم حذف الدورة بنجاح");
+              },
+              onError: () => {
+                Alert.alert("خطأ", "حدث خطأ أثناء حذف الدورة");
+              },
+            }
+          );
         },
       },
     ]);

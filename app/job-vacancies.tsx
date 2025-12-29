@@ -159,27 +159,27 @@ export default function JobVacanciesScreen() {
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
-          headerRight: () =>
-            isSuperAdmin ? (
-              <View style={styles.headerActions}>
-                <TouchableOpacity
-                  onPress={() => {
-                    router.push("/admin-content-manager?type=jobs");
-                  }}
-                  style={[styles.headerButton, styles.addButton]}
-                >
-                  <Plus size={20} color={COLORS.white} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    router.push("/admin-content-manager?type=jobs");
-                  }}
-                  style={[styles.headerButton, styles.editButton]}
-                >
-                  <Edit3 size={20} color={COLORS.white} />
-                </TouchableOpacity>
-              </View>
-            ) : null,
+          // headerRight: () =>
+          //   isSuperAdmin ? (
+          //     <View style={styles.headerActions}>
+          //       <TouchableOpacity
+          //         onPress={() => {
+          //           router.push("/admin-content-manager?type=jobs");
+          //         }}
+          //         style={[styles.headerButton, styles.addButton]}
+          //       >
+          //         <Plus size={20} color={COLORS.white} />
+          //       </TouchableOpacity>
+          //       <TouchableOpacity
+          //         onPress={() => {
+          //           router.push("/admin-content-manager?type=jobs");
+          //         }}
+          //         style={[styles.headerButton, styles.editButton]}
+          //       >
+          //         <Edit3 size={20} color={COLORS.white} />
+          //       </TouchableOpacity>
+          //     </View>
+          //   ) : null,
         }}
       />
 

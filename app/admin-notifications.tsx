@@ -33,6 +33,7 @@ export default function AdminNotificationsScreen() {
     refetch,
   } = useQuery(
     trpc.admin.notifications.getNotifications.queryOptions({
+      adminId: 1,
       filter, // pass filter to backend if it supports it
     })
   );
@@ -44,27 +45,9 @@ export default function AdminNotificationsScreen() {
   }, [notificationsData]);
 
   // Mutations
-  const markAsReadMutation = useMutation(
-    trpc.admin.notifications.markAsRead.mutationOptions({
-      onSuccess: () => {
-        refetch();
-      },
-      onError: () => {
-        Alert.alert("خطأ", "تعذر وضع الاشعار كمقروء");
-      },
-    })
-  );
+  const markAsReadMutation = useMutation(trpc.admin.notifications.markAsRead.mutationOptions());
 
-  const deleteNotificationMutation = useMutation(
-    trpc.admin.notifications.delete.mutationOptions({
-      onSuccess: () => {
-        refetch();
-      },
-      onError: () => {
-        Alert.alert("خطأ", "تعذر حذف الإشعار");
-      },
-    })
-  );
+  const deleteNotificationMutation = useMutation(trpc.admin.notifications.delete.mutationOptions());
 
   const getNotificationIcon = (type: AdminNotification["type"], relatedResourceType?: string | null) => {
     if (type === "approval_request") {
@@ -105,7 +88,17 @@ export default function AdminNotificationsScreen() {
   };
 
   const markAsRead = (id: number) => {
-    markAsReadMutation.mutate({ notificationId: id });
+    markAsReadMutation.mutate(
+      { notificationId: Number(id) },
+      {
+        onSuccess: () => {
+          refetch();
+        },
+        onError: () => {
+          Alert.alert("خطأ", "تعذر وضع الاشعار كمقروء");
+        },
+      }
+    );
   };
 
   const deleteNotification = (id: number) => {
@@ -115,7 +108,17 @@ export default function AdminNotificationsScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          deleteNotificationMutation.mutate({ notificationId: id });
+          deleteNotificationMutation.mutate(
+            { notificationId: id },
+            {
+              onSuccess: () => {
+                refetch();
+              },
+              onError: () => {
+                Alert.alert("خطأ", "تعذر حذف الإشعار");
+              },
+            }
+          );
         },
       },
     ]);

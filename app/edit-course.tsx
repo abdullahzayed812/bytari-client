@@ -25,7 +25,7 @@ import {
 } from "lucide-react-native";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { ImageUploader } from "@/components/ImageUploader";
 
@@ -45,39 +45,15 @@ interface CourseFormData {
   thumbnailImage?: string;
 }
 
-// Mock data for editing
-const mockCourseData: CourseFormData = {
-  title: "دورة الطب البيطري الحديث",
-  organizer: "الجمعية السعودية للأطباء البيطريين",
-  date: "15 أغسطس 2024",
-  location: "الرياض - مركز المؤتمرات",
-  type: "course",
-  duration: "3 أيام",
-  capacity: "50",
-  price: "1500 ريال",
-  description: "دورة شاملة تغطي أحدث التطورات في مجال الطب البيطري والتقنيات الحديثة",
-  courseUrl: "https://vetcourse.com/modern-veterinary",
-  registrationType: "link",
-  status: "active",
-};
-
 export default function EditCourseScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
-  const { data, isLoading: isCourseLoading } = useQuery(trpc.courses.getById.queryOptions({ id: String(id) }));
-
-  const updateCourseMutation = trpc.courses.update.useMutation({
-    onSuccess: () => {
-      Alert.alert("تم التحديث", "تم تحديث الدورة بنجاح", [{ text: "موافق", onPress: () => router.back() }]);
-    },
-    onError: () => {
-      Alert.alert("خطأ", "حدث خطأ أثناء تحديث الدورة");
-    },
-  });
-
-  const isLoading = updateCourseMutation.isLoading;
+  const { data, isLoading: isCourseLoading } = useQuery(trpc.courses.getById.queryOptions({ id: Number(id) }));
   const course = useMemo(() => (data as any)?.course, [data]);
+
+  const updateCourseMutation = useMutation(trpc.admin.courses.update.mutationOptions());
+  const isLoading = updateCourseMutation.isPending;
 
   const [formData, setFormData] = useState<CourseFormData | null>(null);
 
@@ -133,10 +109,20 @@ export default function EditCourseScreen() {
     }
 
     try {
-      await updateCourseMutation.mutateAsync({
-        id: String(id),
-        data: formData,
-      });
+      await updateCourseMutation.mutateAsync(
+        {
+          id: String(id),
+          data: formData,
+        } as any,
+        {
+          onSuccess: () => {
+            Alert.alert("تم التحديث", "تم تحديث الدورة بنجاح", [{ text: "موافق", onPress: () => router.back() }]);
+          },
+          onError: () => {
+            Alert.alert("خطأ", "حدث خطأ أثناء تحديث الدورة");
+          },
+        }
+      );
     } catch (error) {
       Alert.alert("خطأ", "حدث خطأ أثناء تحديث الدورة");
     }

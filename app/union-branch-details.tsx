@@ -1,17 +1,32 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Building2, MapPin, Phone, Mail, Users, Star, Edit3, Plus, Calendar, MessageSquare, ExternalLink, Bell, BellOff, Link } from 'lucide-react-native';
-import { trpc } from '../lib/trpc';
-import { useQuery } from '@tanstack/react-query';
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Users,
+  Star,
+  Edit3,
+  Plus,
+  Calendar,
+  MessageSquare,
+  ExternalLink,
+  Bell,
+  BellOff,
+  Link,
+} from "lucide-react-native";
+import { trpc } from "../lib/trpc";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface UnionBranch {
   id: string;
   name: string;
   governorate: string;
-  region: 'central' | 'northern' | 'southern' | 'kurdistan';
+  region: "central" | "northern" | "southern" | "kurdistan";
   address: string;
   phone: string;
   email: string;
@@ -30,7 +45,7 @@ interface Announcement {
   title: string;
   content: string;
   date: string;
-  type: 'general' | 'urgent' | 'event' | 'meeting';
+  type: "general" | "urgent" | "event" | "meeting";
   isImportant: boolean;
   image?: string;
   link?: string;
@@ -40,59 +55,58 @@ interface Announcement {
 }
 
 export default function UnionBranchDetailsScreen() {
-
-  const { isSuperAdmin, hasAdminAccess, sendNotification, isModerator, moderatorPermissions } = useApp();
+  const { isSuperAdmin, hasAdminAccess, /* sendNotification ,*/ isModerator, moderatorPermissions } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
-
   const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
+  const [isFollowing, setIsFollowing] = useState<boolean>(branch?.isFollowing || false);
+  const queryClient = useQueryClient();
 
-  const handleFollowToggle = async () => {
-    const newFollowingState = !isFollowing;
-    setIsFollowing(newFollowingState);
-    
-    if (newFollowingState) {
-      // Send notification to user about following
-      await sendNotification({
-        userId: 'current-user-id', // In real app, get from user context
-        type: 'medical_record',
-        title: 'متابعة النقابة',
-        message: `تم تفعيل متابعة ${branch.name}. ستصلك إشعارات بجميع الإعلانات الجديدة.`,
-        data: {
-          petId: '',
-          petName: '',
-          clinicId: branch.id,
-          clinicName: branch.name,
-          recordId: '',
-          actionType: 'medical_record'
-        },
-        status: 'pending'
-      });
+  useEffect(() => {
+    if (branch) {
+      setIsFollowing(branch.isFollowing);
     }
-    
-    Alert.alert(
-      'تم التحديث',
-      newFollowingState ? 'تم تفعيل المتابعة بنجاح. ستصلك إشعارات بجميع الإعلانات الجديدة.' : 'تم إلغاء المتابعة بنجاح',
-      [{ text: 'موافق' }]
-    );
+  }, [branch]);
+
+  const followMutation = useMutation(
+    trpc.union.follow.toggle.mutationOptions({
+      onSuccess: (data) => {
+        setIsFollowing(data.isFollowing);
+        queryClient.invalidateQueries(trpc.union.branch.get.queryKey(parseInt(id as string) as any));
+        queryClient.invalidateQueries(trpc.union.branch.list.queryKey as any);
+      },
+    })
+  );
+
+  const handleFollowToggle = () => {
+    if (branch) {
+      followMutation.mutate({ branchId: branch.id });
+    }
   };
 
   const getAnnouncementTypeColor = (type: string) => {
     switch (type) {
-      case 'urgent': return COLORS.error;
-      case 'meeting': return COLORS.primary;
-      case 'event': return COLORS.success;
-      default: return COLORS.darkGray;
+      case "urgent":
+        return COLORS.error;
+      case "meeting":
+        return COLORS.primary;
+      case "event":
+        return COLORS.success;
+      default:
+        return COLORS.darkGray;
     }
   };
 
   const getAnnouncementTypeLabel = (type: string) => {
     switch (type) {
-      case 'urgent': return 'عاجل';
-      case 'meeting': return 'اجتماع';
-      case 'event': return 'فعالية';
-      default: return 'عام';
+      case "urgent":
+        return "عاجل";
+      case "meeting":
+        return "اجتماع";
+      case "event":
+        return "فعالية";
+      default:
+        return "عام";
     }
   };
 
@@ -100,20 +114,20 @@ export default function UnionBranchDetailsScreen() {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-    
+
     for (let i = 0; i < fullStars; i++) {
       stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
     }
-    
+
     if (hasHalfStar) {
       stars.push(<Star key="half" size={16} color="#FFD700" fill="#FFD700" />);
     }
-    
+
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(<Star key={`empty-${i}`} size={16} color="#E5E7EB" />);
     }
-    
+
     return stars;
   };
 
@@ -135,40 +149,43 @@ export default function UnionBranchDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: branch.name,
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 16 },
-          headerRight: () => (
-            (isSuperAdmin || hasAdminAccess || (isModerator && moderatorPermissions?.sections?.includes('union-branches'))) ? (
+          headerTitleStyle: { fontWeight: "bold", fontSize: 16 },
+          headerRight: () =>
+            isSuperAdmin ||
+            hasAdminAccess ||
+            (isModerator && moderatorPermissions?.sections?.includes("union-branches")) ? (
               <View style={styles.headerActions}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
                   style={[styles.headerButton, styles.addButton]}
                 >
                   <Plus size={20} color={COLORS.white} />
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => router.push(`/edit-union-branch?id=${branch.id}`)}
                   style={[styles.headerButton, styles.editButton]}
                 >
                   <Edit3 size={20} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
-            ) : null
-          ),
-        }} 
+            ) : null,
+        }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Union Announcements - Top Priority */}
         <View style={styles.topAnnouncementsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
-            {(isSuperAdmin || hasAdminAccess || (isModerator && moderatorPermissions?.sections?.includes('union-branches'))) && (
-              <TouchableOpacity 
+            {(isSuperAdmin ||
+              hasAdminAccess ||
+              (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
+              <TouchableOpacity
                 onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
                 style={styles.addAnnouncementButton}
               >
@@ -177,18 +194,15 @@ export default function UnionBranchDetailsScreen() {
               </TouchableOpacity>
             )}
           </View>
-          
+
           <View style={styles.topAnnouncementsList}>
-            {branch.announcements.slice(0, 2).map((announcement) => (
+            {branch?.announcements?.slice(0, 2)?.map((announcement) => (
               <View key={announcement.id} style={styles.topAnnouncementCard}>
                 <View style={styles.announcementHeader}>
-                  <View style={[
-                    styles.announcementType,
-                    { backgroundColor: getAnnouncementTypeColor(announcement.type) }
-                  ]}>
-                    <Text style={styles.announcementTypeText}>
-                      {getAnnouncementTypeLabel(announcement.type)}
-                    </Text>
+                  <View
+                    style={[styles.announcementType, { backgroundColor: getAnnouncementTypeColor(announcement.type) }]}
+                  >
+                    <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
                   </View>
                   {announcement.isImportant && (
                     <View style={styles.importantBadge}>
@@ -197,40 +211,38 @@ export default function UnionBranchDetailsScreen() {
                   )}
                   <Text style={styles.announcementDate}>{announcement.date}</Text>
                 </View>
-                
+
                 <Text style={styles.announcementTitle}>{announcement.title}</Text>
                 <Text style={styles.announcementContent}>{announcement.content}</Text>
-                
+
                 {announcement.image && (
                   <View style={styles.announcementImageContainer}>
                     <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
                   </View>
                 )}
-                
+
                 {announcement.link && (
                   <TouchableOpacity style={styles.announcementLink}>
                     <Link size={16} color={COLORS.primary} />
-                    <Text style={styles.announcementLinkText}>
-                      {announcement.linkText || 'رابط ذات صلة'}
-                    </Text>
+                    <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
                     <ExternalLink size={14} color={COLORS.primary} />
                   </TouchableOpacity>
                 )}
-                
+
                 <View style={styles.announcementFooter}>
-                  {announcement.author && (
-                    <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>
-                  )}
-                  {announcement.views && (
-                    <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>
-                  )}
+                  {announcement.author && <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>}
+                  {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
                 </View>
-                
-                {(isSuperAdmin || hasAdminAccess || (isModerator && moderatorPermissions?.sections?.includes('union-branches'))) && (
+
+                {(isSuperAdmin ||
+                  hasAdminAccess ||
+                  (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
                   <View style={styles.announcementActions}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.editAnnouncementButton}
-                      onPress={() => router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)}
+                      onPress={() =>
+                        router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)
+                      }
                     >
                       <Edit3 size={14} color={COLORS.primary} />
                       <Text style={styles.editAnnouncementText}>تعديل</Text>
@@ -251,29 +263,29 @@ export default function UnionBranchDetailsScreen() {
             <Text style={styles.branchName}>{branch.name}</Text>
             <Text style={styles.branchGovernorate}>{branch.governorate}</Text>
             <View style={styles.ratingContainer}>
-              <View style={styles.starsContainer}>
-                {renderStars(branch.rating)}
-              </View>
+              <View style={styles.starsContainer}>{renderStars(branch.rating)}</View>
               <Text style={styles.ratingText}>({branch.rating})</Text>
             </View>
           </View>
           <TouchableOpacity
             style={[
               styles.followButton,
-              (isFollowing || branch.isFollowing) ? styles.followingButton : styles.notFollowingButton
+              isFollowing || branch.isFollowing ? styles.followingButton : styles.notFollowingButton,
             ]}
             onPress={handleFollowToggle}
           >
-            {(isFollowing || branch.isFollowing) ? (
+            {isFollowing || branch.isFollowing ? (
               <BellOff size={16} color={COLORS.white} />
             ) : (
               <Bell size={16} color={COLORS.primary} />
             )}
-            <Text style={[
-              styles.followButtonText,
-              (isFollowing || branch.isFollowing) ? styles.followingText : styles.notFollowingText
-            ]}>
-              {(isFollowing || branch.isFollowing) ? 'متابعة' : 'متابعة'}
+            <Text
+              style={[
+                styles.followButtonText,
+                isFollowing || branch.isFollowing ? styles.followingText : styles.notFollowingText,
+              ]}
+            >
+              {isFollowing || branch.isFollowing ? "متابعة" : "متابعة"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -296,13 +308,13 @@ export default function UnionBranchDetailsScreen() {
               <MapPin size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>{branch.address}</Text>
             </View>
-            
+
             <TouchableOpacity style={styles.contactItem}>
               <Phone size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>{branch.phone}</Text>
               <ExternalLink size={16} color={COLORS.darkGray} />
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.contactItem}>
               <Mail size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>{branch.email}</Text>
@@ -320,13 +332,13 @@ export default function UnionBranchDetailsScreen() {
               <Text style={styles.statNumber}>{branch.membersCount.toLocaleString()}</Text>
               <Text style={styles.statLabel}>عضو مسجل</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <MessageSquare size={24} color={COLORS.success} />
-              <Text style={styles.statNumber}>{branch.announcements.length}</Text>
+              <Text style={styles.statNumber}>{branch?.announcements?.length}</Text>
               <Text style={styles.statLabel}>إعلان نشط</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <Star size={24} color="#FFD700" />
               <Text style={styles.statNumber}>{branch.rating}</Text>
@@ -363,8 +375,10 @@ export default function UnionBranchDetailsScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>الأخبار والإعلانات السابقة</Text>
-            {(isSuperAdmin || hasAdminAccess || (isModerator && moderatorPermissions?.sections?.includes('union-branches'))) && (
-              <TouchableOpacity 
+            {(isSuperAdmin ||
+              hasAdminAccess ||
+              (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
+              <TouchableOpacity
                 onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
                 style={styles.addAnnouncementButton}
               >
@@ -373,18 +387,15 @@ export default function UnionBranchDetailsScreen() {
               </TouchableOpacity>
             )}
           </View>
-          
+
           <View style={styles.announcementsList}>
-            {branch.announcements.slice(2).map((announcement) => (
+            {branch?.announcements?.slice(2)?.map((announcement) => (
               <View key={announcement.id} style={styles.announcementCard}>
                 <View style={styles.announcementHeader}>
-                  <View style={[
-                    styles.announcementType,
-                    { backgroundColor: getAnnouncementTypeColor(announcement.type) }
-                  ]}>
-                    <Text style={styles.announcementTypeText}>
-                      {getAnnouncementTypeLabel(announcement.type)}
-                    </Text>
+                  <View
+                    style={[styles.announcementType, { backgroundColor: getAnnouncementTypeColor(announcement.type) }]}
+                  >
+                    <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
                   </View>
                   {announcement.isImportant && (
                     <View style={styles.importantBadge}>
@@ -393,40 +404,38 @@ export default function UnionBranchDetailsScreen() {
                   )}
                   <Text style={styles.announcementDate}>{announcement.date}</Text>
                 </View>
-                
+
                 <Text style={styles.announcementTitle}>{announcement.title}</Text>
                 <Text style={styles.announcementContent}>{announcement.content}</Text>
-                
+
                 {announcement.image && (
                   <View style={styles.announcementImageContainer}>
                     <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
                   </View>
                 )}
-                
+
                 {announcement.link && (
                   <TouchableOpacity style={styles.announcementLink}>
                     <Link size={16} color={COLORS.primary} />
-                    <Text style={styles.announcementLinkText}>
-                      {announcement.linkText || 'رابط ذات صلة'}
-                    </Text>
+                    <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
                     <ExternalLink size={14} color={COLORS.primary} />
                   </TouchableOpacity>
                 )}
-                
+
                 <View style={styles.announcementFooter}>
-                  {announcement.author && (
-                    <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>
-                  )}
-                  {announcement.views && (
-                    <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>
-                  )}
+                  {announcement.author && <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>}
+                  {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
                 </View>
-                
-                {(isSuperAdmin || hasAdminAccess || (isModerator && moderatorPermissions?.sections?.includes('union-branches'))) && (
+
+                {(isSuperAdmin ||
+                  hasAdminAccess ||
+                  (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
                   <View style={styles.announcementActions}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.editAnnouncementButton}
-                      onPress={() => router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)}
+                      onPress={() =>
+                        router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)
+                      }
                     >
                       <Edit3 size={14} color={COLORS.primary} />
                       <Text style={styles.editAnnouncementText}>تعديل</Text>
@@ -445,7 +454,7 @@ export default function UnionBranchDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   content: {
     flex: 1,
@@ -453,10 +462,10 @@ const styles = StyleSheet.create({
   branchHeader: {
     backgroundColor: COLORS.white,
     padding: 20,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
   },
   branchIcon: {
     marginRight: 16,
@@ -467,42 +476,42 @@ const styles = StyleSheet.create({
   },
   branchName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   branchGovernorate: {
     fontSize: 16,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 8,
   },
   starsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 2,
   },
   ratingText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   followButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
     minWidth: 80,
-    justifyContent: 'center',
+    justifyContent: "center",
     gap: 6,
   },
   followingButton: {
@@ -510,12 +519,12 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   notFollowingButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderColor: COLORS.primary,
   },
   followButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   followingText: {
     color: COLORS.white,
@@ -533,7 +542,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderBottomWidth: 2,
     borderBottomColor: COLORS.primary,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -544,16 +553,16 @@ const styles = StyleSheet.create({
   },
   topSectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   topAnnouncementsList: {
     gap: 16,
   },
   topAnnouncementCard: {
-    backgroundColor: '#F0F9FF',
+    backgroundColor: "#F0F9FF",
     padding: 18,
     borderRadius: 16,
     borderWidth: 2,
@@ -568,101 +577,101 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   description: {
     fontSize: 16,
     color: COLORS.darkGray,
     lineHeight: 24,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 12,
   },
   establishedInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 8,
   },
   establishedText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   contactInfo: {
     gap: 16,
   },
   contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   contactText: {
     fontSize: 16,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     gap: 12,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   statNumber: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   presidentCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 16,
     borderRadius: 12,
     borderLeftWidth: 4,
     borderLeftColor: COLORS.primary,
   },
   presidentInfo: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   presidentName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   presidentTitle: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   servicesList: {
     gap: 12,
   },
   serviceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   serviceBullet: {
@@ -675,36 +684,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   addAnnouncementButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
     borderRadius: 8,
   },
   addAnnouncementText: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   announcementsList: {
     gap: 16,
   },
   announcementCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   announcementHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 8,
     marginBottom: 12,
   },
@@ -716,7 +725,7 @@ const styles = StyleSheet.create({
   announcementTypeText: {
     fontSize: 10,
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   importantBadge: {
     backgroundColor: COLORS.error,
@@ -727,38 +736,38 @@ const styles = StyleSheet.create({
   importantText: {
     fontSize: 9,
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   announcementDate: {
     fontSize: 12,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementContent: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: "#E5E7EB",
   },
   editAnnouncementButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -766,24 +775,24 @@ const styles = StyleSheet.create({
   editAnnouncementText: {
     fontSize: 12,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   announcementImageContainer: {
     marginTop: 12,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   announcementImage: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   announcementLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 12,
     padding: 12,
-    backgroundColor: '#F0F9FF',
+    backgroundColor: "#F0F9FF",
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.primary,
@@ -793,43 +802,43 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
-    textAlign: 'right',
+    fontWeight: "600",
+    textAlign: "right",
   },
   announcementFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 12,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: "#E5E7EB",
   },
   announcementAuthor: {
     fontSize: 12,
     color: COLORS.darkGray,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   announcementViews: {
     fontSize: 12,
     color: COLORS.darkGray,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   headerButton: {
     padding: 8,
     borderRadius: 6,
     minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   addButton: {
-    backgroundColor: COLORS.success || '#28a745',
+    backgroundColor: COLORS.success || "#28a745",
   },
   editButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
 });

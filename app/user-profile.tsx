@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Phone, Mail, MapPin, Calendar, Briefcase, MessageCircle, Send, X } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
@@ -52,25 +52,28 @@ export default function UserProfileScreen() {
     )
   );
 
+  console.log(params?.userId);
+
   const { data, isLoading, error } = isAdminView ? userProfileQuery : ownProfileQuery;
+  const userData = useMemo(() => data as any, [data]);
 
   const sendMessageMutation = useMutation(trpc.admin.messages.sendSystemMessage.mutationOptions());
 
-  const userProfile: UserProfile | null = data
+  const userProfile: UserProfile | null = userData
     ? {
-        id: data.id.toString(),
-        name: data.name || "N/A",
-        email: data.email || "N/A",
-        phone: data.phone || null,
-        location: data.province || "غير محدد",
-        joinDate: new Date(data.createdAt).toLocaleDateString("ar-SA"),
-        profession: data.userType === "vet" ? "طبيب بيطري" : data.userType === "admin" ? "مشرف" : "مستخدم عادي",
-        experience: data.experience || "غير محدد",
-        education: data.education || "غير محدد",
-        bio: data.bio || "لا توجد معلومات إضافية متاحة",
-        userType: data.userType,
-        isActive: data.isActive,
-        avatar: data.avatar,
+        id: userData?.id?.toString(),
+        name: userData.name || "N/A",
+        email: userData.email || "N/A",
+        phone: userData.phone || null,
+        location: userData.province || "غير محدد",
+        joinDate: new Date(userData.createdAt).toLocaleDateString("ar-SA"),
+        profession: userData.userType === "vet" ? "طبيب بيطري" : userData.userType === "admin" ? "مشرف" : "مستخدم عادي",
+        experience: userData.experience || "غير محدد",
+        education: userData.education || "غير محدد",
+        bio: userData.bio || "لا توجد معلومات إضافية متاحة",
+        userType: userData.userType,
+        isActive: userData.isActive,
+        avatar: userData.avatar,
       }
     : null;
 

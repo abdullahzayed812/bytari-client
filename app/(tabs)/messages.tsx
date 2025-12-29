@@ -1,140 +1,159 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useRouter } from "expo-router";
-import { ArrowLeft, ArrowRight, MessageCircle, Building2, AlertCircle } from "lucide-react-native";
+import { ArrowLeft, MessageCircle, AlertCircle, CheckCircle, Clock, Send, X } from "lucide-react-native";
 import { Stack } from "expo-router";
 import { useApp } from "../../providers/AppProvider";
+import { handleBackNavigation } from "../../lib/navigation-utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { trpc } from "../../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
 
 interface Message {
   id: string;
-  type: "system" | "clinic";
-  sender: string;
-  subject: string;
-  preview: string;
-  time: string;
-  read: boolean;
-  avatar?: string;
+  type: string;
+  title: string;
+  content: string;
+  createdAt: Date;
+  isRead: boolean;
+  readAt: Date | null;
+  priority: "low" | "normal" | "high" | "urgent";
 }
-
-const mockMessages: Message[] = [
-  {
-    id: "2",
-    type: "system",
-    sender: "إدارة التطبيق",
-    subject: "مرحباً بك في تطبيق الحيوانات الأليفة",
-    preview: "نرحب بك في تطبيقنا! يمكنك الآن الاستفادة من جميع الخدمات المتاحة مثل الاستشارات البيطرية...",
-    time: "2024-01-14T10:15:00Z",
-    read: true,
-  },
-  {
-    id: "3",
-    type: "clinic",
-    sender: "عيادة الرحمة البيطرية",
-    subject: "تأكيد موعد الفحص",
-    preview: 'تم تأكيد موعدك لفحص حيوانك الأليف "فلافي" يوم الأحد الساعة 10:00 صباحاً...',
-    time: "2024-01-13T16:45:00Z",
-    read: false,
-    avatar:
-      "https://images.unsplash.com/photo-1551601651-2a8555f1a136?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2013&q=80",
-  },
-
-  {
-    id: "5",
-    type: "system",
-    sender: "إدارة التطبيق",
-    subject: "تحديث سياسة الخصوصية",
-    preview: "تم تحديث سياسة الخصوصية الخاصة بنا. يرجى مراجعة التغييرات الجديدة...",
-    time: "2024-01-11T13:00:00Z",
-    read: true,
-  },
-];
 
 export default function MessagesScreen() {
   const { t, isRTL } = useI18n();
   const router = useRouter();
-  const { user } = useApp();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { userMode, user } = useApp();
 
-  // استعلام الرسائل من قاعدة البيانات
-  const messagesQuery = useQuery(
-    trpc.admin.messages.getUserSystemMessages.queryOptions(
-      { userId: parseInt(user?.id || "0") },
-      {
-        enabled: !!user?.id && !isNaN(parseInt(user.id)),
-        refetchOnMount: true,
-        refetchOnWindowFocus: true,
-      }
-    )
+  const queryClient = useQueryClient();
+  const markAsReadMutation = useMutation(trpc.admin.messages.markAsRead.mutationOptions());
+  const sendSystemMessageReplyMutation = useMutation(trpc.admin.messages.sendReply.mutationOptions());
+
+  const [replyModalVisible, setReplyModalVisible] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+
+  const {
+    data: repliesData,
+    isLoading: isLoadingReplies,
+    refetch: refetchReplies,
+  } = useQuery(
+    trpc.admin.messages.getReplies.queryOptions({
+      messageId: selectedMessage?.id ? Number(selectedMessage.id) : -1,
+    }) // Use -1 or handle undefined appropriately
+  );
+  const replies = useMemo(() => repliesData?.replies, [repliesData]);
+
+  const { data, isLoading, error } = useQuery(
+    trpc.admin.messages.getUserSystemMessages.queryOptions({ userId: Number(user?.id) })
   );
 
-  useEffect(() => {
-    if (messagesQuery.data) {
-      // تحويل البيانات من قاعدة البيانات إلى تنسيق الرسائل
-      const dbMessages: Message[] = messagesQuery.data.map((msg: any) => ({
-        id: msg.id.toString(),
-        type: msg.type === "system" ? "system" : "clinic",
-        sender: msg.type === "system" ? "إدارة التطبيق" : "استشارة طبية",
-        subject: msg.title,
-        preview: msg.content.substring(0, 100) + "...",
-        time: msg.sentAt || msg.createdAt,
-        read: msg.isRead || false,
-        avatar: undefined,
-      }));
+  const messages = useMemo(() => data?.messages, [data]);
 
-      setMessages(dbMessages);
-      setIsLoading(false);
-    } else if (!messagesQuery.isLoading) {
-      // إذا لم تكن هناك بيانات من قاعدة البيانات، استخدم البيانات الوهمية
-      setMessages(mockMessages);
-      setIsLoading(false);
-    }
-  }, [messagesQuery.data, messagesQuery.isLoading]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await messagesQuery.refetch();
-    setRefreshing(false);
+  const markAsRead = (messageId: number) => {
+    if (!user?.id) return;
+    markAsReadMutation.mutate(
+      { userId: Number(user.id), messageId: messageId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.admin.messages.getUserSystemMessages.queryKey as any);
+        },
+      }
+    );
   };
 
   const getMessageIcon = (type: string) => {
     switch (type) {
-      case "clinic":
-        return <Building2 size={20} color={COLORS.primary} />;
-
-      case "system":
-        return <AlertCircle size={20} color={COLORS.warning} />;
+      case "announcement":
+        return <AlertCircle size={20} color={COLORS.primary} />;
+      case "maintenance":
+        return <Clock size={20} color={COLORS.warning} />;
+      case "update":
+        return <CheckCircle size={20} color={COLORS.success} />;
+      case "warning":
+        return <AlertCircle size={20} color={COLORS.error} />;
       default:
         return <MessageCircle size={20} color={COLORS.darkGray} />;
     }
   };
 
-  const formatTime = (timeString: string) => {
-    const date = new Date(timeString);
+  const formatTime = (date: Date) => {
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (diffInHours < 1) {
-      return "الآن";
-    } else if (diffInHours < 24) {
-      return `منذ ${diffInHours} ساعة`;
+    if (minutes < 60) {
+      return `منذ ${minutes} دقيقة`;
+    } else if (hours < 24) {
+      return `منذ ${hours} ساعة`;
     } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `منذ ${diffInDays} يوم`;
+      return `منذ ${days} يوم`;
+    }
+  };
+
+  const getPriorityColor = (priority: Message["priority"]) => {
+    switch (priority) {
+      case "high":
+        return COLORS.error;
+      case "normal":
+        return COLORS.warning;
+      case "low":
+        return COLORS.success;
+      case "urgent":
+        return COLORS.red;
+      default:
+        return COLORS.gray;
     }
   };
 
   const handleMessagePress = (message: Message) => {
     console.log("Message pressed:", message.id);
     // Handle navigation based on message type
-    if (message.type === "clinic") {
-      // Navigate to clinic details
-    }
+    // if (message.type === "consultation") {
+    //   // Navigate to consultation details
+    // } else if (message.type === "clinic") {
+    //   // Navigate to clinic details
+    // }
+  };
+
+  const handleSendReply = () => {
+    if (!replyText?.trim() || !selectedMessage || !user?.id) return;
+
+    sendSystemMessageReplyMutation.mutate(
+      {
+        messageId: Number(selectedMessage.id),
+        userId: user.id,
+        content: replyText,
+        isFromAdmin: false, // User is sending the reply
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("تم الإرسال", "تم إرسال الرد بنجاح");
+          setReplyModalVisible(false);
+          setReplyText("");
+          setSelectedMessage(null);
+          queryClient.invalidateQueries(trpc.admin.messages.getUserSystemMessages);
+          refetchReplies(); // Refetch replies for the selected message
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", `حدث خطأ أثناء إرسال الرد: ${error.message}`);
+        },
+      }
+    );
   };
 
   return (
@@ -152,76 +171,156 @@ export default function MessagesScreen() {
             fontWeight: "bold",
           },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
+            <TouchableOpacity onPress={() => handleBackNavigation()} style={styles.backButton}>
+              <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
         }}
       />
 
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        // Pull to refresh functionality will be added later
-      >
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>جاري تحميل الرسائل...</Text>
-          </View>
-        ) : (
-          messages.map((message) => (
-            <TouchableOpacity
-              key={message.id}
-              style={[styles.messageCard, !message.read && styles.unreadCard]}
-              onPress={() => handleMessagePress(message)}
-            >
-              <View style={[styles.messageContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                <View style={styles.avatarContainer}>
-                  {message.avatar ? (
-                    <Image source={{ uri: message.avatar }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.iconContainer}>{getMessageIcon(message.type)}</View>
-                  )}
-                </View>
-
-                <View
-                  style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
-                >
-                  <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>{message.sender}</Text>
-                    <Text style={[styles.messageTime, { textAlign: isRTL ? "left" : "right" }]}>
-                      {formatTime(message.time)}
-                    </Text>
-                  </View>
-
-                  <Text style={[styles.messageSubject, { textAlign: isRTL ? "right" : "left" }]}>
-                    {message.subject}
-                  </Text>
-
-                  <Text style={[styles.messagePreview, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
-                    {message.preview}
-                  </Text>
-                </View>
-
-                {!message.read && <View style={styles.unreadIndicator} />}
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {messages.map((message) => (
+          <TouchableOpacity
+            key={message.id}
+            style={[styles.messageCard, !message.isRead && styles.unreadCard]}
+            onPress={() => handleMessagePress(message)}
+          >
+            <View style={[styles.messageContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+              <View style={styles.avatarContainer}>
+                <View style={styles.iconContainer}>{getMessageIcon(message.type)}</View>
               </View>
-            </TouchableOpacity>
-          ))
-        )}
 
-        {!isLoading && messages.length === 0 && (
+              <View
+                style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
+              >
+                <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                  <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>System</Text>
+                  <Text style={[styles.messageTime, { textAlign: isRTL ? "left" : "right" }]}>
+                    {formatTime(message.createdAt)}
+                  </Text>
+                </View>
+
+                <Text style={[styles.messageSubject, { textAlign: isRTL ? "right" : "left" }]}>{message.title}</Text>
+
+                <Text style={[styles.messagePreview, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                  {message.content}
+                </Text>
+              </View>
+
+              <View style={styles.messageActions}>
+                <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(message.priority) }]} />
+                {message.isRead ? (
+                  <CheckCircle size={16} color={COLORS.success} />
+                ) : (
+                  <Clock size={16} color={COLORS.warning} />
+                )}
+                <TouchableOpacity
+                  style={styles.replyButton}
+                  onPress={() => {
+                    setSelectedMessage(message);
+                    setReplyModalVisible(true);
+                  }}
+                >
+                  <Send size={14} color={COLORS.white} />
+                  <Text style={styles.replyButtonText}>رد</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        {messages.length === 0 && (
           <View style={styles.emptyState}>
             <MessageCircle size={64} color={COLORS.lightGray} />
             <Text style={styles.emptyStateText}>لا توجد رسائل</Text>
-            <Text style={styles.emptyStateSubtext}>ستظهر الرسائل هنا عند وصولها</Text>
+            <Text style={styles.emptyStateSubtext}>
+              {userMode === "veterinarian" ? "ستظهر هنا رسائل المرضى والعيادات الأخرى" : "ستظهر الرسائل هنا عند وصولها"}
+            </Text>
           </View>
         )}
       </ScrollView>
+
+      {/* Reply Modal */}
+      <Modal
+        visible={replyModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setReplyModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>الرد على الرسالة</Text>
+              <TouchableOpacity style={styles.closeButton} onPress={() => setReplyModalVisible(false)}>
+                <X size={24} color={COLORS.gray} />
+              </TouchableOpacity>
+            </View>
+
+            {selectedMessage && (
+              <View style={styles.originalMessage}>
+                <Text style={styles.originalTitle}>{selectedMessage?.title}</Text>
+                <Text style={styles.originalText}>{selectedMessage?.content}</Text>
+                <Text style={styles.originalFrom}>من: System</Text>
+              </View>
+            )}
+
+            {isLoadingReplies ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <ScrollView style={styles.repliesContainer}>
+                {replies?.map((reply) => (
+                  <View
+                    key={reply.id}
+                    style={[styles.replyItem, reply.isFromAdmin ? styles.adminReply : styles.userReply]}
+                  >
+                    <Text style={styles.replySender}>
+                      {reply.userName}
+                      <Text style={styles.replyTimestamp}> ({formatTime(new Date(reply.createdAt))})</Text>
+                    </Text>
+                    <Text style={styles.replyContent}>{reply.content}</Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            <TextInput
+              style={styles.replyInput}
+              placeholder="اكتب ردك هنا..."
+              value={replyText}
+              onChangeText={setReplyText}
+              multiline
+              numberOfLines={6}
+              textAlignVertical="top"
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setReplyModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>إلغاء</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.sendButton, !replyText?.trim() && styles.disabledButton]}
+                onPress={() => handleSendReply()}
+                disabled={!replyText?.trim()}
+              >
+                <Send size={16} color={COLORS.white} />
+                <Text style={styles.sendButtonText}>إرسال الرد</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  errorText: {
+    color: "red",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.gray,
@@ -323,14 +422,161 @@ const styles = StyleSheet.create({
     color: COLORS.lightGray,
     textAlign: "center",
   },
-  loadingContainer: {
-    padding: 40,
+  messageActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  priorityIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  replyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 4,
+  },
+  replyButtonText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+    width: "100%",
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: COLORS.black,
+  },
+  closeButton: {
+    padding: 4,
+  },
+  originalMessage: {
+    backgroundColor: COLORS.lightGray,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  originalTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginBottom: 4,
+  },
+  originalText: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginBottom: 4,
+  },
+  originalFrom: {
+    fontSize: 10,
+    color: COLORS.gray,
+  },
+  replyInput: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: COLORS.black,
+    minHeight: 120,
+    marginBottom: 16,
+    textAlign: "right",
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: COLORS.darkGray,
+    borderColor: COLORS.gray,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  sendButton: {
+    flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
   },
-  loadingText: {
-    fontSize: 16,
+  disabledButton: {
+    backgroundColor: COLORS.gray,
+  },
+  sendButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  repliesContainer: {
+    maxHeight: 350, // Limit height for scrollability
+    marginBottom: 16,
+    paddingRight: 10,
+  },
+  replyItem: {
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 8,
+    maxWidth: "80%",
+  },
+  adminReply: {
+    backgroundColor: COLORS.primary + "10",
+    alignSelf: "flex-start",
+    borderTopLeftRadius: 0,
+  },
+  userReply: {
+    backgroundColor: COLORS.lightGray,
+    alignSelf: "flex-end",
+    borderTopRightRadius: 0,
+  },
+  replySender: {
+    fontSize: 12,
+    fontWeight: "bold",
     color: COLORS.darkGray,
-    textAlign: "center",
+    marginBottom: 2,
+  },
+  replyTimestamp: {
+    fontSize: 10,
+    color: COLORS.gray,
+    marginLeft: 5,
+  },
+  replyContent: {
+    fontSize: 14,
+    color: COLORS.black,
   },
 });

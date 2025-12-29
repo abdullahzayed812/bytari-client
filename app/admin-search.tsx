@@ -21,6 +21,7 @@ import { trpc } from "../lib/trpc";
 import { AdminTopBar } from "../components/AdminTopBar";
 
 import Button from "../components/Button";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 type SearchCategory = "users" | "pets" | "clinics" | "stores" | "inquiries" | "consultations" | "all";
 
@@ -61,8 +62,12 @@ export default function AdminSearchScreen() {
   }>({});
 
   // Fetch data from database
-  const usersQuery = trpc.admin.users.listAll.useQuery({ adminId: 1 });
-  const storesQuery = trpc.stores.listActive.useQuery();
+  const usersQuery = useQuery(trpc.admin.users.listAll.queryOptions({ adminId: 1 }));
+  const storesQuery = useQuery(trpc.stores.listActive.queryOptions());
+
+  const banUserMutation = useMutation(trpc.admin.users.ban.mutationOptions());
+  const deleteUserMutation = useMutation(trpc.admin.users.delete.mutationOptions());
+  const updateUserMutation = useMutation(trpc.admin.users.updateProfile.mutationOptions());
 
   if (!hasAdminAccess) {
     Alert.alert("خطأ", "ليس لديك صلاحية للوصول إلى هذه الصفحة");
@@ -212,16 +217,6 @@ export default function AdminSearchScreen() {
     setShowEditModal(true);
   };
 
-  const banUserMutation = trpc.admin.users.ban.useMutation({
-    onSuccess: () => {
-      usersQuery.refetch();
-      handleSearch(); // Refresh search results
-    },
-    onError: (error: any) => {
-      Alert.alert("خطأ", error.message || "حدث خطأ أثناء تحديث المستخدم");
-    },
-  });
-
   const handleBanItem = (result: SearchResult) => {
     if (result.type !== "users") return;
 
@@ -232,25 +227,26 @@ export default function AdminSearchScreen() {
         text: action,
         style: result.isActive ? "destructive" : "default",
         onPress: () => {
-          banUserMutation.mutate({
-            userId: parseInt(result.id),
-            adminId: 1,
-            ban: result.isActive || false,
-          });
+          banUserMutation.mutate(
+            {
+              userId: parseInt(result.id),
+              adminId: 1,
+              ban: result.isActive || false,
+            },
+            {
+              onSuccess: () => {
+                usersQuery.refetch();
+                handleSearch(); // Refresh search results
+              },
+              onError: (error: any) => {
+                Alert.alert("خطأ", error.message || "حدث خطأ أثناء تحديث المستخدم");
+              },
+            }
+          );
         },
       },
     ]);
   };
-
-  const deleteUserMutation = trpc.admin.users.delete.useMutation({
-    onSuccess: () => {
-      usersQuery.refetch();
-      handleSearch(); // Refresh search results
-    },
-    onError: (error: any) => {
-      Alert.alert("خطأ", error.message || "حدث خطأ أثناء حذف المستخدم");
-    },
-  });
 
   const handleDeleteItem = (result: SearchResult) => {
     const itemType = result.type === "users" ? "المستخدم" : result.type === "stores" ? "المتجر" : "العنصر";
@@ -261,10 +257,21 @@ export default function AdminSearchScreen() {
         style: "destructive",
         onPress: () => {
           if (result.type === "users") {
-            deleteUserMutation.mutate({
-              userId: parseInt(result.id),
-              adminId: 1,
-            });
+            deleteUserMutation.mutate(
+              {
+                userId: parseInt(result.id),
+                adminId: 1,
+              },
+              {
+                onSuccess: () => {
+                  usersQuery.refetch();
+                  handleSearch(); // Refresh search results
+                },
+                onError: (error: any) => {
+                  Alert.alert("خطأ", error.message || "حدث خطأ أثناء حذف المستخدم");
+                },
+              }
+            );
           } else {
             Alert.alert("تنبيه", "حذف هذا النوع من العناصر غير متاح حالياً");
           }
@@ -273,32 +280,33 @@ export default function AdminSearchScreen() {
     ]);
   };
 
-  const updateUserMutation = trpc.admin.users.updateProfile.useMutation({
-    onSuccess: () => {
-      usersQuery.refetch();
-      handleSearch(); // Refresh search results
-      Alert.alert("تم", "تم حفظ التغييرات بنجاح");
-      setShowEditModal(false);
-      setSelectedItem(null);
-    },
-    onError: (error: any) => {
-      Alert.alert("خطأ", error.message || "حدث خطأ أثناء حفظ التغييرات");
-    },
-  });
-
   const handleSaveEdit = () => {
     if (!selectedItem) return;
 
     if (selectedItem.type === "users") {
-      updateUserMutation.mutate({
-        userId: parseInt(selectedItem.id),
-        adminId: 1,
-        name: editForm.name || "",
-        email: editForm.email || "",
-        phone: editForm.phone,
-        userType: editForm.userType as "user" | "vet" | "admin",
-        isActive: editForm.isActive || false,
-      });
+      updateUserMutation.mutate(
+        {
+          userId: parseInt(selectedItem.id),
+          adminId: 1,
+          name: editForm.name || "",
+          email: editForm.email || "",
+          phone: editForm.phone,
+          userType: editForm.userType as "user" | "vet" | "admin",
+          isActive: editForm.isActive || false,
+        },
+        {
+          onSuccess: () => {
+            usersQuery.refetch();
+            handleSearch(); // Refresh search results
+            Alert.alert("تم", "تم حفظ التغييرات بنجاح");
+            setShowEditModal(false);
+            setSelectedItem(null);
+          },
+          onError: (error: any) => {
+            Alert.alert("خطأ", error.message || "حدث خطأ أثناء حفظ التغييرات");
+          },
+        }
+      );
     } else {
       Alert.alert("تنبيه", "تعديل هذا النوع من العناصر غير متاح حالياً");
     }

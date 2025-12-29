@@ -41,7 +41,7 @@ export default function JobApplicationScreen() {
   // Initial form data with sample values
   const [formData, setFormData] = useState<JobApplicationFormData>({
     applicantName: "د. أحمد محمد علي",
-    applicantEmail: "ahmed.mohammed@example.com",
+    applicantEmail: "vet1@example.com",
     applicantPhone: "07701234567",
     location: "بغداد، العراق",
     desiredPosition: decodedJobTitle || "طبيب بيطري",

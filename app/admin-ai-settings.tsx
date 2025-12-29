@@ -51,31 +51,10 @@ export default function AdminAiSettingsScreen() {
   const adminId = 1;
 
   // جلب إعدادات الذكاء الاصطناعي
-  const {
-    data: aiSettingsData,
-    refetch,
-    isLoading,
-  } = useQuery(
-    trpc.admin.aiSettings.get.queryOptions(
-      {},
-      {
-        retry: 1,
-      }
-    )
-  );
+  const { data: aiSettingsData, refetch, isLoading } = useQuery(trpc.admin.aiSettings.get.queryOptions());
 
   // Mutations
-  const updateAiSettings = useMutation(
-    trpc.admin.aiSettings.update.mutationOptions({
-      onSuccess: () => {
-        Alert.alert("نجح", "تم تحديث إعدادات الذكاء الاصطناعي بنجاح");
-        refetch();
-      },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message);
-      },
-    })
-  );
+  const updateAiSettings = useMutation(trpc.admin.aiSettings.update.mutationOptions());
 
   const toggleAi = useMutation(
     trpc.admin.aiSettings.toggle.mutationOptions({
@@ -161,6 +140,7 @@ export default function AdminAiSettingsScreen() {
         maxResponseLength: settings.maxResponseLength,
         adminId,
       },
+
       {
         onSettled: () => setSaving(false),
       }

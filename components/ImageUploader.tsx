@@ -31,6 +31,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     },
   });
 
+  console.log(imageUri);
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}

@@ -100,7 +100,6 @@ export default function AdminDashboard() {
   const { data: rawSystemStats, isLoading: statsLoading } = useQuery(
     trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
   );
-
   const systemStats: any = useMemo(() => rawSystemStats, [rawSystemStats]);
 
   const { data: rawUserPermissions, isLoading: permissionsLoading } = useQuery(
@@ -1319,7 +1318,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     textAlign: "center",
-    marginBottom: 20,
+    // marginBottom: 20,
     fontFamily: "System",
   },
   modalScroll: {
@@ -1383,10 +1382,15 @@ const styles = StyleSheet.create({
 
   modalActions: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   sendButton: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
     backgroundColor: "#4ECDC4",
     paddingVertical: 12,
     borderRadius: 8,

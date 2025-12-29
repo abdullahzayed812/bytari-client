@@ -93,7 +93,7 @@ export default function PostJobVacancyScreen() {
       {
         onSuccess: (data) => {
           // Invalidate jobs queries to refresh the list
-          queryClient.invalidateQueries(trpc.admin.jobs.getAllJobs.queryKey);
+          queryClient.invalidateQueries(trpc.admin.jobs.getAllJobs.queryKey as any);
 
           // Show success message
           Alert.alert("نجح الإرسال", "تم إرسال إعلان الوظيفة بنجاح وسيظهر في قائمة الوظائف المتاحة", [

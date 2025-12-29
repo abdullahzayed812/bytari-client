@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
-} from 'react-native';
+} from "react-native";
 import {
   ArrowLeft,
   Scale,
@@ -23,20 +23,20 @@ import {
   FileText,
   Eye,
   Trash2,
-} from 'lucide-react-native';
-import { useRouter, Stack } from 'expo-router';
+} from "lucide-react-native";
+import { useRouter, Stack } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { usePermissions } from "../lib/permissions";
-import { trpc } from '../lib/trpc';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { trpc } from "../lib/trpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface UnionBranch {
   id: string;
   name: string;
-  type: 'main' | 'branch';
+  type: "main" | "branch";
   governorate?: string;
-  region?: 'central' | 'northern' | 'southern' | 'kurdistan';
+  region?: "central" | "northern" | "southern" | "kurdistan";
   address: string;
   phone: string;
   email: string;
@@ -44,94 +44,96 @@ interface UnionBranch {
   membersCount: number;
   announcements: number;
   rating: number;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   canManage: boolean;
 }
 
 export default function UnionManagementDashboardScreen() {
   const router = useRouter();
-  const { moderatorPermissions, isSuperAdmin, isModerator } = useApp();
-  const { canAccessUnion } = usePermissions();
-  const [selectedTab, setSelectedTab] = useState<'overview' | 'unions' | 'announcements'>('overview');
+  // const { moderatorPermissions, isSuperAdmin, isModerator } = useApp();
+  // const { canAccessUnion } = usePermissions();
+  const [selectedTab, setSelectedTab] = useState<"overview" | "unions" | "announcements">("overview");
   const queryClient = useQueryClient();
 
-  const { data: allUnions, isLoading, error } = useQuery(trpc.union.branch.list.queryOptions());
+  const { data: allUnions, isLoading: isAllUnionsLoading, error } = useQuery(trpc.union.branch.list.queryOptions());
 
-  const deleteUnionMutation = useMutation(trpc.union.branch.delete.mutationOptions({
-    onSuccess: () => {
-      queryClient.invalidateQueries(trpc.union.branch.list.queryKey);
-      Alert.alert('تم', 'تم حذف النقابة بنجاح');
-    },
-    onError: (error) => {
-      Alert.alert('خطأ', 'حدث خطأ أثناء حذف النقابة');
-    }
-  }));
+  const { data: announcements, isLoading: isAnnouncementsLoading } = useQuery(
+    trpc.union.announcement.list.queryOptions({})
+  );
 
-  const filteredUnions = allUnions?.filter(union => union.canManage) || [];
+  const deleteUnionMutation = useMutation(
+    trpc.union.branch.delete.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.union.branch.list.queryKey as any);
+        Alert.alert("تم", "تم حذف النقابة بنجاح");
+      },
+      onError: (error) => {
+        Alert.alert("خطأ", "حدث خطأ أثناء حذف النقابة");
+      },
+    })
+  );
+
+  const filteredUnions = allUnions?.filter((union) => union) || [];
 
   const handleUnionPress = (union: UnionBranch) => {
-    if (union.type === 'main') {
-      router.push('/vet-union');
+    if (union.type === "main") {
+      router.push("/vet-union");
     } else {
       router.push(`/union-branch-details?id=${union.id}`);
     }
   };
 
   const handleEditUnion = (union: UnionBranch) => {
-    if (union.type === 'main') {
-      router.push('/edit-union-main');
+    if (union.type === "main") {
+      router.push("/edit-union-main");
     } else {
       router.push(`/edit-union-branch?id=${union.id}`);
     }
   };
 
   const handleAddAnnouncement = (union: UnionBranch) => {
-    if (union.type === 'main') {
-      router.push('/add-union-announcement?branchId=main');
+    if (union.type === "main") {
+      router.push("/add-union-announcement?branchId=main");
     } else {
       router.push(`/add-union-announcement?branchId=${union.id}`);
     }
   };
 
   const handleDeleteUnion = (unionId: string, unionName: string) => {
-    Alert.alert(
-      'تأكيد الحذف',
-      `هل أنت متأكد من حذف ${unionName}؟`,
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: () => {
-            deleteUnionMutation.mutate(parseInt(unionId));
-          }
-        }
-      ]
-    );
+    Alert.alert("تأكيد الحذف", `هل أنت متأكد من حذف ${unionName}؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deleteUnionMutation.mutate(parseInt(unionId));
+        },
+      },
+    ]);
   };
 
   const renderStars = (rating: number) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-    
+
     for (let i = 0; i < fullStars; i++) {
       stars.push(<Star key={i} size={12} color="#FFD700" fill="#FFD700" />);
     }
-    
+
     if (hasHalfStar) {
       stars.push(<Star key="half" size={12} color="#FFD700" fill="#FFD700" />);
     }
-    
+
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(<Star key={`empty-${i}`} size={12} color="#E5E7EB" />);
     }
-    
+
     return stars;
   };
 
-  if (isLoading) {
+  if (isAllUnionsLoading || isAnnouncementsLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={COLORS.primary} />
@@ -155,24 +157,22 @@ export default function UnionManagementDashboardScreen() {
           <Text style={styles.statNumber}>{filteredUnions.length}</Text>
           <Text style={styles.statLabel}>إجمالي النقابات</Text>
         </View>
-        
-        <View style={[styles.statCard, { backgroundColor: '#10B981' }]}>
+
+        <View style={[styles.statCard, { backgroundColor: "#10B981" }]}>
           <FileText size={24} color={COLORS.white} />
-          <Text style={styles.statNumber}>
-            {filteredUnions.reduce((sum, u) => sum + u.announcements, 0)}
-          </Text>
+          <Text style={styles.statNumber}>{filteredUnions.reduce((sum, u) => sum + u.announcements, 0)}</Text>
           <Text style={styles.statLabel}>إجمالي الإعلانات</Text>
         </View>
-        
-        <View style={[styles.statCard, { backgroundColor: '#F59E0B' }]}>
+
+        <View style={[styles.statCard, { backgroundColor: "#F59E0B" }]}>
           <Users size={24} color={COLORS.white} />
           <Text style={styles.statNumber}>
             {filteredUnions.reduce((sum, u) => sum + u.membersCount, 0).toLocaleString()}
           </Text>
           <Text style={styles.statLabel}>إجمالي الأعضاء</Text>
         </View>
-        
-        <View style={[styles.statCard, { backgroundColor: '#EF4444' }]}>
+
+        <View style={[styles.statCard, { backgroundColor: "#EF4444" }]}>
           <BarChart3 size={24} color={COLORS.white} />
           <Text style={styles.statNumber}>98%</Text>
           <Text style={styles.statLabel}>معدل النشاط</Text>
@@ -181,35 +181,35 @@ export default function UnionManagementDashboardScreen() {
 
       <View style={styles.quickActionsContainer}>
         <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
-        
+
         <View style={styles.quickActionsGrid}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.quickActionCard, { backgroundColor: COLORS.primary }]}
-            onPress={() => router.push('/union-branches')}
+            onPress={() => router.push("/union-branches")}
           >
             <Plus size={20} color={COLORS.white} />
             <Text style={styles.quickActionText}>إضافة فرع</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.quickActionCard, { backgroundColor: '#10B981' }]}
-            onPress={() => router.push('/add-union-announcement')}
+
+          <TouchableOpacity
+            style={[styles.quickActionCard, { backgroundColor: "#10B981" }]}
+            onPress={() => router.push("/add-union-announcement")}
           >
             <FileText size={20} color={COLORS.white} />
             <Text style={styles.quickActionText}>إعلان جديد</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.quickActionCard, { backgroundColor: '#F59E0B' }]}
-            onPress={() => router.push('/union-settings')}
+
+          <TouchableOpacity
+            style={[styles.quickActionCard, { backgroundColor: "#F59E0B" }]}
+            onPress={() => router.push("/union-settings")}
           >
             <Settings size={20} color={COLORS.white} />
             <Text style={styles.quickActionText}>إعدادات النظام</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.quickActionCard, { backgroundColor: '#8B5CF6' }]}
-            onPress={() => router.push('/union-analytics')}
+
+          <TouchableOpacity
+            style={[styles.quickActionCard, { backgroundColor: "#8B5CF6" }]}
+            onPress={() => router.push("/union-analytics")}
           >
             <BarChart3 size={20} color={COLORS.white} />
             <Text style={styles.quickActionText}>التحليلات</Text>
@@ -223,15 +223,12 @@ export default function UnionManagementDashboardScreen() {
     <View style={styles.tabContent}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>قائمة النقابات</Text>
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => router.push('/union-branches')}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={() => router.push("/union-branches")}>
           <Plus size={16} color={COLORS.white} />
           <Text style={styles.addButtonText}>إضافة</Text>
         </TouchableOpacity>
       </View>
-      
+
       {filteredUnions.map((union) => (
         <View key={union.id} style={styles.unionCard}>
           <View style={styles.unionHeader}>
@@ -239,67 +236,61 @@ export default function UnionManagementDashboardScreen() {
               <Text style={styles.unionName}>{union.name}</Text>
               <View style={styles.unionMeta}>
                 <MapPin size={14} color={COLORS.darkGray} />
-                <Text style={styles.unionLocation}>{union.governorate || 'المقر الرئيسي'}</Text>
-                {union.type === 'main' && (
+                <Text style={styles.unionLocation}>{union.governorate || "المقر الرئيسي"}</Text>
+                {union.type === "main" && (
                   <View style={styles.mainBadge}>
                     <Text style={styles.mainBadgeText}>رئيسي</Text>
                   </View>
                 )}
               </View>
               <View style={styles.ratingContainer}>
-                <View style={styles.starsContainer}>
-                  {renderStars(union.rating)}
-                </View>
+                <View style={styles.starsContainer}>{renderStars(union.rating)}</View>
                 <Text style={styles.ratingText}>({union.rating})</Text>
               </View>
             </View>
-            
-            <View style={[styles.statusBadge, 
-              { backgroundColor: union.status === 'active' ? '#10B981' : '#EF4444' }
-            ]}>
-              <Text style={styles.statusText}>
-                {union.status === 'active' ? 'نشط' : 'غير نشط'}
-              </Text>
+
+            <View style={[styles.statusBadge, { backgroundColor: union.status === "active" ? "#10B981" : "#EF4444" }]}>
+              <Text style={styles.statusText}>{union.status === "active" ? "نشط" : "غير نشط"}</Text>
             </View>
           </View>
-          
+
           <View style={styles.unionStats}>
             <View style={styles.statItem}>
               <FileText size={16} color={COLORS.primary} />
               <Text style={styles.statItemText}>{union.announcements} إعلان</Text>
             </View>
-            
+
             <View style={styles.statItem}>
               <Users size={16} color="#10B981" />
               <Text style={styles.statItemText}>{union.membersCount.toLocaleString()} عضو</Text>
             </View>
           </View>
-          
+
           <View style={styles.unionActions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
               onPress={() => handleUnionPress(union)}
             >
               <Eye size={16} color={COLORS.white} />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#F59E0B' }]}
+
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: "#F59E0B" }]}
               onPress={() => handleEditUnion(union)}
             >
               <Edit3 size={16} color={COLORS.white} />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, { backgroundColor: '#10B981' }]}
+
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: "#10B981" }]}
               onPress={() => handleAddAnnouncement(union)}
             >
               <FileText size={16} color={COLORS.white} />
             </TouchableOpacity>
-            
-            {union.type !== 'main' && (
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#EF4444' }]}
+
+            {union.type !== "main" && (
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: "#EF4444" }]}
                 onPress={() => handleDeleteUnion(union.id, union.name)}
                 disabled={deleteUnionMutation.isPending}
               >
@@ -312,70 +303,53 @@ export default function UnionManagementDashboardScreen() {
     </View>
   );
 
-  const renderAnnouncementsTab = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>إدارة الإعلانات</Text>
-        <TouchableOpacity 
-          style={styles.addButton} 
-          onPress={() => router.push('/add-union-announcement')}
-        >
-          <Plus size={16} color={COLORS.white} />
-          <Text style={styles.addButtonText}>إعلان جديد</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.announcementsList}>
-        <View style={styles.announcementCard}>
-          <View style={styles.announcementHeader}>
-            <View style={[styles.typeBadge, { backgroundColor: '#10B981' }]}>
-              <Text style={styles.typeBadgeText}>إعلان</Text>
-            </View>
-            <Text style={styles.announcementDate}>2024-12-01</Text>
-          </View>
-          
-          <Text style={styles.announcementTitle}>إعلان مهم من النقابة</Text>
-          <Text style={styles.announcementUnion}>نقابة الأطباء البيطريين العراقية - المقر الرئيسي</Text>
-          
-          <View style={styles.announcementActions}>
-            <TouchableOpacity style={styles.announcementActionButton}>
-              <Eye size={14} color={COLORS.primary} />
-              <Text style={styles.announcementActionText}>عرض</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.announcementActionButton}>
-              <Edit3 size={14} color="#F59E0B" />
-              <Text style={styles.announcementActionText}>تعديل</Text>
-            </TouchableOpacity>
-          </View>
+  const renderAnnouncementsTab = (announcements: any) => {
+    return (
+      <View style={styles.tabContent}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>إدارة الإعلانات</Text>
+          <TouchableOpacity style={styles.addButton} onPress={() => router.push("/add-union-announcement")}>
+            <Plus size={16} color={COLORS.white} />
+            <Text style={styles.addButtonText}>إعلان جديد</Text>
+          </TouchableOpacity>
         </View>
-        
-        <View style={styles.announcementCard}>
-          <View style={styles.announcementHeader}>
-            <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
-              <Text style={styles.typeBadgeText}>خبر</Text>
+
+        <View style={styles.announcementsList}>
+          {announcements?.map((announcement) => (
+            <View key={announcement.id} style={styles.announcementCard}>
+              <View style={styles.announcementHeader}>
+                <View style={[styles.typeBadge, { backgroundColor: "#10B981" }]}>
+                  <Text style={styles.typeBadgeText}>{announcement.type}</Text>
+                </View>
+                <Text style={styles.announcementDate}>{new Date(announcement.createdAt).toLocaleDateString()}</Text>
+              </View>
+
+              <Text style={styles.announcementTitle}>{announcement.title}</Text>
+              <Text style={styles.announcementUnion}>
+                {announcement.branchId ? allUnions?.find((u) => u.id === announcement.branchId)?.name : "المقر الرئيسي"}
+              </Text>
+
+              <View style={styles.announcementActions}>
+                <TouchableOpacity
+                  style={styles.announcementActionButton}
+                  onPress={() =>
+                    router.push(
+                      `/edit-union-announcement?announcementId=${announcement.id}&branchId=${
+                        announcement.branchId || "main"
+                      }`
+                    )
+                  }
+                >
+                  <Edit3 size={14} color="#F59E0B" />
+                  <Text style={styles.announcementActionText}>تعديل</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <Text style={styles.announcementDate}>2024-11-15</Text>
-          </View>
-          
-          <Text style={styles.announcementTitle}>المؤتمر العلمي السنوي الثامن والثلاثون</Text>
-          <Text style={styles.announcementUnion}>نقابة الأطباء البيطريين - بغداد</Text>
-          
-          <View style={styles.announcementActions}>
-            <TouchableOpacity style={styles.announcementActionButton}>
-              <Eye size={14} color={COLORS.primary} />
-              <Text style={styles.announcementActionText}>عرض</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.announcementActionButton}>
-              <Edit3 size={14} color="#F59E0B" />
-              <Text style={styles.announcementActionText}>تعديل</Text>
-            </TouchableOpacity>
-          </View>
+          ))}
         </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <>
@@ -393,41 +367,35 @@ export default function UnionManagementDashboardScreen() {
         </View>
 
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, selectedTab === 'overview' && styles.activeTab]}
-            onPress={() => setSelectedTab('overview')}
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === "overview" && styles.activeTab]}
+            onPress={() => setSelectedTab("overview")}
           >
-            <BarChart3 size={18} color={selectedTab === 'overview' ? COLORS.white : COLORS.primary} />
-            <Text style={[styles.tabText, selectedTab === 'overview' && styles.activeTabText]}>
-              نظرة عامة
-            </Text>
+            <BarChart3 size={18} color={selectedTab === "overview" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.tabText, selectedTab === "overview" && styles.activeTabText]}>نظرة عامة</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.tab, selectedTab === 'unions' && styles.activeTab]}
-            onPress={() => setSelectedTab('unions')}
+
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === "unions" && styles.activeTab]}
+            onPress={() => setSelectedTab("unions")}
           >
-            <Scale size={18} color={selectedTab === 'unions' ? COLORS.white : COLORS.primary} />
-            <Text style={[styles.tabText, selectedTab === 'unions' && styles.activeTabText]}>
-              النقابات
-            </Text>
+            <Scale size={18} color={selectedTab === "unions" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.tabText, selectedTab === "unions" && styles.activeTabText]}>النقابات</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.tab, selectedTab === 'announcements' && styles.activeTab]}
-            onPress={() => setSelectedTab('announcements')}
+
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === "announcements" && styles.activeTab]}
+            onPress={() => setSelectedTab("announcements")}
           >
-            <FileText size={18} color={selectedTab === 'announcements' ? COLORS.white : COLORS.primary} />
-            <Text style={[styles.tabText, selectedTab === 'announcements' && styles.activeTabText]}>
-              الإعلانات
-            </Text>
+            <FileText size={18} color={selectedTab === "announcements" ? COLORS.white : COLORS.primary} />
+            <Text style={[styles.tabText, selectedTab === "announcements" && styles.activeTabText]}>الإعلانات</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {selectedTab === 'overview' && renderOverviewTab()}
-          {selectedTab === 'unions' && renderUnionsTab()}
-          {selectedTab === 'announcements' && renderAnnouncementsTab()}
+          {selectedTab === "overview" && renderOverviewTab()}
+          {selectedTab === "unions" && renderUnionsTab()}
+          {selectedTab === "announcements" && renderAnnouncementsTab(announcements)}
         </ScrollView>
       </SafeAreaView>
     </>
@@ -437,12 +405,12 @@ export default function UnionManagementDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -452,22 +420,22 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   notificationButton: {
     padding: 8,
   },
   tabContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.white,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 12,
     padding: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -475,9 +443,9 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
@@ -488,7 +456,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
   },
   activeTabText: {
@@ -502,17 +470,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
     marginBottom: 24,
   },
   statCard: {
-    width: '47%',
+    width: "47%",
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -520,14 +488,14 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     marginTop: 8,
   },
   statLabel: {
     fontSize: 12,
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
   },
   quickActionsContainer: {
@@ -535,21 +503,21 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   quickActionCard: {
-    width: '47%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "47%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     gap: 8,
@@ -557,17 +525,17 @@ const styles = StyleSheet.create({
   quickActionText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -577,23 +545,23 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   unionCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   unionHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 12,
   },
   unionInfo: {
@@ -601,14 +569,14 @@ const styles = StyleSheet.create({
   },
   unionName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   unionMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     marginBottom: 4,
   },
@@ -626,16 +594,16 @@ const styles = StyleSheet.create({
   mainBadgeText: {
     color: COLORS.white,
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 4,
   },
   starsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 2,
   },
   ratingText: {
@@ -650,16 +618,16 @@ const styles = StyleSheet.create({
   statusText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   unionStats: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
     marginBottom: 12,
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   statItemText: {
@@ -667,15 +635,15 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   unionActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   actionButton: {
     width: 36,
     height: 36,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   announcementsList: {
     gap: 12,
@@ -684,16 +652,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   announcementHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 8,
   },
   typeBadge: {
@@ -704,7 +672,7 @@ const styles = StyleSheet.create({
   typeBadgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   announcementDate: {
     fontSize: 12,
@@ -712,28 +680,28 @@ const styles = StyleSheet.create({
   },
   announcementTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementUnion: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   announcementActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   announcementActionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

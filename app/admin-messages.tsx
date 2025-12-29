@@ -1,7 +1,18 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Image } from "react-native";
+import React, { useMemo, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  TextInput,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { Stack, useRouter } from "expo-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { COLORS } from "@/constants/colors";
 import { useApp } from "@/providers/AppProvider";
@@ -16,48 +27,61 @@ import {
   Plus,
   Send,
   Trash2,
-  User,
   X,
 } from "lucide-react-native";
 
 interface AdminMessage {
   id: string;
-  type: "inquiry" | "consultation" | "general_manager" | "admin_message";
+  senderId: number;
+  senderName: string;
   title: string;
-  message: string;
-  from: {
-    name: string;
-    email: string;
-    role: "user" | "vet" | "admin" | "general_manager";
-  };
-  timestamp: Date;
-  status: "pending" | "replied" | "closed";
-  priority: "high" | "medium" | "low";
-  repliedBy?: {
-    name: string;
-    role: string;
-    timestamp: Date;
-  };
-  reply?: string;
-  category?: string;
+  content: string;
+  type: string;
+  priority: "low" | "normal" | "high" | "urgent";
+  status: "sent" | "replied"; // Add this
+  createdAt: Date;
+  targetAudience: "all" | "users" | "vets" | "students" | "clinics" | "stores" | "specific" | "multiple";
+  targetCategories: string[] | null;
+  targetUserIds: number[] | null;
+  imageUrl: string | null;
+  linkUrl: string | null;
+  replyCount: number;
 }
 
 export default function AdminMessagesScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient(); // Add useQueryClient
   const { hasAdminAccess, isSuperAdmin, isModerator, user } = useApp();
+
   const {
     data: messagesData,
     isLoading,
     error,
-  } = useQuery(trpc.admin.messages.getUserSystemMessages.queryOptions({ userId: user?.id }));
+  } = useQuery(trpc.admin.messages.getAllSystemMessages.queryOptions({ adminId: Number(user?.id) }));
 
-  const messages = messagesData?.messages;
+  const messages = useMemo(() => messagesData?.messages, [messagesData]);
+
+  const markAsReadMutation = useMutation(trpc.admin.messages.markAsRead.mutationOptions());
+  const sendSystemMessageReplyMutation = useMutation(trpc.admin.messages.sendReply.mutationOptions());
 
   const [filter, setFilter] = useState<"all" | "pending" | "replied" | "high">("all");
   const [selectedMessage, setSelectedMessage] = useState<AdminMessage | null>(null);
   const [replyModalVisible, setReplyModalVisible] = useState<boolean>(false);
   const [replyText, setReplyText] = useState<string>("");
   const [sendMessageModalVisible, setSendMessageModalVisible] = useState<boolean>(false);
+
+  // Fetch replies for the selected message
+  const {
+    data: repliesData,
+    isLoading: isLoadingReplies,
+    refetch: refetchReplies,
+  } = useQuery({
+    ...trpc.admin.messages.getReplies.queryOptions({
+      messageId: selectedMessage?.id ? Number(selectedMessage.id) : -1,
+    }),
+    enabled: replyModalVisible && !!selectedMessage?.id, // Only fetch when modal is visible and message is selected
+  });
+  const replies = useMemo(() => repliesData?.replies, [repliesData]);
   const [newMessage, setNewMessage] = useState<{
     title: string;
     content: string;
@@ -107,42 +131,35 @@ export default function AdminMessagesScreen() {
     return null;
   }
 
-  const getMessageIcon = (type: AdminMessage["type"]) => {
+  const getMessageIcon = (type: string) => {
     switch (type) {
-      case "general_manager":
+      case "announcement":
+        return <AlertCircle size={20} color={COLORS.primary} />;
+      case "maintenance":
+        return <Clock size={20} color={COLORS.warning} />;
+      case "update":
+        return <CheckCircle size={20} color={COLORS.success} />;
+      case "warning":
         return <AlertCircle size={20} color={COLORS.error} />;
-      case "consultation":
-        return <MessageCircle size={20} color={COLORS.warning} />;
-      case "inquiry":
-        return <MessageCircle size={20} color={COLORS.info} />;
-      case "admin_message":
-        return <User size={20} color={COLORS.primary} />;
       default:
         return <MessageCircle size={20} color={COLORS.gray} />;
     }
   };
 
-  const getStatusIcon = (status: AdminMessage["status"]) => {
-    switch (status) {
-      case "replied":
-        return <CheckCircle size={16} color={COLORS.success} />;
-      case "pending":
-        return <Clock size={16} color={COLORS.warning} />;
-      case "closed":
-        return <CheckCircle size={16} color={COLORS.gray} />;
-      default:
-        return <Clock size={16} color={COLORS.gray} />;
-    }
+  const getStatusIcon = (isRead: boolean) => {
+    return isRead ? <CheckCircle size={16} color={COLORS.success} /> : <Clock size={16} color={COLORS.warning} />;
   };
 
   const getPriorityColor = (priority: AdminMessage["priority"]) => {
     switch (priority) {
       case "high":
         return COLORS.error;
-      case "medium":
+      case "normal":
         return COLORS.warning;
       case "low":
         return COLORS.success;
+      case "urgent":
+        return COLORS.red;
       default:
         return COLORS.gray;
     }
@@ -153,35 +170,35 @@ export default function AdminMessagesScreen() {
     setReplyModalVisible(true);
   };
 
-  const sendReply = () => {
-    if (!replyText.trim() || !selectedMessage) return;
+  // const sendReply = () => {
+  //   if (!replyText?.trim() || !selectedMessage) return;
 
-    const updatedMessages = messages?.map((msg) => {
-      if (msg.id === selectedMessage.id) {
-        return {
-          ...msg,
-          status: "replied" as const,
-          reply: replyText,
-          repliedBy: {
-            name: user?.name || "مشرف",
-            role: isSuperAdmin ? "المدير العام" : "مشرف",
-            timestamp: new Date(),
-          },
-        };
-      }
-      return msg;
-    });
+  //   const updatedMessages = messages?.map((msg) => {
+  //     if (msg.id === selectedMessage.id) {
+  //       return {
+  //         ...msg,
+  //         status: "replied" as const,
+  //         reply: replyText,
+  //         repliedBy: {
+  //           name: user?.name || "مشرف",
+  //           role: isSuperAdmin ? "المدير العام" : "مشرف",
+  //           timestamp: new Date(),
+  //         },
+  //       };
+  //     }
+  //     return msg;
+  //   });
 
-    // setMessages(updatedMessages);
-    setReplyModalVisible(false);
-    setReplyText("");
-    setSelectedMessage(null);
+  //   // setMessages(updatedMessages);
+  //   setReplyModalVisible(false);
+  //   setReplyText("");
+  //   setSelectedMessage(null);
 
-    Alert.alert("تم الإرسال", "تم إرسال الرد بنجاح");
-  };
+  //   Alert.alert("تم الإرسال", "تم إرسال الرد بنجاح");
+  // };
 
   const handleSendNewMessage = async () => {
-    if (!newMessage.title.trim() || !newMessage.content.trim()) {
+    if (!newMessage?.title?.trim() || !newMessage?.content?.trim()) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
@@ -193,7 +210,7 @@ export default function AdminMessagesScreen() {
 
     sendMessageMutation.mutate(
       {
-        senderId: user?.id || 1,
+        senderId: Number(user?.id),
         title: newMessage.title,
         content: newMessage.content,
         type: newMessage.type,
@@ -220,6 +237,7 @@ export default function AdminMessagesScreen() {
             imageUrl: "",
             linkUrl: "",
           });
+          queryClient.invalidateQueries(trpc.admin.messages.getAllSystemMessages.queryKey as any);
         },
         onError: (error) => {
           Alert.alert("خطأ", "حدث خطأ أثناء إرسال الرسالة");
@@ -291,22 +309,51 @@ export default function AdminMessagesScreen() {
     }
   };
 
-  const markAsRead = (id: string) => {
-    // setMessages((prev) =>
-    //   prev.map((msg) =>
-    //     msg.id === id ? { ...msg, status: "closed" as const } : msg
-    //   )
-    // );
+  const markAsRead = (messageId: number) => {
+    if (!user?.id) return;
+    markAsReadMutation.mutate(
+      { userId: Number(user.id), messageId: messageId },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.admin.messages.getAllSystemMessages.queryKey as any);
+        },
+      }
+    );
   };
 
-  const filteredMessages = messages?.filter((msg) => {
+  const sendReply = () => {
+    if (!replyText?.trim() || !selectedMessage || !user?.id) return;
+
+    sendSystemMessageReplyMutation.mutate(
+      {
+        messageId: Number(selectedMessage.id),
+        userId: user.id,
+        content: replyText,
+        isFromAdmin: true,
+      },
+      {
+        onSuccess: () => {
+          Alert.alert("تم الإرسال", "تم إرسال الرد بنجاح");
+          setReplyModalVisible(false);
+          setReplyText("");
+          setSelectedMessage(null);
+          queryClient.invalidateQueries(trpc.admin.messages.getAllSystemMessages);
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", `حدث خطأ أثناء إرسال الرد: ${error.message}`);
+        },
+      }
+    );
+  };
+
+  const filteredMessages = messages?.filter((message) => {
     switch (filter) {
       case "pending":
-        return msg.status === "pending";
+        return message.status === "sent"; // Assuming 'pending' means not yet replied
       case "replied":
-        return msg.status === "replied";
+        return message.status === "replied";
       case "high":
-        return msg.priority === "high";
+        return message.priority === "high" || message.priority === "urgent";
       default:
         return true;
     }
@@ -328,16 +375,16 @@ export default function AdminMessagesScreen() {
     }
   };
 
-  const getTypeLabel = (type: AdminMessage["type"]) => {
+  const getTypeLabel = (type: string) => {
     switch (type) {
-      case "general_manager":
-        return "رسالة من المدير العام";
-      case "consultation":
-        return "استشارة طبية";
-      case "inquiry":
-        return "استفسار";
-      case "admin_message":
-        return "رسالة إدارية";
+      case "announcement":
+        return "إعلان";
+      case "maintenance":
+        return "صيانة";
+      case "update":
+        return "تحديث";
+      case "warning":
+        return "تحذير";
       default:
         return "رسالة";
     }
@@ -396,11 +443,14 @@ export default function AdminMessagesScreen() {
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {filteredMessages.map((message) => (
+        {filteredMessages?.map((message) => (
           <TouchableOpacity
             key={message.id}
-            style={[styles.messageCard, message.status === "pending" && styles.pendingCard]}
-            onPress={() => markAsRead(message.id)}
+            style={[
+              styles.messageCard,
+              !message.isRead && { borderLeftWidth: 4, borderLeftColor: COLORS.warning, backgroundColor: "#fffbf0" },
+            ]}
+            // onPress={() => !message.isRead && markAsRead(Number(message.id))}
           >
             <View style={styles.messageHeader}>
               <View style={styles.messageInfo}>
@@ -408,43 +458,40 @@ export default function AdminMessagesScreen() {
                 <View style={styles.messageContent}>
                   <Text style={styles.messageTitle}>{message.title}</Text>
                   <Text style={styles.messageType}>{getTypeLabel(message.type)}</Text>
-                  <Text style={styles.messageFrom}>من: {message.from.name}</Text>
+                  <Text style={styles.messageFrom}>من: {message.senderName}</Text>
                 </View>
               </View>
 
               <View style={styles.messageActions}>
                 <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(message.priority) }]} />
-                {getStatusIcon(message.status)}
+                {getStatusIcon(message.isRead)}
+                {message.replyCount > 0 && (
+                  <View style={styles.replyCountContainer}>
+                    <MessageCircle size={14} color={COLORS.gray} />
+                    <Text style={styles.replyCountText}>{message.replyCount}</Text>
+                  </View>
+                )}
               </View>
             </View>
 
             <Text style={styles.messageText} numberOfLines={3}>
-              {message.message}
+              {message.content}
             </Text>
 
-            {message.repliedBy && (
-              <View style={styles.replyInfo}>
-                <CheckCircle size={14} color={COLORS.success} />
-                <Text style={styles.replyText}>
-                  تم الرد بواسطة {message.repliedBy.name} ({message.repliedBy.role})
-                </Text>
-              </View>
-            )}
-
             <View style={styles.messageFooter}>
-              <Text style={styles.timestamp}>{formatTime(message.timestamp)}</Text>
+              <Text style={styles.timestamp}>{formatTime(new Date(message.createdAt))}</Text>
 
-              {message.status === "pending" && (
+              {
                 <TouchableOpacity style={styles.replyButton} onPress={() => handleReply(message)}>
                   <Send size={14} color={COLORS.white} />
                   <Text style={styles.replyButtonText}>رد</Text>
                 </TouchableOpacity>
-              )}
+              }
             </View>
           </TouchableOpacity>
         ))}
 
-        {filteredMessages.length === 0 && (
+        {filteredMessages?.length === 0 && (
           <View style={styles.emptyState}>
             <MessageCircle size={48} color={COLORS.gray} />
             <Text style={styles.emptyText}>لا توجد رسائل</Text>
@@ -470,10 +517,29 @@ export default function AdminMessagesScreen() {
 
             {selectedMessage && (
               <View style={styles.originalMessage}>
-                <Text style={styles.originalTitle}>{selectedMessage.title}</Text>
-                <Text style={styles.originalText}>{selectedMessage.message}</Text>
-                <Text style={styles.originalFrom}>من: {selectedMessage.from.name}</Text>
+                <Text style={styles.originalTitle}>{selectedMessage?.title}</Text>
+                <Text style={styles.originalText}>{selectedMessage?.content}</Text>
+                <Text style={styles.originalFrom}>من: {selectedMessage?.senderName}</Text>
               </View>
+            )}
+
+            {isLoadingReplies ? (
+              <ActivityIndicator size="small" color={COLORS.primary} />
+            ) : (
+              <ScrollView style={styles.repliesContainer}>
+                {replies?.map((reply) => (
+                  <View
+                    key={reply.id}
+                    style={[styles.replyItem, reply.isFromAdmin ? styles.adminReply : styles.userReply]}
+                  >
+                    <Text style={styles.replySender}>
+                      {reply.userName}
+                      <Text style={styles.replyTimestamp}> ({formatTime(new Date(reply.createdAt))})</Text>
+                    </Text>
+                    <Text style={styles.replyContent}>{reply.content}</Text>
+                  </View>
+                ))}
+              </ScrollView>
             )}
 
             <TextInput
@@ -492,9 +558,9 @@ export default function AdminMessagesScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.sendButton, !replyText.trim() && styles.disabledButton]}
+                style={[styles.sendButton, !replyText?.trim() && styles.disabledButton]}
                 onPress={sendReply}
-                disabled={!replyText.trim()}
+                disabled={!replyText?.trim()}
               >
                 <Send size={16} color={COLORS.white} />
                 <Text style={styles.sendButtonText}>إرسال الرد</Text>
@@ -878,15 +944,15 @@ export default function AdminMessagesScreen() {
                 <TouchableOpacity
                   style={[
                     styles.sendButton,
-                    (!newMessage.title.trim() ||
-                      !newMessage.content.trim() ||
+                    (!newMessage?.title?.trim() ||
+                      !newMessage?.content?.trim() ||
                       (newMessage.targetAudience === "multiple" && newMessage.targetCategories.length === 0)) &&
                       styles.disabledButton,
                   ]}
                   onPress={handleSendNewMessage}
                   disabled={
-                    !newMessage.title.trim() ||
-                    !newMessage.content.trim() ||
+                    !newMessage?.title?.trim() ||
+                    !newMessage?.content?.trim() ||
                     (newMessage.targetAudience === "multiple" && newMessage.targetCategories.length === 0)
                   }
                 >
@@ -943,11 +1009,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
-  },
-  pendingCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.warning,
-    backgroundColor: "#fffbf0",
   },
   messageHeader: {
     flexDirection: "row",
@@ -1113,11 +1174,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
+    backgroundColor: COLORS.darkGray,
     borderColor: COLORS.gray,
     alignItems: "center",
   },
   cancelButtonText: {
-    color: COLORS.gray,
+    color: COLORS.white,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -1340,5 +1402,41 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: "500",
     textAlign: "center",
+  },
+  repliesContainer: {
+    maxHeight: 350, // Limit height for scrollability
+    marginBottom: 16,
+    paddingRight: 10,
+  },
+  replyItem: {
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 8,
+    maxWidth: "80%",
+  },
+  adminReply: {
+    backgroundColor: COLORS.primary + "10",
+    alignSelf: "flex-end",
+    borderTopRightRadius: 0,
+  },
+  userReply: {
+    backgroundColor: COLORS.lightGray,
+    alignSelf: "flex-start",
+    borderTopLeftRadius: 0,
+  },
+  replySender: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: COLORS.darkGray,
+    marginBottom: 2,
+  },
+  replyTimestamp: {
+    fontSize: 10,
+    color: COLORS.gray,
+    marginLeft: 5,
+  },
+  replyContent: {
+    fontSize: 14,
+    color: COLORS.black,
   },
 });

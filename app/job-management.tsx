@@ -21,6 +21,9 @@ interface JobRequest {
   type: "job_posting" | "job_application" | "field_supervision";
   title: string;
   applicantName: string;
+  applicantEmail?: string;
+  farmName?: string;
+  farmId?: string;
   submittedDate: string;
   status: "pending" | "approved" | "rejected";
   location: string;
@@ -39,8 +42,6 @@ export default function JobManagementScreen() {
     trpc.admin.jobs.getAllRequests.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
   );
   const requests = useMemo(() => (data as any)?.requests, [data]);
-
-  console.log("-", requests);
 
   const updateJobMutation = useMutation(trpc.admin.jobs.updateJob.mutationOptions());
   const manageApplicationMutation = useMutation(trpc.admin.jobs.manageJobApplication.mutationOptions());
@@ -126,6 +127,7 @@ export default function JobManagementScreen() {
         (req) =>
           req.title.toLowerCase().includes(query) ||
           req.applicantName.toLowerCase().includes(query) ||
+          req.applicantEmail?.toLowerCase().includes(query) ||
           req.location.toLowerCase().includes(query) ||
           (req.details.company && req.details.company.toLowerCase().includes(query)) ||
           (req.details.position && req.details.position.toLowerCase().includes(query)) ||
@@ -187,18 +189,30 @@ export default function JobManagementScreen() {
         default:
           return "غير محدد";
       }
-    } else {
+    } else if (type === "job_application") {
       switch (status) {
         case "pending":
           return "قيد المراجعة";
         case "approved":
-          return "تم التوظيف";
+          return "تمت الموافقة";
         case "rejected":
-          return "لم نجد له وظيفة";
+          return "مرفوض";
+        default:
+          return "غير محدد";
+      }
+    } else if (type === "field_supervision") {
+      switch (status) {
+        case "pending":
+          return "قيد المراجعة";
+        case "approved":
+          return "تمت الموافقة";
+        case "rejected":
+          return "مرفوض";
         default:
           return "غير محدد";
       }
     }
+    return "غير محدد";
   };
 
   if (isLoading) {
@@ -288,11 +302,12 @@ export default function JobManagementScreen() {
                 </View>
                 <Text style={styles.requestTitle}>{request.title}</Text>
                 <TouchableOpacity
-                  onPress={() => router.push(`/user-profile?userName=${encodeURIComponent(request.applicantName)}`)}
+                  onPress={() => router.push(`/user-profile?userId=${encodeURIComponent(request.applicantId)}`)}
                 >
                   {" "}
                   <Text style={styles.applicantNameClickable}>المتقدم: {request.applicantName}</Text>
                 </TouchableOpacity>
+                {request.applicantEmail && <Text style={styles.applicantEmail}>{request.applicantEmail}</Text>}
               </View>
 
               <View style={[styles.statusBadge, { backgroundColor: getStatusColor(request.status) }]}>
@@ -338,6 +353,13 @@ export default function JobManagementScreen() {
                 <>
                   <Text style={styles.detailText}>نوع المزرعة: {request.details.farmType}</Text>
                   <Text style={styles.detailText}>عدد الحيوانات: {request.details.animalCount}</Text>
+                  {request.farmId && (
+                    <TouchableOpacity
+                      onPress={() => router.push(`/poultry-farm-details?id=${encodeURIComponent(request.farmId)}`)}
+                    >
+                      <Text style={styles.detailText}>اسم المزرعة: {request.farmName}</Text>
+                    </TouchableOpacity>
+                  )}
                   {request.status !== "pending" && request.details.employmentStatus && (
                     <Text
                       style={[
@@ -362,7 +384,7 @@ export default function JobManagementScreen() {
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
                     style={styles.viewButton}
-                    onPress={() => Alert.alert("عرض التفاصيل", "سيتم فتح صفحة التفاصيل الكاملة")}
+                    onPress={() => router.push(`/job-details?requestId=${request.id}&requestType=${request.type}`)}
                   >
                     <Eye size={16} color={COLORS.primary} />
                   </TouchableOpacity>
@@ -505,6 +527,10 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textDecorationLine: "underline",
     fontWeight: "600",
+  },
+  applicantEmail: {
+    fontSize: 12,
+    color: COLORS.darkGray,
   },
   statusBadge: {
     paddingHorizontal: 8,

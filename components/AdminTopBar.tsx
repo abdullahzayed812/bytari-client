@@ -15,8 +15,6 @@ export function AdminTopBar({ onAdminDashboard }: AdminTopBarProps) {
   const { hasAdminAccess, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
   const { isRTL } = useI18n();
 
-  console.log({ hasAdminAccess, isSuperAdmin, isModerator, moderatorPermissions });
-
   const badgeStyle = {
     ...styles.badge,
     left: isRTL ? -4 : undefined,
