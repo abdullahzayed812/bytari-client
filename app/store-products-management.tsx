@@ -32,70 +32,101 @@ export default function StoreProductsManagementScreen() {
   // Determine store type from params or userMode
   const currentStoreType = storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
 
-  // Mock store data - replace with actual data from API
-  const storeData = {
-    id: 1,
-    name: currentStoreType === "veterinarian" ? "متجر الطبيب البيطري" : "متجر صاحب الحيوان",
-    type: currentStoreType === "veterinarian" ? "vet_store" : "pet_owner_store",
-    totalProducts: 32,
-    totalOrders: 89,
+  const {
+    data: productsData,
+    isLoading,
+    refetch,
+  } = useQuery(
+    trpc.unifiedStore.listProducts.queryOptions({
+      storeType: currentStoreType,
+      category: selectedCategory === "all" ? undefined : selectedCategory,
+      search: searchQuery,
+    })
+  );
 
-    rating: 4.3,
+  const { data: categoriesData } = useQuery(
+    trpc.unifiedStore.getCategories.queryOptions({
+      storeType: currentStoreType,
+    })
+  );
+
+  const deleteProductMutation = useMutation(
+    trpc.unifiedStore.deleteProduct.mutationOptions({
+      onSuccess: () => {
+        Alert.alert("نجاح", "تم حذف المنتج بنجاح");
+        refetch();
+      },
+      onError: (error) => {
+        Alert.alert("خطأ", error.message || "حدث خطأ أثناء حذف المنتج");
+      },
+    })
+  );
+
+  const updateProductMutation = useMutation(
+    trpc.unifiedStore.updateProduct.mutationOptions({
+      onSuccess: () => {
+        Alert.alert("نجاح", "تم تحديث حالة المنتج بنجاح");
+        refetch();
+      },
+      onError: (error) => {
+        Alert.alert("خطأ", error.message || "حدث خطأ أثناء تحديث حالة المنتج");
+      },
+    })
+  );
+
+  const storeData = {
+    name: currentStoreType === "veterinarian" ? "متجر الطبيب البيطري" : "متجر صاحب الحيوان",
+    totalProducts: productsData?.items?.length || 0,
+    totalOrders: 0, // This could be fetched from listStoreOrders
   };
 
-  const categories = [
-    { id: "all", name: "جميع المنتجات" },
-    { id: "food", name: "طعام" },
-    { id: "accessories", name: "إكسسوارات" },
-    { id: "toys", name: "ألعاب" },
-    { id: "medicine", name: "أدوية" },
-    { id: "grooming", name: "العناية" },
-  ];
+  const filteredProducts = productsData?.items || [];
+  const categories = [{ id: "all", name: "جميع المنتجات" }, ...(categoriesData || [])];
 
-  const mockProducts: StoreProduct[] = [
-    {
-      id: 1,
-      name: "طعام قطط بريميوم",
-      category: "food",
-      price: 45.0,
-      stock: 15,
-      image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400",
-      isActive: true,
-      petType: ["cat"],
-      rating: 4.5,
-      description: "طعام عالي الجودة للقطط البالغة",
-    },
-    {
-      id: 2,
-      name: "لعبة كرة للكلاب",
-      category: "toys",
-      price: 25.0,
-      stock: 8,
-      image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
-      isActive: true,
-      petType: ["dog"],
-      rating: 4.2,
-      description: "لعبة تفاعلية للكلاب",
-    },
-    {
-      id: 3,
-      name: "طوق أنيق للقطط",
-      category: "accessories",
-      price: 35.0,
-      stock: 12,
-      image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400",
-      isActive: false,
-      petType: ["cat"],
-      rating: 4.0,
-      description: "طوق جلدي أنيق ومريح",
-    },
-  ];
+  // const mockProducts: StoreProduct[] = [
+  //   {
+  //     id: 1,
+  //     name: "طعام قطط بريميوم",
+  //     category: "food",
+  //     price: 45.0,
+  //     stock: 15,
+  //     image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400",
+  //     isActive: true,
+  //     petType: ["cat"],
+  //     rating: 4.5,
+  //     description: "طعام عالي الجودة للقطط البالغة",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "لعبة كرة للكلاب",
+  //     category: "toys",
+  //     price: 25.0,
+  //     stock: 8,
+  //     image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400",
+  //     isActive: true,
+  //     petType: ["dog"],
+  //     rating: 4.2,
+  //     description: "لعبة تفاعلية للكلاب",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "طوق أنيق للقطط",
+  //     category: "accessories",
+  //     price: 35.0,
+  //     stock: 12,
+  //     image: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400",
+  //     isActive: false,
+  //     petType: ["cat"],
+  //     rating: 4.0,
+  //     description: "طوق جلدي أنيق ومريح",
+  //   },
+  // ];
 
-  const filteredProducts = mockProducts.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // const filteredProducts = mockProducts.filter((product) => {
+  //   const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+  //   const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
+  //   return matchesSearch && matchesCategory;
+  // });
 
   const handleAddProduct = () => {
     router.push(`/add-store-product?storeType=${currentStoreType}`);
@@ -112,16 +143,18 @@ export default function StoreProductsManagementScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          // Handle delete logic here
-          console.log("Delete product:", productId);
+          deleteProductMutation.mutate({ id: productId, storeType: currentStoreType });
         },
       },
     ]);
   };
 
-  const toggleProductStatus = (productId: number) => {
-    // Handle toggle product active status
-    console.log("Toggle product status:", productId);
+  const toggleProductStatus = (product: any) => {
+    updateProductMutation.mutate({
+      id: product.id,
+      storeType: currentStoreType,
+      inStock: !product.inStock,
+    });
   };
 
   const renderOverviewTab = () => (
@@ -198,8 +231,8 @@ export default function StoreProductsManagementScreen() {
               <Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
               <Text style={styles.productStock}>المخزون: {item.stock}</Text>
               <View style={styles.productStatus}>
-                <Text style={[styles.statusText, { color: item.isActive ? COLORS.green : COLORS.red }]}>
-                  {item.isActive ? "نشط" : "غير نشط"}
+                <Text style={[styles.statusText, { color: item.inStock ? COLORS.green : COLORS.red }]}>
+                  {item.inStock ? "متوفر" : "غير متوفر"}
                 </Text>
               </View>
             </View>
@@ -211,8 +244,8 @@ export default function StoreProductsManagementScreen() {
                 <Edit size={16} color={COLORS.white} />
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: item.isActive ? COLORS.warning : COLORS.green }]}
-                onPress={() => toggleProductStatus(item.id)}
+                style={[styles.actionBtn, { backgroundColor: item.inStock ? COLORS.warning : COLORS.green }]}
+                onPress={() => toggleProductStatus(item)}
               >
                 <Eye size={16} color={COLORS.white} />
               </TouchableOpacity>

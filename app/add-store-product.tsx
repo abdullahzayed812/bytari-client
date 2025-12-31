@@ -7,14 +7,15 @@ import { Package } from "lucide-react-native";
 import { router, useLocalSearchParams, Stack } from "expo-router";
 import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 import { useToastContext } from "../providers/ToastProvider";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface StoreProductFormData {
   name: string;
   description: string;
   category: string;
+  subcategory?: string;
   price: string;
   stock: string;
   images: string[];
@@ -37,32 +38,17 @@ export default function AddStoreProductScreen() {
     images: [],
   });
 
-  const createProductMutation = useMutation(trpc.stores.products.create.mutationOptions());
+  const createProductMutation = useMutation(trpc.unifiedStore.createProduct.mutationOptions());
 
-  // Categories based on store type
-  const getCategories = () => {
-    if (currentStoreType === "veterinarian") {
-      return [
-        { id: "medicine", name: "أدوية" },
-        { id: "equipment", name: "معدات طبية" },
-        { id: "surgical", name: "أدوات جراحية" },
-        { id: "diagnostic", name: "أدوات تشخيص" },
-        { id: "vaccines", name: "لقاحات" },
-        { id: "supplements", name: "مكملات غذائية" },
-        { id: "poultry", name: "الدواجن" },
-      ];
-    }
-    return [
-      { id: "food", name: "طعام" },
-      { id: "accessories", name: "إكسسوارات" },
-      { id: "toys", name: "ألعاب" },
-      { id: "grooming", name: "العناية" },
-      { id: "medicine", name: "أدوية" },
-      { id: "equipment", name: "معدات" },
-    ];
-  };
+  const { data: categoriesData } = useQuery(
+    trpc.unifiedStore.getCategories.queryOptions({
+      storeType: currentStoreType as "veterinarian" | "pet_owner",
+    })
+  );
 
-  const categories = getCategories();
+  const categories = categoriesData || [];
+  const selectedCategory = categories.find((c) => c.id === formData.category);
+  const subcategories = selectedCategory?.subcategories || [];
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -77,32 +63,32 @@ export default function AddStoreProductScreen() {
       showToast({ type: "error", message: "الكمية مطلوبة" });
       return;
     }
+    if (!formData.category) {
+      showToast({ type: "error", message: "الفئة مطلوبة" });
+      return;
+    }
 
     createProductMutation.mutate(
       {
-        storeId: Number(storeId),
+        storeType: currentStoreType as "veterinarian" | "pet_owner",
         name: formData.name,
-        description: formData.description || undefined,
-        category: formData.category as any, // Ensure it matches backend enum
+        description: formData.description,
+        category: formData.category,
+        subcategory: formData.subcategory,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock, 10),
         images: formData.images,
-        discountPrice: undefined,
-        brand: undefined,
-        expiryDate: undefined,
-        batchNumber: undefined,
-        isFeatured: false,
-      } as any,
+      },
       {
-        onSuccess: (response: any) => {
+        onSuccess: (response) => {
           if (response.success) {
-            showToast({ type: "success", message: response.message || "تم إضافة المنتج بنجاح" });
+            showToast({ type: "success", message: "تم إضافة المنتج بنجاح" });
             router.back();
           } else {
             showToast({ type: "error", message: "حدث خطأ أثناء إضافة المنتج" });
           }
         },
-        onError: (error: any) => {
+        onError: (error) => {
           console.error(error);
           showToast({ type: "error", message: error.message || "حدث خطأ أثناء إضافة المنتج" });
         },
@@ -165,7 +151,7 @@ export default function AddStoreProductScreen() {
                 <TouchableOpacity
                   key={category.id}
                   style={[styles.categoryChip, formData.category === category.id && styles.selectedCategoryChip]}
-                  onPress={() => setFormData((prev) => ({ ...prev, category: category.id }))}
+                  onPress={() => setFormData((prev) => ({ ...prev, category: category.id, subcategory: "" }))}
                 >
                   <Text style={[styles.categoryText, formData.category === category.id && styles.selectedCategoryText]}>
                     {category.name}
@@ -174,6 +160,25 @@ export default function AddStoreProductScreen() {
               ))}
             </View>
           </View>
+
+          {formData.category && subcategories.length > 0 && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>الفئة الفرعية</Text>
+              <View style={styles.categoryGrid}>
+                {subcategories.map((sub) => (
+                  <TouchableOpacity
+                    key={sub.id}
+                    style={[styles.categoryChip, formData.subcategory === sub.id && styles.selectedCategoryChip]}
+                    onPress={() => setFormData((prev) => ({ ...prev, subcategory: sub.id }))}
+                  >
+                    <Text style={[styles.categoryText, formData.subcategory === sub.id && styles.selectedCategoryText]}>
+                      {sub.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>

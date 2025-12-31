@@ -9,6 +9,8 @@ import { mockProducts } from "../mocks/data";
 import Button from "../components/Button";
 import { ArrowRight, Search, Plus, Edit, Trash2, Package, Cat, Dog, Bird, Fish, Egg } from 'lucide-react-native';
 import { router, useLocalSearchParams, Stack } from 'expo-router';
+import { trpc } from "@/lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 type AnimalType = 'cat' | 'dog' | 'bird' | 'fish' | 'poultry';
 
@@ -29,7 +31,7 @@ export default function PetCategoryProductsScreen() {
   const { category } = useLocalSearchParams<{ category: AnimalType }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  
+
   if (!category) {
     return (
       <View style={styles.container}>
@@ -39,24 +41,31 @@ export default function PetCategoryProductsScreen() {
   }
 
   const animalInfo = getAnimalInfo(category);
-  
-  // Filter products for this animal category
-  const categoryProducts = mockProducts.filter(product => {
-    const matchesAnimal = product.petType.includes(category);
-    const matchesSearch = searchQuery === '' || 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesAnimal && matchesSearch;
-  });
+
+  const { data: productsData, isLoading } = useQuery(
+    trpc.unifiedStore.listProducts.queryOptions({
+      storeType: 'pet_owner',
+      category: category,
+      search: searchQuery,
+    })
+  );
+
+  const categoryProducts = (productsData?.items || []).map(p => ({
+    ...p,
+    id: p.id.toString(),
+    imageUrl: p.image || undefined,
+    rating: 0, // Default rating
+    sellerId: '', // Default sellerId
+  }));
 
   // Check if user has store management permissions
   const hasStorePermission = () => {
     if (isSuperAdmin) return true;
     if (!isModerator || !moderatorPermissions) return false;
-    
+
     const storePerms = moderatorPermissions.storeManagement;
     if (!storePerms) return false;
-    
+
     return storePerms.petOwnerStores;
   };
 
@@ -74,8 +83,8 @@ export default function PetCategoryProductsScreen() {
       'هل أنت متأكد من حذف هذا المنتج؟',
       [
         { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'حذف', 
+        {
+          text: 'حذف',
           style: 'destructive',
           onPress: () => {
             console.log('Delete product:', productId);
@@ -86,8 +95,8 @@ export default function PetCategoryProductsScreen() {
   };
 
   const handleSelectProduct = (productId: string) => {
-    setSelectedProducts(prev => 
-      prev.includes(productId) 
+    setSelectedProducts(prev =>
+      prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
@@ -95,14 +104,14 @@ export default function PetCategoryProductsScreen() {
 
   const handleBulkDelete = () => {
     if (selectedProducts.length === 0) return;
-    
+
     Alert.alert(
       'حذف المنتجات المحددة',
       `هل أنت متأكد من حذف ${selectedProducts.length} منتج؟`,
       [
         { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'حذف', 
+        {
+          text: 'حذف',
           style: 'destructive',
           onPress: () => {
             console.log('Delete products:', selectedProducts);
@@ -115,15 +124,15 @@ export default function PetCategoryProductsScreen() {
 
   const renderProductItem = ({ item }: { item: Product }) => {
     const isSelected = selectedProducts.includes(item.id);
-    
+
     return (
       <View style={[styles.productCard, isSelected && styles.selectedProductCard]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.productSelectArea}
           onPress={() => handleSelectProduct(item.id)}
         >
           <View style={styles.productImageContainer}>
-            <Image source={{ uri: item.image }} style={styles.productImage} />
+            <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
             {isSelected && (
               <View style={styles.selectedOverlay}>
                 <Text style={styles.selectedText}>✓</Text>
@@ -136,7 +145,7 @@ export default function PetCategoryProductsScreen() {
             <Text style={styles.productCategory}>{item.category}</Text>
           </View>
         </TouchableOpacity>
-        
+
         {hasStorePermission() && (
           <View style={styles.productActions}>
             <TouchableOpacity
@@ -159,15 +168,15 @@ export default function PetCategoryProductsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: `منتجات ${animalInfo.label}`,
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.primary,
           headerTitleStyle: { fontWeight: 'bold' },
-        }} 
+        }}
       />
-      
+
       <View style={styles.header}>
         <View style={styles.headerInfo}>
           {animalInfo.icon}
@@ -176,7 +185,7 @@ export default function PetCategoryProductsScreen() {
             <Text style={styles.headerSubtitle}>إدارة منتجات فئة {animalInfo.label}</Text>
           </View>
         </View>
-        
+
         {hasStorePermission() && (
           <View style={styles.headerActions}>
             {selectedProducts.length > 0 && (

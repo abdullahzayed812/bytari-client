@@ -1,30 +1,33 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
-import { Order } from "../types"; // define this type as needed
+import React, { createContext, useContext, ReactNode } from "react";
+import { Order } from "../types";
 import { useToastContext } from "./ToastProvider";
+import { trpc } from "../lib/trpc";
+import { useApp } from "./AppProvider";
+import { useQuery } from "@tanstack/react-query";
 
 type OrdersContextType = {
   orders: Order[];
-  addOrder: (order: Order) => void;
-  clearOrders: () => void;
+  isLoading: boolean;
+  refetch: () => void;
 };
 
 const OrdersContext = createContext<OrdersContextType | undefined>(undefined);
 
 export const OrdersProvider = ({ children }: { children: ReactNode }) => {
-  const { showToast } = useToastContext();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { userMode } = useApp();
+  const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
 
-  const addOrder = (order: Order) => {
-    setOrders((prev) => [...prev, order]);
-    showToast({ type: "success", message: "تمت إضافة الطلب بنجاح" });
-  };
+  const { data: orders, isLoading, refetch } = useQuery(
+    trpc.unifiedStore.listMyOrders.queryOptions({
+      storeType,
+    })
+  );
 
-  const clearOrders = () => {
-    setOrders([]);
-    showToast({ type: "success", message: "تم حذف جميع الطلبات" });
-  };
-
-  return <OrdersContext.Provider value={{ orders, addOrder, clearOrders }}>{children}</OrdersContext.Provider>;
+  return (
+    <OrdersContext.Provider value={{ orders: (orders as unknown as Order[]) || [], isLoading, refetch }}>
+      {children}
+    </OrdersContext.Provider>
+  );
 };
 
 export const useOrders = () => {

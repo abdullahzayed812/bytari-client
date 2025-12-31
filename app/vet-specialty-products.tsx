@@ -4,6 +4,8 @@ import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { router, useLocalSearchParams, Stack } from 'expo-router';
+import { trpc } from "@/lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings } from 'lucide-react-native';
 import Button from "../components/Button";
 import { Product } from "../types";
@@ -28,38 +30,33 @@ export default function VetSpecialtyProductsScreen() {
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator } = useApp();
   const { specialty } = useLocalSearchParams<{ specialty: VetSpecialty }>();
-  
+
   const specialtyInfo = getSpecialtyInfo(specialty!);
-  
-  // Filter products based on specialty
-  const getSpecialtyProducts = () => {
-    return mockProducts.filter(product => {
-      if (specialty === 'equipment') {
-        return product.category === 'accessories' || 
-               product.name.toLowerCase().includes('جهاز') || 
-               product.name.toLowerCase().includes('معدات');
-      }
-      
-      const animalType = specialty === 'small_animals' ? 'cat' : 
-                        specialty === 'large_animals' ? 'dog' :
-                        specialty === 'birds' ? 'bird' :
-                        specialty === 'fish' ? 'fish' : 'poultry';
-      
-      return product.petType.includes(animalType);
-    });
-  };
-  
-  const [products] = useState<Product[]>(getSpecialtyProducts());
+
+  const { data: productsData, isLoading } = useQuery(
+    trpc.unifiedStore.listProducts.queryOptions({
+      storeType: 'veterinarian',
+      category: specialty,
+    })
+  );
+
+  const products = (productsData?.items || []).map(p => ({
+    ...p,
+    id: p.id.toString(),
+    imageUrl: p.image || undefined,
+    rating: 0, // Default rating
+    sellerId: '', // Default sellerId
+  }));
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  
+
   const handleSelectProduct = (productId: string) => {
-    setSelectedProducts(prev => 
-      prev.includes(productId) 
+    setSelectedProducts(prev =>
+      prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
   };
-  
+
   const handleSelectAll = () => {
     if (selectedProducts.length === products.length) {
       setSelectedProducts([]);
@@ -67,15 +64,15 @@ export default function VetSpecialtyProductsScreen() {
       setSelectedProducts(products.map(p => p.id));
     }
   };
-  
+
   const handleDeleteSelected = () => {
     Alert.alert(
       'حذف المنتجات',
       `هل أنت متأكد من حذف ${selectedProducts.length} منتج؟`,
       [
         { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'حذف', 
+        {
+          text: 'حذف',
           style: 'destructive',
           onPress: () => {
             Alert.alert('تم الحذف', 'تم حذف المنتجات المحددة بنجاح');
@@ -85,34 +82,34 @@ export default function VetSpecialtyProductsScreen() {
       ]
     );
   };
-  
+
   const handleAddProduct = () => {
     router.push(`/add-store-product?storeType=veterinarian&specialty=${specialty}`);
   };
-  
+
   const handleEditProduct = (productId: string) => {
     router.push(`/edit-store-product?productId=${productId}&specialty=${specialty}`);
   };
-  
+
   const renderProductItem = ({ item }: { item: Product }) => {
     const isSelected = selectedProducts.includes(item.id);
-    
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.productCard, isSelected && styles.selectedProductCard]}
         onPress={() => handleSelectProduct(item.id)}
         activeOpacity={0.7}
       >
         <View style={styles.productHeader}>
           <View style={[styles.selectionIndicator, isSelected && styles.selectedIndicator]} />
-          <Image source={{ uri: item.image }} style={styles.productImage} />
+          <Image source={{ uri: item.imageUrl }} style={styles.productImage} />
         </View>
-        
+
         <View style={styles.productInfo}>
           <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
           <Text style={styles.productPrice}>{formatPrice(item.price)}</Text>
           <Text style={styles.productCategory}>{item.category}</Text>
-          
+
           <View style={styles.productStats}>
             <View style={styles.statItem}>
               <Text style={styles.statLabel}>المبيعات</Text>
@@ -128,16 +125,16 @@ export default function VetSpecialtyProductsScreen() {
             </View>
           </View>
         </View>
-        
+
         <View style={styles.productActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={() => handleEditProduct(item.id)}
           >
             <Edit size={16} color={COLORS.primary} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={() => {
               // TODO: Navigate to product details page
@@ -150,18 +147,18 @@ export default function VetSpecialtyProductsScreen() {
       </TouchableOpacity>
     );
   };
-  
+
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: `منتجات ${specialtyInfo.name}`,
           headerStyle: { backgroundColor: specialtyInfo.color },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: 'bold' },
-        }} 
+        }}
       />
-      
+
       {/* Header Stats */}
       <View style={[styles.headerStats, { backgroundColor: specialtyInfo.color }]}>
         <View style={styles.statCard}>
@@ -169,24 +166,24 @@ export default function VetSpecialtyProductsScreen() {
           <Text style={styles.statNumber}>{products.length}</Text>
           <Text style={styles.statLabel}>إجمالي المنتجات</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <BarChart3 size={24} color={COLORS.white} />
           <Text style={styles.statNumber}>1,234</Text>
           <Text style={styles.statLabel}>إجمالي المبيعات</Text>
         </View>
-        
+
         <View style={styles.statCard}>
           <Eye size={24} color={COLORS.white} />
           <Text style={styles.statNumber}>5,678</Text>
           <Text style={styles.statLabel}>المشاهدات</Text>
         </View>
       </View>
-      
+
       {/* Action Bar */}
       <View style={styles.actionBar}>
         <View style={styles.actionBarLeft}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.selectAllButton}
             onPress={handleSelectAll}
           >
@@ -194,9 +191,9 @@ export default function VetSpecialtyProductsScreen() {
               {selectedProducts.length === products.length ? 'إلغاء التحديد' : 'تحديد الكل'}
             </Text>
           </TouchableOpacity>
-          
+
           {selectedProducts.length > 0 && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.deleteButton}
               onPress={handleDeleteSelected}
             >
@@ -205,23 +202,23 @@ export default function VetSpecialtyProductsScreen() {
             </TouchableOpacity>
           )}
         </View>
-        
+
         <View style={styles.actionBarRight}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.filterButton}
-            onPress={() => {/* Handle filter */}}
+            onPress={() => {/* Handle filter */ }}
           >
             <Filter size={20} color={COLORS.primary} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.searchButton}
-            onPress={() => {/* Handle search */}}
+            onPress={() => {/* Handle search */ }}
           >
             <Search size={20} color={COLORS.primary} />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.addButton, { backgroundColor: specialtyInfo.color }]}
             onPress={handleAddProduct}
           >
@@ -229,7 +226,7 @@ export default function VetSpecialtyProductsScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      
+
       {/* Products List */}
       <FlatList
         data={products}
@@ -240,18 +237,18 @@ export default function VetSpecialtyProductsScreen() {
         columnWrapperStyle={styles.productsRow}
         showsVerticalScrollIndicator={false}
       />
-      
+
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.quickActionButton}
           onPress={() => router.push(`/vet-specialty-settings?specialty=${specialty}`)}
         >
           <Settings size={20} color={COLORS.primary} />
           <Text style={styles.quickActionText}>إعدادات القسم</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.quickActionButton}
           onPress={() => router.push(`/vet-specialty-analytics?specialty=${specialty}`)}
         >

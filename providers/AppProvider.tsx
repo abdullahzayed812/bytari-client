@@ -35,6 +35,8 @@ interface AppContextType {
   updateUser: (userData: Partial<User>) => Promise<void>;
   setHasSeenSplash: (seen: boolean) => void;
   toggleUserMode: () => void;
+  addresses: any[];
+  addAddress: (address: any) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -187,6 +189,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const [addresses, setAddresses] = useState<any[]>([]);
+
+  const addAddress = async (address: any) => {
+    const newAddresses = [...addresses, address];
+    setAddresses(newAddresses);
+    await AsyncStorage.setItem("addresses", JSON.stringify(newAddresses));
+  };
+
+  useEffect(() => {
+    const loadAddresses = async () => {
+      const stored = await AsyncStorage.getItem("addresses");
+      if (stored) {
+        setAddresses(JSON.parse(stored));
+      }
+    };
+    loadAddresses();
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -205,6 +225,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateUser,
         setHasSeenSplash: setHasSeenSplashWrapper,
         toggleUserMode,
+        addresses,
+        addAddress,
       }}
     >
       {children}

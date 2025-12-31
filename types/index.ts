@@ -279,3 +279,13 @@ export type Order = {
   status: "pending" | "completed" | "cancelled" | "confirmed" | "preparing" | "shipped" | "delivered";
   date: string; // or use Date type
 };
+
+export interface Address {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  isDefault: boolean;
+  latitude?: number;
+  longitude?: number;
+}

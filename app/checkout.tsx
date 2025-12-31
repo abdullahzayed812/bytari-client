@@ -1,34 +1,40 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import React, { useState } from 'react';
-import { Stack, router } from 'expo-router';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
+import React, { useState } from "react";
+import { Stack, router } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { Address, Order } from "../types";
 import Button from "../components/Button";
-import { MapPin, CreditCard, Banknote, Plus, Check } from 'lucide-react-native';
+import { MapPin, CreditCard, Banknote, Plus, Check } from "lucide-react-native";
+import { trpc } from "@/lib/trpc";
+import { useCart } from "@/providers/CartProvider";
+import { useMutation } from "@tanstack/react-query";
 
 export default function CheckoutScreen() {
   const { t } = useI18n();
-  const { cart, user, addresses, createOrder, addAddress } = useApp();
+  const { cart, clearCart } = useCart();
+  const { user, addresses, addAddress, userMode } = useApp();
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(
-    addresses.find(addr => addr.isDefault) || addresses[0] || null
+    addresses.find((addr) => addr.isDefault) || addresses[0] || null
   );
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("cash");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-    address: '',
+    name: user?.name || "",
+    phone: user?.phone || "",
+    address: "",
   });
 
+  const createOrderMutation = useMutation(trpc.unifiedStore.createOrder.mutationOptions());
+
   const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.product.price * item.quantity), 0);
+    return cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
   };
 
   const handleAddAddress = async () => {
     if (!newAddress.name || !newAddress.phone || !newAddress.address) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول");
       return;
     }
 
@@ -43,58 +49,61 @@ export default function CheckoutScreen() {
     await addAddress(address);
     setSelectedAddress(address);
     setShowAddressForm(false);
-    setNewAddress({ name: user?.name || '', phone: user?.phone || '', address: '' });
+    setNewAddress({ name: user?.name || "", phone: user?.phone || "", address: "" });
   };
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
-      Alert.alert('خطأ', 'يرجى اختيار عنوان التوصيل');
+      Alert.alert("خطأ", "يرجى اختيار عنوان التوصيل");
       return;
     }
 
     if (!user) {
-      Alert.alert('خطأ', 'يرجى تسجيل الدخول أولاً');
+      Alert.alert("خطأ", "يرجى تسجيل الدخول أولاً");
       return;
     }
 
-    const order: Order = {
-      id: Date.now().toString(),
-      userId: user.id,
-      items: cart,
-      total: getTotalPrice(),
-      status: 'pending',
-      paymentMethod,
-      deliveryAddress: {
-        name: selectedAddress.name,
-        phone: selectedAddress.phone,
-        address: selectedAddress.address,
-        latitude: selectedAddress.latitude,
-        longitude: selectedAddress.longitude,
-      },
-      createdAt: new Date().toISOString(),
-    };
+    const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
 
-    await createOrder(order);
-    
-    Alert.alert(
-      'تم تأكيد الطلب',
-      'تم إرسال طلبك بنجاح. سيتم التواصل معك قريباً لتأكيد التوصيل.',
-      [
-        {
-          text: 'موافق',
-          onPress: () => router.replace('/(tabs)'),
-        }
-      ]
+    createOrderMutation.mutate(
+      {
+        storeType,
+        items: cart.map((item) => ({
+          productId: Number(item.productId),
+          quantity: Number(item.quantity),
+          unitPrice: 1,
+        })),
+        shippingAddress: {
+          name: selectedAddress.name,
+          phone: selectedAddress.phone,
+          address: selectedAddress.address,
+          latitude: selectedAddress.latitude,
+          longitude: selectedAddress.longitude,
+        },
+        totalAmount: getTotalPrice(),
+        paymentMethod,
+      },
+      {
+        onSuccess: () => {
+          clearCart();
+          Alert.alert("تم تأكيد الطلب", "تم إرسال طلبك بنجاح. سيتم التواصل معك قريباً لتأكيد التوصيل.", [
+            {
+              text: "موافق",
+              onPress: () => router.replace("/(tabs)"),
+            },
+          ]);
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message || "حدث خطأ أثناء إنشاء الطلب");
+        },
+      }
     );
   };
 
   const renderAddressItem = (address: Address) => (
     <TouchableOpacity
       key={address.id}
-      style={[
-        styles.addressItem,
-        selectedAddress?.id === address.id && styles.selectedAddressItem
-      ]}
+      style={[styles.addressItem, selectedAddress?.id === address.id && styles.selectedAddressItem]}
       onPress={() => setSelectedAddress(address)}
     >
       <View style={styles.addressInfo}>
@@ -102,34 +111,27 @@ export default function CheckoutScreen() {
         <Text style={styles.addressPhone}>{address.phone}</Text>
         <Text style={styles.addressText}>{address.address}</Text>
       </View>
-      {selectedAddress?.id === address.id && (
-        <Check size={24} color={COLORS.primary} />
-      )}
+      {selectedAddress?.id === address.id && <Check size={24} color={COLORS.primary} />}
     </TouchableOpacity>
   );
 
-  const renderPaymentMethod = (method: 'card' | 'cash', title: string, icon: React.ReactNode) => (
+  const renderPaymentMethod = (method: "card" | "cash", title: string, icon: React.ReactNode) => (
     <TouchableOpacity
-      style={[
-        styles.paymentMethod,
-        paymentMethod === method && styles.selectedPaymentMethod
-      ]}
+      style={[styles.paymentMethod, paymentMethod === method && styles.selectedPaymentMethod]}
       onPress={() => setPaymentMethod(method)}
     >
       <View style={styles.paymentInfo}>
         {icon}
         <Text style={styles.paymentTitle}>{title}</Text>
       </View>
-      {paymentMethod === method && (
-        <Check size={24} color={COLORS.primary} />
-      )}
+      {paymentMethod === method && <Check size={24} color={COLORS.primary} />}
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'إتمام الشراء', headerShown: true }} />
-      
+      <Stack.Screen options={{ title: "إتمام الشراء", headerShown: true }} />
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Order Summary */}
         <View style={styles.section}>
@@ -158,10 +160,7 @@ export default function CheckoutScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>عنوان التوصيل</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => setShowAddressForm(true)}
-            >
+            <TouchableOpacity style={styles.addButton} onPress={() => setShowAddressForm(true)}>
               <Plus size={20} color={COLORS.primary} />
               <Text style={styles.addButtonText}>إضافة عنوان</Text>
             </TouchableOpacity>
@@ -171,17 +170,10 @@ export default function CheckoutScreen() {
             <View style={styles.emptyState}>
               <MapPin size={40} color={COLORS.gray} />
               <Text style={styles.emptyStateText}>لا توجد عناوين محفوظة</Text>
-              <Button
-                title="إضافة عنوان جديد"
-                onPress={() => setShowAddressForm(true)}
-                type="outline"
-                size="small"
-              />
+              <Button title="إضافة عنوان جديد" onPress={() => setShowAddressForm(true)} type="outline" size="small" />
             </View>
           ) : (
-            <View style={styles.addressList}>
-              {addresses.map(renderAddressItem)}
-            </View>
+            <View style={styles.addressList}>{addresses.map(renderAddressItem)}</View>
           )}
 
           {showAddressForm && (
@@ -208,10 +200,7 @@ export default function CheckoutScreen() {
                 multiline
                 numberOfLines={3}
               />
-              <TouchableOpacity
-                style={styles.mapButton}
-                onPress={() => router.push('/map-location?returnTo=checkout')}
-              >
+              <TouchableOpacity style={styles.mapButton} onPress={() => router.push("/map-location?returnTo=checkout")}>
                 <MapPin size={20} color={COLORS.primary} />
                 <Text style={styles.mapButtonText}>تحديد الموقع على الخريطة</Text>
               </TouchableOpacity>
@@ -223,13 +212,7 @@ export default function CheckoutScreen() {
                   size="small"
                   style={styles.formButton}
                 />
-                <Button
-                  title="حفظ"
-                  onPress={handleAddAddress}
-                  type="primary"
-                  size="small"
-                  style={styles.formButton}
-                />
+                <Button title="حفظ" onPress={handleAddAddress} type="primary" size="small" style={styles.formButton} />
               </View>
             </View>
           )}
@@ -239,16 +222,8 @@ export default function CheckoutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>طريقة الدفع</Text>
           <View style={styles.paymentMethods}>
-            {renderPaymentMethod(
-              'cash',
-              'الدفع عند الاستلام',
-              <Banknote size={24} color={COLORS.primary} />
-            )}
-            {renderPaymentMethod(
-              'card',
-              'الدفع الإلكتروني',
-              <CreditCard size={24} color={COLORS.primary} />
-            )}
+            {renderPaymentMethod("cash", "الدفع عند الاستلام", <Banknote size={24} color={COLORS.primary} />)}
+            {renderPaymentMethod("card", "الدفع الإلكتروني", <CreditCard size={24} color={COLORS.primary} />)}
           </View>
         </View>
       </ScrollView>
@@ -280,25 +255,25 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   addButtonText: {
     color: COLORS.primary,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 4,
   },
   orderSummary: {
@@ -307,9 +282,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   summaryLabel: {
@@ -319,7 +294,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 16,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   totalRow: {
     borderTopWidth: 1,
@@ -329,16 +304,16 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   totalValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
   },
   emptyStateText: {
@@ -350,9 +325,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   addressItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
@@ -360,14 +335,14 @@ const styles = StyleSheet.create({
   },
   selectedAddressItem: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: COLORS.primary + "10",
   },
   addressInfo: {
     flex: 1,
   },
   addressName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 4,
   },
@@ -388,7 +363,7 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 16,
   },
@@ -403,25 +378,25 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   mapButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 12,
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: COLORS.primary + "10",
     borderRadius: 8,
     marginBottom: 12,
   },
   mapButtonText: {
     color: COLORS.primary,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   formButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   formButton: {
@@ -431,9 +406,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   paymentMethod: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
@@ -441,15 +416,15 @@ const styles = StyleSheet.create({
   },
   selectedPaymentMethod: {
     borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary + '10',
+    backgroundColor: COLORS.primary + "10",
   },
   paymentInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   paymentTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: COLORS.black,
     marginLeft: 12,
   },
@@ -460,6 +435,6 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
   },
   placeOrderButton: {
-    width: '100%',
+    width: "100%",
   },
 });

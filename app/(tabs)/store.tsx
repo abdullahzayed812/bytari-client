@@ -6,7 +6,6 @@ import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { Product } from "../../types";
 import { mockProducts } from "../../mocks/data";
-import Button from "../../components/Button";
 import {
   ShoppingBag,
   ShoppingCart,
@@ -18,17 +17,11 @@ import {
   Heart,
   Search,
   Plus,
-  Edit,
   Settings,
+  ClipboardList,
   Egg,
-  Stethoscope,
-  Syringe,
-  Pill,
-  Microscope,
-  Activity,
   Cog,
   Package,
-  Users,
   BarChart3,
   Zap,
   Wrench,
@@ -37,6 +30,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCart } from "@/providers/CartProvider";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { useFavorites } from "@/providers/FavoritesProvider";
 
 type Category = "all" | "food" | "accessories" | "medicine" | "toys";
 type AnimalType = "cat" | "dog" | "bird" | "fish" | "poultry";
@@ -46,9 +40,9 @@ type VetSpecialty = "small_animals" | "large_animals" | "birds" | "fish" | "poul
 // Pet Owner Store - Fixed categories for pet owners only
 const getPetOwnerCategories = () => {
   return [
-    { id: "cat" as AnimalType, label: "قطط", icon: <Cat size={40} color={COLORS.white} />, color: "#FF6B6B" },
-    { id: "dog" as AnimalType, label: "كلاب", icon: <Dog size={40} color={COLORS.white} />, color: "#4ECDC4" },
-    { id: "bird" as AnimalType, label: "طيور", icon: <Bird size={40} color={COLORS.white} />, color: "#45B7D1" },
+    { id: "cats" as AnimalType, label: "قطط", icon: <Cat size={40} color={COLORS.white} />, color: "#FF6B6B" },
+    { id: "dogs" as AnimalType, label: "كلاب", icon: <Dog size={40} color={COLORS.white} />, color: "#4ECDC4" },
+    { id: "birds" as AnimalType, label: "طيور", icon: <Bird size={40} color={COLORS.white} />, color: "#45B7D1" },
     { id: "fish" as AnimalType, label: "أسماك", icon: <Fish size={40} color={COLORS.white} />, color: "#96CEB4" },
     { id: "poultry" as AnimalType, label: "دواجن", icon: <Egg size={40} color={COLORS.white} />, color: "#FFA726" },
   ];
@@ -98,6 +92,7 @@ const vetCategories: { id: VetCategory; label: string }[] = [
 export default function StoreScreen() {
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
+  const { favorites, removeFromFavorites, addToFavorites } = useFavorites();
   const { addToCart, getCartItemCount } = useCart();
   const [selectedAnimal, setSelectedAnimal] = useState<AnimalType | null>(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState<VetSpecialty | null>(null);
@@ -108,83 +103,47 @@ export default function StoreScreen() {
   const specialtyFlatListRef = useRef<FlatList>(null);
   const productFlatListRef = useRef<FlatList>(null);
 
-  // const { data } = useQuery(trpc.stores.list.queryOptions({}));
-  // console.log(data?.stores);
-
-  // Scroll to top when tab is focused
-  useFocusEffect(
-    React.useCallback(() => {
-      if (userMode === "veterinarian") {
-        if (selectedSpecialty) {
-          productFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-        } else {
-          specialtyFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-        }
-      } else {
-        if (selectedAnimal) {
-          productFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-        } else {
-          animalFlatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-        }
-      }
-    }, [selectedAnimal, selectedSpecialty, userMode])
-  );
+  const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
 
   const animalCategories = getPetOwnerCategories();
   const vetSpecialties = getVetSpecialties();
 
-  // Filter products based on user mode
-  const filteredProducts =
-    userMode === "veterinarian"
-      ? selectedSpecialty
-        ? mockProducts.filter((product) => {
-            const matchesSpecialty =
-              selectedSpecialty === "equipment"
-                ? product.category === "accessories" ||
-                  product.name.toLowerCase().includes("جهاز") ||
-                  product.name.toLowerCase().includes("معدات")
-                : product.petType.includes(
-                    selectedSpecialty === "small_animals"
-                      ? "cat"
-                      : selectedSpecialty === "large_animals"
-                      ? "dog"
-                      : selectedSpecialty === "birds"
-                      ? "bird"
-                      : selectedSpecialty === "fish"
-                      ? "fish"
-                      : "poultry"
-                  );
-            const matchesCategory =
-              selectedVetCategory === "all" || product.category === "medicine" || product.category === "accessories";
-            const matchesSearch =
-              searchQuery === "" ||
-              product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesSpecialty && matchesCategory && matchesSearch;
-          })
-        : []
-      : selectedAnimal
-      ? mockProducts.filter((product) => {
-          const matchesAnimal = product.petType.includes(selectedAnimal);
-          const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-          const matchesSearch =
-            searchQuery === "" ||
-            product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-          return matchesAnimal && matchesCategory && matchesSearch;
-        })
-      : [];
+  const { data: productsData, isLoading } = useQuery(
+    trpc.unifiedStore.listProducts.queryOptions({
+      storeType,
+      category: userMode === "veterinarian" ? selectedSpecialty || undefined : selectedAnimal || undefined,
+      subcategory:
+        userMode === "veterinarian"
+          ? selectedVetCategory === "all"
+            ? undefined
+            : selectedVetCategory
+          : selectedCategory === "all"
+            ? undefined
+            : selectedCategory,
+      search: searchQuery,
+    })
+  );
 
-  const handleAddToCart = (product: Product) => {
+  const filteredProducts = productsData?.items || [];
+  console.log("===========", filteredProducts);
+  console.log("===========", selectedVetCategory);
+  console.log("===========", selectedCategory);
+
+  const handleAddToCart = (product: any) => {
     addToCart({
       productId: product.id,
       quantity: 1,
-      product,
+      product: {
+        ...product,
+        price: product.price,
+        image: product.image,
+      },
     });
   };
 
   const handleToggleFavorite = (product: Product) => {
     const isFavorite = favorites.some((f) => f.productId === product.id);
+
     if (isFavorite) {
       removeFromFavorites(product.id);
     } else {
@@ -221,10 +180,18 @@ export default function StoreScreen() {
     if (isSuperAdmin) return true;
     if (!isModerator || !moderatorPermissions) return false;
 
-    const storePerms = moderatorPermissions.storeManagement;
-    if (!storePerms) return false;
+    // Check if moderatorPermissions is an array of strings (new system)
+    if (Array.isArray(moderatorPermissions)) {
+      return moderatorPermissions.includes("manage_store_products");
+    }
 
-    return userMode === "veterinarian" ? storePerms.vetStores : storePerms.petOwnerStores;
+    // Fallback for legacy structure if any
+    const storePerms = moderatorPermissions.storeManagement;
+    if (storePerms) {
+      return userMode === "veterinarian" ? storePerms.vetStores : storePerms.petOwnerStores;
+    }
+
+    return false;
   };
 
   const handleAddProduct = () => {
@@ -379,7 +346,7 @@ export default function StoreScreen() {
             }}
           >
             <ShoppingCart size={16} color={COLORS.white} />
-            <Text style={styles.addButtonText}>{t("store.addToCart")}</Text>
+            <Text style={styles.addButtonText}>اضف الي السلة</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -403,6 +370,15 @@ export default function StoreScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
                   <Settings size={20} color={COLORS.white} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.adminButton}
+                  onPress={() => {
+                    const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
+                    router.push(`/store-orders?storeType=${storeType}`);
+                  }}
+                >
+                  <ClipboardList size={20} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
             )}

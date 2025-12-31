@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { formatPrice } from "../constants/currency";
@@ -9,35 +9,46 @@ import { mockProducts } from "../mocks/data";
 import Button from "../components/Button 2";
 import { ShoppingCart, Heart, Star, ArrowLeft, Phone, Share, Truck, Shield, RotateCcw } from "lucide-react-native";
 import { useLocalSearchParams, Stack, router } from "expo-router";
+import { useCart } from "@/providers/CartProvider";
+import { trpc } from "@/lib/trpc";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ProductDetailsScreen() {
-  const { productId } = useLocalSearchParams();
+  const { productId, storeType } = useLocalSearchParams();
   const { t, isRTL } = useI18n();
-  // const { addToCart, addToFavorites, removeFromFavorites, favorites } = useApp();
+  const { addToCart } = useCart();
+  const { userMode } = useApp();
   const [quantity, setQuantity] = useState(1);
 
-  const product = mockProducts.find((p) => p.id === productId) || mockProducts[0];
-  // const isFavorite = favorites.some(f => f.productId === product.id);
+  // Determine store type if not passed in params
+  const effectiveStoreType = (storeType as "veterinarian" | "pet_owner") ||
+    (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
+
+  const { data: product, isLoading, error } = useQuery(
+    trpc.unifiedStore.getProduct.queryOptions({
+      id: Number(productId),
+      storeType: effectiveStoreType,
+    })
+  );
 
   const handleAddToCart = () => {
-    // addToCart({
-    //   productId: product.id,
-    //   quantity,
-    //   product,
-    // });
+    if (!product) return;
+
+    addToCart({
+      productId: product.id.toString(),
+      quantity,
+      product: {
+        ...product,
+        id: product.id.toString(),
+        image: product.image || "", // Handle null image
+        rating: 0, // Default rating as it's not in marketplace_products yet
+      },
+    });
     Alert.alert("تم الإضافة", "تم إضافة المنتج إلى السلة بنجاح");
   };
 
   const handleToggleFavorite = () => {
-    // if (isFavorite) {
-    //   // removeFromFavorites(product.id);
-    // } else {
-    //   // addToFavorites({
-    //   //   productId: product.id,
-    //   //   product,
-    //   //   addedAt: new Date().toISOString(),
-    //   // });
-    // }
+    // Implement favorite logic
   };
 
   const handleQuantityChange = (change: number) => {
@@ -55,6 +66,22 @@ export default function ProductDetailsScreen() {
     Alert.alert("مشاركة المنتج", "سيتم مشاركة المنتج قريباً");
   };
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>المنتج غير موجود</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -71,8 +98,7 @@ export default function ProductDetailsScreen() {
           <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
             <Heart
               size={24}
-              // color={isFavorite ? COLORS.red : COLORS.gray}
-              // fill={isFavorite ? COLORS.red : 'transparent'}
+              color={COLORS.gray}
             />
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
@@ -85,37 +111,36 @@ export default function ProductDetailsScreen() {
           <Text style={styles.productName}>{product.name}</Text>
           <Text style={styles.productCategory}>{product.category}</Text>
 
-          {/* Rating */}
+          {/* Rating - Placeholder for now */}
           <View style={styles.ratingContainer}>
             <View style={styles.starsContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
                   size={16}
-                  color={star <= Math.floor(product.rating) ? "#FFD700" : COLORS.lightGray}
-                  fill={star <= Math.floor(product.rating) ? "#FFD700" : "transparent"}
+                  color={COLORS.lightGray}
+                  fill={"transparent"}
                 />
               ))}
             </View>
-            <Text style={styles.ratingText}>({product.rating})</Text>
-            <Text style={styles.reviewsText}>• 127 تقييم</Text>
+            <Text style={styles.ratingText}>(0)</Text>
+            <Text style={styles.reviewsText}>• 0 تقييم</Text>
           </View>
 
           {/* Price */}
           <View style={styles.priceContainer}>
             <Text style={styles.currentPrice}>{formatPrice(product.price)}</Text>
-            <Text style={styles.originalPrice}>{formatPrice(product.price * 1.2)}</Text>
-            <View style={styles.discountBadge}>
+            {/* <Text style={styles.originalPrice}>{formatPrice(product.price * 1.2)}</Text> */}
+            {/* <View style={styles.discountBadge}>
               <Text style={styles.discountText}>خصم 20%</Text>
-            </View>
+            </View> */}
           </View>
 
           {/* Description */}
           <View style={styles.descriptionContainer}>
             <Text style={styles.sectionTitle}>الوصف</Text>
             <Text style={styles.description}>
-              {product.description ||
-                "منتج عالي الجودة مناسب لجميع أنواع الحيوانات الأليفة. يتميز بالجودة العالية والمواد الطبيعية الآمنة. مصنوع من أفضل المواد المتاحة لضمان صحة وسلامة حيوانك الأليف."}
+              {product.description || "لا يوجد وصف متاح"}
             </Text>
           </View>
 
