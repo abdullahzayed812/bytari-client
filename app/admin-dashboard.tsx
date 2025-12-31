@@ -779,7 +779,7 @@ export default function AdminDashboard() {
           </View>
 
           <ScrollView style={styles.supervisorModalScroll}>
-            {supervisors.map((supervisor: any) => (
+            {supervisors?.map((supervisor: any) => (
               <View key={supervisor.id} style={styles.supervisorCard}>
                 <View style={styles.supervisorHeader}>
                   <View style={styles.supervisorInfo}>

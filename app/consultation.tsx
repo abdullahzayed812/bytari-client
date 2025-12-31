@@ -125,7 +125,7 @@ export default function ConsultationScreen() {
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>{t("consultation.question")}</Text>
+        <Text style={styles.label}>محتوى الإستشارة</Text>
         <TextInput
           style={styles.textArea}
           placeholder="اكتب سؤالك هنا..."

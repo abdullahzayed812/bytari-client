@@ -109,7 +109,7 @@ export default function StoreScreen() {
   const productFlatListRef = useRef<FlatList>(null);
 
   // const { data } = useQuery(trpc.stores.list.queryOptions({}));
-  // console.log(data);
+  // console.log(data?.stores);
 
   // Scroll to top when tab is focused
   useFocusEffect(

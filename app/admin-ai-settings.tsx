@@ -51,7 +51,7 @@ export default function AdminAiSettingsScreen() {
   const adminId = 1;
 
   // جلب إعدادات الذكاء الاصطناعي
-  const { data: aiSettingsData, refetch, isLoading } = useQuery(trpc.admin.aiSettings.get.queryOptions());
+  const { data: aiSettingsData, refetch, isLoading } = useQuery(trpc.admin.aiSettings.get.queryOptions({}));
 
   // Mutations
   const updateAiSettings = useMutation(trpc.admin.aiSettings.update.mutationOptions());

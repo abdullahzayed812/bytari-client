@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, ActivityIndicator } from "react-native";
-import { ArrowLeft, MessageCircle, User, Clock, CheckCircle, PawPrint } from "lucide-react-native";
+import { ArrowLeft, MessageCircle, User, Clock, CheckCircle, PawPrint, Bot } from "lucide-react-native";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { COLORS } from "@/constants/colors";
 import { trpc } from "@/lib/trpc";
@@ -209,7 +209,9 @@ export default function AdminConsultationDetailsScreen() {
                         <User size={16} color={COLORS.white} />
                       </View>
                       <View>
-                        <Text style={styles.responderName}>{response.responder?.name || "مشرف"}</Text>
+                        <Text style={styles.responderName}>
+                          {response.isAiGenerated && !response.responder?.name ? "الذكاء الاصطناعي" : response.responder?.name || "مشرف"}
+                        </Text>
                         <Text style={styles.responseDate}>
                           {new Date(response.createdAt || "").toLocaleDateString("ar-SA", {
                             month: "short",
@@ -224,6 +226,12 @@ export default function AdminConsultationDetailsScreen() {
                       <View style={styles.officialBadge}>
                         <CheckCircle size={14} color={COLORS.white} />
                         <Text style={styles.officialBadgeText}>رد رسمي</Text>
+                      </View>
+                    )}
+                    {response.isAiGenerated && (
+                      <View style={styles.aiGeneratedBadge}>
+                        <Bot size={14} color={COLORS.white} />
+                        <Text style={styles.aiGeneratedBadgeText}>AI</Text>
                       </View>
                     )}
                   </View>
@@ -529,6 +537,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   officialBadgeText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: COLORS.white,
+  },
+  aiGeneratedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: COLORS.secondary, // Assuming COLORS.secondary is a suitable color
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginLeft: 8, // To separate it from the official badge
+  },
+  aiGeneratedBadgeText: {
     fontSize: 10,
     fontWeight: "600",
     color: COLORS.white,
