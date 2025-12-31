@@ -74,10 +74,16 @@ export default function AdoptionBreedingListScreen() {
   };
 
   const renderPetCard = ({ item: pet }: { item: any }) => {
+    const isClosed = !pet.isAvailable || pet.isClosedByOwner;
     return (
       <TouchableOpacity
         style={styles.petCard}
-        onPress={() => handlePetPress(pet.id)}
+        activeOpacity={isClosed ? 1 : 0.7}
+        onPress={() => {
+          if (!isClosed) {
+            handlePetPress(pet.id);
+          }
+        }}
       >
         {/* Pet Image */}
         <Image
@@ -95,13 +101,13 @@ export default function AdoptionBreedingListScreen() {
           <View
             style={[
               styles.badge,
-              activeTab === "adoption"
+              isClosed ? { backgroundColor: COLORS.darkGray } : (activeTab === "adoption"
                 ? styles.adoptionBadge
-                : styles.breedingBadge,
+                : styles.breedingBadge),
             ]}
           >
             <Text style={styles.badgeText}>
-              {activeTab === "adoption" ? "للتبني" : "للتزاوج"}
+              {isClosed ? "مغلق" : (activeTab === "adoption" ? "للتبني" : "للتزاوج")}
             </Text>
           </View>
         </View>
@@ -142,37 +148,38 @@ export default function AdoptionBreedingListScreen() {
         </View>
 
         {/* Action Buttons */}
-        <View style={styles.petActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handlePetPress(pet.id)}
-          >
-            <Text style={styles.actionButtonText}>التفاصيل</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.favoriteButton}
-            onPress={() => {
-              console.log(`Add to favorites: ${pet.id}`);
-              // TODO: Implement add to favorites functionality
-            }}
-          >
-            <Heart size={14} color="#EF4444" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.primaryActionButton]}
-            onPress={() => {
-              console.log(`Contact owner for ${activeTab} pet ${pet.id}`);
-              console.log("Contact info:", pet.contactInfo);
-              // TODO: Implement contact owner functionality
-            }}
-          >
-            <Text
-              style={[styles.actionButtonText, styles.primaryActionButtonText]}
+        {!isClosed && (
+          <View style={styles.petActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handlePetPress(pet.id)}
             >
-              اتصال
-            </Text>
-          </TouchableOpacity>
-        </View>
+              <Text style={styles.actionButtonText}>التفاصيل</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.favoriteButton}
+              onPress={() => {
+                // TODO: Implement add to favorites functionality
+              }}
+            >
+              <Heart size={14} color="#EF4444" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.primaryActionButton]}
+              onPress={() => {
+                if (pet.contactInfo.phone) {
+                  Linking.openURL(`tel:${pet.contactInfo.phone}`);
+                }
+              }}
+            >
+              <Text
+                style={[styles.actionButtonText, styles.primaryActionButtonText]}
+              >
+                اتصال
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };

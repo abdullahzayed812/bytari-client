@@ -38,14 +38,17 @@ export default function HomeScreen() {
   const { downloadBook, isDownloading } = useBookDownload();
 
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
-  // Mock data for notifications and messages count (will be replaced with real data later)
-  const [notificationsCount, setNotificationsCount] = useState<number>(5);
-  const [messagesCount, setMessagesCount] = useState<number>(12);
+
   const adScrollViewRef = useRef<ScrollView>(null);
   const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
   const isVet = userMode === "veterinarian";
+
+  const { data: countData } = useQuery({
+    ...trpc.admin.stats.getUserMessageCounts.queryOptions({ userId: user?.id }),
+    enabled: !!user?.id,
+  });
 
   // Real backend data queries
   const {
@@ -98,9 +101,9 @@ export default function HomeScreen() {
 
   const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(trpc.pets.getApproved.queryOptions({}));
   const adoptionPets = useMemo(() => (adoptionPetsData as any)?.pets, [adoptionPetsData]);
-  const trackImpressionMutation = useMutation(trpc.admin.ads.trackImpression.mutationOptions());
-  const [trackedImpressions, setTrackedImpressions] = useState<number[]>([]);
 
+  const [trackedImpressions, setTrackedImpressions] = useState<number[]>([]);
+  const trackImpressionMutation = useMutation(trpc.admin.ads.trackImpression.mutationOptions());
   const watchArticleMutation = useMutation(trpc.content.watchArticle.mutationOptions());
   const watchBookMutation = useMutation(trpc.content.watchBook.mutationOptions());
 
@@ -286,6 +289,17 @@ export default function HomeScreen() {
     }
   };
 
+  const getPetStatus = (status: string) => {
+    switch (status) {
+      case "found":
+        return { text: "تم العثور عليه", color: COLORS.success };
+      case "closed":
+        return { text: "مغلق", color: COLORS.darkGray };
+      default:
+        return { text: "مفقود", color: COLORS.error };
+    }
+  };
+
   const handleReportLostPet = () => {
     router.push("/report-lost-pet");
   };
@@ -336,9 +350,11 @@ export default function HomeScreen() {
             }}
           >
             <Bell size={22} color={COLORS.black} />
-            {notificationsCount > 0 && (
+            {countData?.notificationsCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{notificationsCount > 99 ? "99+" : notificationsCount.toString()}</Text>
+                <Text style={styles.badgeText}>
+                  {countData?.notificationsCount > 99 ? "99+" : countData?.notificationsCount?.toString()}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -356,9 +372,11 @@ export default function HomeScreen() {
             }}
           >
             <MessageCircle size={22} color={COLORS.black} />
-            {messagesCount > 0 && (
+            {countData?.messagesCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{messagesCount > 99 ? "99+" : messagesCount.toString()}</Text>
+                <Text style={styles.badgeText}>
+                  {countData?.messagesCount > 99 ? "99+" : countData?.messagesCount?.toString()}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -763,7 +781,6 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
-                          console.log(`Call store ${store.id}: ${store.phone}`);
                           // TODO: Implement phone call functionality
                         }}
                       >
@@ -772,7 +789,6 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         style={styles.clinicActionButton}
                         onPress={() => {
-                          console.log(`View store products ${store.id}`);
                           router.push({
                             pathname: "/store-products",
                             params: { id: store.id },
@@ -888,7 +904,6 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
-                          console.log(`Call clinic ${clinic.id}: ${clinic.phone}`);
                           // TODO: Implement phone call functionality
                         }}
                       >
@@ -897,7 +912,6 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         style={styles.clinicActionButton}
                         onPress={() => {
-                          console.log(`Show map for clinic ${clinic.id}`);
                           // TODO: Implement map functionality
                         }}
                       >
@@ -1058,12 +1072,15 @@ export default function HomeScreen() {
                         marginLeft: isRTL ? 16 : 0,
                       },
                     ]}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/adoption-pet-details",
-                        params: { id: pet.id, type: "adoption" },
-                      })
-                    }
+                    activeOpacity={pet.isClosedByOwner ? 1 : 0.7}
+                    onPress={() => {
+                      if (pet.isAvailable && !pet.isClosedByOwner) {
+                        router.push({
+                          pathname: "/adoption-pet-details",
+                          params: { id: pet.id, type: pet.requestType === "adoption" ? "adoption" : "breeding" },
+                        });
+                      }
+                    }}
                   >
                     <View style={[styles.adoptionPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Pet Image */}
@@ -1082,8 +1099,21 @@ export default function HomeScreen() {
                       >
                         {/* Status Badge */}
                         <View style={[styles.adoptionBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
-                          <View style={styles.adoptionBadge}>
-                            <Text style={styles.adoptionBadgeText}>للتبني</Text>
+                          <View
+                            style={[
+                              styles.adoptionBadge,
+                              {
+                                backgroundColor: pet.isClosedByOwner
+                                  ? COLORS.darkGray
+                                  : pet.type === "adoption"
+                                  ? "#10B981"
+                                  : "#8B5CF6",
+                              },
+                            ]}
+                          >
+                            <Text style={styles.adoptionBadgeText}>
+                              {pet.isClosedByOwner ? "مغلق" : pet.requestType === "adoption" ? "للتبني" : "للتزاوج"}
+                            </Text>
                           </View>
                         </View>
 
@@ -1123,7 +1153,7 @@ export default function HomeScreen() {
                               },
                             ]}
                           >
-                            {pet?.lastSeen?.location}
+                            {pet?.location}
                           </Text>
                         </View>
 
@@ -1139,7 +1169,7 @@ export default function HomeScreen() {
                               },
                             ]}
                           >
-                            {pet?.ownerPhone}
+                            {pet?.contactInfo?.phone}
                           </Text>
                         </View>
                       </View>
@@ -1150,35 +1180,37 @@ export default function HomeScreen() {
                       style={[styles.adoptionPetDescription, { textAlign: isRTL ? "right" : "left" }]}
                       numberOfLines={2}
                     >
-                      حيوان أليف ودود ومدرب، يحتاج إلى منزل محب ورعاية جيدة.
+                      {pet.description}
                     </Text>
 
                     {/* Action Buttons */}
-                    <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                      <TouchableOpacity
-                        style={styles.adoptionActionButton}
-                        onPress={() => {
-                          console.log(`View details for adoption pet ${pet.id}`);
-                          router.push({
-                            pathname: "/adoption-pet-details",
-                            params: { id: pet.id, type: "adoption" },
-                          });
-                        }}
-                      >
-                        <Text style={styles.adoptionActionButtonText}>التفاصيل</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.adoptionActionButton, styles.primaryAdoptionActionButton]}
-                        onPress={() => {
-                          console.log(`Contact owner for adoption pet ${pet.id}`);
-                          // TODO: Implement contact owner functionality
-                        }}
-                      >
-                        <Text style={[styles.adoptionActionButtonText, styles.primaryAdoptionActionButtonText]}>
-                          اتصال
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
+                    {pet.isAvailable && !pet.isClosedByOwner && (
+                      <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <TouchableOpacity
+                          style={styles.adoptionActionButton}
+                          onPress={() => {
+                            router.push({
+                              pathname: "/adoption-pet-details",
+                              params: { id: pet.id, type: pet.type === "adoption" ? "adoption" : "breeding" },
+                            });
+                          }}
+                        >
+                          <Text style={styles.adoptionActionButtonText}>التفاصيل</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.adoptionActionButton, styles.primaryAdoptionActionButton]}
+                          onPress={() => {
+                            if (pet.contactInfo.phone) {
+                              Linking.openURL(`tel:${pet.contactInfo.phone}`);
+                            }
+                          }}
+                        >
+                          <Text style={[styles.adoptionActionButtonText, styles.primaryAdoptionActionButtonText]}>
+                            اتصال
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))
               )}
@@ -1275,12 +1307,15 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={pet.id}
                   style={[styles.lostPetCardNew, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/lost-pet",
-                      params: { id: pet.id },
-                    })
-                  }
+                  activeOpacity={pet.status === "found" || pet.status === "closed" ? 1 : 0.7}
+                  onPress={() => {
+                    if (pet.status !== "found" && pet.status !== "closed") {
+                      router.push({
+                        pathname: "/lost-pet",
+                        params: { id: pet.id },
+                      });
+                    }
+                  }}
                 >
                   <View style={[styles.lostPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                     {/* Pet Image */}
@@ -1299,11 +1334,10 @@ export default function HomeScreen() {
                     >
                       {/* Status Badge */}
                       <View style={[styles.statusBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
-                        <View style={styles.statusBadge}>
-                          <Text style={styles.statusBadgeText}>مفقود</Text>
+                        <View style={[styles.statusBadge, { backgroundColor: getPetStatus(pet.status).color }]}>
+                          <Text style={styles.statusBadgeText}>{getPetStatus(pet.status).text}</Text>
                         </View>
                       </View>
-
                       {/* Pet Name and Type */}
                       <Text style={[styles.lostPetName, { textAlign: isRTL ? "right" : "left" }]}>{pet.name}</Text>
                       <Text style={[styles.lostPetType, { textAlign: isRTL ? "right" : "left" }]}>
@@ -1366,35 +1400,34 @@ export default function HomeScreen() {
                   </Text>
 
                   {/* Action Buttons */}
-                  <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => {
-                        console.log(`Show location for lost pet ${pet.id}`);
-                        // TODO: Implement map/location functionality
-                      }}
-                    >
-                      <Text style={styles.actionButtonText}>الموقع</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => {
-                        console.log(`Report found pet ${pet.id}`);
-                        // TODO: Implement report found functionality
-                      }}
-                    >
-                      <Text style={styles.actionButtonText}>ابلاغ</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.primaryActionButton]}
-                      onPress={() => {
-                        console.log(`Contact owner for pet ${pet.id}`);
-                        // TODO: Implement contact owner functionality
-                      }}
-                    >
-                      <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>اتصال</Text>
-                    </TouchableOpacity>
-                  </View>
+                  {pet.status === "lost" && (
+                    <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                          // TODO: Implement map/location functionality
+                        }}
+                      >
+                        <Text style={styles.actionButtonText}>الموقع</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.actionButton}
+                        onPress={() => {
+                          // TODO: Implement report found functionality
+                        }}
+                      >
+                        <Text style={styles.actionButtonText}>ابلاغ</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.primaryActionButton]}
+                        onPress={() => {
+                          // TODO: Implement contact owner functionality
+                        }}
+                      >
+                        <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>اتصال</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </TouchableOpacity>
               ))
             ) : (

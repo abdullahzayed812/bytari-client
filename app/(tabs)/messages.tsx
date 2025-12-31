@@ -143,7 +143,7 @@ export default function MessagesScreen() {
       {
         onSuccess: () => {
           Alert.alert("تم الإرسال", "تم إرسال الرد بنجاح");
-          setReplyModalVisible(false);
+          // setReplyModalVisible(false);
           setReplyText("");
           setSelectedMessage(null);
           queryClient.invalidateQueries(trpc.admin.messages.getUserSystemMessages);
@@ -158,9 +158,9 @@ export default function MessagesScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
+      {/* <Stack.Screen
         options={{
-          headerShown: true,
+          // headerShown: true,
           title: "الرسائل",
           headerStyle: {
             backgroundColor: COLORS.white,
@@ -176,10 +176,10 @@ export default function MessagesScreen() {
             </TouchableOpacity>
           ),
         }}
-      />
+      /> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {messages.map((message) => (
+        {messages?.map((message) => (
           <TouchableOpacity
             key={message.id}
             style={[styles.messageCard, !message.isRead && styles.unreadCard]}
@@ -194,7 +194,7 @@ export default function MessagesScreen() {
                 style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
               >
                 <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                  <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>System</Text>
+                  <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>الإدارة</Text>
                   <Text style={[styles.messageTime, { textAlign: isRTL ? "left" : "right" }]}>
                     {formatTime(message.createdAt)}
                   </Text>
@@ -229,7 +229,7 @@ export default function MessagesScreen() {
           </TouchableOpacity>
         ))}
 
-        {messages.length === 0 && (
+        {messages?.length === 0 && (
           <View style={styles.emptyState}>
             <MessageCircle size={64} color={COLORS.lightGray} />
             <Text style={styles.emptyStateText}>لا توجد رسائل</Text>
@@ -252,7 +252,7 @@ export default function MessagesScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>الرد على الرسالة</Text>
               <TouchableOpacity style={styles.closeButton} onPress={() => setReplyModalVisible(false)}>
-                <X size={24} color={COLORS.gray} />
+                <X size={24} color={COLORS.darkGray} />
               </TouchableOpacity>
             </View>
 
@@ -260,7 +260,7 @@ export default function MessagesScreen() {
               <View style={styles.originalMessage}>
                 <Text style={styles.originalTitle}>{selectedMessage?.title}</Text>
                 <Text style={styles.originalText}>{selectedMessage?.content}</Text>
-                <Text style={styles.originalFrom}>من: System</Text>
+                <Text style={styles.originalFrom}>من: الإدارة</Text>
               </View>
             )}
 
@@ -303,8 +303,10 @@ export default function MessagesScreen() {
                 onPress={() => handleSendReply()}
                 disabled={!replyText?.trim()}
               >
-                <Send size={16} color={COLORS.white} />
-                <Text style={styles.sendButtonText}>إرسال الرد</Text>
+                <Send size={16} color={!replyText?.trim() ? COLORS.darkGray : COLORS.white} />
+                <Text style={[styles.sendButtonText, { color: !replyText?.trim() ? COLORS.darkGray : COLORS.white }]}>
+                  إرسال الرد
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -384,7 +386,7 @@ const styles = StyleSheet.create({
   },
   messageTime: {
     fontSize: 12,
-    color: COLORS.lightGray,
+    color: COLORS.darkGray,
   },
   messageSubject: {
     fontSize: 15,

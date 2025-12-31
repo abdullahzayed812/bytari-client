@@ -54,7 +54,7 @@ export default function NotificationsScreen() {
 
   const handleNotificationPress = (notification: any) => {
     markNotificationAsRead.mutate({ userId: user?.id, notificationId: notification?.id } as any);
-    queryClient.invalidateQueries(trpc.notifications.list.queryKey);
+    queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
 
     if (notification?.type === "appointment") {
       router.push("/appointments");
@@ -64,6 +64,8 @@ export default function NotificationsScreen() {
       router.push({ pathname: "/inquiry-details", params: { id: notification?.data?.inquiryId } });
     } else if (notification?.type === "consultation") {
       router.push({ pathname: "/consultation-details", params: { id: notification?.data?.consultationId } });
+    } else if (notification?.type === "system") {
+      router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
     }
   };
 
@@ -71,7 +73,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen
+      {/* <Stack.Screen
         options={{
           headerShown: true,
           title: "الإشعارات",
@@ -87,7 +89,7 @@ export default function NotificationsScreen() {
             </TouchableOpacity>
           ),
         }}
-      />
+      /> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {isLoading ? (

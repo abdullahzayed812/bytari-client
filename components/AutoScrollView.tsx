@@ -13,7 +13,7 @@ interface AutoScrollViewProps {
 export default function AutoScrollView({
   children,
   itemWidth,
-  autoScrollInterval = 3000,
+  autoScrollInterval = 5000,
   showsHorizontalScrollIndicator = false,
   contentContainerStyle,
   style,

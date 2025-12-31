@@ -334,7 +334,7 @@ export default function AdminMessagesScreen() {
       {
         onSuccess: () => {
           Alert.alert("تم الإرسال", "تم إرسال الرد بنجاح");
-          setReplyModalVisible(false);
+          // setReplyModalVisible(false);
           setReplyText("");
           setSelectedMessage(null);
           queryClient.invalidateQueries(trpc.admin.messages.getAllSystemMessages);
@@ -511,7 +511,7 @@ export default function AdminMessagesScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>الرد على الرسالة</Text>
               <TouchableOpacity style={styles.closeButton} onPress={() => setReplyModalVisible(false)}>
-                <X size={24} color={COLORS.gray} />
+                <X size={24} color={COLORS.darkGray} />
               </TouchableOpacity>
             </View>
 
@@ -562,8 +562,10 @@ export default function AdminMessagesScreen() {
                 onPress={sendReply}
                 disabled={!replyText?.trim()}
               >
-                <Send size={16} color={COLORS.white} />
-                <Text style={styles.sendButtonText}>إرسال الرد</Text>
+                <Send size={16} color={!replyText?.trim() ? COLORS.darkGray : COLORS.white} />
+                <Text style={[styles.sendButtonText, { color: !replyText?.trim() ? COLORS.darkGray : COLORS.white }]}>
+                  إرسال الرد
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1039,7 +1041,7 @@ const styles = StyleSheet.create({
   },
   messageFrom: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: COLORS.darkGray,
   },
   messageActions: {
     flexDirection: "row",

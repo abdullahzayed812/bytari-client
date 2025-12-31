@@ -7,8 +7,8 @@ import { useRouter, Stack } from "expo-router";
 import Button from "../components/Button";
 import { Pet } from "../types";
 import { MapPin } from "lucide-react-native";
-import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { queryClient, trpc } from "../lib/trpc";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
@@ -17,14 +17,14 @@ const GENDERS = ["male", "female"] as const;
 const LISTING_TYPES = ["adoption", "breeding"] as const;
 
 export default function AddAdoptionPetScreen() {
-  const { t } = useI18n();
+  const queryClient = useQueryClient();
   const { user } = useApp();
   const router = useRouter();
   const { showToast } = useToastContext();
 
   const [formData, setFormData] = useState({
     name: "Buddy",
-    type: "dog" as Pet["type"],
+    type: "dog",
     breed: "Golden Retriever",
     age: "3",
     gender: "male" as Pet["gender"],
@@ -104,7 +104,7 @@ export default function AddAdoptionPetScreen() {
             message: data?.message || "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
           });
           router.back();
-          trpc.pets.getApproved.invalidate();
+          queryClient.invalidateQueries(trpc.pets.getApproved.queryKey);
         },
         onError: (error) => {
           showToast({

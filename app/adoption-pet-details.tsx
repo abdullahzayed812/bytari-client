@@ -14,22 +14,23 @@ import {
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Calendar, MapPin, Phone, Heart, User, Palette, Weight, Award } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
-import { useI18n } from "../providers/I18nProvider";
 import { trpc } from "../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApp } from "@/providers/AppProvider";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function AdoptionPetDetailsScreen() {
-  const { t, isRTL } = useI18n();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { id, type } = useLocalSearchParams<{
     id: string;
     type: "adoption" | "breeding";
   }>();
+  const { user } = useApp();
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const { data, isLoading, error } = useQuery(
+  const { data, isLoading, error, refetch } = useQuery(
     trpc.pets.getAdoptionBreedingPetDetails.queryOptions({
       id: parseInt(id || "0"),
       type: type as "adoption" | "breeding",
@@ -37,6 +38,49 @@ export default function AdoptionPetDetailsScreen() {
   );
 
   const pet = data?.pet;
+  const isOwner = user && pet && user?.id === pet?.ownerId;
+
+  const closeAdoptionMutation = useMutation(trpc.pets.closeAdoptionListing.mutationOptions());
+  const closeBreedingMutation = useMutation(trpc.pets.closeBreedingListing.mutationOptions());
+
+  const getAdoptionStatus = (pet: any) => {
+    if (pet.isClosedByOwner) {
+      return { text: " مغلق", color: COLORS.darkGray };
+    }
+    if (pet.isAvailable) {
+      return { text: type === "adoption" ? "للتبني" : "للتزاوج", color: type === "adoption" ? "#10B981" : "#8B5CF6" };
+    }
+    return { text: "غير متاح", color: COLORS.darkGray };
+  };
+
+  const handleCloseListing = () => {
+    if (!isOwner || !pet) return;
+
+    const mutation = type === "adoption" ? closeAdoptionMutation : closeBreedingMutation;
+    const petId = pet.id;
+
+    Alert.alert("تأكيد الإغلاق", "هل أنت متأكد أنك تريد إغلاق هذا الإعلان؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "نعم، إغلاق",
+        onPress: () => {
+          mutation.mutate(
+            { petId, ownerId: user.id },
+            {
+              onSuccess: () => {
+                Alert.alert("تم الإغلاق", "تم إغلاق الإعلان بنجاح.");
+                refetch();
+                queryClient.invalidateQueries(trpc.pets.getApproved.queryKey);
+              },
+              onError: (err) => {
+                Alert.alert("خطأ", "حدث خطأ أثناء إغلاق الإعلان: " + err.message);
+              },
+            }
+          );
+        },
+      },
+    ]);
+  };
 
   const handleContact = () => {
     if (!pet) return;
@@ -57,7 +101,6 @@ export default function AdoptionPetDetailsScreen() {
 
   const handleFavorite = () => {
     setIsFavorite(!isFavorite);
-    console.log(`${isFavorite ? "Removed from" : "Added to"} favorites: ${pet?.name}`);
   };
 
   if (isLoading) {
@@ -126,8 +169,8 @@ export default function AdoptionPetDetailsScreen() {
 
           {/* Status Badge */}
           <View style={styles.badgeContainer}>
-            <View style={[styles.badge, type === "adoption" ? styles.adoptionBadge : styles.breedingBadge]}>
-              <Text style={styles.badgeText}>{type === "adoption" ? "للتبني" : "للتزاوج"}</Text>
+            <View style={[styles.badge, { backgroundColor: getAdoptionStatus(pet).color }]}>
+              <Text style={styles.badgeText}>{getAdoptionStatus(pet).text}</Text>
             </View>
           </View>
 
@@ -146,7 +189,7 @@ export default function AdoptionPetDetailsScreen() {
         <View style={styles.section}>
           <Text style={styles.petName}>{pet.name}</Text>
           <Text style={styles.petType}>
-            {t(`pets.types.${pet.type}`)} {pet.breed ? `- ${pet.breed}` : ""}
+            {`${pet.type}`} {pet.breed ? `- ${pet.breed}` : ""}
           </Text>
         </View>
 
@@ -255,22 +298,24 @@ export default function AdoptionPetDetailsScreen() {
         )}
 
         {/* Owner Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>معلومات المالك</Text>
+        {!pet.isClosedByOwner && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>معلومات المالك</Text>
 
-          <View style={styles.ownerCard}>
-            <View style={styles.ownerAvatar}>
-              <User size={24} color={COLORS.white} />
+            <View style={styles.ownerCard}>
+              <View style={styles.ownerAvatar}>
+                <User size={24} color={COLORS.white} />
+              </View>
+              <View style={styles.ownerInfo}>
+                <Text style={styles.ownerName}>{pet.ownerName}</Text>
+                <Text style={styles.ownerLocation}>{pet.location}</Text>
+              </View>
+              <TouchableOpacity style={styles.contactButton} onPress={handleContact}>
+                <Phone size={16} color={COLORS.white} />
+              </TouchableOpacity>
             </View>
-            <View style={styles.ownerInfo}>
-              <Text style={styles.ownerName}>{pet.contactInfo.name || pet.ownerName}</Text>
-              <Text style={styles.ownerLocation}>{pet.location}</Text>
-            </View>
-            <TouchableOpacity style={styles.contactButton} onPress={handleContact}>
-              <Phone size={16} color={COLORS.white} />
-            </TouchableOpacity>
           </View>
-        </View>
+        )}
 
         {/* Bottom Spacing */}
         <View style={styles.bottomSpacing} />
@@ -278,10 +323,17 @@ export default function AdoptionPetDetailsScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        <TouchableOpacity style={styles.contactActionButton} onPress={handleContact}>
-          <Phone size={20} color={COLORS.white} />
-          <Text style={styles.contactActionText}>{type === "adoption" ? "اتصال للتبني" : "اتصال للتزاوج"}</Text>
-        </TouchableOpacity>
+        {!isOwner && !pet.isClosedByOwner && (
+          <TouchableOpacity style={styles.contactActionButton} onPress={handleContact}>
+            <Phone size={20} color={COLORS.white} />
+            <Text style={styles.contactActionText}>{type === "adoption" ? "اتصال للتبني" : "اتصال للتزاوج"}</Text>
+          </TouchableOpacity>
+        )}
+        {isOwner && !pet.isClosedByOwner && (
+          <TouchableOpacity style={styles.closeActionButton} onPress={handleCloseListing}>
+            <Text style={styles.closeActionText}>إغلاق الإعلان</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -429,7 +481,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bottomSpacing: {
-    height: 100,
+    height: 200,
   },
   actionContainer: {
     position: "absolute",
@@ -453,6 +505,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   contactActionText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  closeActionButton: {
+    backgroundColor: COLORS.error,
+    borderRadius: 12,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  closeActionText: {
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
