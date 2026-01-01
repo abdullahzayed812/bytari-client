@@ -58,9 +58,18 @@ export default function UnionBranchDetailsScreen() {
   const { isSuperAdmin, hasAdminAccess, /* sendNotification ,*/ isModerator, moderatorPermissions } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
-  const [isFollowing, setIsFollowing] = useState<boolean>(branch?.isFollowing || false);
   const queryClient = useQueryClient();
+
+  const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
+
+  const { data: announcements, isLoading: isAnnouncementsLoading } = useQuery({
+    ...trpc.union.announcement.list.queryOptions({ branchId: Number(branch?.id) }),
+    enabled: !!branch?.id,
+  });
+
+  console.log(announcements);
+
+  const [isFollowing, setIsFollowing] = useState<boolean>(branch?.isFollowing || false);
 
   useEffect(() => {
     if (branch) {
@@ -68,19 +77,20 @@ export default function UnionBranchDetailsScreen() {
     }
   }, [branch]);
 
-  const followMutation = useMutation(
-    trpc.union.follow.toggle.mutationOptions({
-      onSuccess: (data) => {
-        setIsFollowing(data.isFollowing);
-        queryClient.invalidateQueries(trpc.union.branch.get.queryKey(parseInt(id as string) as any));
-        queryClient.invalidateQueries(trpc.union.branch.list.queryKey as any);
-      },
-    })
-  );
+  const followMutation = useMutation(trpc.union.follow.toggle.mutationOptions());
 
   const handleFollowToggle = () => {
     if (branch) {
-      followMutation.mutate({ branchId: branch.id });
+      followMutation.mutate(
+        { branchId: branch.id },
+        {
+          onSuccess: (data) => {
+            setIsFollowing(data.isFollowing);
+            queryClient.invalidateQueries(trpc.union.branch.get.queryKey as any);
+            queryClient.invalidateQueries(trpc.union.branch.list.queryKey as any);
+          },
+        }
+      );
     }
   };
 
@@ -178,82 +188,6 @@ export default function UnionBranchDetailsScreen() {
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Union Announcements - Top Priority */}
-        <View style={styles.topAnnouncementsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
-            {(isSuperAdmin ||
-              hasAdminAccess ||
-              (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
-              <TouchableOpacity
-                onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
-                style={styles.addAnnouncementButton}
-              >
-                <Plus size={16} color={COLORS.primary} />
-                <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.topAnnouncementsList}>
-            {branch?.announcements?.slice(0, 2)?.map((announcement) => (
-              <View key={announcement.id} style={styles.topAnnouncementCard}>
-                <View style={styles.announcementHeader}>
-                  <View
-                    style={[styles.announcementType, { backgroundColor: getAnnouncementTypeColor(announcement.type) }]}
-                  >
-                    <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
-                  </View>
-                  {announcement.isImportant && (
-                    <View style={styles.importantBadge}>
-                      <Text style={styles.importantText}>مهم</Text>
-                    </View>
-                  )}
-                  <Text style={styles.announcementDate}>{announcement.date}</Text>
-                </View>
-
-                <Text style={styles.announcementTitle}>{announcement.title}</Text>
-                <Text style={styles.announcementContent}>{announcement.content}</Text>
-
-                {announcement.image && (
-                  <View style={styles.announcementImageContainer}>
-                    <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
-                  </View>
-                )}
-
-                {announcement.link && (
-                  <TouchableOpacity style={styles.announcementLink}>
-                    <Link size={16} color={COLORS.primary} />
-                    <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
-                    <ExternalLink size={14} color={COLORS.primary} />
-                  </TouchableOpacity>
-                )}
-
-                <View style={styles.announcementFooter}>
-                  {announcement.author && <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>}
-                  {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
-                </View>
-
-                {(isSuperAdmin ||
-                  hasAdminAccess ||
-                  (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
-                  <View style={styles.announcementActions}>
-                    <TouchableOpacity
-                      style={styles.editAnnouncementButton}
-                      onPress={() =>
-                        router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)
-                      }
-                    >
-                      <Edit3 size={14} color={COLORS.primary} />
-                      <Text style={styles.editAnnouncementText}>تعديل</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        </View>
-
         {/* Branch Header */}
         <View style={styles.branchHeader}>
           <View style={styles.branchIcon}>
@@ -362,7 +296,7 @@ export default function UnionBranchDetailsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الخدمات المقدمة</Text>
           <View style={styles.servicesList}>
-            {branch.services.map((service, index) => (
+            {branch?.services?.map((service, index) => (
               <View key={index} style={styles.serviceItem}>
                 <View style={styles.serviceBullet} />
                 <Text style={styles.serviceText}>{service}</Text>
@@ -371,10 +305,10 @@ export default function UnionBranchDetailsScreen() {
           </View>
         </View>
 
-        {/* Previous Announcements and News */}
-        <View style={styles.section}>
+        {/* Union Announcements - Top Priority */}
+        <View style={styles.topAnnouncementsSection}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>الأخبار والإعلانات السابقة</Text>
+            <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
             {(isSuperAdmin ||
               hasAdminAccess ||
               (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
@@ -388,9 +322,9 @@ export default function UnionBranchDetailsScreen() {
             )}
           </View>
 
-          <View style={styles.announcementsList}>
-            {branch?.announcements?.slice(2)?.map((announcement) => (
-              <View key={announcement.id} style={styles.announcementCard}>
+          <View style={styles.topAnnouncementsList}>
+            {announcements?.slice(0, 2)?.map((announcement) => (
+              <View key={announcement.id} style={styles.topAnnouncementCard}>
                 <View style={styles.announcementHeader}>
                   <View
                     style={[styles.announcementType, { backgroundColor: getAnnouncementTypeColor(announcement.type) }]}

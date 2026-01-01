@@ -1,17 +1,43 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, TextInput, Switch, Image, ActivityIndicator } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  Switch,
+  Image,
+  ActivityIndicator,
+} from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
-import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { Building2, MapPin, Phone, Mail, Users, Save, Trash2, Plus, Edit3, Calendar, X, Link, Upload, Camera } from 'lucide-react-native';
-import { trpc } from '../lib/trpc';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter, useLocalSearchParams, Stack } from "expo-router";
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Users,
+  Save,
+  Trash2,
+  Plus,
+  Edit3,
+  Calendar,
+  X,
+  Link,
+  Upload,
+  Camera,
+} from "lucide-react-native";
+import { trpc } from "../lib/trpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface UnionBranch {
   id: string;
   name: string;
   governorate: string;
-  region: 'central' | 'northern' | 'southern' | 'kurdistan';
+  region: "central" | "northern" | "southern" | "kurdistan";
   address: string;
   phone: string;
   email: string;
@@ -30,7 +56,7 @@ interface Announcement {
   title: string;
   content: string;
   date: string;
-  type: 'general' | 'urgent' | 'event' | 'meeting';
+  type: "general" | "urgent" | "event" | "meeting";
   isImportant: boolean;
   image?: string;
   link?: string;
@@ -45,22 +71,26 @@ export default function EditUnionBranchScreen() {
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
 
-  const { data: originalBranch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
+  const {
+    data: originalBranch,
+    isLoading,
+    error,
+  } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
 
   const [formData, setFormData] = useState<UnionBranch | null>(null);
-  const [newService, setNewService] = useState<string>('');
+  const [newService, setNewService] = useState<string>("");
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [showAddAnnouncement, setShowAddAnnouncement] = useState<boolean>(false);
   const [newAnnouncement, setNewAnnouncement] = useState<Partial<Announcement>>({
-    title: '',
-    content: '',
-    date: new Date().toISOString().split('T')[0],
-    type: 'general',
+    title: "",
+    content: "",
+    date: new Date().toISOString().split("T")[0],
+    type: "general",
     isImportant: false,
-    image: '',
-    link: '',
-    linkText: '',
-    author: ''
+    image: "",
+    link: "",
+    linkText: "",
+    author: "",
   });
   const [selectedAnnouncementImage, setSelectedAnnouncementImage] = useState<string | null>(null);
 
@@ -70,28 +100,19 @@ export default function EditUnionBranchScreen() {
     }
   }, [originalBranch]);
 
-  const updateBranchMutation = useMutation(trpc.union.branch.update.mutationOptions({
-    onSuccess: () => {
-      queryClient.invalidateQueries(trpc.union.branch.get.queryKey(parseInt(id as string)));
-      Alert.alert('تم الحفظ', 'تم حفظ التغييرات بنجاح', [
-        { text: 'موافق', onPress: () => router.back() }
-      ]);
-    },
-    onError: (error) => {
-      Alert.alert('خطأ', 'حدث خطأ أثناء حفظ التغييرات');
-    }
-  }));
+  const updateBranchMutation = useMutation(trpc.union.branch.update.mutationOptions());
 
-  if (!isSuperAdmin && !hasAdminAccess && !(isModerator && moderatorPermissions?.sections?.includes('union-branches'))) {
+  if (
+    !isSuperAdmin &&
+    !hasAdminAccess &&
+    !(isModerator && moderatorPermissions?.sections?.includes("union-branches"))
+  ) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'غير مصرح' }} />
+        <Stack.Screen options={{ title: "غير مصرح" }} />
         <View style={styles.noPermissionContainer}>
           <Text style={styles.noPermissionText}>ليس لديك صلاحية لتعديل معلومات النقابة</Text>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>العودة</Text>
           </TouchableOpacity>
         </View>
@@ -116,35 +137,39 @@ export default function EditUnionBranchScreen() {
   }
 
   const handleSave = () => {
-    Alert.alert(
-      'حفظ التغييرات',
-      'هل أنت متأكد من حفظ جميع التغييرات؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حفظ',
-          onPress: () => {
-            updateBranchMutation.mutate(formData as any);
-          }
-        }
-      ]
-    );
+    Alert.alert("حفظ التغييرات", "هل أنت متأكد من حفظ جميع التغييرات؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حفظ",
+        onPress: () => {
+          updateBranchMutation.mutate(formData as any, {
+            onSuccess: () => {
+              queryClient.invalidateQueries(trpc.union.branch.get.queryKey(parseInt(id as string)));
+              Alert.alert("تم الحفظ", "تم حفظ التغييرات بنجاح", [{ text: "موافق", onPress: () => router.back() }]);
+            },
+            onError: (error) => {
+              Alert.alert("خطأ", "حدث خطأ أثناء حفظ التغييرات");
+            },
+          });
+        },
+      },
+    ]);
   };
 
   const handleAddService = () => {
     if (newService.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        services: [...prev.services, newService.trim()]
+        services: [...prev.services, newService.trim()],
       }));
-      setNewService('');
+      setNewService("");
     }
   };
 
   const handleRemoveService = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      services: prev.services.filter((_, i) => i !== index)
+      services: prev.services.filter((_, i) => i !== index),
     }));
   };
 
@@ -154,26 +179,26 @@ export default function EditUnionBranchScreen() {
         id: Date.now().toString(),
         title: newAnnouncement.title,
         content: newAnnouncement.content,
-        date: newAnnouncement.date || new Date().toISOString().split('T')[0],
-        type: newAnnouncement.type as 'general' | 'urgent' | 'event' | 'meeting',
-        isImportant: newAnnouncement.isImportant || false
+        date: newAnnouncement.date || new Date().toISOString().split("T")[0],
+        type: newAnnouncement.type as "general" | "urgent" | "event" | "meeting",
+        isImportant: newAnnouncement.isImportant || false,
       };
-      
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
-        announcements: [announcement, ...prev.announcements]
+        announcements: [announcement, ...prev.announcements],
       }));
-      
+
       setNewAnnouncement({
-        title: '',
-        content: '',
-        date: new Date().toISOString().split('T')[0],
-        type: 'general',
+        title: "",
+        content: "",
+        date: new Date().toISOString().split("T")[0],
+        type: "general",
         isImportant: false,
-        image: '',
-        link: '',
-        linkText: '',
-        author: ''
+        image: "",
+        link: "",
+        linkText: "",
+        author: "",
       });
       setSelectedAnnouncementImage(null);
       setShowAddAnnouncement(false);
@@ -186,126 +211,128 @@ export default function EditUnionBranchScreen() {
 
   const handleUpdateAnnouncement = () => {
     if (editingAnnouncement) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        announcements: prev.announcements.map(ann => 
-          ann.id === editingAnnouncement.id ? editingAnnouncement : ann
-        )
+        announcements: prev.announcements.map((ann) => (ann.id === editingAnnouncement.id ? editingAnnouncement : ann)),
       }));
       setEditingAnnouncement(null);
     }
   };
 
   const handleDeleteAnnouncement = (announcementId: string) => {
-    Alert.alert(
-      'حذف الإعلان',
-      'هل أنت متأكد من حذف هذا الإعلان؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: () => {
-            setFormData(prev => ({
-              ...prev,
-              announcements: prev.announcements.filter(ann => ann.id !== announcementId)
-            }));
-          }
-        }
-      ]
-    );
+    Alert.alert("حذف الإعلان", "هل أنت متأكد من حذف هذا الإعلان؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          setFormData((prev) => ({
+            ...prev,
+            announcements: prev.announcements.filter((ann) => ann.id !== announcementId),
+          }));
+        },
+      },
+    ]);
   };
 
   const getAnnouncementTypeColor = (type: string) => {
     switch (type) {
-      case 'urgent': return COLORS.error;
-      case 'meeting': return COLORS.primary;
-      case 'event': return COLORS.success;
-      default: return COLORS.darkGray;
+      case "urgent":
+        return COLORS.error;
+      case "meeting":
+        return COLORS.primary;
+      case "event":
+        return COLORS.success;
+      default:
+        return COLORS.darkGray;
     }
   };
 
   const getAnnouncementTypeLabel = (type: string) => {
     switch (type) {
-      case 'urgent': return 'عاجل';
-      case 'meeting': return 'اجتماع';
-      case 'event': return 'فعالية';
-      default: return 'عام';
+      case "urgent":
+        return "عاجل";
+      case "meeting":
+        return "اجتماع";
+      case "event":
+        return "فعالية";
+      default:
+        return "عام";
     }
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'تعديل معلومات النقابة',
+          title: "تعديل معلومات النقابة",
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold', fontSize: 16 },
+          headerTitleStyle: { fontWeight: "bold", fontSize: 16 },
           headerRight: () => (
             <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={updateBranchMutation.isPending}>
               <Save size={20} color={COLORS.white} />
             </TouchableOpacity>
           ),
-        }} 
+        }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Basic Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>المعلومات الأساسية</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>اسم النقابة</Text>
             <TextInput
               style={styles.textInput}
               value={formData.name}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
               placeholder="اسم النقابة"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>المحافظة</Text>
             <TextInput
               style={styles.textInput}
               value={formData.governorate}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, governorate: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, governorate: text }))}
               placeholder="المحافظة"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>رئيس النقابة</Text>
             <TextInput
               style={styles.textInput}
               value={formData.president}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, president: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, president: text }))}
               placeholder="رئيس النقابة"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>سنة التأسيس</Text>
             <TextInput
               style={styles.textInput}
               value={formData.establishedYear.toString()}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, establishedYear: parseInt(text) || 0 }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, establishedYear: parseInt(text) || 0 }))}
               placeholder="سنة التأسيس"
               keyboardType="numeric"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>عدد الأعضاء</Text>
             <TextInput
               style={styles.textInput}
               value={formData.membersCount.toString()}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, membersCount: parseInt(text) || 0 }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, membersCount: parseInt(text) || 0 }))}
               placeholder="عدد الأعضاء"
               keyboardType="numeric"
               textAlign="right"
@@ -316,38 +343,38 @@ export default function EditUnionBranchScreen() {
         {/* Contact Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>العنوان</Text>
             <TextInput
               style={[styles.textInput, styles.multilineInput]}
               value={formData.address}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, address: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, address: text }))}
               placeholder="العنوان الكامل"
               multiline
               numberOfLines={3}
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>رقم الهاتف</Text>
             <TextInput
               style={styles.textInput}
               value={formData.phone}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, phone: text }))}
               placeholder="رقم الهاتف"
               keyboardType="phone-pad"
               textAlign="right"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>البريد الإلكتروني</Text>
             <TextInput
               style={styles.textInput}
               value={formData.email}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
               placeholder="البريد الإلكتروني"
               keyboardType="email-address"
               textAlign="right"
@@ -361,7 +388,7 @@ export default function EditUnionBranchScreen() {
           <TextInput
             style={[styles.textInput, styles.multilineInput]}
             value={formData.description}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+            onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
             placeholder="نبذة تعريفية عن النقابة"
             multiline
             numberOfLines={5}
@@ -372,7 +399,7 @@ export default function EditUnionBranchScreen() {
         {/* Services */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الخدمات المقدمة</Text>
-          
+
           <View style={styles.addServiceContainer}>
             <TouchableOpacity onPress={handleAddService} style={styles.addServiceButton}>
               <Plus size={16} color={COLORS.white} />
@@ -386,14 +413,11 @@ export default function EditUnionBranchScreen() {
               onSubmitEditing={handleAddService}
             />
           </View>
-          
+
           <View style={styles.servicesList}>
             {formData.services.map((service, index) => (
               <View key={index} style={styles.serviceItem}>
-                <TouchableOpacity 
-                  onPress={() => handleRemoveService(index)}
-                  style={styles.removeServiceButton}
-                >
+                <TouchableOpacity onPress={() => handleRemoveService(index)} style={styles.removeServiceButton}>
                   <X size={16} color={COLORS.error} />
                 </TouchableOpacity>
                 <Text style={styles.serviceText}>{service}</Text>
@@ -405,78 +429,75 @@ export default function EditUnionBranchScreen() {
         {/* Announcements */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <TouchableOpacity 
-              onPress={() => setShowAddAnnouncement(true)}
-              style={styles.addButton}
-            >
+            <TouchableOpacity onPress={() => setShowAddAnnouncement(true)} style={styles.addButton}>
               <Plus size={16} color={COLORS.white} />
               <Text style={styles.addButtonText}>إضافة إعلان</Text>
             </TouchableOpacity>
             <Text style={styles.sectionTitle}>الإعلانات والأخبار</Text>
           </View>
-          
+
           {/* Add Announcement Form */}
           {showAddAnnouncement && (
             <View style={styles.announcementForm}>
               <Text style={styles.formTitle}>إضافة إعلان جديد</Text>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>عنوان الإعلان</Text>
                 <TextInput
                   style={styles.textInput}
                   value={newAnnouncement.title}
-                  onChangeText={(text) => setNewAnnouncement(prev => ({ ...prev, title: text }))}
+                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, title: text }))}
                   placeholder="عنوان الإعلان"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>محتوى الإعلان</Text>
                 <TextInput
                   style={[styles.textInput, styles.multilineInput]}
                   value={newAnnouncement.content}
-                  onChangeText={(text) => setNewAnnouncement(prev => ({ ...prev, content: text }))}
+                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, content: text }))}
                   placeholder="محتوى الإعلان"
                   multiline
                   numberOfLines={4}
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>المؤلف/المسؤول</Text>
                 <TextInput
                   style={styles.textInput}
                   value={newAnnouncement.author}
-                  onChangeText={(text) => setNewAnnouncement(prev => ({ ...prev, author: text }))}
+                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, author: text }))}
                   placeholder="اسم المؤلف أو المسؤول"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>رابط ذات صلة</Text>
                 <TextInput
                   style={styles.textInput}
                   value={newAnnouncement.link}
-                  onChangeText={(text) => setNewAnnouncement(prev => ({ ...prev, link: text }))}
+                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, link: text }))}
                   placeholder="رابط الموقع أو الملف"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>نص الرابط</Text>
                 <TextInput
                   style={styles.textInput}
                   value={newAnnouncement.linkText}
-                  onChangeText={(text) => setNewAnnouncement(prev => ({ ...prev, linkText: text }))}
+                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, linkText: text }))}
                   placeholder="نص يظهر للرابط (مثال: رابط التسجيل)"
                   textAlign="right"
                 />
               </View>
-              
+
               {/* Image Upload for Announcement */}
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>صورة الإعلان</Text>
@@ -484,194 +505,200 @@ export default function EditUnionBranchScreen() {
                   <View style={styles.imagePreviewContainer}>
                     <Image source={{ uri: selectedAnnouncementImage }} style={styles.imagePreview} />
                     <View style={styles.imageActions}>
-                      <TouchableOpacity style={styles.changeImageButton} onPress={() => {/* Add image picker logic */}}>
+                      <TouchableOpacity
+                        style={styles.changeImageButton}
+                        onPress={() => {
+                          /* Add image picker logic */
+                        }}
+                      >
                         <Camera size={16} color={COLORS.white} />
                         <Text style={styles.imageActionText}>تغيير</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.removeImageButton} onPress={() => {
-                        setSelectedAnnouncementImage(null);
-                        setNewAnnouncement(prev => ({ ...prev, image: '' }));
-                      }}>
+                      <TouchableOpacity
+                        style={styles.removeImageButton}
+                        onPress={() => {
+                          setSelectedAnnouncementImage(null);
+                          setNewAnnouncement((prev) => ({ ...prev, image: "" }));
+                        }}
+                      >
                         <X size={16} color={COLORS.white} />
                         <Text style={styles.imageActionText}>حذف</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
                 ) : (
-                  <TouchableOpacity style={styles.uploadButton} onPress={() => {/* Add image picker logic */}}>
+                  <TouchableOpacity
+                    style={styles.uploadButton}
+                    onPress={() => {
+                      /* Add image picker logic */
+                    }}
+                  >
                     <Upload size={24} color={COLORS.primary} />
                     <Text style={styles.uploadButtonText}>اختيار صورة</Text>
                     <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط صورة جديدة</Text>
                   </TouchableOpacity>
                 )}
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>تاريخ الإعلان</Text>
                 <TextInput
                   style={styles.textInput}
                   value={newAnnouncement.date}
-                  onChangeText={(text) => setNewAnnouncement(prev => ({ ...prev, date: text }))}
+                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, date: text }))}
                   placeholder="YYYY-MM-DD"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.switchContainer}>
                 <Switch
                   value={newAnnouncement.isImportant}
-                  onValueChange={(value) => setNewAnnouncement(prev => ({ ...prev, isImportant: value }))}
+                  onValueChange={(value) => setNewAnnouncement((prev) => ({ ...prev, isImportant: value }))}
                   trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
                   thumbColor={newAnnouncement.isImportant ? COLORS.white : COLORS.gray}
                 />
                 <Text style={styles.switchLabel}>إعلان مهم</Text>
               </View>
-              
+
               <View style={styles.formActions}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setShowAddAnnouncement(false)}
                   style={[styles.formButton, styles.cancelButton]}
                 >
                   <Text style={styles.cancelButtonText}>إلغاء</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={handleAddAnnouncement}
-                  style={[styles.formButton, styles.saveFormButton]}
-                >
+                <TouchableOpacity onPress={handleAddAnnouncement} style={[styles.formButton, styles.saveFormButton]}>
                   <Text style={styles.saveFormButtonText}>إضافة</Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
-          
+
           {/* Edit Announcement Form */}
           {editingAnnouncement && (
             <View style={styles.announcementForm}>
               <Text style={styles.formTitle}>تعديل الإعلان</Text>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>عنوان الإعلان</Text>
                 <TextInput
                   style={styles.textInput}
                   value={editingAnnouncement.title}
-                  onChangeText={(text) => setEditingAnnouncement(prev => prev ? ({ ...prev, title: text }) : null)}
+                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, title: text } : null))}
                   placeholder="عنوان الإعلان"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>محتوى الإعلان</Text>
                 <TextInput
                   style={[styles.textInput, styles.multilineInput]}
                   value={editingAnnouncement.content}
-                  onChangeText={(text) => setEditingAnnouncement(prev => prev ? ({ ...prev, content: text }) : null)}
+                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, content: text } : null))}
                   placeholder="محتوى الإعلان"
                   multiline
                   numberOfLines={4}
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>المؤلف/المسؤول</Text>
                 <TextInput
                   style={styles.textInput}
                   value={editingAnnouncement.author}
-                  onChangeText={(text) => setEditingAnnouncement(prev => prev ? ({ ...prev, author: text }) : null)}
+                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, author: text } : null))}
                   placeholder="اسم المؤلف أو المسؤول"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>رابط ذات صلة</Text>
                 <TextInput
                   style={styles.textInput}
                   value={editingAnnouncement.link}
-                  onChangeText={(text) => setEditingAnnouncement(prev => prev ? ({ ...prev, link: text }) : null)}
+                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, link: text } : null))}
                   placeholder="رابط الموقع أو الملف"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>نص الرابط</Text>
                 <TextInput
                   style={styles.textInput}
                   value={editingAnnouncement.linkText}
-                  onChangeText={(text) => setEditingAnnouncement(prev => prev ? ({ ...prev, linkText: text }) : null)}
+                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, linkText: text } : null))}
                   placeholder="نص يظهر للرابط"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>تاريخ الإعلان</Text>
                 <TextInput
                   style={styles.textInput}
                   value={editingAnnouncement.date}
-                  onChangeText={(text) => setEditingAnnouncement(prev => prev ? ({ ...prev, date: text }) : null)}
+                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, date: text } : null))}
                   placeholder="YYYY-MM-DD"
                   textAlign="right"
                 />
               </View>
-              
+
               <View style={styles.switchContainer}>
                 <Switch
                   value={editingAnnouncement.isImportant}
-                  onValueChange={(value) => setEditingAnnouncement(prev => prev ? ({ ...prev, isImportant: value }) : null)}
+                  onValueChange={(value) =>
+                    setEditingAnnouncement((prev) => (prev ? { ...prev, isImportant: value } : null))
+                  }
                   trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
                   thumbColor={editingAnnouncement.isImportant ? COLORS.white : COLORS.gray}
                 />
                 <Text style={styles.switchLabel}>إعلان مهم</Text>
               </View>
-              
+
               <View style={styles.formActions}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => setEditingAnnouncement(null)}
                   style={[styles.formButton, styles.cancelButton]}
                 >
                   <Text style={styles.cancelButtonText}>إلغاء</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  onPress={handleUpdateAnnouncement}
-                  style={[styles.formButton, styles.saveFormButton]}
-                >
+                <TouchableOpacity onPress={handleUpdateAnnouncement} style={[styles.formButton, styles.saveFormButton]}>
                   <Text style={styles.saveFormButtonText}>حفظ</Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
-          
+
           {/* Announcements List */}
           <View style={styles.announcementsList}>
             {formData.announcements.map((announcement) => (
               <View key={announcement.id} style={styles.announcementCard}>
                 <View style={styles.announcementHeader}>
                   <View style={styles.announcementActions}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       onPress={() => handleDeleteAnnouncement(announcement.id)}
                       style={styles.deleteButton}
                     >
                       <Trash2 size={14} color={COLORS.error} />
                     </TouchableOpacity>
-                    <TouchableOpacity 
-                      onPress={() => handleEditAnnouncement(announcement)}
-                      style={styles.editButton}
-                    >
+                    <TouchableOpacity onPress={() => handleEditAnnouncement(announcement)} style={styles.editButton}>
                       <Edit3 size={14} color={COLORS.primary} />
                     </TouchableOpacity>
                   </View>
-                  
+
                   <View style={styles.announcementMeta}>
-                    <View style={[
-                      styles.announcementType,
-                      { backgroundColor: getAnnouncementTypeColor(announcement.type) }
-                    ]}>
-                      <Text style={styles.announcementTypeText}>
-                        {getAnnouncementTypeLabel(announcement.type)}
-                      </Text>
+                    <View
+                      style={[
+                        styles.announcementType,
+                        { backgroundColor: getAnnouncementTypeColor(announcement.type) },
+                      ]}
+                    >
+                      <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
                     </View>
                     {announcement.isImportant && (
                       <View style={styles.importantBadge}>
@@ -681,7 +708,7 @@ export default function EditUnionBranchScreen() {
                     <Text style={styles.announcementDate}>{announcement.date}</Text>
                   </View>
                 </View>
-                
+
                 <Text style={styles.announcementTitle}>{announcement.title}</Text>
                 <Text style={styles.announcementContent}>{announcement.content}</Text>
               </View>
@@ -696,21 +723,21 @@ export default function EditUnionBranchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   content: {
     flex: 1,
   },
   noPermissionContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   noPermissionText: {
     fontSize: 18,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
   },
   backButton: {
@@ -722,12 +749,12 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButton: {
     padding: 8,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   section: {
     backgroundColor: COLORS.white,
@@ -735,31 +762,31 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   inputGroup: {
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.darkGray,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -769,11 +796,11 @@ const styles = StyleSheet.create({
   },
   multilineInput: {
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   addServiceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 16,
   },
@@ -784,16 +811,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     padding: 10,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   servicesList: {
     gap: 8,
   },
   serviceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F8F9FA",
     padding: 12,
     borderRadius: 8,
     gap: 8,
@@ -805,11 +832,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     backgroundColor: COLORS.success,
     paddingHorizontal: 12,
@@ -819,38 +846,38 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   announcementForm: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 16,
     borderRadius: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   formTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
     gap: 8,
     marginBottom: 16,
   },
   switchLabel: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   formActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     gap: 8,
   },
   formButton: {
@@ -858,17 +885,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     minWidth: 80,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: COLORS.darkGray,
   },
   cancelButtonText: {
     color: COLORS.darkGray,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveFormButton: {
     backgroundColor: COLORS.primary,
@@ -876,26 +903,26 @@ const styles = StyleSheet.create({
   saveFormButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   announcementsList: {
     gap: 12,
   },
   announcementCard: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
   },
   announcementHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   announcementActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   editButton: {
@@ -905,11 +932,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   announcementMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   announcementType: {
     paddingHorizontal: 8,
@@ -919,7 +946,7 @@ const styles = StyleSheet.create({
   announcementTypeText: {
     fontSize: 10,
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   importantBadge: {
     backgroundColor: COLORS.error,
@@ -930,7 +957,7 @@ const styles = StyleSheet.create({
   importantText: {
     fontSize: 9,
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   announcementDate: {
     fontSize: 12,
@@ -938,37 +965,37 @@ const styles = StyleSheet.create({
   },
   announcementTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   announcementContent: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    textAlign: 'right',
+    textAlign: "right",
   },
   imagePreviewContainer: {
     borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#F8F9FA',
+    overflow: "hidden",
+    backgroundColor: "#F8F9FA",
   },
   imagePreview: {
-    width: '100%',
+    width: "100%",
     height: 200,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   imageActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
     gap: 8,
   },
   changeImageButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.primary,
     paddingVertical: 8,
     borderRadius: 6,
@@ -976,9 +1003,9 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.error,
     paddingVertical: 8,
     borderRadius: 6,
@@ -987,28 +1014,28 @@ const styles = StyleSheet.create({
   imageActionText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   uploadButton: {
     borderWidth: 2,
     borderColor: COLORS.primary,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: 8,
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8F9FA',
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F8F9FA",
     gap: 8,
   },
   uploadButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   uploadButtonSubtext: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
