@@ -47,6 +47,8 @@ export default function AuthScreen() {
   const [idBackImage, setIdBackImage] = useState<any>(null);
   const [idFrontImageUrl, setIdFrontImageUrl] = useState<string>("");
   const [idBackImageUrl, setIdBackImageUrl] = useState<string>("");
+  const [profileImage, setProfileImage] = useState<any>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string>("");
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -86,7 +88,25 @@ export default function AuthScreen() {
     },
   });
 
-  const isLoading = loginMutation.isPending || registerMutation.isPending || vetApplicationMutation.isPending || idFrontUpload.isLoading || idBackUpload.isLoading;
+  const profileImageUpload = useImageUpload({
+    onUploadSuccess: (url) => {
+      setProfileImageUrl(url);
+      if (errors.profileImage) {
+        setErrors((prev) => ({ ...prev, profileImage: "" }));
+      }
+    },
+    onUploadError: (error) => {
+      Alert.alert("خطأ في رفع الصورة", error);
+    },
+  });
+
+  const isLoading =
+    loginMutation.isPending ||
+    registerMutation.isPending ||
+    vetApplicationMutation.isPending ||
+    idFrontUpload.isLoading ||
+    idBackUpload.isLoading ||
+    profileImageUpload.isLoading;
 
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
@@ -244,6 +264,7 @@ export default function AuthScreen() {
           gender: selectedGender as "male" | "female",
           idFrontImage: idFrontImageUrl,
           idBackImage: idBackImageUrl,
+          avatar: profileImageUrl,
           veterinarianType,
         } as any,
         {
@@ -289,6 +310,7 @@ export default function AuthScreen() {
           country: selectedLocationCountry,
           province: selectedProvince,
           gender: selectedGender as "male" | "female",
+          avatar: profileImageUrl,
         } as any,
         {
           onSuccess: async (data) => {
@@ -410,6 +432,26 @@ export default function AuthScreen() {
     } catch (error) {
       console.error("ID back pick error:", error);
       Alert.alert("خطأ", "حدث خطأ أثناء اختيار صورة ظهر الهوية");
+    }
+  };
+
+  const handleProfileImagePick = async () => {
+    if (isLoading) return;
+
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setProfileImage(result.assets[0]);
+        // Upload the image immediately
+        await profileImageUpload.pickAndUploadImage([1, 1]);
+      }
+    } catch (error) {
+      console.error("Profile image pick error:", error);
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار صورة الملف الشخصي");
     }
   };
 
@@ -546,6 +588,33 @@ export default function AuthScreen() {
                     </Text>
                   </TouchableOpacity>
                 </View>
+              </View>
+            )}
+
+            {activeTab === "register" && (
+              <View style={styles.inputGroup}>
+                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
+                  {t("auth.profileImage")}
+                </Text>
+                <TouchableOpacity
+                  style={[styles.profileImageUploadButton, errors.profileImage && styles.inputError]}
+                  onPress={handleProfileImagePick}
+                  disabled={profileImageUpload.isLoading}
+                >
+                  <View style={styles.profileImageContainer}>
+                    {profileImageUpload.isLoading ? (
+                      <ActivityIndicator size="large" color={COLORS.primary} />
+                    ) : profileImageUrl ? (
+                      <Image source={{ uri: profileImageUrl }} style={styles.profileImagePreview} />
+                    ) : (
+                      <View style={styles.profileImagePlaceholder}>
+                        <Upload size={32} color={COLORS.darkGray} />
+                        <Text style={styles.profileImagePlaceholderText}>{t("auth.uploadProfileImage")}</Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+                {errors.profileImage && <Text style={styles.errorText}>{errors.profileImage}</Text>}
               </View>
             )}
 
@@ -1429,5 +1498,34 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 13,
     fontWeight: "600",
+  },
+  profileImageUploadButton: {
+    alignSelf: "center",
+    marginBottom: 20,
+  },
+  profileImageContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: COLORS.gray,
+    borderWidth: 2,
+    borderColor: COLORS.lightGray,
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  profileImagePreview: {
+    width: "100%",
+    height: "100%",
+  },
+  profileImagePlaceholder: {
+    alignItems: "center",
+  },
+  profileImagePlaceholderText: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginTop: 8,
+    textAlign: "center",
   },
 });

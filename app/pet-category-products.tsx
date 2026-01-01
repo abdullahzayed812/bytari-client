@@ -7,22 +7,23 @@ import { useApp } from "../providers/AppProvider";
 import { Product } from "../types";
 import { mockProducts } from "../mocks/data";
 import Button from "../components/Button";
-import { ArrowRight, Search, Plus, Edit, Trash2, Package, Cat, Dog, Bird, Fish, Egg } from 'lucide-react-native';
+import { ArrowRight, Search, Plus, Edit, Trash2, Package, Cat, Dog, Bird, Fish, Egg, Rabbit } from 'lucide-react-native';
 import { router, useLocalSearchParams, Stack } from 'expo-router';
 import { trpc } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 
-type AnimalType = 'cat' | 'dog' | 'bird' | 'fish' | 'poultry';
+type AnimalType = 'cats' | 'dogs' | 'birds' | 'fish' | 'poultry' | 'small_animals';
 
 const getAnimalInfo = (category: AnimalType) => {
   const animalMap = {
-    cat: { label: 'قطط', icon: <Cat size={24} color={COLORS.primary} />, color: '#FF6B6B' },
-    dog: { label: 'كلاب', icon: <Dog size={24} color={COLORS.primary} />, color: '#4ECDC4' },
-    bird: { label: 'طيور', icon: <Bird size={24} color={COLORS.primary} />, color: '#45B7D1' },
+    cats: { label: 'قطط', icon: <Cat size={24} color={COLORS.primary} />, color: '#FF6B6B' },
+    dogs: { label: 'كلاب', icon: <Dog size={24} color={COLORS.primary} />, color: '#4ECDC4' },
+    birds: { label: 'طيور', icon: <Bird size={24} color={COLORS.primary} />, color: '#45B7D1' },
     fish: { label: 'أسماك', icon: <Fish size={24} color={COLORS.primary} />, color: '#96CEB4' },
     poultry: { label: 'دواجن', icon: <Egg size={24} color={COLORS.primary} />, color: '#FFA726' },
+    small_animals: { label: 'حيوانات صغيرة', icon: <Rabbit size={24} color={COLORS.primary} />, color: '#BA68C8' },
   };
-  return animalMap[category];
+  return animalMap[category] || { label: 'غير محدد', icon: <Package size={24} color={COLORS.primary} />, color: COLORS.gray };
 };
 
 export default function PetCategoryProductsScreen() {

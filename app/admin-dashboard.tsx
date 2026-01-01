@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import {
   Users,
@@ -79,6 +79,7 @@ interface Permission {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useApp();
   const [selectedTab, setSelectedTab] = useState<string>("dashboard");
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -183,6 +184,7 @@ export default function AdminDashboard() {
           Alert.alert("تم الإرسال", "تم إرسال الرسالة بنجاح");
           setSendMessageModalVisible(false);
           resetMessageForm();
+          queryClient.invalidateQueries(trpc.admin.stats.getUserMessageCounts.queryKey as any);
         },
         onError: () => {
           Alert.alert("خطأ", "حدث خطأ أثناء إرسال الرسالة");
@@ -648,12 +650,12 @@ export default function AdminDashboard() {
             </TouchableOpacity>
           )}
 
-          {hasPermission("manage_stores") && (
+          {/* {hasPermission("manage_stores") && (
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-stores-management")}>
               <Store size={24} color="#FF9800" />
               <Text style={styles.actionText}>إدارة المتاجر</Text>
             </TouchableOpacity>
-          )}
+          )} */}
 
           {hasPermission("manage_hospitals") && (
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/hospitals-management-dashboard")}>

@@ -11,16 +11,17 @@ import { useApp } from "@/providers/AppProvider";
 const { width } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated, setHasSeenOnboarding } = useApp();
   const router = useRouter();
   const { t } = useI18n();
 
   if (isAuthenticated) {
-    router.replace("/auth");
+    router.replace("/(tabs)");
     return;
   }
 
   const handleGetStarted = () => {
+    setHasSeenOnboarding(true);
     router.replace("/auth");
   };
 

@@ -1,4 +1,14 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Image, Alert } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
@@ -34,7 +44,7 @@ import {
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import * as ImagePicker from "expo-image-picker";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface SectionItem {
   id: string;
@@ -44,6 +54,7 @@ interface SectionItem {
   route: string;
   badgeCount?: number;
   hidden?: boolean;
+  isSystem?: boolean;
 }
 
 export default function SectionsScreen() {
@@ -79,6 +90,22 @@ export default function SectionsScreen() {
     }, [])
   );
 
+  // Sections tRPC queries and mutations
+  const {
+    data: serverSections,
+    isLoading: isLoadingSections,
+    refetch: refetchSections,
+  } = useQuery(
+    trpc.admin.content.listSections.queryOptions({
+      userType: userMode === "veterinarian" ? "veterinarian" : "pet_owner",
+    })
+  );
+
+  const createSectionMutation = useMutation(trpc.admin.content.createSection.mutationOptions());
+  const updateSectionMutation = useMutation(trpc.admin.content.updateSection.mutationOptions());
+  const deleteSectionMutation = useMutation(trpc.admin.content.deleteSection.mutationOptions());
+  const reorderSectionsMutation = useMutation(trpc.admin.content.reorderSections.mutationOptions());
+
   // Mock data for notifications and messages count
   const [consultationsCount, setConsultationsCount] = useState<number>(8);
   const [appointmentsCount, setAppointmentsCount] = useState<number>(3);
@@ -101,187 +128,6 @@ export default function SectionsScreen() {
 
     return () => clearInterval(interval);
   }, []);
-
-  // Pet owner sections
-  const petOwnerSections: SectionItem[] = [
-    {
-      id: "consultations",
-      title: "الاستشارات",
-      icon: <MessageCircle size={32} color={COLORS.white} />,
-      color: "#10B981",
-      route: "/consultation",
-      badgeCount: consultationsCount,
-    },
-    {
-      id: "appointments",
-      title: "المواعيد",
-      icon: <Calendar size={32} color={COLORS.white} />,
-      color: "#3B82F6",
-      route: "/appointments",
-      badgeCount: appointmentsCount,
-    },
-    {
-      id: "clinics",
-      title: "العيادات",
-      icon: <Hospital size={32} color={COLORS.white} />,
-      color: "#0EA5E9",
-      route: "/clinics-list",
-    },
-    {
-      id: "tips",
-      title: "أفضل النصائح",
-      icon: <Lightbulb size={32} color={COLORS.white} />,
-      color: "#F59E0B",
-      route: "/tips-list",
-    },
-    {
-      id: "lost-pets",
-      title: "الحيوانات المفقودة",
-      icon: <Heart size={32} color={COLORS.white} />,
-      color: "#EF4444",
-      route: "/lost-pets-list",
-    },
-
-    {
-      id: "reminders",
-      title: "التذكيرات",
-      icon: <Bell size={32} color={COLORS.white} />,
-      color: "#F59E0B",
-      route: "/reminders",
-      badgeCount: remindersCount,
-    },
-    {
-      id: "premium",
-      title: "العضوية المميزة",
-      icon: <Award size={32} color={COLORS.white} />,
-      color: "#10B981",
-      route: "/premium-subscription",
-      hidden: true,
-    },
-    {
-      id: "settings",
-      title: "الإعدادات",
-      icon: <Settings size={32} color={COLORS.white} />,
-      color: "#6B7280",
-      route: "/settings",
-    },
-    {
-      id: "contact-us",
-      title: "تواصل معنا",
-      icon: <Phone size={32} color={COLORS.white} />,
-      color: "#10B981",
-      route: "/contact-us",
-    },
-  ];
-
-  // Veterinarian sections
-  const veterinarianSections: SectionItem[] = [
-    {
-      id: "inquiries",
-      title: "الاستفسارات",
-      icon: <MessageCircle size={32} color={COLORS.white} />,
-      color: "#10B981",
-      route: "inquiries",
-      badgeCount: consultationsCount,
-    },
-    // {
-    //   id: "appointments",
-    //   title: "المواعيد",
-    //   icon: <Calendar size={32} color={COLORS.white} />,
-    //   color: "#3B82F6",
-    //   route: "/appointments",
-    //   badgeCount: appointmentsCount,
-    // },
-    {
-      id: "magazine",
-      title: "المجلة البيطرية",
-      icon: <FileText size={32} color={COLORS.white} />,
-      color: "#8B5CF6",
-      route: "/vet-magazine",
-    },
-    {
-      id: "books",
-      title: "الكتب البيطرية",
-      icon: <BookOpen size={32} color={COLORS.white} />,
-      color: "#F59E0B",
-      route: "/vet-books",
-    },
-    {
-      id: "union",
-      title: "نقابة الأطباء البيطريين",
-      icon: <Users size={32} color={COLORS.white} />,
-      color: "#EF4444",
-      route: "/vet-union",
-    },
-    {
-      id: "hospitals",
-      title: "المستشفيات البيطرية العراقية",
-      icon: <Hospital size={32} color={COLORS.white} />,
-      color: "#0EA5E9",
-      route: "/vet-hospitals",
-    },
-    {
-      id: "offices",
-      title: "المذاخر البيطرية",
-      icon: <Building2 size={32} color={COLORS.white} />,
-      color: "#6B7280",
-      route: "/vet-stores-list",
-    },
-    {
-      id: "premium",
-      title: "العضوية المميزة",
-      icon: <Award size={32} color={COLORS.white} />,
-      color: "#10B981",
-      route: "/premium-subscription",
-      hidden: true,
-    },
-    {
-      id: "job-vacancies",
-      title: "الوظائف الشاغرة",
-      icon: <Briefcase size={32} color={COLORS.white} />,
-      color: "#DC2626",
-      route: "/job-vacancies",
-    },
-    // {
-    //   id: "lessons-lectures",
-    //   title: "دروس ومحاضرات",
-    //   icon: <GraduationCap size={32} color={COLORS.white} />,
-    //   color: "#7C3AED",
-    //   route: "/lessons-lectures",
-    // },
-    {
-      id: "courses-seminars",
-      title: "دورات وندوات",
-      icon: <UserCheck size={32} color={COLORS.white} />,
-      color: "#059669",
-      route: "/courses-seminars",
-    },
-    {
-      id: "settings",
-      title: "الإعدادات",
-      icon: <Settings size={32} color={COLORS.white} />,
-      color: "#6B7280",
-      route: "/settings",
-    },
-    {
-      id: "contact-us",
-      title: "تواصل معنا",
-      icon: <Phone size={32} color={COLORS.white} />,
-      color: "#10B981",
-      route: "/contact-us",
-    },
-  ];
-
-  const [customSections, setCustomSections] = useState<SectionItem[]>([]);
-  const [hiddenSections, setHiddenSections] = useState<string[]>(["premium"]);
-
-  // Filter out hidden sections (but show all in management mode)
-  const baseSections = userMode === "veterinarian" ? veterinarianSections : petOwnerSections;
-  const visibleBaseSections = isManagementMode
-    ? baseSections // Show all sections in management mode
-    : baseSections.filter((section) => !hiddenSections.includes(section.id));
-  const sections = [...visibleBaseSections, ...customSections];
-
   const availableColors = [
     "#10B981",
     "#3B82F6",
@@ -314,14 +160,39 @@ export default function SectionsScreen() {
     { name: "Hospital", component: Hospital },
   ];
 
-  const getIconComponent = (iconName: string) => {
-    const iconData = availableIcons.find((icon) => icon.name === iconName);
+  const getIconComponent = (iconName?: string) => {
+    const iconData = availableIcons.find((icon) => icon?.name === iconName);
     if (iconData) {
       const IconComponent = iconData.component;
       return <IconComponent size={32} color={COLORS.white} />;
     }
     return <MessageCircle size={32} color={COLORS.white} />;
   };
+
+  // Map server sections to SectionItem interface
+  const sections: SectionItem[] = (serverSections || []).map((section: any) => ({
+    id: section.id.toString(),
+    title: section.title,
+    icon: getIconComponent(section?.icon),
+    color: section.color,
+    route: section.route,
+    hidden: !section.isActive,
+    isSystem: section.isSystem,
+    badgeCount:
+      section.name === "consultations" || section.name === "inquiries"
+        ? consultationsCount
+        : section.name === "appointments"
+          ? appointmentsCount
+          : section.name === "reminders"
+            ? remindersCount
+            : 0,
+  }));
+
+  // Filter out hidden sections (but show all in management mode)
+  const visibleSections = isManagementMode
+    ? sections // Show all sections in management mode
+    : sections.filter((section) => !section.hidden);
+
 
   const pickFile = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -396,28 +267,36 @@ export default function SectionsScreen() {
     }
   };
 
-  const handleAddSection = () => {
+  const handleAddSection = async () => {
     if (!newSectionTitle.trim() || !newSectionRoute.trim()) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
-    const newSection: SectionItem = {
-      id: `custom_${Date.now()}`,
-      title: newSectionTitle,
-      icon: getIconComponent(selectedIcon),
-      color: newSectionColor,
-      route: newSectionRoute,
-    };
+    try {
+      await createSectionMutation.mutateAsync({
+        adminId: Number(user?.id) || 1,
+        name: `custom_${Date.now()}`,
+        title: newSectionTitle,
+        icon: selectedIcon,
+        color: newSectionColor,
+        route: newSectionRoute,
+        userType: userMode === "veterinarian" ? "veterinarian" : "pet_owner",
+        order: sections.length + 1,
+      });
 
-    setCustomSections((prev) => [...prev, newSection]);
-    setNewSectionTitle("");
-    setNewSectionRoute("");
-    setNewSectionColor("#10B981");
-    setSelectedIcon("MessageCircle");
-    setShowAddSectionForm(false);
+      refetchSections();
+      setNewSectionTitle("");
+      setNewSectionRoute("");
+      setNewSectionColor("#10B981");
+      setSelectedIcon("MessageCircle");
+      setShowAddSectionForm(false);
 
-    Alert.alert("نجح", "تم إضافة القسم بنجاح");
+      Alert.alert("نجح", "تم إضافة القسم بنجاح");
+    } catch (error) {
+      console.error("Error adding section:", error);
+      Alert.alert("خطأ", "فشل في إضافة القسم");
+    }
   };
 
   const handleEditSection = (section: SectionItem) => {
@@ -428,30 +307,35 @@ export default function SectionsScreen() {
     setShowAddSectionForm(true);
   };
 
-  const handleUpdateSection = () => {
+  const handleUpdateSection = async () => {
     if (!editingSection || !newSectionTitle.trim() || !newSectionRoute.trim()) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
-    const updatedSection: SectionItem = {
-      ...editingSection,
-      title: newSectionTitle,
-      color: newSectionColor,
-      route: newSectionRoute,
-      icon: getIconComponent(selectedIcon),
-    };
+    try {
+      await updateSectionMutation.mutateAsync({
+        adminId: Number(user?.id) || 1,
+        sectionId: Number(editingSection.id),
+        title: newSectionTitle,
+        color: newSectionColor,
+        route: newSectionRoute,
+        icon: selectedIcon,
+      });
 
-    setCustomSections((prev) => prev.map((section) => (section.id === editingSection.id ? updatedSection : section)));
+      refetchSections();
+      setEditingSection(null);
+      setNewSectionTitle("");
+      setNewSectionRoute("");
+      setNewSectionColor("#10B981");
+      setSelectedIcon("MessageCircle");
+      setShowAddSectionForm(false);
 
-    setEditingSection(null);
-    setNewSectionTitle("");
-    setNewSectionRoute("");
-    setNewSectionColor("#10B981");
-    setSelectedIcon("MessageCircle");
-    setShowAddSectionForm(false);
-
-    Alert.alert("نجح", "تم تحديث القسم بنجاح");
+      Alert.alert("نجح", "تم تحديث القسم بنجاح");
+    } catch (error) {
+      console.error("Error updating section:", error);
+      Alert.alert("خطأ", "فشل في تحديث القسم");
+    }
   };
 
   const handleDeleteSection = (sectionId: string, sectionTitle: string) => {
@@ -460,19 +344,26 @@ export default function SectionsScreen() {
       {
         text: "حذف",
         style: "destructive",
-        onPress: () => {
-          setCustomSections((prev) => prev.filter((section) => section.id !== sectionId));
-          Alert.alert("تم", "تم حذف القسم بنجاح");
+        onPress: async () => {
+          try {
+            await deleteSectionMutation.mutateAsync({
+              adminId: Number(user?.id) || 1,
+              sectionId: Number(sectionId),
+            });
+            refetchSections();
+            Alert.alert("تم", "تم حذف القسم بنجاح");
+          } catch (error) {
+            console.error("Error deleting section:", error);
+            Alert.alert("خطأ", "فشل في حذف القسم");
+          }
         },
       },
     ]);
   };
 
   const renderSectionItem = (item: SectionItem, index: number) => {
-    // const isCustomSection = item.id.startsWith("custom_");
-    // const isBuiltInSection = !isCustomSection;
-    const isHidden = hiddenSections.includes(item.id);
-    const isLastOddItem = index === sections.length - 1 && sections.length % 2 === 1;
+    const isHidden = item.hidden;
+    const isLastOddItem = index === visibleSections.length - 1 && visibleSections.length % 2 === 1;
 
     return (
       <View key={item.id} style={[styles.sectionItemWrapper, isLastOddItem && styles.lastOddItemWrapper]}>
@@ -499,7 +390,7 @@ export default function SectionsScreen() {
             <View style={styles.whiteSection}>
               <Text style={[styles.sectionTitle, { color: item.color }]}>
                 {item.title}
-                {isHidden && isManagementMode && " (مخفي)"}
+                {item.hidden && isManagementMode && " (مخفي)"}
               </Text>
             </View>
           </View>
@@ -513,22 +404,32 @@ export default function SectionsScreen() {
                 <Edit size={16} color={COLORS.white} />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.managementActionButton, { backgroundColor: "#EF4444" }]}
-                onPress={() => handleDeleteSection(item.id, item.title)}
-              >
-                <Trash2 size={16} color={COLORS.white} />
-              </TouchableOpacity>
+              {!item.isSystem && (
+                <TouchableOpacity
+                  style={[styles.managementActionButton, { backgroundColor: "#EF4444" }]}
+                  onPress={() => handleDeleteSection(item.id, item.title)}
+                >
+                  <Trash2 size={16} color={COLORS.white} />
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity
-                style={[styles.managementActionButton, { backgroundColor: isHidden ? "#10B981" : "#6B7280" }]}
-                onPress={() => {
-                  if (isHidden) {
-                    setHiddenSections((prev) => prev.filter((id) => id !== item.id));
-                    Alert.alert("إظهار القسم", `تم إظهار قسم "${item.title}"`);
-                  } else {
-                    setHiddenSections((prev) => [...prev, item.id]);
-                    Alert.alert("إخفاء القسم", `تم إخفاء قسم "${item.title}"`);
+                style={[styles.managementActionButton, { backgroundColor: item.hidden ? "#10B981" : "#6B7280" }]}
+                onPress={async () => {
+                  try {
+                    await updateSectionMutation.mutateAsync({
+                      adminId: Number(user?.id) || 1,
+                      sectionId: Number(item.id),
+                      isActive: !!item.hidden,
+                    });
+                    refetchSections();
+                    Alert.alert(
+                      item.hidden ? "إظهار القسم" : "إخفاء القسم",
+                      `تم ${item.hidden ? "إظهار" : "إخفاء"} قسم "${item.title}"`
+                    );
+                  } catch (error) {
+                    console.error("Error toggling visibility:", error);
+                    Alert.alert("خطأ", "فشل في تغيير حالة الظهور");
                   }
                 }}
               >
@@ -540,114 +441,6 @@ export default function SectionsScreen() {
       </View>
     );
   };
-
-  const renderAddSectionForm = () => (
-    <View style={styles.addSectionForm}>
-      <View style={styles.formHeader}>
-        <TouchableOpacity
-          onPress={() => {
-            setShowAddSectionForm(false);
-            setEditingSection(null);
-            setNewSectionTitle("");
-            setNewSectionRoute("");
-            setNewSectionColor("#10B981");
-            setSelectedIcon("MessageCircle");
-          }}
-          style={styles.backButton}
-        >
-          <ArrowRight size={24} color={COLORS.white} />
-        </TouchableOpacity>
-        <Text style={styles.formHeaderTitle}>{editingSection ? "تعديل القسم" : "إضافة قسم جديد"}</Text>
-        <View style={{ width: 24 }} />
-      </View>
-
-      <ScrollView style={styles.formContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.formSection}>
-          <Text style={styles.formLabel}>عنوان القسم *</Text>
-          <TextInput
-            style={styles.formInput}
-            placeholder="أدخل عنوان القسم"
-            placeholderTextColor={COLORS.darkGray}
-            value={newSectionTitle}
-            onChangeText={setNewSectionTitle}
-            textAlign={isRTL ? "right" : "left"}
-          />
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.formLabel}>مسار الصفحة *</Text>
-          <TextInput
-            style={styles.formInput}
-            placeholder="مثال: /my-custom-page"
-            placeholderTextColor={COLORS.darkGray}
-            value={newSectionRoute}
-            onChangeText={setNewSectionRoute}
-            textAlign={isRTL ? "right" : "left"}
-          />
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.formLabel}>اختر الأيقونة</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.iconsContainer}>
-            {availableIcons.map((icon) => {
-              const IconComponent = icon.component;
-              return (
-                <TouchableOpacity
-                  key={icon.name}
-                  style={[styles.iconOption, selectedIcon === icon.name && styles.selectedIconOption]}
-                  onPress={() => setSelectedIcon(icon.name)}
-                >
-                  <IconComponent size={24} color={selectedIcon === icon.name ? COLORS.white : COLORS.primary} />
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.formLabel}>اختر اللون</Text>
-          <View style={styles.colorsContainer}>
-            {availableColors.map((color) => (
-              <TouchableOpacity
-                key={color}
-                style={[
-                  styles.colorOption,
-                  { backgroundColor: color },
-                  newSectionColor === color && styles.selectedColorOption,
-                ]}
-                onPress={() => setNewSectionColor(color)}
-              >
-                {newSectionColor === color && (
-                  <View style={styles.colorCheckmark}>
-                    <Text style={styles.colorCheckmarkText}>✓</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.formLabel}>معاينة القسم</Text>
-          <View style={[styles.previewSection, { backgroundColor: newSectionColor }]}>
-            {getIconComponent(selectedIcon)}
-            <Text style={styles.previewTitle}>{newSectionTitle || "عنوان القسم"}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            (!newSectionTitle.trim() || !newSectionRoute.trim()) && styles.submitButtonDisabled,
-          ]}
-          onPress={editingSection ? handleUpdateSection : handleAddSection}
-          disabled={!newSectionTitle.trim() || !newSectionRoute.trim()}
-        >
-          <Text style={styles.submitButtonText}>{editingSection ? "تحديث القسم" : "إضافة القسم"}</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </View>
-  );
 
   if (showInquiryForm) {
     return (
@@ -773,13 +566,122 @@ export default function SectionsScreen() {
   }
 
   if (showAddSectionForm) {
-    return renderAddSectionForm();
+    return (
+      <View style={styles.addSectionForm}>
+        <View style={styles.formHeader}>
+          <TouchableOpacity
+            onPress={() => {
+              setShowAddSectionForm(false);
+              setEditingSection(null);
+              setNewSectionTitle("");
+              setNewSectionRoute("");
+              setNewSectionColor("#10B981");
+              setSelectedIcon("MessageCircle");
+            }}
+            style={styles.backButton}
+          >
+            <ArrowRight size={24} color={COLORS.white} />
+          </TouchableOpacity>
+          <Text style={styles.formHeaderTitle}>{editingSection ? "تعديل القسم" : "إضافة قسم جديد"}</Text>
+          <View style={{ width: 24 }} />
+        </View>
+
+        <ScrollView style={styles.formContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.formSection}>
+            <Text style={styles.formLabel}>عنوان القسم *</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="أدخل عنوان القسم"
+              placeholderTextColor={COLORS.darkGray}
+              value={newSectionTitle}
+              onChangeText={setNewSectionTitle}
+              textAlign={isRTL ? "right" : "left"}
+            />
+          </View>
+
+          <View style={styles.formSection}>
+            <Text style={styles.formLabel}>مسار الصفحة *</Text>
+            <TextInput
+              style={styles.formInput}
+              placeholder="مثال: /my-custom-page"
+              placeholderTextColor={COLORS.darkGray}
+              value={newSectionRoute}
+              onChangeText={setNewSectionRoute}
+              textAlign={isRTL ? "right" : "left"}
+            />
+          </View>
+
+          <View style={styles.formSection}>
+            <Text style={styles.formLabel}>اختر الأيقونة</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.iconsContainer}>
+              {availableIcons.map((icon) => {
+                const IconComponent = icon.component;
+                return (
+                  <TouchableOpacity
+                    key={icon.name}
+                    style={[styles.iconOption, selectedIcon === icon.name && styles.selectedIconOption]}
+                    onPress={() => setSelectedIcon(icon.name)}
+                  >
+                    <IconComponent size={24} color={selectedIcon === icon.name ? COLORS.white : COLORS.primary} />
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          <View style={styles.formSection}>
+            <Text style={styles.formLabel}>اختر اللون</Text>
+            <View style={styles.colorsContainer}>
+              {availableColors.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: color },
+                    newSectionColor === color && styles.selectedColorOption,
+                  ]}
+                  onPress={() => setNewSectionColor(color)}
+                >
+                  {newSectionColor === color && (
+                    <View style={styles.colorCheckmark}>
+                      <Text style={styles.colorCheckmarkText}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.formSection}>
+            <Text style={styles.formLabel}>معاينة القسم</Text>
+            <View style={[styles.previewSection, { backgroundColor: newSectionColor }]}>
+              {getIconComponent(selectedIcon)}
+              <Text style={styles.previewTitle}>{newSectionTitle || "عنوان القسم"}</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              (!newSectionTitle.trim() || !newSectionRoute.trim()) && styles.submitButtonDisabled,
+            ]}
+            onPress={editingSection ? handleUpdateSection : handleAddSection}
+            disabled={!newSectionTitle.trim() || !newSectionRoute.trim()}
+          >
+            <Text style={styles.submitButtonText}>{editingSection ? "تحديث القسم" : "إضافة القسم"}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    );
   }
 
   return (
     <View style={styles.container}>
+      {/* {isLoadingSections ? (<ActivityIndicator />) : (
+
+      )} */}
       {/* Management Header - Only visible for admin users */}
-      {isSuperAdmin && (
+      {hasAdminAccess && (
         <View style={styles.managementHeader}>
           <TouchableOpacity
             style={[styles.managementToggle, isManagementMode && styles.managementToggleActive]}
@@ -816,7 +718,7 @@ export default function SectionsScreen() {
           />
         )}
 
-        <View style={styles.sectionsGrid}>{sections.map((item, index) => renderSectionItem(item, index))}</View>
+        <View style={styles.sectionsGrid}>{visibleSections.map((item, index) => renderSectionItem(item, index))}</View>
       </ScrollView>
     </View>
   );

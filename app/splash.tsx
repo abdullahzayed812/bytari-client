@@ -8,7 +8,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width, height } = Dimensions.get("window");
 
 export default function SplashScreen() {
-  const { setHasSeenSplash, isAuthenticated } = useApp();
+  const { setHasSeenSplash, hasSeenOnboarding, isAuthenticated } = useApp();
   const logoScale = useRef(new Animated.Value(0.3)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const backgroundOpacity = useRef(new Animated.Value(0)).current;
@@ -56,13 +56,16 @@ export default function SplashScreen() {
         setHasSeenSplash(true);
         await AsyncStorage.setItem("hasSeenSplash", "true");
 
-        // Navigate based on authentication status
+        // Navigate based on authentication status and first launch
         if (isAuthenticated) {
           console.log("User is authenticated, navigating to main app");
           router.replace("/(tabs)/" as any);
-        } else {
-          console.log("User is not authenticated, navigating to onboarding");
+        } else if (!hasSeenOnboarding) {
+          console.log("User is not authenticated and hasn't seen onboarding, navigating to onboarding");
           router.replace("/onboarding");
+        } else {
+          console.log("User is not authenticated but has seen onboarding, navigating to login");
+          router.replace("/auth");
         }
       }, 2000);
     });

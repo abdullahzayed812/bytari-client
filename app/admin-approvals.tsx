@@ -1,15 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  TextInput,
-  Image as RNImage,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Image as RNImage } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
 import { trpc } from "../lib/trpc";
@@ -38,6 +28,7 @@ import { COLORS } from "../constants/colors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface ApprovalRequest {
   id: number;
@@ -85,6 +76,8 @@ export default function AdminApprovalsScreen() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [activationStartDate, setActivationStartDate] = useState("1/1/2024");
   const [activationEndDate, setActivationEndDate] = useState("1/1/2025");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const { showToast } = useToastContext();
 
@@ -177,6 +170,11 @@ export default function AdminApprovalsScreen() {
       default:
         return COLORS.gray;
     }
+  };
+
+  const handleViewImage = (url: string) => {
+    setSelectedImageUrl(url);
+    setShowImageModal(true);
   };
 
   const handleApprove = (request: ApprovalRequest) => {
@@ -725,7 +723,7 @@ export default function AdminApprovalsScreen() {
                                       : "هوية شخصية"}
                                   </Text>
                                 </View>
-                                <TouchableOpacity style={styles.viewImageButton}>
+                                <TouchableOpacity style={styles.viewImageButton} onPress={() => handleViewImage(doc)}>
                                   <Eye size={16} color={COLORS.white} />
                                 </TouchableOpacity>
                               </TouchableOpacity>
@@ -757,19 +755,14 @@ export default function AdminApprovalsScreen() {
                           </Text>
                           <View style={styles.documentImageGrid}>
                             {JSON.parse(selectedRequest!.licenseImages!).map((doc: string, index: number) => (
-                              <TouchableOpacity key={index} style={styles.documentImageItem}>
-                                <View style={styles.documentImageContainer}>
-                                  <Image size={24} color={COLORS.info} />
-                                  <Text style={styles.documentImageLabel}>ترخيص {index + 1}</Text>
-                                </View>
-                                <View style={styles.documentImageInfo}>
-                                  <Text style={styles.documentImageName}>{doc}</Text>
-                                  <Text style={styles.documentImageType}>ترخيص مهني</Text>
-                                </View>
-                                <TouchableOpacity style={[styles.viewImageButton, { backgroundColor: COLORS.info }]}>
-                                  <Eye size={16} color={COLORS.white} />
+                              <View key={index} style={styles.documentImageItem}>
+                                <TouchableOpacity
+                                  style={[styles.viewImageButton, { backgroundColor: COLORS.info }]}
+                                  onPress={() => handleViewImage(doc)}
+                                >
+                                  <RNImage source={{ uri: doc }} style={{ width: 50, height: 50 }} />
                                 </TouchableOpacity>
-                              </TouchableOpacity>
+                              </View>
                             ))}
                           </View>
                         </View>
@@ -1148,6 +1141,7 @@ export default function AdminApprovalsScreen() {
       {renderDetailsModal()}
       {renderRejectModal()}
       {renderApprovalModal()}
+      <ImageViewerModal visible={showImageModal} imageUrl={selectedImageUrl} onClose={() => setShowImageModal(false)} />
     </SafeAreaView>
   );
 }
@@ -1685,7 +1679,7 @@ const styles = StyleSheet.create({
   },
   documentSubtitle: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: COLORS.darkGray,
     marginTop: 2,
   },
   documentPreviewContainer: {
@@ -1693,7 +1687,7 @@ const styles = StyleSheet.create({
   },
   documentCount: {
     fontSize: 12,
-    color: COLORS.gray,
+    color: COLORS.darkGray,
     marginBottom: 8,
     fontWeight: "500",
   },
@@ -1702,6 +1696,7 @@ const styles = StyleSheet.create({
   },
   documentImageItem: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: COLORS.white,
     padding: 12,
@@ -1733,7 +1728,7 @@ const styles = StyleSheet.create({
   },
   viewImageButton: {
     backgroundColor: COLORS.primary,
-    padding: 8,
+    padding: 3,
     borderRadius: 6,
   },
   documentFileItem: {

@@ -30,11 +30,11 @@ export default function AddStoreProductScreen() {
   // Determine store type from params or userMode
   const currentStoreType = storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
   const [formData, setFormData] = useState<StoreProductFormData>({
-    name: "طعام كلاب ممتاز",
-    description: "طعام جاف عالي الجودة للكلاب البالغة، غني بالبروتين والفيتامينات.",
-    category: "طعام",
-    price: "25.00",
-    stock: "100",
+    name: "اسم منتج جديد",
+    description: "وصف المنتج للاختبار",
+    category: "",
+    price: "300",
+    stock: "12",
     images: [],
   });
 

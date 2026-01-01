@@ -18,6 +18,7 @@ import { trpc } from "@/lib/trpc";
 import { CheckCircle, Clock, Eye, XCircle } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface PetApprovalRequest {
   id: number;
@@ -57,6 +58,8 @@ export default function AdminPetApprovals() {
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -155,6 +158,11 @@ export default function AdminPetApprovals() {
     setSelectedRequest(request);
     setActionType(action);
     setShowActionModal(true);
+  };
+
+  const handleViewImage = (url: string) => {
+    setSelectedImageUrl(url);
+    setShowImageModal(true);
   };
 
   const confirmAction = () => {
@@ -366,11 +374,18 @@ export default function AdminPetApprovals() {
                   <Text style={styles.sectionTitle}>الصور المرفقة</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
                     {selectedRequest.images.map((image: string, index: number) => (
-                      <Image
+                      <TouchableOpacity
                         key={`image-${selectedRequest.id}-${index}`}
-                        source={{ uri: image }}
-                        style={styles.attachedImage}
-                      />
+                        onPress={() => {
+                          setSelectedImageUrl(image);
+                          setShowImageModal(true);
+                        }}
+                      >
+                        <Image
+                          source={{ uri: image }}
+                          style={styles.attachedImage}
+                        />
+                      </TouchableOpacity>
                     ))}
                   </ScrollView>
                 </View>
@@ -474,11 +489,18 @@ export default function AdminPetApprovals() {
         <View style={styles.requestInfo}>
           {/* Pet Image Thumbnail */}
           {(item.petImage || (item.images && item.images.length > 0)) && (
-            <Image
-              source={{ uri: item.petImage || item.images[0] }}
-              style={styles.thumbnailImage}
-              resizeMode="cover"
-            />
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                handleViewImage(item.petImage || item.images[0]);
+              }}
+            >
+              <Image
+                source={{ uri: item.petImage || item.images[0] }}
+                style={styles.thumbnailImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
           )}
           <View style={styles.textInfo}>
             <Text style={styles.requestTitle}>{item?.title}</Text>
@@ -608,6 +630,11 @@ export default function AdminPetApprovals() {
 
       {renderDetailModal()}
       {renderActionModal()}
+      <ImageViewerModal
+        visible={showImageModal}
+        imageUrl={selectedImageUrl}
+        onClose={() => setShowImageModal(false)}
+      />
     </SafeAreaView>
   );
 }

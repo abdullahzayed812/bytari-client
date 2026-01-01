@@ -34,6 +34,8 @@ interface AppContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
   setHasSeenSplash: (seen: boolean) => void;
+  hasSeenOnboarding: boolean;
+  setHasSeenOnboarding: (seen: boolean) => void;
   toggleUserMode: () => void;
   addresses: any[];
   addAddress: (address: any) => Promise<void>;
@@ -44,6 +46,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasSeenSplash, setHasSeenSplash] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userMode, setUserMode] = useState("");
@@ -83,13 +86,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const initializeApp = async () => {
     try {
-      const [splashSeen, userData, storedUserMode] = await Promise.all([
+      const [splashSeen, onboardingSeen, userData, storedUserMode] = await Promise.all([
         AsyncStorage.getItem("hasSeenSplash"),
+        AsyncStorage.getItem("hasSeenOnboarding"),
         AsyncStorage.getItem("userData"),
         AsyncStorage.getItem("userMode"),
       ]);
 
       setHasSeenSplash(splashSeen === "true");
+      setHasSeenOnboarding(onboardingSeen === "true");
 
       if (userData) {
         const parsedUser = JSON.parse(userData);
@@ -148,6 +153,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setHasSeenSplash(seen);
     } catch (error) {
       console.error("Error setting splash seen:", error);
+    }
+  };
+
+  const setHasSeenOnboardingWrapper = async (seen: boolean) => {
+    try {
+      await AsyncStorage.setItem("hasSeenOnboarding", seen.toString());
+      setHasSeenOnboarding(seen);
+    } catch (error) {
+      console.error("Error setting onboarding seen:", error);
     }
   };
 
@@ -224,6 +238,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         logout,
         updateUser,
         setHasSeenSplash: setHasSeenSplashWrapper,
+        hasSeenOnboarding,
+        setHasSeenOnboarding: setHasSeenOnboardingWrapper,
         toggleUserMode,
         addresses,
         addAddress,

@@ -6,24 +6,22 @@ import { useApp } from "../providers/AppProvider";
 import { router, useLocalSearchParams, Stack } from 'expo-router';
 import { trpc } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
-import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings } from 'lucide-react-native';
+import { Package, Plus, Edit, Trash2, Eye, Search, Filter, BarChart3, Settings, Pill, Stethoscope, Microscope, Beef } from 'lucide-react-native';
 import Button from "../components/Button";
 import { Product } from "../types";
 import { mockProducts } from "../mocks/data";
 import { formatPrice } from "../constants/currency";
 
-type VetSpecialty = 'small_animals' | 'large_animals' | 'birds' | 'fish' | 'poultry' | 'equipment';
+type VetSpecialty = 'pharmaceuticals' | 'medical_equipment' | 'lab_supplies' | 'nutrition_supplements';
 
 const getSpecialtyInfo = (specialty: VetSpecialty) => {
   const specialties = {
-    small_animals: { name: 'قطط وكلاب', color: '#FF6B6B' },
-    large_animals: { name: 'الحيوانات الصغيرة والكبيرة', color: '#4ECDC4' },
-    birds: { name: 'الطيور', color: '#45B7D1' },
-    fish: { name: 'الأسماك', color: '#96CEB4' },
-    poultry: { name: 'الدواجن', color: '#FFA726' },
-    equipment: { name: 'أجهزة ومعدات بيطرية', color: '#9C27B0' },
+    pharmaceuticals: { name: 'أدوية', color: '#20c997', icon: <Pill size={24} color={COLORS.white} /> },
+    medical_equipment: { name: 'معدات طبية', color: '#9C27B0', icon: <Stethoscope size={24} color={COLORS.white} /> },
+    lab_supplies: { name: 'مستلزمات مختبر', color: '#17a2b8', icon: <Microscope size={24} color={COLORS.white} /> },
+    nutrition_supplements: { name: 'تغذية ومكملات', color: '#fd7e14', icon: <Beef size={24} color={COLORS.white} /> },
   };
-  return specialties[specialty] || { name: 'غير محدد', color: COLORS.gray };
+  return specialties[specialty] || { name: 'غير محدد', color: COLORS.gray, icon: <Package size={24} color={COLORS.white} /> };
 };
 
 export default function VetSpecialtyProductsScreen() {

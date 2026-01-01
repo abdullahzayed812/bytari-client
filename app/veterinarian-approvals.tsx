@@ -7,6 +7,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { ArrowLeft, Calendar, Check, Eye, FileText, Mail, MapPin, Phone, X } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
+import { useToastContext } from "@/providers/ToastProvider";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface VeterinarianApplication {
   id: string;
@@ -26,6 +28,9 @@ interface VeterinarianApplication {
 export default function VeterinarianApprovalsScreen() {
   const router = useRouter();
   const { user } = useApp();
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<VeterinarianApplication | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const {
@@ -94,6 +99,11 @@ export default function VeterinarianApprovalsScreen() {
       "",
       "default"
     );
+  };
+
+  const handleViewImage = (imageUrl: string) => {
+    setSelectedImageUrl(imageUrl);
+    setShowImageModal(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -194,19 +204,23 @@ export default function VeterinarianApprovalsScreen() {
                 <View style={styles.documentsGrid}>
                   <View style={styles.documentItem}>
                     <Text style={styles.documentLabel}>صورة وجه الهوية</Text>
-                    <Image
-                      source={{ uri: selectedApplication.idFrontImage }}
-                      style={styles.documentImage}
-                      resizeMode="cover"
-                    />
+                    <TouchableOpacity onPress={() => handleViewImage(selectedApplication.idFrontImage!)}>
+                      <Image
+                        source={{ uri: selectedApplication.idFrontImage }}
+                        style={styles.documentImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.documentItem}>
                     <Text style={styles.documentLabel}>صورة ظهر الهوية</Text>
-                    <Image
-                      source={{ uri: selectedApplication.idBackImage }}
-                      style={styles.documentImage}
-                      resizeMode="cover"
-                    />
+                    <TouchableOpacity onPress={() => handleViewImage(selectedApplication.idBackImage!)}>
+                      <Image
+                        source={{ uri: selectedApplication.idBackImage }}
+                        style={styles.documentImage}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
@@ -232,6 +246,11 @@ export default function VeterinarianApprovalsScreen() {
             )}
           </View>
         </ScrollView>
+        <ImageViewerModal
+          visible={showImageModal}
+          imageUrl={selectedImageUrl}
+          onClose={() => setShowImageModal(false)}
+        />
       </SafeAreaView>
     );
   }
@@ -369,6 +388,11 @@ export default function VeterinarianApprovalsScreen() {
           ))}
         </View>
       </ScrollView>
+      <ImageViewerModal
+        visible={showImageModal}
+        imageUrl={selectedImageUrl}
+        onClose={() => setShowImageModal(false)}
+      />
     </SafeAreaView>
   );
 }

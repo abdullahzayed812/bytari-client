@@ -8,6 +8,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Stack } from 'expo-router';
 import { useApp } from "../providers/AppProvider";
 import * as ImagePicker from 'expo-image-picker';
+import { useQuery } from '@tanstack/react-query';
+import { trpc } from '../lib/trpc';
 
 interface StoreProductFormData {
   name: string;
@@ -24,46 +26,29 @@ export default function EditStoreProductScreen() {
   const { t, isRTL } = useI18n();
   const { userMode } = useApp();
   const { id, storeType } = useLocalSearchParams<{ id?: string; storeType?: string }>();
-  
+
   // Determine store type from params or userMode
   const currentStoreType = storeType || (userMode === 'veterinarian' ? 'veterinarian' : 'pet_owner');
-  
-  // Mock data - replace with actual API call
+
+  const { data: categoriesData } = useQuery(
+    trpc.unifiedStore.getCategories.queryOptions({
+      storeType: currentStoreType as "veterinarian" | "pet_owner",
+    })
+  );
+
+  const categories = categoriesData || [];
+
   const [formData, setFormData] = useState<StoreProductFormData>({
-    name: 'طعام قطط بريميوم',
-    description: 'طعام عالي الجودة للقطط البالغة',
-    category: 'food',
-    price: '45.00',
-    stock: '15',
-    brand: 'رويال كانين',
-    images: ['https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400'],
-    petType: ['cat'],
+    name: '',
+    description: '',
+    category: '',
+    price: '',
+    stock: '',
+    brand: '',
+    images: [],
+    petType: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Categories based on store type
-  const getCategories = () => {
-    if (currentStoreType === 'veterinarian') {
-      return [
-        { id: 'medicine', name: 'أدوية' },
-        { id: 'equipment', name: 'معدات طبية' },
-        { id: 'surgical', name: 'أدوات جراحية' },
-        { id: 'diagnostic', name: 'أدوات تشخيص' },
-        { id: 'vaccines', name: 'لقاحات' },
-        { id: 'supplements', name: 'مكملات غذائية' },
-      ];
-    }
-    return [
-      { id: 'food', name: 'طعام' },
-      { id: 'accessories', name: 'إكسسوارات' },
-      { id: 'toys', name: 'ألعاب' },
-      { id: 'grooming', name: 'العناية' },
-      { id: 'medicine', name: 'أدوية' },
-      { id: 'equipment', name: 'معدات' },
-    ];
-  };
-  
-  const categories = getCategories();
 
   const petTypes = [
     { id: 'cat', name: 'قطط' },
@@ -216,7 +201,7 @@ export default function EditStoreProductScreen() {
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: 'تعديل منتج المتجر',
           headerStyle: { backgroundColor: COLORS.primary },
@@ -224,7 +209,7 @@ export default function EditStoreProductScreen() {
           headerTitleStyle: { fontWeight: 'bold' }
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.storeTypeIndicator}>
@@ -235,7 +220,7 @@ export default function EditStoreProductScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>معلومات المنتج</Text>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>اسم المنتج *</Text>
               <TextInput
@@ -263,7 +248,7 @@ export default function EditStoreProductScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>الفئة *</Text>
               <View style={styles.categoryContainer}>
-                {categories.map((category) => (
+                {categories.map((category: any) => (
                   <TouchableOpacity
                     key={category.id}
                     style={[
@@ -288,7 +273,7 @@ export default function EditStoreProductScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>نوع الحيوان المناسب *</Text>
               <View style={styles.categoryContainer}>
-                {petTypes.map((petType) => (
+                {petTypes.map((petType: any) => (
                   <TouchableOpacity
                     key={petType.id}
                     style={[

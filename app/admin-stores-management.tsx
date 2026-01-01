@@ -20,6 +20,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface StoreData {
   id: number;
@@ -92,6 +93,8 @@ export default function AdminStoresManagement() {
   const [actionType, setActionType] = useState<"activate" | "ban" | "unban" | "delete" | "suspend" | null>(null);
   const [actionReason, setActionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const {
     data: storesData,
@@ -137,6 +140,11 @@ export default function AdminStoresManagement() {
       count: stores?.filter((s) => s.isPremium).length || 0,
     },
   ];
+
+  const handleViewImage = (url: string) => {
+    setSelectedImageUrl(url);
+    setShowImageModal(true);
+  };
 
   const getFilteredStores = () => {
     if (!stores) return [];
@@ -327,7 +335,11 @@ export default function AdminStoresManagement() {
                 {selectedStore.businessLicense && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>رخصة تجارية:</Text>
-                    <Text style={styles.infoValue}>{selectedStore.businessLicense}</Text>
+                    <TouchableOpacity onPress={() => handleViewImage(selectedStore.businessLicense!)}>
+                      <Text style={[styles.infoValue, { color: COLORS.primary, textDecorationLine: 'underline' }]}>
+                        عرض الرخصة
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 )}
 
@@ -640,6 +652,11 @@ export default function AdminStoresManagement() {
 
       {renderDetailModal()}
       {renderActionModal()}
+      <ImageViewerModal
+        visible={showImageModal}
+        imageUrl={selectedImageUrl}
+        onClose={() => setShowImageModal(false)}
+      />
     </SafeAreaView>
   );
 }
