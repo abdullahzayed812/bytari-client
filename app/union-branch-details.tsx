@@ -21,6 +21,7 @@ import {
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Picker } from "@react-native-picker/picker";
 
 interface UnionBranch {
   id: string;
@@ -55,10 +56,11 @@ interface Announcement {
 }
 
 export default function UnionBranchDetailsScreen() {
-  const { isSuperAdmin, hasAdminAccess, /* sendNotification ,*/ isModerator, moderatorPermissions } = useApp();
+  const { isSuperAdmin, hasAdminAccess, user, isModerator, moderatorPermissions } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
 
@@ -67,7 +69,8 @@ export default function UnionBranchDetailsScreen() {
     enabled: !!branch?.id,
   });
 
-  console.log(announcements);
+  const { data: usersData } = useQuery(trpc.admin.users.listAll.queryOptions({ adminId: Number(user?.id) }));
+  const users = usersData?.users;
 
   const [isFollowing, setIsFollowing] = useState<boolean>(branch?.isFollowing || false);
 
@@ -78,6 +81,25 @@ export default function UnionBranchDetailsScreen() {
   }, [branch]);
 
   const followMutation = useMutation(trpc.union.follow.toggle.mutationOptions());
+
+  const assignSupervisorMutation = useMutation(trpc.union.branch.assignSupervisor.mutationOptions());
+
+  const handleAssignSupervisor = () => {
+    if (branch && selectedUserId) {
+      assignSupervisorMutation.mutate(
+        { branchId: branch.id, userId: Number(selectedUserId) },
+        {
+          onSuccess: () => {
+            Alert.alert("عملية ناجحة", "تم اضافة المستخدم مشرف لفرع النقابة");
+            queryClient.invalidateQueries(trpc.union.branch.get.queryKey as any);
+          },
+          onError: (error) => {
+            Alert.alert("Error", error.message || "Failed to assign supervisor.");
+          },
+        }
+      );
+    }
+  };
 
   const handleFollowToggle = () => {
     if (branch) {
@@ -292,6 +314,21 @@ export default function UnionBranchDetailsScreen() {
           </View>
         </View>
 
+        {isSuperAdmin && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>تعيين مشرف للنقابة</Text>
+            <Picker selectedValue={selectedUserId} onValueChange={(itemValue) => setSelectedUserId(itemValue)}>
+              <Picker.Item label="Select a User" value={null} />
+              {users?.map((user) => (
+                <Picker.Item key={user.id} label={user.name} value={user.id} />
+              ))}
+            </Picker>
+            <TouchableOpacity style={styles.button} onPress={handleAssignSupervisor}>
+              <Text style={styles.buttonText}>Assign Supervisor</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Services */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الخدمات المقدمة</Text>
@@ -323,61 +360,72 @@ export default function UnionBranchDetailsScreen() {
           </View>
 
           <View style={styles.topAnnouncementsList}>
-            {announcements?.slice(0, 2)?.map((announcement) => (
-              <View key={announcement.id} style={styles.topAnnouncementCard}>
-                <View style={styles.announcementHeader}>
-                  <View
-                    style={[styles.announcementType, { backgroundColor: getAnnouncementTypeColor(announcement.type) }]}
-                  >
-                    <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
+            {isAnnouncementsLoading ? (
+              <ActivityIndicator />
+            ) : (
+              announcements?.slice(0, 2)?.map((announcement) => (
+                <View key={announcement.id} style={styles.topAnnouncementCard}>
+                  <View style={styles.announcementHeader}>
+                    <View
+                      style={[
+                        styles.announcementType,
+                        { backgroundColor: getAnnouncementTypeColor(announcement.type) },
+                      ]}
+                    >
+                      <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
+                    </View>
+                    {announcement.isImportant && (
+                      <View style={styles.importantBadge}>
+                        <Text style={styles.importantText}>مهم</Text>
+                      </View>
+                    )}
+                    <Text style={styles.announcementDate}>{announcement.date}</Text>
                   </View>
-                  {announcement.isImportant && (
-                    <View style={styles.importantBadge}>
-                      <Text style={styles.importantText}>مهم</Text>
+
+                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                  <Text style={styles.announcementContent}>{announcement.content}</Text>
+
+                  {announcement.image && (
+                    <View style={styles.announcementImageContainer}>
+                      <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
                     </View>
                   )}
-                  <Text style={styles.announcementDate}>{announcement.date}</Text>
-                </View>
 
-                <Text style={styles.announcementTitle}>{announcement.title}</Text>
-                <Text style={styles.announcementContent}>{announcement.content}</Text>
-
-                {announcement.image && (
-                  <View style={styles.announcementImageContainer}>
-                    <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
-                  </View>
-                )}
-
-                {announcement.link && (
-                  <TouchableOpacity style={styles.announcementLink}>
-                    <Link size={16} color={COLORS.primary} />
-                    <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
-                    <ExternalLink size={14} color={COLORS.primary} />
-                  </TouchableOpacity>
-                )}
-
-                <View style={styles.announcementFooter}>
-                  {announcement.author && <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>}
-                  {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
-                </View>
-
-                {(isSuperAdmin ||
-                  hasAdminAccess ||
-                  (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
-                  <View style={styles.announcementActions}>
-                    <TouchableOpacity
-                      style={styles.editAnnouncementButton}
-                      onPress={() =>
-                        router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)
-                      }
-                    >
-                      <Edit3 size={14} color={COLORS.primary} />
-                      <Text style={styles.editAnnouncementText}>تعديل</Text>
+                  {announcement.link && (
+                    <TouchableOpacity style={styles.announcementLink}>
+                      <Link size={16} color={COLORS.primary} />
+                      <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
+                      <ExternalLink size={14} color={COLORS.primary} />
                     </TouchableOpacity>
+                  )}
+
+                  <View style={styles.announcementFooter}>
+                    {announcement.author && (
+                      <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>
+                    )}
+                    {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
                   </View>
-                )}
-              </View>
-            ))}
+
+                  {(isSuperAdmin ||
+                    hasAdminAccess ||
+                    (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
+                    <View style={styles.announcementActions}>
+                      <TouchableOpacity
+                        style={styles.editAnnouncementButton}
+                        onPress={() =>
+                          router.push(
+                            `/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`
+                          )
+                        }
+                      >
+                        <Edit3 size={14} color={COLORS.primary} />
+                        <Text style={styles.editAnnouncementText}>تعديل</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              ))
+            )}
           </View>
         </View>
       </ScrollView>
@@ -774,5 +822,17 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    padding: 15,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

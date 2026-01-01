@@ -45,7 +45,7 @@ export default function JobVacanciesScreen() {
       adminId: Number(user?.id),
       limit: 50,
       offset: 0,
-      status: "active",
+      status: "approved",
     })
   );
 

@@ -63,7 +63,7 @@ export default function JobManagementScreen() {
 
           if (request.type === "job_posting") {
             updateJobMutation.mutate(
-              { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "active" },
+              { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "approved" },
               { onSuccess, onError }
             );
           } else if (request.type === "job_application") {
@@ -99,7 +99,7 @@ export default function JobManagementScreen() {
 
           if (request.type === "job_posting") {
             updateJobMutation.mutate(
-              { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "inactive" },
+              { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "rejected" },
               { onSuccess, onError }
             );
           } else if (request.type === "job_application") {

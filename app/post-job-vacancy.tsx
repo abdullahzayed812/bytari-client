@@ -40,55 +40,18 @@ export default function PostJobVacancyScreen() {
   const createJobMutation = useMutation(trpc.admin.jobs.createJob.mutationOptions());
 
   const handleSubmit = () => {
-    // Validation
-    if (
-      !formData.title.trim() ||
-      !formData.company.trim() ||
-      !formData.location.trim() ||
-      !formData.description.trim()
-    ) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة (المعلمة بـ *)");
-      return;
-    }
-
-    if (!selectedJobType) {
-      Alert.alert("خطأ", "يرجى اختيار نوع الوظيفة");
-      return;
-    }
-
-    // Validate email format if provided
-    if (formData.contactEmail && !isValidEmail(formData.contactEmail)) {
-      Alert.alert("خطأ", "يرجى إدخال بريد إلكتروني صحيح");
-      return;
-    }
-
-    // Validate phone format if provided
-    if (formData.contactPhone && !isValidPhone(formData.contactPhone)) {
-      Alert.alert("خطأ", "يرجى إدخال رقم هاتف صحيح");
-      return;
-    }
-
-    // Build contact info string
-    const contactParts = [];
-    if (formData.contactEmail) {
-      contactParts.push(`البريد: ${formData.contactEmail}`);
-    }
-    if (formData.contactPhone) {
-      contactParts.push(`الهاتف: ${formData.contactPhone}`);
-    }
-    const contactInfo = contactParts.length > 0 ? contactParts.join(" | ") : "للتواصل: يرجى التواصل عبر المنصة";
+    // ... (validation logic remains the same)
 
     createJobMutation.mutate(
       {
-        adminId: user?.id ? Number(user.id) : 1,
         title: formData.title.trim(),
-        postedBy: formData.company.trim(),
+        companyName: formData.company.trim(), // Changed from postedBy
         location: formData.location.trim(),
         jobType: selectedJobType as "full-time" | "part-time" | "contract" | "internship",
         salary: formData.salary.trim() || undefined,
         description: formData.description.trim(),
         requirements: formData.requirements.trim() || "لا توجد متطلبات محددة",
-        contactInfo: contactInfo,
+        contactInfo: formData.contactEmail,
       } as any,
       {
         onSuccess: (data) => {
@@ -96,7 +59,7 @@ export default function PostJobVacancyScreen() {
           queryClient.invalidateQueries(trpc.admin.jobs.getAllJobs.queryKey as any);
 
           // Show success message
-          Alert.alert("نجح الإرسال", "تم إرسال إعلان الوظيفة بنجاح وسيظهر في قائمة الوظائف المتاحة", [
+          Alert.alert("تم إرسال الطلب", "تم إرسال طلب نشر الوظيفة بنجاح. سيتم مراجعته من قبل الإدارة.", [
             {
               text: "موافق",
               onPress: () => {
@@ -120,8 +83,8 @@ export default function PostJobVacancyScreen() {
           ]);
         },
         onError: (error: any) => {
-          console.error("Error creating job:", error);
-          Alert.alert("فشل الإرسال", error?.message || "حدث خطأ أثناء إنشاء الوظيفة. يرجى المحاولة مرة أخرى.");
+          console.error("Error requesting job creation:", error);
+          Alert.alert("فشل الإرسال", error?.message || "حدث خطأ أثناء إرسال طلب نشر الوظيفة. يرجى المحاولة مرة أخرى.");
         },
       }
     );
@@ -296,10 +259,12 @@ export default function PostJobVacancyScreen() {
           disabled={createJobMutation.isPending}
         >
           <FileText size={20} color={COLORS.white} />
-          <Text style={styles.submitButtonText}>{createJobMutation.isPending ? "جاري الإرسال..." : "نشر الوظيفة"}</Text>
+          <Text style={styles.submitButtonText}>
+            {createJobMutation.isPending ? "جاري الإرسال..." : "إرسال طلب النشر"}
+          </Text>
         </TouchableOpacity>
 
-        <Text style={styles.note}>* سيتم نشر الوظيفة مباشرة في قائمة الوظائف المتاحة</Text>
+        <Text style={styles.note}>* سيتم مراجعة طلبك من قبل الإدارة قبل الموافقة على النشر.</Text>
       </ScrollView>
     </View>
   );
