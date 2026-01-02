@@ -52,21 +52,25 @@ export default function NotificationsScreen() {
     }
   };
 
-  const handleNotificationPress = (notification: any) => {
-    markNotificationAsRead.mutate({ userId: user?.id, notificationId: notification?.id } as any);
-    queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
+  const handleNotificationPress = async (notification: any) => {
+    markNotificationAsRead.mutate({ userId: user?.id, notificationId: notification?.id } as any, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
 
-    if (notification?.type === "appointment") {
-      router.push("/appointments");
-    } else if (notification?.type === "order") {
-      router.push("/orders");
-    } else if (notification?.type === "inquiry") {
-      router.push({ pathname: "/inquiry-details", params: { id: notification?.data?.inquiryId } });
-    } else if (notification?.type === "consultation") {
-      router.push({ pathname: "/consultation-details", params: { id: notification?.data?.consultationId } });
-    } else if (notification?.type === "system") {
-      router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
-    }
+        if (notification?.type === "appointment") {
+          router.push("/appointments");
+        } else if (notification?.type === "order") {
+          router.push("/orders");
+        } else if (notification?.type === "inquiry") {
+          router.push({ pathname: "/inquiry-details", params: { id: notification?.data?.inquiryId } });
+        } else if (notification?.type === "consultation") {
+          router.push({ pathname: "/consultation-details", params: { id: notification?.data?.consultationId } });
+        } else if (notification?.type === "system") {
+          router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
+        }
+      },
+      onError: () => {},
+    });
   };
 
   if (isLoading) return <ActivityIndicator size="large" />;
