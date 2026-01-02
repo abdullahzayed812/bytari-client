@@ -33,8 +33,7 @@ interface Message {
 }
 
 export default function MessagesScreen() {
-  const { t, isRTL } = useI18n();
-  const router = useRouter();
+  const { isRTL } = useI18n();
   const { userMode, user } = useApp();
 
   const queryClient = useQueryClient();
@@ -121,13 +120,7 @@ export default function MessagesScreen() {
   };
 
   const handleMessagePress = (message: Message) => {
-    console.log("Message pressed:", message.id);
-    // Handle navigation based on message type
-    // if (message.type === "consultation") {
-    //   // Navigate to consultation details
-    // } else if (message.type === "clinic") {
-    //   // Navigate to clinic details
-    // }
+    markAsRead(message?.id);
   };
 
   const handleSendReply = () => {
@@ -136,7 +129,7 @@ export default function MessagesScreen() {
     sendSystemMessageReplyMutation.mutate(
       {
         messageId: Number(selectedMessage.id),
-        userId: user.id,
+        userId: Number(user.id),
         content: replyText,
         isFromAdmin: false, // User is sending the reply
       },
@@ -146,7 +139,7 @@ export default function MessagesScreen() {
           // setReplyModalVisible(false);
           setReplyText("");
           setSelectedMessage(null);
-          queryClient.invalidateQueries(trpc.admin.messages.getUserSystemMessages);
+          queryClient.invalidateQueries(trpc.admin.messages.getUserSystemMessages.queryKey as any);
           refetchReplies(); // Refetch replies for the selected message
         },
         onError: (error) => {
