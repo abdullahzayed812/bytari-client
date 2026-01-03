@@ -94,7 +94,7 @@ export default function LostPetScreen() {
         text: "نعم، إزالة",
         onPress: () => {
           dismissReportMutation.mutate(
-            { reportId, ownerId: user.id },
+            { reportId, ownerId: Number(user.id) },
             {
               onSuccess: () => {
                 Alert.alert("تم الإزالة", "تم إزالة البلاغ بنجاح.");
@@ -137,7 +137,7 @@ export default function LostPetScreen() {
     reportSightingMutation.mutate(
       {
         lostPetId: Number(pet.id),
-        reporterId: user?.id,
+        reporterId: Number(user?.id),
         sightingDate: new Date(),
         sightingLocation: sightingInfo.sightingLocation,
         description: sightingInfo.description,

@@ -56,7 +56,7 @@ interface Announcement {
 }
 
 export default function UnionBranchDetailsScreen() {
-  const { isSuperAdmin, hasAdminAccess, user, isModerator, moderatorPermissions } = useApp();
+  const { isSuperAdmin, user, moderatorPermissions, supervisedBranchIds } = useApp();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
@@ -163,6 +163,9 @@ export default function UnionBranchDetailsScreen() {
     return stars;
   };
 
+  const canManageBranch =
+    isSuperAdmin || moderatorPermissions?.unionManagement || supervisedBranchIds?.includes(branch?.id);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -188,9 +191,7 @@ export default function UnionBranchDetailsScreen() {
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold", fontSize: 16 },
           headerRight: () =>
-            isSuperAdmin ||
-            hasAdminAccess ||
-            (isModerator && moderatorPermissions?.sections?.includes("union-branches")) ? (
+            isSuperAdmin || moderatorPermissions?.unionManagement ? (
               <View style={styles.headerActions}>
                 <TouchableOpacity
                   onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
@@ -314,7 +315,7 @@ export default function UnionBranchDetailsScreen() {
           </View>
         </View>
 
-        {isSuperAdmin && (
+        {(isSuperAdmin || moderatorPermissions?.unionManagement) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>تعيين مشرف للنقابة</Text>
             <Picker selectedValue={selectedUserId} onValueChange={(itemValue) => setSelectedUserId(itemValue)}>
@@ -346,9 +347,7 @@ export default function UnionBranchDetailsScreen() {
         <View style={styles.topAnnouncementsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
-            {(isSuperAdmin ||
-              hasAdminAccess ||
-              (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
+            {canManageBranch && (
               <TouchableOpacity
                 onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
                 style={styles.addAnnouncementButton}
@@ -406,9 +405,7 @@ export default function UnionBranchDetailsScreen() {
                     {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
                   </View>
 
-                  {(isSuperAdmin ||
-                    hasAdminAccess ||
-                    (isModerator && moderatorPermissions?.sections?.includes("union-branches"))) && (
+                  {canManageBranch && (
                     <View style={styles.announcementActions}>
                       <TouchableOpacity
                         style={styles.editAnnouncementButton}

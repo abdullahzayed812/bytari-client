@@ -182,17 +182,16 @@ export default function SectionsScreen() {
       section.name === "consultations" || section.name === "inquiries"
         ? consultationsCount
         : section.name === "appointments"
-          ? appointmentsCount
-          : section.name === "reminders"
-            ? remindersCount
-            : 0,
+        ? appointmentsCount
+        : section.name === "reminders"
+        ? remindersCount
+        : 0,
   }));
 
   // Filter out hidden sections (but show all in management mode)
   const visibleSections = isManagementMode
     ? sections // Show all sections in management mode
     : sections.filter((section) => !section.hidden);
-
 
   const pickFile = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -717,8 +716,13 @@ export default function SectionsScreen() {
             showDots={true}
           />
         )}
-
-        <View style={styles.sectionsGrid}>{visibleSections.map((item, index) => renderSectionItem(item, index))}</View>
+        {isLoadingSections ? (
+          <ActivityIndicator />
+        ) : (
+          <View style={styles.sectionsGrid}>
+            {visibleSections.map((item, index) => renderSectionItem(item, index))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );

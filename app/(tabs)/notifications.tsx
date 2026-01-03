@@ -65,6 +65,12 @@ export default function NotificationsScreen() {
           router.push({ pathname: "/inquiry-details", params: { id: notification?.data?.inquiryId } });
         } else if (notification?.type === "consultation") {
           router.push({ pathname: "/consultation-details", params: { id: notification?.data?.consultationId } });
+        } else if (notification?.type === "lost_pet_sighting") {
+          const data = notification?.data;
+          router.push({ pathname: "/lost-pet", params: { id: data.lostPetId } });
+        } else if (notification?.type === "union_supervisor_assignment") {
+          const data = notification?.data;
+          router.push({ pathname: "/union-branch-details", params: { id: data.branchId } });
         } else if (notification?.type === "system") {
           router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
         }

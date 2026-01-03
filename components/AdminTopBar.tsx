@@ -12,7 +12,7 @@ interface AdminTopBarProps {
 
 export function AdminTopBar({ onAdminDashboard }: AdminTopBarProps) {
   const router = useRouter();
-  const { hasAdminAccess, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
+  const { hasAdminAccess, isSuperAdmin, isModerator, moderatorPermissions, supervisedBranchIds } = useApp();
   const { isRTL } = useI18n();
 
   const badgeStyle = {
@@ -123,16 +123,20 @@ export function AdminTopBar({ onAdminDashboard }: AdminTopBarProps) {
       )}
 
       {/* زر دخول الإدارة للمشرفين */}
-      {isModerator && !moderatorPermissions?.superPermissions && (
-        <TouchableOpacity
-          style={styles.moderatorAdminButton}
-          onPress={() => router.push("/moderator-quick-actions")}
-          testID="moderator-admin-button"
-        >
-          <Shield size={16} color={COLORS.white} />
-          <Text style={styles.moderatorText}>دخول الإدارة</Text>
-        </TouchableOpacity>
-      )}
+      {isModerator &&
+        !moderatorPermissions?.superPermissions &&
+        !supervisedBranchIds.length &&
+        !moderatorPermissions?.storeManagement?.vetStores &&
+        !moderatorPermissions?.storeManagement?.petOwnerStores && (
+          <TouchableOpacity
+            style={styles.moderatorAdminButton}
+            onPress={() => router.push("/moderator-quick-actions")}
+            testID="moderator-admin-button"
+          >
+            <Shield size={16} color={COLORS.white} />
+            <Text style={styles.moderatorText}>دخول الإدارة</Text>
+          </TouchableOpacity>
+        )}
     </View>
   );
 }

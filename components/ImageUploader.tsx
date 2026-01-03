@@ -31,8 +31,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     },
   });
 
-  console.log(imageUri);
-
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
@@ -40,9 +38,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       <View style={styles.imageWrapper}>
         <Image
           source={{
-            uri:
-              imageUri ||
-              "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
+            uri: imageUri,
           }}
           style={[styles.image, imageStyle]}
         />

@@ -21,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
 import ImageViewerModal from "../components/ImageViewerModal";
+import { COLORS } from "@/constants/colors";
 
 interface StoreData {
   id: number;
@@ -434,7 +435,7 @@ export default function AdminStoresManagement() {
                 </View>
               </View>
 
-              <StoreProducts storeId={selectedStore.id} />
+              <StoreProducts storeId={selectedStore.id.toString()} />
             </ScrollView>
 
             <View style={styles.actionButtons}>

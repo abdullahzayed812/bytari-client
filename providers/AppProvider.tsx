@@ -17,6 +17,7 @@ interface User {
   isSuperAdmin?: boolean;
   isModerator?: boolean;
   moderatorPermissions?: any;
+  supervisedBranchIds?: number[];
 }
 
 interface AppContextType {
@@ -30,6 +31,7 @@ interface AppContextType {
   isSuperAdmin: boolean;
   isModerator: boolean;
   moderatorPermissions: any;
+  supervisedBranchIds: number[];
   login: (userData: User, accessToken: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<void>;
@@ -55,6 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = user?.isSuperAdmin || false;
   const isModerator = user?.isModerator || false;
   const moderatorPermissions = user?.moderatorPermissions || {};
+  const supervisedBranchIds = user?.supervisedBranchIds || [];
 
   // Mock data for now - will be replaced with real backend data
   const pointsHistory = user?.points
@@ -234,6 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         isSuperAdmin,
         isModerator,
         moderatorPermissions,
+        supervisedBranchIds,
         login,
         logout,
         updateUser,

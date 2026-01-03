@@ -48,6 +48,8 @@ export default function VetUnionScreen() {
   const { data, isLoading, error } = useQuery(trpc.union.main.get.queryOptions());
   const unionInfo = data?.union;
 
+  const canManageUnion = isSuperAdmin || moderatorPermissions?.unionManagement;
+
   const services: UnionService[] = useMemo(() => {
     return unionInfo?.services?.map((service: any) => ({
       ...service,
@@ -85,7 +87,7 @@ export default function VetUnionScreen() {
     }
   };
 
-  const handleContactPress = async (type: "phone" | "email" | "website", value: string | undefined) => {
+  const handleContactPress = async (type: "phone" | "email" | "website", value: string | null) => {
     if (!value) return;
 
     let url;
@@ -137,9 +139,6 @@ export default function VetUnionScreen() {
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" },
           headerRight: () => {
-            // Only super admin or users with union management permissions can see these buttons
-            const canManageUnion = isSuperAdmin || (isModerator && moderatorPermissions?.sections?.includes("union"));
-
             return canManageUnion ? (
               <View style={styles.headerActions}>
                 <TouchableOpacity
@@ -206,7 +205,7 @@ export default function VetUnionScreen() {
         <View style={styles.announcementsSection}>
           <View style={styles.announcementHeader}>
             <Text style={styles.sectionTitle}>إعلانات النقابة</Text>
-            {(isSuperAdmin || isModerator) && (
+            {canManageUnion && (
               <TouchableOpacity
                 onPress={() => {
                   router.push("/add-union-announcement?branchId=main");
@@ -229,7 +228,7 @@ export default function VetUnionScreen() {
               <TouchableOpacity
                 key={service.id}
                 style={[styles.serviceCard, { backgroundColor: service.color }]}
-                onPress={() => handleServicePress(service.id)}
+                // onPress={() => handleServicePress(service.id)}
                 activeOpacity={0.8}
               >
                 <View style={styles.serviceIcon}>{service.icon}</View>
@@ -269,7 +268,7 @@ export default function VetUnionScreen() {
           <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
 
           <View style={styles.contactCard}>
-            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("phone")}>
+            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("phone", unionInfo?.phone1)}>
               <Phone size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>الهاتف</Text>
@@ -277,7 +276,7 @@ export default function VetUnionScreen() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("phone")}>
+            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("phone", unionInfo?.phone2)}>
               <Phone size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>الهاتف الثاني</Text>
@@ -285,7 +284,7 @@ export default function VetUnionScreen() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("email")}>
+            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("email", unionInfo?.email)}>
               <Mail size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>البريد الإلكتروني</Text>
@@ -301,7 +300,10 @@ export default function VetUnionScreen() {
               </View>
             </View>
 
-            <TouchableOpacity style={styles.contactItem} onPress={() => handleContactPress("website")}>
+            <TouchableOpacity
+              style={styles.contactItem}
+              onPress={() => handleContactPress("website", unionInfo?.website)}
+            >
               <ExternalLink size={20} color={COLORS.primary} />
               <View style={styles.contactDetails}>
                 <Text style={styles.contactLabel}>الموقع الإلكتروني</Text>

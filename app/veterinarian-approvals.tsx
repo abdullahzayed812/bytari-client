@@ -7,7 +7,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { ArrowLeft, Calendar, Check, Eye, FileText, Mail, MapPin, Phone, X } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
-import { useToastContext } from "@/providers/ToastProvider";
 import ImageViewerModal from "../components/ImageViewerModal";
 
 interface VeterinarianApplication {
@@ -28,7 +27,6 @@ interface VeterinarianApplication {
 export default function VeterinarianApprovalsScreen() {
   const router = useRouter();
   const { user } = useApp();
-  const [rejectionReason, setRejectionReason] = useState("");
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<VeterinarianApplication | null>(null);
@@ -38,7 +36,9 @@ export default function VeterinarianApprovalsScreen() {
     isLoading,
     error,
     refetch,
-  } = useQuery(trpc.admin.veterinarianApprovals.getPendingApplications.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
+  } = useQuery(
+    trpc.admin.veterinarianApprovals.getPendingApplications.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
+  );
   const applications = useMemo(() => (applicationsData as any)?.applications, [applicationsData]);
 
   const approveMutation = useMutation(trpc.admin.veterinarianApprovals.approveApplication.mutationOptions());
@@ -51,19 +51,16 @@ export default function VeterinarianApprovalsScreen() {
         text: "موافقة",
         style: "default",
         onPress: () => {
-          approveMutation.mutate(
-            { applicationId: applicationId, adminId: user?.id ? Number(user.id) : 0 } as any,
-            {
-              onSuccess: () => {
-                Alert.alert("تم بنجاح", "تم الموافقة على الطلب وإرسال إشعار للمستخدم.");
-                refetch();
-                setShowDetails(false);
-              },
-              onError: (error: Error) => {
-                Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
-              },
-            }
-          );
+          approveMutation.mutate({ applicationId: applicationId, adminId: user?.id ? Number(user.id) : 0 } as any, {
+            onSuccess: () => {
+              Alert.alert("تم بنجاح", "تم الموافقة على الطلب وإرسال إشعار للمستخدم.");
+              refetch();
+              setShowDetails(false);
+            },
+            onError: (error) => {
+              Alert.alert("خطأ", error.message || "فشل في الموافقة على الطلب");
+            },
+          });
         },
       },
     ]);
@@ -87,7 +84,7 @@ export default function VeterinarianApprovalsScreen() {
                   refetch();
                   setShowDetails(false);
                 },
-                onError: (error: Error) => {
+                onError: (error) => {
                   Alert.alert("خطأ", error.message || "فشل في رفض الطلب");
                 },
               }
@@ -388,11 +385,7 @@ export default function VeterinarianApprovalsScreen() {
           ))}
         </View>
       </ScrollView>
-      <ImageViewerModal
-        visible={showImageModal}
-        imageUrl={selectedImageUrl}
-        onClose={() => setShowImageModal(false)}
-      />
+      <ImageViewerModal visible={showImageModal} imageUrl={selectedImageUrl} onClose={() => setShowImageModal(false)} />
     </SafeAreaView>
   );
 }
