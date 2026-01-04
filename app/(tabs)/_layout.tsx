@@ -108,7 +108,7 @@ const AnimatedTabIcon = ({
 
 export default function TabLayout() {
   const { t, isRTL } = useI18n();
-  const { isAuthenticated, isLoading, userMode, hasAdminAccess, isSuperAdmin } = useApp();
+  const { isAuthenticated, isLoading, userMode, hasAdminAccess } = useApp();
 
   const isDev = process.env.NODE_ENV === "development";
 

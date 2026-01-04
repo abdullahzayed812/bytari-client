@@ -52,7 +52,8 @@ const { width } = Dimensions.get("window");
 
 export default function ModeratorQuickActionsScreen() {
   const router = useRouter();
-  const { user, isSuperAdmin } = useApp();
+  const { user, isSuperAdmin, moderatorPermissions } = useApp();
+  console.log(moderatorPermissions);
 
   // Fetch data using tRPC
   const { data: rawSystemStats, isLoading: statsLoading } = useQuery(
@@ -75,6 +76,8 @@ export default function ModeratorQuickActionsScreen() {
     return userPermissions?.permissions?.some((p: any) => p.permissionName === permission) ?? false;
   };
 
+  console.log(userPermissions);
+
   const handleBack = () => {
     router.back();
   };
@@ -88,10 +91,7 @@ export default function ModeratorQuickActionsScreen() {
   );
 
   const ActionCard = ({ icon, label, onPress, badge, color }: any) => (
-    <TouchableOpacity
-      style={[styles.actionCard, { borderTopColor: color || COLORS.primary }]}
-      onPress={onPress}
-    >
+    <TouchableOpacity style={[styles.actionCard, { borderTopColor: color || COLORS.primary }]} onPress={onPress}>
       <View style={styles.actionCardContent}>
         <View style={[styles.iconContainer, { backgroundColor: (color || COLORS.primary) + "15" }]}>
           {React.cloneElement(icon as React.ReactElement, { color: color || COLORS.primary })}

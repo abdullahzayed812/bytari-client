@@ -62,25 +62,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Mock data for now - will be replaced with real backend data
   const pointsHistory = user?.points
     ? [
-      {
-        id: 1,
-        action: "تسجيل دخول يومي",
-        points: 10,
-        date: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        action: "إضافة حيوان أليف",
-        points: 50,
-        date: new Date().toISOString(),
-      },
-      {
-        id: 3,
-        action: "مشاركة التطبيق",
-        points: 25,
-        date: new Date().toISOString(),
-      },
-    ]
+        {
+          id: 1,
+          action: "تسجيل دخول يومي",
+          points: 10,
+          date: new Date().toISOString(),
+        },
+        {
+          id: 2,
+          action: "إضافة حيوان أليف",
+          points: 50,
+          date: new Date().toISOString(),
+        },
+        {
+          id: 3,
+          action: "مشاركة التطبيق",
+          points: 25,
+          date: new Date().toISOString(),
+        },
+      ]
     : [];
 
   useEffect(() => {

@@ -246,8 +246,8 @@ export default function AuthScreen() {
                   setSelectedLocationCountry("");
                   setSelectedProvince("");
                   setSelectedGender("");
-                  setIdFrontImageUrl(null);
-                  setIdBackImageUrl(null);
+                  setIdFrontImageUrl("");
+                  setIdBackImageUrl("");
                   setIdFrontImageUrl("");
                   setIdBackImageUrl("");
                   setErrors({});
@@ -768,9 +768,6 @@ export default function AuthScreen() {
                     imageUri={idFrontImageUrl}
                     onUploadComplete={setIdFrontImageUrl}
                     label={veterinarianType === "student" ? t("auth.studentIdFront") : t("auth.doctorIdFront")}
-                    aspect={[4, 3]}
-                    containerStyle={styles.documentUploader}
-                    imageStyle={styles.documentPreview}
                   />
                   {errors.idFront && <Text style={styles.errorText}>{errors.idFront}</Text>}
                 </View>
@@ -780,9 +777,6 @@ export default function AuthScreen() {
                     imageUri={idBackImageUrl}
                     onUploadComplete={setIdBackImageUrl}
                     label={veterinarianType === "student" ? t("auth.studentIdBack") : t("auth.doctorIdBack")}
-                    aspect={[4, 3]}
-                    containerStyle={styles.documentUploader}
-                    imageStyle={styles.documentPreview}
                   />
                   {errors.idBack && <Text style={styles.errorText}>{errors.idBack}</Text>}
                 </View>

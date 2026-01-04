@@ -24,7 +24,7 @@ interface Announcement {
 }
 
 export default function AddUnionAnnouncementScreen() {
-  const { isSuperAdmin, hasAdminAccess, isModerator, moderatorPermissions, user } = useApp();
+  const { isSuperAdmin, isModerator, supervisedBranchIds, user } = useApp();
   const router = useRouter();
   const { branchId } = useLocalSearchParams();
 
@@ -46,12 +46,10 @@ export default function AddUnionAnnouncementScreen() {
 
   const createAnnouncementMutation = useMutation(trpc.union.announcement.create.mutationOptions());
 
+  console.log(user);
+
   // Check if user has permission to add announcements
-  if (
-    !isSuperAdmin &&
-    !hasAdminAccess &&
-    !(isModerator && moderatorPermissions?.sections?.includes("union-branches"))
-  ) {
+  if (!isSuperAdmin && !isModerator && !supervisedBranchIds.length) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: "غير مصرح" }} />

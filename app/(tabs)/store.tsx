@@ -462,6 +462,15 @@ export default function StoreScreen() {
                 <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
                   <Settings size={20} color={COLORS.white} />
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.adminButton}
+                  onPress={() => {
+                    const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
+                    router.push(`/store-orders?storeType=${storeType}`);
+                  }}
+                >
+                  <ClipboardList size={20} color={COLORS.white} />
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.adminButton} onPress={handlePetStoreSettings}>
                   <Cog size={20} color={COLORS.white} />
                 </TouchableOpacity>
