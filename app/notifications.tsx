@@ -232,6 +232,26 @@ export default function NotificationsScreen() {
     }
   };
 
+  const handleNotificationPress = (notification: any) => {
+    if (notification.type === 'announcement' && notification.data) {
+      const data = JSON.parse(notification.data);
+      if (data.branchId) {
+        router.push({
+          pathname: '/union-branch-details',
+          params: { id: data.branchId },
+        });
+      } else if (data.mainUnionId) {
+        router.push('/vet-unions');
+      } else if (data.announcementId) {
+        router.push({
+          pathname: '/announcement-details',
+          params: { id: data.announcementId },
+        });
+      }
+    }
+    // Add other notification type handling here
+  };
+
   const toggleNotification = (id: string) => {
     setNotificationSettings((prev) =>
       prev.map((setting) => (setting.id === id ? { ...setting, enabled: !setting.enabled } : setting))

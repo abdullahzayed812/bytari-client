@@ -331,7 +331,7 @@ function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
 
   return (
     <View>
-      {announcements.map((announcement) => (
+      {announcements?.reverse()?.map((announcement) => (
         <View key={announcement.id} style={styles.announcementBox}>
           <View style={styles.announcementIcon}>
             <Megaphone size={24} color={COLORS.primary} />

@@ -18,6 +18,7 @@ import { trpc } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import UserReplyForm from "@/components/UserReplyForm";
 import { useApp } from "@/providers/AppProvider";
+import ImageAttachmentViewer from "@/components/ImageAttachmentViewer";
 
 type InquiryStatusType = "pending" | "answered" | "closed";
 
@@ -178,19 +179,7 @@ export default function InquiryDetailsScreen() {
               <Text style={styles.sectionTitle}>المحتوى:</Text>
               <Text style={styles.descriptionText}>{inquiry.content}</Text>
 
-              {inquiry.attachments && (
-                <View style={styles.attachmentsContainer}>
-                  <Text style={styles.sectionTitle}>المرفقات:</Text>
-                  <View style={styles.attachmentsBadge}>
-                    <FileText size={16} color={COLORS.primary} />
-                    <Text style={styles.attachmentsText}>
-                      {typeof inquiry.attachments === "object"
-                        ? JSON.stringify(inquiry.attachments)
-                        : inquiry.attachments}
-                    </Text>
-                  </View>
-                </View>
-              )}
+              <ImageAttachmentViewer attachments={inquiry.attachments} />
             </View>
           </View>
 
@@ -251,19 +240,8 @@ export default function InquiryDetailsScreen() {
                       </View>
                     </View>
                   </View>
-
-                  <Text style={styles.responseContent}>{response.content}</Text>
-
-                  {response.attachments && (
-                    <View style={styles.responseAttachments}>
-                      <FileText size={16} color={COLORS.darkGray} />
-                      <Text style={styles.attachmentsText}>
-                        {typeof response.attachments === "object"
-                          ? JSON.stringify(response.attachments)
-                          : response.attachments}
-                      </Text>
-                    </View>
-                  )}
+                  <Text style={styles.responseContent}>{response.content}</Text>/
+                  {/* <ImageAttachmentViewer attachments={response.attachments} /> */}
                 </View>
               ))}
             </View>
@@ -484,22 +462,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 16,
   },
-  attachmentsContainer: {
-    marginTop: 8,
-  },
-  attachmentsBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 8,
-  },
-  attachmentsText: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-    flex: 1,
-  },
+
   contactCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -603,15 +566,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 23,
   },
-  responseAttachments: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 6,
-  },
+
   emptyResponsesCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,

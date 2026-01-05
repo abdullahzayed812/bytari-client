@@ -16,6 +16,7 @@ import { trpc } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import UserReplyForm from "@/components/UserReplyForm";
 import { useApp } from "@/providers/AppProvider";
+import ImageAttachmentViewer from "@/components/ImageAttachmentViewer";
 
 type StatusType = "pending" | "answered" | "closed";
 
@@ -204,18 +205,7 @@ export default function ConsultationDetailsScreen() {
                 </>
               )}
 
-              {consultation.attachments && (
-                <View style={styles.attachmentsContainer}>
-                  <Text style={styles.sectionTitle}>المرفقات:</Text>
-                  <View style={styles.attachmentsBadge}>
-                    <Text style={styles.attachmentsText}>
-                      {typeof consultation.attachments === "object"
-                        ? JSON.stringify(consultation.attachments)
-                        : consultation.attachments}
-                    </Text>
-                  </View>
-                </View>
-              )}
+              <ImageAttachmentViewer attachments={consultation.attachments} />
             </View>
           </View>
 
@@ -258,15 +248,7 @@ export default function ConsultationDetailsScreen() {
 
                   <Text style={styles.responseContent}>{response.content}</Text>
 
-                  {response.attachments && (
-                    <View style={styles.responseAttachments}>
-                      <Text style={styles.attachmentsText}>
-                        {typeof response.attachments === "object"
-                          ? JSON.stringify(response.attachments)
-                          : response.attachments}
-                      </Text>
-                    </View>
-                  )}
+                  <ImageAttachmentViewer attachments={response.attachments} />
                 </View>
               ))}
             </View>
@@ -477,18 +459,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 16,
   },
-  attachmentsContainer: {
-    marginTop: 8,
-  },
-  attachmentsBadge: {
-    backgroundColor: "#F3F4F6",
-    padding: 12,
-    borderRadius: 8,
-  },
-  attachmentsText: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-  },
+
   responsesSection: {
     marginBottom: 16,
   },
@@ -569,12 +540,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 23,
   },
-  responseAttachments: {
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 6,
-  },
+
   emptyResponsesCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,

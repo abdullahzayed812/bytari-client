@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import * as ImagePicker from "expo-image-picker";
+import { ImageUploader } from "@/components/ImageUploader";
 
 const categories = ["عام", "تغذية", "سلوكيات", "أمراض جلدية", "تطعيمات", "أخرى"];
 
@@ -80,7 +81,7 @@ export default function NewInquiryScreen() {
                 setPrescriptionFile(null);
                 setFileType(null);
                 router.back();
-                queryClient.invalidateQueries(trpc.inquiries.listForUser.queryKey);
+                queryClient.invalidateQueries(trpc.inquiries.listForUser.queryKey as any);
               },
             },
           ]);
@@ -138,9 +139,15 @@ export default function NewInquiryScreen() {
 
             {/* Prescription File Upload */}
             <View style={styles.imageSection}>
-              <Text style={styles.imageLabel}>رفع صورة او فيديو (اختياري)</Text>
+              {/* <Text style={styles.imageLabel}>رفع صورة او فيديو (اختياري)</Text> */}
 
-              {prescriptionFile ? (
+              <ImageUploader
+                imageUri={prescriptionFile!}
+                onUploadComplete={setPrescriptionFile}
+                label="رفع صورة او فيديو (اختياري)"
+              />
+
+              {/* {prescriptionFile ? (
                 <View style={styles.imageContainer}>
                   <Image source={{ uri: prescriptionFile }} style={styles.prescriptionImage} />
                   <TouchableOpacity style={styles.removeImageButton} onPress={removeFile}>
@@ -152,7 +159,7 @@ export default function NewInquiryScreen() {
                   <Camera size={24} color={COLORS.primary} />
                   <Text style={styles.uploadButtonText}>اختر الملف</Text>
                 </TouchableOpacity>
-              )}
+              )} */}
             </View>
 
             <TouchableOpacity

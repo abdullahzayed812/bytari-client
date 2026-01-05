@@ -71,6 +71,16 @@ export default function NotificationsScreen() {
         } else if (notification?.type === "union_supervisor_assignment") {
           const data = notification?.data;
           router.push({ pathname: "/union-branch-details", params: { id: data.branchId } });
+        } else if (notification?.type === "announcement") {
+          const data = JSON.parse(notification.data);
+          if (data.branchId) {
+            router.push({
+              pathname: "/union-branch-details",
+              params: { id: data.branchId },
+            });
+          } else if (data.mainUnionId) {
+            router.push("/vet-unions");
+          }
         } else if (notification?.type === "system") {
           router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
         }

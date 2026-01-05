@@ -1,4 +1,14 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ActivityIndicator,
+  TextInput,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
@@ -60,7 +70,7 @@ export default function UnionBranchDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
 
   const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
 
@@ -68,9 +78,6 @@ export default function UnionBranchDetailsScreen() {
     ...trpc.union.announcement.list.queryOptions({ branchId: Number(branch?.id) }),
     enabled: !!branch?.id,
   });
-
-  const { data: usersData } = useQuery(trpc.admin.users.listAll.queryOptions({ adminId: Number(user?.id) }));
-  const users = usersData?.users;
 
   const [isFollowing, setIsFollowing] = useState<boolean>(branch?.isFollowing || false);
 
@@ -85,9 +92,9 @@ export default function UnionBranchDetailsScreen() {
   const assignSupervisorMutation = useMutation(trpc.union.branch.assignSupervisor.mutationOptions());
 
   const handleAssignSupervisor = () => {
-    if (branch && selectedUserId) {
+    if (branch && email) {
       assignSupervisorMutation.mutate(
-        { branchId: branch.id, userId: Number(selectedUserId) },
+        { branchId: branch.id, email: email },
         {
           onSuccess: () => {
             Alert.alert("عملية ناجحة", "تم اضافة المستخدم مشرف لفرع النقابة");
@@ -318,12 +325,14 @@ export default function UnionBranchDetailsScreen() {
         {(isSuperAdmin || moderatorPermissions?.unionManagement) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>تعيين مشرف للنقابة</Text>
-            <Picker selectedValue={selectedUserId} onValueChange={(itemValue) => setSelectedUserId(itemValue)}>
-              <Picker.Item label="Select a User" value={null} />
-              {users?.map((user) => (
-                <Picker.Item key={user.id} label={user.name} value={user.id} />
-              ))}
-            </Picker>
+            <TextInput
+              style={styles.input}
+              placeholder="أدخل البريد الإلكتروني للمستخدم"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
             <TouchableOpacity style={styles.button} onPress={handleAssignSupervisor}>
               <Text style={styles.buttonText}>Assign Supervisor</Text>
             </TouchableOpacity>
@@ -831,5 +840,15 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    backgroundColor: COLORS.white,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    fontSize: 16,
+    textAlign: "right",
   },
 });

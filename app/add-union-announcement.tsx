@@ -5,7 +5,7 @@ import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
 import { Save, X, Camera, Link, Calendar, MessageSquare } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
 
 interface Announcement {
@@ -26,6 +26,7 @@ interface Announcement {
 export default function AddUnionAnnouncementScreen() {
   const { isSuperAdmin, isModerator, supervisedBranchIds, user } = useApp();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { branchId } = useLocalSearchParams();
 
   // Form state - must be declared before any conditional returns
@@ -105,9 +106,11 @@ export default function AddUnionAnnouncementScreen() {
         { ...announcementData, mainUnionId: 1 },
         {
           onSuccess: (data) => {
+            queryClient.invalidateQueries(trpc.union.announcement.list.queryKey as any);
             Alert.alert(
               "تم الحفظ",
               branchId === "main" ? "تم إضافة الإعلان بنجاح وإرسال إشعارات لمتابعي النقابة" : "تم إضافة الإعلان بنجاح",
+
               [
                 {
                   text: "موافق",
@@ -126,6 +129,7 @@ export default function AddUnionAnnouncementScreen() {
         { ...announcementData, branchId: parseInt(branchId as string) },
         {
           onSuccess: (data) => {
+            queryClient.invalidateQueries(trpc.union.announcement.list.queryKey as any);
             Alert.alert(
               "تم الحفظ",
               branchId === "main" ? "تم إضافة الإعلان بنجاح وإرسال إشعارات لمتابعي النقابة" : "تم إضافة الإعلان بنجاح",

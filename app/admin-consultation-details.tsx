@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import AdminReplyForm from "@/components/AdminReplyForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
+import ImageAttachmentViewer from "@/components/ImageAttachmentViewer";
 
 type StatusFilter = "pending" | "assigned" | "answered" | "closed";
 
@@ -186,12 +187,7 @@ export default function AdminConsultationDetailsScreen() {
               </View>
             )}
 
-            {consultation.attachments && (
-              <View style={styles.attachmentsContainer}>
-                <Text style={styles.attachmentsTitle}>المرفقات:</Text>
-                <Text style={styles.attachmentsText}>{consultation.attachments}</Text>
-              </View>
-            )}
+            <ImageAttachmentViewer attachments={consultation.attachments} />
           </View>
 
           {responses && responses.length > 0 && (
@@ -238,11 +234,7 @@ export default function AdminConsultationDetailsScreen() {
 
                   <Text style={styles.responseContent}>{response.content}</Text>
 
-                  {response.attachments && (
-                    <View style={styles.responseAttachments}>
-                      <Text style={styles.attachmentsText}>{response.attachments}</Text>
-                    </View>
-                  )}
+                  <ImageAttachmentViewer attachments={response.attachments} />
 
                   {response.keepConversationOpen && (
                     <View style={styles.conversationOpenBadge}>
@@ -451,22 +443,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     flex: 1,
   },
-  attachmentsContainer: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-  },
-  attachmentsTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.black,
-    marginBottom: 6,
-  },
-  attachmentsText: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-  },
+
   responsesSection: {
     marginBottom: 16,
   },
@@ -561,12 +538,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 22,
   },
-  responseAttachments: {
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 6,
-  },
+
   conversationOpenBadge: {
     marginTop: 12,
     padding: 8,

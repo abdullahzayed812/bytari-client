@@ -52,8 +52,6 @@ export default function UserProfileScreen() {
     )
   );
 
-  console.log(params?.userId);
-
   const { data, isLoading, error } = isAdminView ? userProfileQuery : ownProfileQuery;
   const userData = useMemo(() => data as any, [data]);
 
