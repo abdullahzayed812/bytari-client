@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import {
   ArrowLeft,
@@ -315,7 +316,7 @@ export default function UnionManagementDashboardScreen() {
         </View>
 
         <View style={styles.announcementsList}>
-          {announcements?.map((announcement) => (
+          {announcements?.reverse()?.map((announcement) => (
             <View key={announcement.id} style={styles.announcementCard}>
               <View style={styles.announcementHeader}>
                 <View style={[styles.typeBadge, { backgroundColor: "#10B981" }]}>
@@ -324,6 +325,12 @@ export default function UnionManagementDashboardScreen() {
                 <Text style={styles.announcementDate}>{new Date(announcement.createdAt).toLocaleDateString()}</Text>
               </View>
 
+              <View style={{ flex: 1, height: 150, borderRadius: 20 }}>
+                <Image
+                  source={{ uri: announcement.image }}
+                  style={{ width: "100%", height: 150, resizeMode: "cover", borderRadius: 10 }}
+                />
+              </View>
               <Text style={styles.announcementTitle}>{announcement.title}</Text>
               <Text style={styles.announcementUnion}>
                 {announcement.branchId ? allUnions?.find((u) => u.id === announcement.branchId)?.name : "المقر الرئيسي"}

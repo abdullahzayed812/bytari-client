@@ -203,7 +203,7 @@ export default function PetDetailsScreen() {
     enabled: isClinicAccess,
   });
 
-  console.log("--------------------------", clinicAccess);
+  // console.log("--------------------------", checkAccess);
 
   // Check access when component loads
   useEffect(() => {
@@ -213,9 +213,11 @@ export default function PetDetailsScreen() {
   }, [checkAccess.data]);
 
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
-  const updatePetMutation = useMutation(trpc.admin.updatePetProfile.mutationOptions({}));
-  const deletePetMutation = useMutation(trpc.admin.deletePet.mutationOptions({}));
+  const updatePetMutation = useMutation(trpc.admin.pets.updateProfile.mutationOptions({}));
+  const deletePetMutation = useMutation(trpc.admin.pets.delete.mutationOptions({}));
   const updatePetOwnerMutation = useMutation(trpc.pets.update.mutationOptions({}));
+  const deletePetOwnerMutation = useMutation(trpc.pets.delete.mutationOptions({}));
+  // const deletePetOwnerMutation = useMutation(trpc.pets.delete.mutationOptions({}));
 
   // Update mutations
   const requestMedicalRecordMutation = useMutation(trpc.pets.requestAddMedicalRecord.mutationOptions({}));
@@ -726,7 +728,7 @@ export default function PetDetailsScreen() {
               type: "success",
             });
             setShowEditModal(false);
-            trpc.admin.getPetProfile.invalidate();
+            petQuery.refetch();
           },
           onError: (error) => {
             showToast({
@@ -757,7 +759,7 @@ export default function PetDetailsScreen() {
               type: "success",
             });
             setShowEditModal(false);
-            trpc.pets.getById.invalidate();
+            petQuery.refetch();
           },
           onError: (error) => {
             showToast({
@@ -768,6 +770,40 @@ export default function PetDetailsScreen() {
         }
       );
     }
+  };
+
+  const handleDeletePetForOwner = () => {
+    if (!pet || !user || !isOwner) return;
+
+    Alert.alert("حذف الحيوان", "هل أنت متأكد من حذف هذا الحيوان؟ هذا الإجراء لا يمكن التراجع عنه.", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deletePetOwnerMutation.mutate(
+            {
+              id: pet.id,
+            },
+            {
+              onSuccess: () => {
+                showToast({
+                  message: "تم حذف الحيوان بنجاح",
+                  type: "success",
+                });
+                router.back();
+              },
+              onError: (error) => {
+                showToast({
+                  message: error.message || "حدث خطأ أثناء حذف الحيوان",
+                  type: "error",
+                });
+              },
+            }
+          );
+        },
+      },
+    ]);
   };
 
   const handleDeletePet = () => {
@@ -1015,9 +1051,14 @@ export default function PetDetailsScreen() {
           <View style={styles.petNameRow}>
             <Text style={styles.petName}>{pet.name}</Text>
             {isOwner && (
-              <TouchableOpacity onPress={handleEditPet} style={styles.editIcon}>
-                <Edit3 size={20} color={COLORS.primary} />
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row" }}>
+                <TouchableOpacity onPress={handleEditPet} style={styles.editIcon}>
+                  <Edit3 size={20} color={COLORS.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleDeletePetForOwner} style={styles.editIcon}>
+                  <Trash2 size={20} color={COLORS.error} />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
           <Text style={styles.petType}>
@@ -1487,7 +1528,7 @@ export default function PetDetailsScreen() {
                 <Text style={styles.emptyStateText}>لا توجد طلبات صلاحية</Text>
                 <Button
                   title="طلب متابعة جديد"
-                  onPress={() => setShowAccessRequestModal(true)}
+                  onPress={handleFollowUp}
                   type="primary"
                   size="medium"
                   style={styles.requestAccessButton}

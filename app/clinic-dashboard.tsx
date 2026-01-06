@@ -30,7 +30,7 @@ export default function ClinicDashboard() {
   const [isSearching, setIsSearching] = useState(false);
 
   const { data: clinicData, isLoading: isClinicDataLoading } = useQuery({
-    ...trpc.clinics.getDashboardData.queryOptions({ clinicId: Number(clinicId), userId: user?.id }),
+    ...trpc.clinics.getDashboardData.queryOptions({ clinicId: Number(clinicId), userId: Number(user?.id) }),
     enabled: !!clinicId,
   });
   const clinic = useMemo(() => (clinicData as any)?.clinic, [clinicData]);
@@ -234,7 +234,7 @@ export default function ClinicDashboard() {
           </View>
 
           {/* Search Section */}
-          {access.isOwner ? (
+          {access?.hasAccess ? (
             <View style={styles.searchSection}>
               <Text style={styles.sectionTitle}>البحث عن حيوان</Text>
               <View style={styles.searchContainer}>

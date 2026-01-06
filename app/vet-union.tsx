@@ -336,8 +336,17 @@ function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
           <View style={styles.announcementIcon}>
             <Megaphone size={24} color={COLORS.primary} />
           </View>
+
           <View style={styles.announcementContent}>
             <Text style={styles.announcementTitle}>{announcement.title}</Text>
+            {announcement?.image ? (
+              <View style={{ height: 150, borderRadius: 20 }}>
+                <Image
+                  source={{ uri: announcement.image || "" }}
+                  style={{ width: "100%", height: 150, resizeMode: "cover", borderRadius: 10 }}
+                />
+              </View>
+            ) : null}
             <Text style={styles.announcementText}>{announcement.content}</Text>
             <Text style={styles.announcementDate}>
               تاريخ النشر: {new Date(announcement?.createdAt).toLocaleDateString()}
