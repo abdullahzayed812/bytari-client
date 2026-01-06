@@ -27,6 +27,7 @@ export default function NotificationsScreen() {
     switch (type) {
       case "appointment":
       case "order":
+      case "new_product":
         return <Building2 size={20} color={COLORS.primary} />;
       case "inquiry":
         return <AlertCircle size={20} color={COLORS.warning} />;
@@ -83,6 +84,8 @@ export default function NotificationsScreen() {
           }
         } else if (notification?.type === "system") {
           router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
+        } else if (notification?.type === "new_product") {
+          router.push({ pathname: "/store-details", params: { id: notification?.data?.storeId } });
         }
       },
       onError: () => {},

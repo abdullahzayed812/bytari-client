@@ -31,8 +31,10 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { VetStoreProduct } from "../mocks/data"; // Assuming this is still valid for products
 import RatingComponent from "../components/RatingComponent";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { useApp } from "@/providers/AppProvider";
+import { useToastContext } from "@/providers/ToastProvider";
 
 // Define TypeScript interface for store data based on schema
 interface Store {
@@ -54,7 +56,10 @@ interface Store {
 
 export default function StoreDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const { user } = useApp();
+  const queryClient = useQueryClient();
+  const { showToast } = useToastContext();
+
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
   const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
 
@@ -64,8 +69,22 @@ export default function StoreDetailsScreen() {
 
   // Fetch store products
   const { data: rawStoreProducts, isLoading: isStoreProductsLoading } = useQuery(
-    trpc.stores.products.list.queryOptions({ storeId: Number(id) })
+    trpc.stores.products.list.queryOptions({
+      storeId: Number(id),
+    })
   );
+
+  const { data: isFollowingData } = useQuery(
+    trpc.stores.isFollowing.queryOptions({ storeId: Number(id), userId: Number(user?.id) }, { enabled: !!user })
+  );
+  const isFollowing = isFollowingData?.isFollowing;
+
+  const { data: followerCountData } = useQuery(trpc.stores.getFollowerCount.queryOptions({ storeId: Number(id) }));
+  const followerCount = followerCountData?.count;
+
+  const followMutation = useMutation(trpc.stores.follow.mutationOptions());
+
+  const unfollowMutation = useMutation(trpc.stores.unfollow.mutationOptions());
 
   const storeProducts = useMemo(
     () => (rawStoreProducts as any)?.products as VetStoreProduct[] | undefined,
@@ -108,6 +127,13 @@ export default function StoreDetailsScreen() {
   };
 
   const handleFollowStore = () => {
+    if (!user) {
+      showToast({
+        type: "error",
+        message: "الرجاء تسجيل الدخول لمتابعة المتجر",
+      });
+      return;
+    }
     if (!storeData) return;
     if (isFollowing) {
       Alert.alert("إلغاء المتابعة", "هل تريد إلغاء متابعة هذا المتجر؟ لن تصلك إشعارات عند إضافة منتجات جديدة.", [
@@ -116,15 +142,48 @@ export default function StoreDetailsScreen() {
           text: "نعم",
           style: "destructive",
           onPress: () => {
-            setIsFollowing(false);
-            console.log("Unfollowed store:", storeData.name);
+            unfollowMutation.mutate(
+              { storeId: Number(id) },
+              {
+                onSuccess: () => {
+                  showToast({
+                    type: "success",
+                    message: "تم إلغاء المتابعة بنجاح",
+                  });
+                  queryClient.invalidateQueries(trpc.stores.isFollowing.queryKey as any);
+                  queryClient.invalidateQueries(trpc.stores.getFollowerCount.queryKey as any);
+                },
+                onError: (error) => {
+                  showToast({
+                    type: "error",
+                    message: error.message,
+                  });
+                },
+              }
+            );
           },
         },
       ]);
     } else {
-      setIsFollowing(true);
-      console.log("Following store:", storeData.name);
-      Alert.alert("تم المتابعة بنجاح", `سيتم إرسال إشعارات لك عند إضافة منتجات جديدة في ${storeData.name}`);
+      followMutation.mutate(
+        { storeId: Number(id) },
+        {
+          onSuccess: () => {
+            showToast({
+              type: "success",
+              message: "تم المتابعة بنجاح",
+            });
+            queryClient.invalidateQueries(trpc.stores.isFollowing.getQueryKey({ storeId: Number(id) }));
+            queryClient.invalidateQueries(trpc.stores.getFollowerCount.getQueryKey({ storeId: Number(id) }));
+          },
+          onError: (error) => {
+            showToast({
+              type: "error",
+              message: error.message,
+            });
+          },
+        }
+      );
     }
   };
 
@@ -187,8 +246,6 @@ export default function StoreDetailsScreen() {
     </View>
   );
 
-
-
   return (
     <>
       <Stack.Screen
@@ -207,6 +264,7 @@ export default function StoreDetailsScreen() {
           <View style={styles.storeHeader}>
             <View style={styles.storeInfo}>
               <Text style={styles.storeName}>{storeData.name}</Text>
+              <Text style={styles.followerCount}>{followerCount} متابع</Text>
               <View style={styles.ratingContainer}>
                 <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
                 <Text style={styles.rating}>{storeData.rating.toFixed(1)}</Text>
@@ -394,6 +452,12 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginBottom: 8,
     textAlign: "right",
+  },
+  followerCount: {
+    fontSize: 16,
+    color: COLORS.darkGray,
+    textAlign: "right",
+    marginBottom: 8,
   },
   ratingContainer: {
     flexDirection: "row-reverse",

@@ -91,7 +91,7 @@ export default function AdminApprovalsScreen() {
     error: approvalsError,
   } = useQuery({
     ...trpc.admin.approvals.getPending.queryOptions({
-      adminId: user?.id,
+      adminId: Number(user?.id),
       type:
         selectedType === "lost_pets" || selectedType === "breeding_pets" || selectedType === "pet_management"
           ? "all"
@@ -208,9 +208,9 @@ export default function AdminApprovalsScreen() {
 
           // Invalidate based on request type
           if (data.requestType === "clinic_activation" || data.requestType === "clinic_renewal") {
-            queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey);
+            queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey as any);
           } else if (data.requestType === "store_activation" || data.requestType === "store_renewal") {
-            queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
+            queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey as any);
           }
         },
         onError: (error) => {
