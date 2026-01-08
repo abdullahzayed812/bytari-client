@@ -36,12 +36,12 @@ export default function AuthScreen() {
   const { t, isRTL } = useI18n();
   const { login } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  const [usernameOrEmail, setUsernameOrEmail] = useState("ali@mail.com");
-  const [password, setPassword] = useState("123123");
-  const [confirmPassword, setConfirmPassword] = useState("123123");
-  const [name, setName] = useState("ali");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [name, setName] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
-  const [phoneNumber, setPhoneNumber] = useState("788888888888888");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [selectedLocationCountry, setSelectedLocationCountry] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");

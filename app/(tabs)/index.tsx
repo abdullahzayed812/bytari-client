@@ -58,6 +58,8 @@ export default function HomeScreen() {
   const autoSlideRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  const adSlideWidth = screenWidth - 32;
+
   const isVet = userMode === "veterinarian";
 
   const { data: countData } = useQuery({
@@ -191,7 +193,7 @@ export default function HomeScreen() {
         // Scroll to the next image immediately
         if (adScrollViewRef.current) {
           adScrollViewRef.current.scrollTo({
-            x: nextIndex * screenWidth,
+            x: nextIndex * adSlideWidth,
             animated: true,
           });
         }
@@ -216,7 +218,7 @@ export default function HomeScreen() {
 
   const handleAdScroll = (event: any) => {
     const { contentOffset } = event.nativeEvent;
-    const newIndex = Math.round(contentOffset.x / screenWidth);
+    const newIndex = Math.round(contentOffset.x / adSlideWidth);
     if (newIndex !== currentImageIndex && newIndex >= 0 && heroImages && newIndex < heroImages.length) {
       setCurrentImageIndex(newIndex);
     }
@@ -244,7 +246,7 @@ export default function HomeScreen() {
   const handleAdMomentumScrollEnd = (event: any) => {
     // Update index based on final scroll position
     const { contentOffset } = event.nativeEvent;
-    const newIndex = Math.round(contentOffset.x / screenWidth);
+    const newIndex = Math.round(contentOffset.x / adSlideWidth);
     if (heroImages && newIndex >= 0 && newIndex < heroImages.length) {
       setCurrentImageIndex(newIndex);
     }
@@ -351,12 +353,14 @@ export default function HomeScreen() {
     router.push("/report-lost-pet");
   };
 
+  console.log(isRTL);
+
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { flexDirection: "row" }]}>
+      <View style={[styles.header, { flexDirection: "row-reverse" }]}>
         {/* Left side - User info */}
-        <View style={[styles.userInfoContainer, { flexDirection: "row" }]}>
+        <View style={[styles.userInfoContainer, { flexDirection: "row-reverse" }]}>
           <TouchableOpacity style={styles.profileButton} onPress={() => router.push("/(tabs)/profile")}>
             <UserAvatar uri={user?.avatar} gender={user?.gender} size={36} />
           </TouchableOpacity>
@@ -368,7 +372,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Right side - Icons */}
-        <View style={[styles.rightIcons, { flexDirection: "row" }]}>
+        <View style={[styles.rightIcons, { flexDirection: "row-reverse" }]}>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => {
@@ -503,7 +507,7 @@ export default function HomeScreen() {
                         // Scroll to the selected image immediately
                         if (adScrollViewRef.current) {
                           adScrollViewRef.current.scrollTo({
-                            x: index * screenWidth,
+                            x: index * adSlideWidth,
                             animated: true,
                           });
                         }
@@ -563,7 +567,7 @@ export default function HomeScreen() {
                     onPress={() => router.push({ pathname: "/inquiry-details", params: { id: inquiry?.id } })}
                   >
                     <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                      <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
+                      <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}>
                         <View
                           style={[
                             styles.statusIndicator,
@@ -629,7 +633,7 @@ export default function HomeScreen() {
                   }
                 >
                   <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                    <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
+                    <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}>
                       <View
                         style={[
                           styles.statusIndicator,
@@ -719,9 +723,9 @@ export default function HomeScreen() {
             }}
           />
           <AutoScrollView
-            itemWidth={300}
-            autoScrollInterval={1000}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+            itemWidth={320}
+            autoScrollInterval={3000}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
           >
             {userMode === "veterinarian"
               ? vetStores?.map((store) => (
@@ -730,8 +734,7 @@ export default function HomeScreen() {
                     style={[
                       styles.clinicCardNew,
                       {
-                        marginRight: isRTL ? 0 : 16,
-                        marginLeft: isRTL ? 16 : 0,
+                        marginHorizontal: 8,
                       },
                     ]}
                     onPress={() =>
@@ -741,7 +744,7 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       {/* Store Info */}
                       <View
                         style={[
@@ -756,7 +759,7 @@ export default function HomeScreen() {
                         {/* Active Badge */}
                         {store.isActive && (
                           <View
-                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}
                           >
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
@@ -769,7 +772,7 @@ export default function HomeScreen() {
                         <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{store.name}</Text>
 
                         {/* Location */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -785,7 +788,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -801,7 +804,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -824,7 +827,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
@@ -864,7 +867,7 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       {/* Clinic Info */}
                       <View
                         style={[
@@ -879,7 +882,7 @@ export default function HomeScreen() {
                         {/* Premium Badge */}
                         {clinic.isPremium && (
                           <View
-                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}
                           >
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
@@ -892,7 +895,7 @@ export default function HomeScreen() {
                         <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{clinic.name}</Text>
 
                         {/* Location */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -908,7 +911,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -924,7 +927,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -947,7 +950,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
@@ -986,9 +989,9 @@ export default function HomeScreen() {
             }}
           />
           <AutoScrollView
-            itemWidth={280}
-            autoScrollInterval={6000}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+            itemWidth={264}
+            autoScrollInterval={3000}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
           >
             {userMode === "veterinarian" ? (
               articlesLoading ? (
@@ -1000,8 +1003,7 @@ export default function HomeScreen() {
                     style={[
                       styles.articleCard,
                       {
-                        marginRight: isRTL ? 0 : 16,
-                        marginLeft: isRTL ? 16 : 0,
+                        marginHorizontal: 8,
                       },
                     ]}
                     onPress={() => handleArticleCardPress(article?.id)}
@@ -1017,7 +1019,7 @@ export default function HomeScreen() {
                       >
                         {article.description}
                       </Text>
-                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                         <User size={14} color={COLORS.darkGray} />
                         <Text
                           style={[
@@ -1037,8 +1039,8 @@ export default function HomeScreen() {
                       >
                         {article.authorTitle}
                       </Text>
-                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Heart size={14} color="#EF4444" />
                           <Text
                             style={[
@@ -1052,7 +1054,7 @@ export default function HomeScreen() {
                             {article.likes}
                           </Text>
                         </View>
-                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MessageCircle size={14} color={COLORS.darkGray} />
                           <Text
                             style={[
@@ -1103,8 +1105,8 @@ export default function HomeScreen() {
             />
             <AutoScrollView
               itemWidth={316}
-              autoScrollInterval={1000}
-              contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+              autoScrollInterval={3000}
+              contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
             >
               {adoptionPetsLoading ? (
                 <ActivityIndicator />
@@ -1115,8 +1117,7 @@ export default function HomeScreen() {
                     style={[
                       styles.adoptionPetCard,
                       {
-                        marginRight: isRTL ? 0 : 16,
-                        marginLeft: isRTL ? 16 : 0,
+                        marginHorizontal: 8,
                       },
                     ]}
                     activeOpacity={pet.isClosedByOwner ? 1 : 0.7}
@@ -1129,7 +1130,7 @@ export default function HomeScreen() {
                       }
                     }}
                   >
-                    <View style={[styles.adoptionPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.adoptionPetCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       {/* Pet Image */}
                       <Image source={{ uri: pet.image }} style={styles.adoptionPetImage} />
 
@@ -1145,7 +1146,7 @@ export default function HomeScreen() {
                         ]}
                       >
                         {/* Status Badge */}
-                        <View style={[styles.adoptionBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
+                        <View style={[styles.adoptionBadgeContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}>
                           <View
                             style={[
                               styles.adoptionBadge,
@@ -1169,11 +1170,11 @@ export default function HomeScreen() {
                           {pet.name}
                         </Text>
                         <Text style={[styles.adoptionPetType, { textAlign: isRTL ? "right" : "left" }]}>
-                          {t(`pets.types.${pet.type}`)}
+                          {t(`${pet.type}`)}
                         </Text>
 
                         {/* Age */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Calendar size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1189,7 +1190,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Location */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MapPin size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1205,7 +1206,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Phone size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1232,7 +1233,7 @@ export default function HomeScreen() {
 
                     {/* Action Buttons */}
                     {pet.isAvailable && !pet.isClosedByOwner && (
-                      <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                         <TouchableOpacity
                           style={styles.adoptionActionButton}
                           onPress={() => {
@@ -1275,9 +1276,9 @@ export default function HomeScreen() {
             onEdit={() => router.push("/home-books-management")}
           />
           <AutoScrollView
-            itemWidth={280}
-            autoScrollInterval={8000}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+            itemWidth={264}
+            autoScrollInterval={3000}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
           >
             {userMode === "veterinarian" ? (
               vetBooksLoading ? (
@@ -1289,8 +1290,7 @@ export default function HomeScreen() {
                     style={[
                       styles.bookCard,
                       {
-                        marginRight: isRTL ? 0 : 16,
-                        marginLeft: isRTL ? 16 : 0,
+                        marginHorizontal: 8,
                       },
                     ]}
                     onPress={() => handleBookCardPress(book?.id)}
@@ -1306,8 +1306,8 @@ export default function HomeScreen() {
                       <Text style={[styles.bookDescription, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                         {book.description}
                       </Text>
-                      <View style={[styles.bookStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <View style={[styles.bookStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.bookStats, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.bookStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Download size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1364,7 +1364,7 @@ export default function HomeScreen() {
                     }
                   }}
                 >
-                  <View style={[styles.lostPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                  <View style={[styles.lostPetCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                     {/* Pet Image */}
                     <Image source={{ uri: pet.images[0] }} style={styles.lostPetImage} />
 
@@ -1380,7 +1380,7 @@ export default function HomeScreen() {
                       ]}
                     >
                       {/* Status Badge */}
-                      <View style={[styles.statusBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
+                      <View style={[styles.statusBadgeContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}>
                         <View style={[styles.statusBadge, { backgroundColor: getPetStatus(pet.status).color }]}>
                           <Text style={styles.statusBadgeText}>{getPetStatus(pet.status).text}</Text>
                         </View>
@@ -1388,11 +1388,11 @@ export default function HomeScreen() {
                       {/* Pet Name and Type */}
                       <Text style={[styles.lostPetName, { textAlign: isRTL ? "right" : "left" }]}>{pet.name}</Text>
                       <Text style={[styles.lostPetType, { textAlign: isRTL ? "right" : "left" }]}>
-                        {t(`pets.types.${pet.type}`)}
+                        {t(`${pet.type}`)}
                       </Text>
 
                       {/* Location */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                         <MapPin size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1408,7 +1408,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Date */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                         <Calendar size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1424,7 +1424,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Phone */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                         <Phone size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1448,7 +1448,7 @@ export default function HomeScreen() {
 
                   {/* Action Buttons */}
                   {pet.status === "lost" && (
-                    <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
@@ -1580,7 +1580,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   userTextContainer: {
-    alignItems: "flex-start",
+    alignItems: "flex-end",
   },
 
   greetingText: {
@@ -1761,14 +1761,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     width: 320,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     elevation: 3,
   },
   clinicCardContent: {
-    alignItems: "flex-start",
+    alignItems: "flex-end",
     marginBottom: 16,
   },
   clinicImage: {
@@ -1777,7 +1773,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   clinicDetails: {
-    justifyContent: "flex-start",
+    justifyContent: "flex-end",
   },
   premiumBadgeContainer: {
     marginBottom: 8,
@@ -1856,7 +1852,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   consultationHistoryContent: {
-    alignItems: "flex-start",
+    alignItems: "flex-end",
     gap: 14,
   },
   consultationHistoryDetails: {
@@ -1939,7 +1935,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   lostPetCardContent: {
-    alignItems: "flex-start",
+    alignItems: "flex-end",
     marginBottom: 12,
   },
   lostPetImage: {
@@ -1948,7 +1944,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   lostPetDetails: {
-    justifyContent: "flex-start",
+    justifyContent: "flex-end",
   },
   statusBadgeContainer: {
     marginBottom: 8,
@@ -2164,7 +2160,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   adoptionPetCardContent: {
-    alignItems: "flex-start",
+    alignItems: "flex-end",
     marginBottom: 12,
   },
   adoptionPetImage: {
@@ -2173,7 +2169,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   adoptionPetDetails: {
-    justifyContent: "flex-start",
+    justifyContent: "flex-end",
   },
   adoptionBadgeContainer: {
     marginBottom: 8,

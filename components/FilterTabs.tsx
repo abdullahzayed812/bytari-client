@@ -1,6 +1,7 @@
 import React from "react";
 import { ScrollView, TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from "react-native";
 import { LucideIcon } from "lucide-react-native";
+import { useI18n } from "@/providers/I18nProvider";
 
 export interface FilterTab<T extends string = string> {
   id: T;
@@ -35,6 +36,7 @@ export function FilterTabs<T extends string = string>({
   textStyle,
   activeTextStyle,
 }: FilterTabsProps<T>) {
+  const { isRTL } = useI18n();
   return (
     <ScrollView
       horizontal

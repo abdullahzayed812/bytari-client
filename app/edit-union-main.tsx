@@ -1,14 +1,15 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert, Image } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { useRouter } from "expo-router";
 import { Stack } from "expo-router";
-import { Save, X, MapPin, Phone, Mail, ExternalLink } from "lucide-react-native";
+import { Save, X, MapPin, Phone, Mail, ExternalLink, ArrowLeft, ArrowRight } from "lucide-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { ImageUploader } from "@/components/ImageUploader";
+import { isRTL } from "@/lib/rtl-config";
 
 interface UnionInfo {
   name: string;
@@ -34,7 +35,8 @@ export default function EditUnionMainScreen() {
   const { isSuperAdmin } = useApp();
   const router = useRouter();
 
-  const { data: initialData, isLoading: isFetching } = useQuery(trpc.union.main.get.queryOptions());
+  const { data: unionData, isLoading: isFetching } = useQuery(trpc.union.main.get.queryOptions());
+  const initialData = useMemo(() => unionData?.union, [unionData]);
   const mutation = useMutation(trpc.union.main.update.mutationOptions());
 
   const [unionInfo, setUnionInfo] = useState<UnionInfo | null>(null);
@@ -45,7 +47,7 @@ export default function EditUnionMainScreen() {
         ...initialData,
         establishedYear: initialData.establishedYear?.toString() || "",
         memberCount: initialData.memberCount?.toString() || "",
-        services: initialData.services ? JSON.parse(initialData.services) : [],
+        // services: typeof initialData.services !== "string" ? JSON.parse(initialData.services) : [],
       });
     }
   }, [initialData]);
@@ -59,13 +61,28 @@ export default function EditUnionMainScreen() {
           options={{
             title: "تعديل معلومات النقابة",
             headerStyle: { backgroundColor: COLORS.primary },
-            headerTintColor: COLORS.white,
+            headerTintColor: COLORS.white, // This does not control icon color in headerLeft/Right
+            headerLeft: () => (
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={[styles.headerBackButton, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}
+              >
+                {isRTL ? <ArrowRight size={24} color={COLORS.white} /> : <ArrowLeft size={24} color={COLORS.white} />}
+              </TouchableOpacity>
+            ),
+            headerTitleStyle: { fontWeight: "bold", textAlign: isRTL ? "right" : "left" }, // Adjust title alignment
+            headerTitleAlign: isRTL ? "right" : "left",
           }}
         />
         <View style={styles.noPermissionContainer}>
-          <Text style={styles.noPermissionText}>ليس لديك صلاحية للوصول إلى هذه الصفحة</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>العودة</Text>
+          <Text style={[styles.noPermissionText, { textAlign: isRTL ? "right" : "left" }]}>
+            ليس لديك صلاحية للوصول إلى هذه الصفحة
+          </Text>
+          <TouchableOpacity
+            style={[styles.backButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+            onPress={() => router.back()}
+          >
+            <Text style={[styles.backButtonText, { textAlign: isRTL ? "right" : "left" }]}>العودة</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -78,9 +95,9 @@ export default function EditUnionMainScreen() {
     try {
       await mutation.mutateAsync({
         ...unionInfo,
-        establishedYear: parseInt(unionInfo.establishedYear, 10) || 0,
-        memberCount: parseInt(unionInfo.memberCount, 10) || 0,
-        services: JSON.stringify(unionInfo.services),
+        establishedYear: unionInfo.establishedYear,
+        memberCount: unionInfo.memberCount,
+        services: unionInfo.services,
       });
 
       Alert.alert("تم الحفظ", "تم حفظ معلومات النقابة بنجاح", [
@@ -149,8 +166,21 @@ export default function EditUnionMainScreen() {
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={[styles.headerBackButton, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}
+            >
+              {isRTL ? <ArrowRight size={24} color={COLORS.white} /> : <ArrowLeft size={24} color={COLORS.white} />}
+            </TouchableOpacity>
+          ),
+          headerTitleAlign: isRTL ? "right" : "left",
           headerRight: () => (
-            <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={isLoading}>
+            <TouchableOpacity
+              onPress={handleSave}
+              style={[styles.headerSaveButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
+              disabled={isLoading}
+            >
               <Save size={20} color={COLORS.white} />
             </TouchableOpacity>
           ),
@@ -415,7 +445,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   saveButton: {
+    // This saveButton is no longer directly used in the header, the new headerSaveButton is.
     padding: 8,
+    borderRadius: 6,
+    backgroundColor: COLORS.success || "#28a745",
+  },
+  headerBackButton: {
+    padding: 8,
+    // marginLeft and marginRight are set inline now
+  },
+  headerSaveButton: {
+    padding: 8,
+    // marginLeft and marginRight are set inline now
     borderRadius: 6,
     backgroundColor: COLORS.success || "#28a745",
   },
@@ -438,7 +479,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
@@ -467,7 +508,7 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   inputWithIcon: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -486,7 +527,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logoContainer: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     alignItems: "center",
     marginBottom: 12,
     gap: 12,
@@ -498,7 +539,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
     paddingHorizontal: 12,
@@ -531,7 +572,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
   serviceHeader: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
@@ -547,7 +588,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEE2E2",
   },
   colorPicker: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     alignItems: "center",
     gap: 12,
   },
@@ -567,17 +608,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     backgroundColor: COLORS.white,
-    textAlign: "left",
+    textAlign: "right",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     gap: 12,
     marginTop: 8,
     marginBottom: 32,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: isRTL() ? "row" : "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
@@ -596,10 +637,12 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "right",
   },
   cancelActionText: {
     color: COLORS.darkGray,
     fontSize: 16,
     fontWeight: "bold",
+    textAlign: "right",
   },
 });

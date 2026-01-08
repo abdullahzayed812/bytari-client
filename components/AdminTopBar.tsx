@@ -78,41 +78,47 @@ export function AdminTopBar({ onAdminDashboard }: AdminTopBarProps) {
   return (
     <View style={styles.container}>
       {/* أيقونات اليسار */}
-      <View style={styles.leftSection}>
-        <TouchableOpacity style={styles.iconButton} onPress={handleMessages} testID="admin-messages-button">
-          <MessageCircle size={24} color={COLORS.white} />
-          {getFilteredMessagesCount() > 0 && (
-            <View style={isModerator && !moderatorPermissions?.superPermissions ? moderatorBadgeStyle : badgeStyle}>
-              <Text
-                style={
-                  isModerator && !moderatorPermissions?.superPermissions ? styles.moderatorBadgeText : styles.badgeText
-                }
-              >
-                {getFilteredMessagesCount() > 99 ? "99+" : getFilteredMessagesCount().toString()}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+      {isSuperAdmin ? (
+        <View style={styles.leftSection}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleMessages} testID="admin-messages-button">
+            <MessageCircle size={24} color={COLORS.white} />
+            {getFilteredMessagesCount() > 0 && (
+              <View style={isModerator && !moderatorPermissions?.superPermissions ? moderatorBadgeStyle : badgeStyle}>
+                <Text
+                  style={
+                    isModerator && !moderatorPermissions?.superPermissions
+                      ? styles.moderatorBadgeText
+                      : styles.badgeText
+                  }
+                >
+                  {getFilteredMessagesCount() > 99 ? "99+" : getFilteredMessagesCount().toString()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.iconButton} onPress={handleNotifications} testID="admin-notifications-button">
-          <Bell size={24} color={COLORS.white} />
-          {getFilteredNotificationsCount() > 0 && (
-            <View style={isModerator && !moderatorPermissions?.superPermissions ? moderatorBadgeStyle : badgeStyle}>
-              <Text
-                style={
-                  isModerator && !moderatorPermissions?.superPermissions ? styles.moderatorBadgeText : styles.badgeText
-                }
-              >
-                {getFilteredNotificationsCount() > 99 ? "99+" : getFilteredNotificationsCount().toString()}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.iconButton} onPress={handleNotifications} testID="admin-notifications-button">
+            <Bell size={24} color={COLORS.white} />
+            {getFilteredNotificationsCount() > 0 && (
+              <View style={isModerator && !moderatorPermissions?.superPermissions ? moderatorBadgeStyle : badgeStyle}>
+                <Text
+                  style={
+                    isModerator && !moderatorPermissions?.superPermissions
+                      ? styles.moderatorBadgeText
+                      : styles.badgeText
+                  }
+                >
+                  {getFilteredNotificationsCount() > 99 ? "99+" : getFilteredNotificationsCount().toString()}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.iconButton} onPress={handleSearch} testID="admin-search-button">
-          <Search size={24} color={COLORS.white} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.iconButton} onPress={handleSearch} testID="admin-search-button">
+            <Search size={24} color={COLORS.white} />
+          </TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* زر دخول الإدارة في اليمين - مخفي للمشرفين العاديين */}
       {isSuperAdmin && (!isModerator || moderatorPermissions?.superPermissions) && (

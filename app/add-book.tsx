@@ -15,12 +15,12 @@ export default function AddBookScreen() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    title: "عنوان الكتاب",
-    author: "محمد احمد حسن",
-    description: "تفسير ظهور الكلاب في المناطق السكنية",
-    pages: "300",
-    category: "تصنيف الكتاب",
-    language: "العربية",
+    title: "",
+    author: "",
+    description: "",
+    pages: "",
+    category: "",
+    language: "",
   });
 
   const [selectedImages, setSelectedImages] = useState<string[]>([]);

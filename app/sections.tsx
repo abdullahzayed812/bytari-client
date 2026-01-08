@@ -1,15 +1,15 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Modal, TextInput } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Modal, TextInput } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { useRouter, Stack } from 'expo-router';
-import { 
-  MessageCircle, 
-  Calendar, 
-  Bookmark, 
-  AlertTriangle, 
-  Bell, 
-  Award, 
+import { useRouter, Stack } from "expo-router";
+import {
+  MessageCircle,
+  Calendar,
+  Bookmark,
+  AlertTriangle,
+  Bell,
+  Award,
   FileText,
   Settings,
   Edit3,
@@ -17,8 +17,8 @@ import {
   EyeOff,
   X,
   Save,
-  Eye
-} from 'lucide-react-native';
+  Eye,
+} from "lucide-react-native";
 
 interface SectionItem {
   id: string;
@@ -30,19 +30,16 @@ interface SectionItem {
 }
 
 const iconMap: { [key: string]: React.ReactNode } = {
-  'MessageCircle': <MessageCircle size={32} color={COLORS.white} />,
-  'Calendar': <Calendar size={32} color={COLORS.white} />,
-  'Bookmark': <Bookmark size={32} color={COLORS.white} />,
-  'AlertTriangle': <AlertTriangle size={32} color={COLORS.white} />,
-  'Bell': <Bell size={32} color={COLORS.white} />,
-  'Award': <Award size={32} color={COLORS.white} />,
-  'FileText': <FileText size={32} color={COLORS.white} />,
+  MessageCircle: <MessageCircle size={32} color={COLORS.white} />,
+  Calendar: <Calendar size={32} color={COLORS.white} />,
+  Bookmark: <Bookmark size={32} color={COLORS.white} />,
+  AlertTriangle: <AlertTriangle size={32} color={COLORS.white} />,
+  Bell: <Bell size={32} color={COLORS.white} />,
+  Award: <Award size={32} color={COLORS.white} />,
+  FileText: <FileText size={32} color={COLORS.white} />,
 };
 
-const colorOptions = [
-  '#10B981', '#3B82F6', '#EF4444', '#F59E0B', 
-  '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
-];
+const colorOptions = ["#10B981", "#3B82F6", "#EF4444", "#F59E0B", "#8B5CF6", "#EC4899", "#06B6D4", "#84CC16"];
 
 export default function SectionsScreen() {
   const { isRTL } = useI18n();
@@ -53,10 +50,10 @@ export default function SectionsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingSection, setEditingSection] = useState<SectionItem | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    icon: 'MessageCircle',
-    color: '#10B981',
-    route: ''
+    title: "",
+    icon: "",
+    color: "",
+    route: "",
   });
 
   const handleSectionPress = (route: string) => {
@@ -64,57 +61,45 @@ export default function SectionsScreen() {
   };
 
   const handleEditSection = (sectionId: string) => {
-    const section = sections.find(s => s.id === sectionId);
+    const section = sections.find((s) => s.id === sectionId);
     if (section) {
       setEditingSection(section);
       setFormData({
         title: section.title,
         icon: section.icon,
         color: section.color,
-        route: section.route
+        route: section.route,
       });
       setModalVisible(true);
     }
   };
 
   const handleDeleteSection = (sectionId: string) => {
-    Alert.alert(
-      'حذف القسم',
-      'هل أنت متأكد من حذف هذا القسم؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: () => {
-            setSections(sections.filter(s => s.id !== sectionId));
-          }
-        }
-      ]
-    );
+    Alert.alert("حذف القسم", "هل أنت متأكد من حذف هذا القسم؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          setSections(sections.filter((s) => s.id !== sectionId));
+        },
+      },
+    ]);
   };
 
   const handleHideSection = (sectionId: string) => {
-    setSections(sections.map(s => 
-      s.id === sectionId 
-        ? { ...s, isHidden: !s.isHidden }
-        : s
-    ));
+    setSections(sections.map((s) => (s.id === sectionId ? { ...s, isHidden: !s.isHidden } : s)));
   };
 
   const handleSaveSection = () => {
     if (!formData.title.trim() || !formData.route.trim()) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول المطلوبة');
+      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
     if (editingSection) {
       // تحديث قسم موجود
-      setSections(sections.map(s => 
-        s.id === editingSection.id 
-          ? { ...s, ...formData }
-          : s
-      ));
+      setSections(sections.map((s) => (s.id === editingSection.id ? { ...s, ...formData } : s)));
     }
 
     setModalVisible(false);
@@ -126,28 +111,24 @@ export default function SectionsScreen() {
         key={item.id}
         style={[
           styles.sectionItemContainer,
-          index === sections.length - 1 && sections.length % 2 === 1 ? styles.fullWidthContainer : {}
+          index === sections.length - 1 && sections.length % 2 === 1 ? styles.fullWidthContainer : {},
         ]}
       >
         <TouchableOpacity
           style={[
             styles.sectionItem,
             { backgroundColor: item.color },
-            index === sections.length - 1 && sections.length % 2 === 1 ? styles.fullWidthItem : {}
+            index === sections.length - 1 && sections.length % 2 === 1 ? styles.fullWidthItem : {},
           ]}
           onPress={() => handleSectionPress(item.route)}
           activeOpacity={0.8}
         >
           <View style={styles.sectionContent}>
-            <View style={styles.iconContainer}>
-              {iconMap[item.icon]}
-            </View>
-            <Text style={[styles.sectionTitle, { textAlign: isRTL ? 'center' : 'center' }]}>
-              {item.title}
-            </Text>
+            <View style={styles.iconContainer}>{iconMap[item.icon]}</View>
+            <Text style={[styles.sectionTitle, { textAlign: isRTL ? "center" : "center" }]}>{item.title}</Text>
           </View>
         </TouchableOpacity>
-        
+
         {/* أزرار التعديل والحذف والإخفاء */}
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -178,114 +159,94 @@ export default function SectionsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'الأقسام',
+          title: "الأقسام",
           headerStyle: {
             backgroundColor: COLORS.white,
           },
           headerTitleStyle: {
             color: COLORS.black,
             fontSize: 18,
-            fontWeight: 'bold',
+            fontWeight: "bold",
           },
-          headerTitleAlign: 'center',
+          headerTitleAlign: "center",
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push('/sections-management')}
-              style={{ marginRight: 16 }}
-            >
+            <TouchableOpacity onPress={() => router.push("/sections-management")} style={{ marginRight: 16 }}>
               <Settings size={24} color={COLORS.primary} />
             </TouchableOpacity>
           ),
-        }} 
+        }}
       />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.sectionsGrid}>
-          {sections.filter(item => !item.isHidden).map((item, index) => renderSectionItem(item, index))}
+          {sections.filter((item) => !item.isHidden).map((item, index) => renderSectionItem(item, index))}
         </View>
-        
+
         {/* الأقسام المخفية */}
-        {sections.some(item => item.isHidden) && (
+        {sections.some((item) => item.isHidden) && (
           <View style={styles.hiddenSectionsContainer}>
             <Text style={styles.hiddenSectionsTitle}>الأقسام المخفية</Text>
             <View style={styles.sectionsGrid}>
-              {sections.filter(item => item.isHidden).map((item, index) => (
-                <View key={item.id} style={[styles.sectionItemContainer, styles.hiddenSection]}>
-                  <TouchableOpacity
-                    style={[
-                      styles.sectionItem,
-                      { backgroundColor: item.color, opacity: 0.6 }
-                    ]}
-                    onPress={() => handleSectionPress(item.route)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.sectionContent}>
-                      <View style={styles.iconContainer}>
-                        {iconMap[item.icon]}
+              {sections
+                .filter((item) => item.isHidden)
+                .map((item, index) => (
+                  <View key={item.id} style={[styles.sectionItemContainer, styles.hiddenSection]}>
+                    <TouchableOpacity
+                      style={[styles.sectionItem, { backgroundColor: item.color, opacity: 0.6 }]}
+                      onPress={() => handleSectionPress(item.route)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.sectionContent}>
+                        <View style={styles.iconContainer}>{iconMap[item.icon]}</View>
+                        <Text style={[styles.sectionTitle, { textAlign: "center" }]}>{item.title}</Text>
                       </View>
-                      <Text style={[styles.sectionTitle, { textAlign: 'center' }]}>
-                        {item.title}
-                      </Text>
+                    </TouchableOpacity>
+
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={() => handleEditSection(item.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Edit3 size={14} color={COLORS.white} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.showButton]}
+                        onPress={() => handleHideSection(item.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Eye size={14} color={COLORS.white} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionButton, styles.deleteButton]}
+                        onPress={() => handleDeleteSection(item.id)}
+                        activeOpacity={0.7}
+                      >
+                        <Trash2 size={14} color={COLORS.white} />
+                      </TouchableOpacity>
                     </View>
-                  </TouchableOpacity>
-                  
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.editButton]}
-                      onPress={() => handleEditSection(item.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Edit3 size={14} color={COLORS.white} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.showButton]}
-                      onPress={() => handleHideSection(item.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Eye size={14} color={COLORS.white} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.deleteButton]}
-                      onPress={() => handleDeleteSection(item.id)}
-                      activeOpacity={0.7}
-                    >
-                      <Trash2 size={14} color={COLORS.white} />
-                    </TouchableOpacity>
                   </View>
-                </View>
-              ))}
+                ))}
             </View>
           </View>
         )}
       </ScrollView>
 
       {/* Modal لتعديل القسم */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
+      <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={styles.closeButton}
-            >
+            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>
-              تعديل القسم
-            </Text>
-            <TouchableOpacity
-              onPress={handleSaveSection}
-              style={styles.saveButton}
-            >
+            <Text style={styles.modalTitle}>تعديل القسم</Text>
+            <TouchableOpacity onPress={handleSaveSection} style={styles.saveButton}>
               <Save size={24} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
@@ -297,7 +258,7 @@ export default function SectionsScreen() {
               <TextInput
                 style={styles.textInput}
                 value={formData.title}
-                onChangeText={(text) => setFormData({...formData, title: text})}
+                onChangeText={(text) => setFormData({ ...formData, title: text })}
                 placeholder="أدخل عنوان القسم"
                 textAlign="right"
               />
@@ -309,7 +270,7 @@ export default function SectionsScreen() {
               <TextInput
                 style={styles.textInput}
                 value={formData.route}
-                onChangeText={(text) => setFormData({...formData, route: text})}
+                onChangeText={(text) => setFormData({ ...formData, route: text })}
                 placeholder="مثال: /consultation"
                 textAlign="left"
               />
@@ -323,11 +284,8 @@ export default function SectionsScreen() {
                   {Object.keys(iconMap).map((iconKey) => (
                     <TouchableOpacity
                       key={iconKey}
-                      style={[
-                        styles.iconOption,
-                        formData.icon === iconKey && styles.selectedIconOption
-                      ]}
-                      onPress={() => setFormData({...formData, icon: iconKey})}
+                      style={[styles.iconOption, formData.icon === iconKey && styles.selectedIconOption]}
+                      onPress={() => setFormData({ ...formData, icon: iconKey })}
                     >
                       {iconMap[iconKey]}
                     </TouchableOpacity>
@@ -346,9 +304,9 @@ export default function SectionsScreen() {
                     style={[
                       styles.colorOption,
                       { backgroundColor: color },
-                      formData.color === color && styles.selectedColorOption
+                      formData.color === color && styles.selectedColorOption,
                     ]}
-                    onPress={() => setFormData({...formData, color})}
+                    onPress={() => setFormData({ ...formData, color })}
                   >
                     {formData.color === color && (
                       <View style={styles.colorCheckmark}>
@@ -365,12 +323,8 @@ export default function SectionsScreen() {
               <Text style={styles.inputLabel}>معاينة</Text>
               <View style={[styles.previewSection, { backgroundColor: formData.color }]}>
                 <View style={styles.previewContent}>
-                  <View style={styles.previewIcon}>
-                    {iconMap[formData.icon]}
-                  </View>
-                  <Text style={styles.previewTitle}>
-                    {formData.title || 'عنوان القسم'}
-                  </Text>
+                  <View style={styles.previewIcon}>{iconMap[formData.icon]}</View>
+                  <Text style={styles.previewTitle}>{formData.title || "عنوان القسم"}</Text>
                 </View>
               </View>
             </View>
@@ -384,7 +338,7 @@ export default function SectionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   content: {
     flex: 1,
@@ -393,26 +347,26 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: 16,
   },
   sectionItemContainer: {
-    width: '47%',
-    position: 'relative',
+    width: "47%",
+    position: "relative",
   },
   fullWidthContainer: {
-    width: '100%',
+    width: "100%",
   },
   sectionItem: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 1,
     borderRadius: 16,
     padding: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -425,10 +379,10 @@ const styles = StyleSheet.create({
     aspectRatio: 2.2,
   },
   actionButtons: {
-    position: 'absolute',
+    position: "absolute",
     top: 6,
     right: 6,
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 4,
     zIndex: 10,
   },
@@ -436,9 +390,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -447,28 +401,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   editButton: {
-    backgroundColor: '#F59E0B',
+    backgroundColor: "#F59E0B",
   },
   hideButton: {
-    backgroundColor: '#6B7280',
+    backgroundColor: "#6B7280",
   },
   showButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: "#10B981",
   },
   hiddenSectionsContainer: {
     marginTop: 32,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5E5',
+    borderTopColor: "#E5E5E5",
   },
   hiddenSectionsTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 16,
   },
   hiddenSection: {
@@ -479,19 +433,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: "#E5E5E5",
   },
   closeButton: {
     padding: 8,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   saveButton: {
@@ -506,21 +460,21 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   textInput: {
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: "#E5E5E5",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     backgroundColor: COLORS.white,
   },
   iconOptions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     paddingVertical: 8,
   },
@@ -528,29 +482,29 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 12,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#F5F5F5",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedIconOption: {
     borderColor: COLORS.primary,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: "#E3F2FD",
   },
   colorOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   colorOption: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 3,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedColorOption: {
     borderColor: COLORS.white,
@@ -559,46 +513,46 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255,255,255,0.3)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   checkmark: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   previewSection: {
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   previewContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   previewIcon: {
     marginBottom: 8,
   },
   previewTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
   },
   deleteButton: {
-    backgroundColor: '#EF4444',
+    backgroundColor: "#EF4444",
   },
   sectionContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   iconContainer: {
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

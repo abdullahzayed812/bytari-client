@@ -51,18 +51,18 @@ export default function FieldSupervisionRequestScreen() {
 
   // Initial form data with sample values
   const [formData, setFormData] = useState<FieldSupervisionFormData>({
-    fullName: "د. حسن علي محمد",
-    email: "vet2@example.com",
-    phone: "07701234567",
-    location: "بغداد - الكرخ",
-    education: "بكالوريوس الطب البيطري - جامعة بغداد",
-    experience: "خبرة 7 سنوات في علاج وإدارة مزارع الدواجن، متخصص في الوقاية من الأمراض والتطعيمات",
-    qualifications: "شهادة في إدارة مزارع الدواجن، دورات تدريبية في الأمن الحيوي والوقاية",
-    previousExperience: "عملت كمشرف بيطري في مزرعة النور للدواجن لمدة 3 سنوات، إدارة قطيع يصل إلى 100,000 طائر",
-    farmName: "مزرعة الأمل للدواجن",
-    farmLocation: "البصرة - الزبير",
-    farmCapacity: "50000",
-    requestType: "both",
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    education: "",
+    experience: "",
+    qualifications: "",
+    previousExperience: "",
+    farmName: "",
+    farmLocation: "",
+    farmCapacity: "",
+    requestType: "",
   });
 
   const submitSupervisionMutation = useMutation(trpc.admin.jobs.submitFieldSupervisionRequest.mutationOptions());

@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { ChevronLeft, ChevronRight, Edit3, Plus } from "lucide-react-native";
+import { isRTL as getIsRTL } from "../lib/rtl-config";
 import { COLORS } from "../constants/colors";
 
 interface SectionHeaderProps {
@@ -22,7 +23,7 @@ export default function SectionHeader({
   title,
   onSeeAll,
   showSeeAll = true,
-  isRTL = true,
+  isRTL = getIsRTL(),
   showAddButton = false,
   showEditButton = false,
   onAdd,
@@ -31,7 +32,7 @@ export default function SectionHeader({
   titleStyle,
 }: SectionHeaderProps) {
   return (
-    <View style={[styles.container, { flexDirection: isRTL ? "row-reverse" : "row" }, containerStyle]}>
+    <View style={[styles.container, { flexDirection: isRTL ? "row" : "row-reverse" }, containerStyle]}>
       {/* See All Button - Left Side */}
       {showSeeAll && onSeeAll && (
         <TouchableOpacity style={styles.seeAllButton} onPress={onSeeAll}>
@@ -63,7 +64,7 @@ export default function SectionHeader({
       )}
 
       {/* Title - Right Side */}
-      <Text style={[styles.title, { textAlign: isRTL ? "left" : "left" }, titleStyle]}>{title}</Text>
+      <Text style={[styles.title, { textAlign: isRTL ? "right" : "left" }, titleStyle]}>{title}</Text>
     </View>
   );
 }

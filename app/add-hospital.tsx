@@ -27,13 +27,13 @@ export default function AddHospitalScreen() {
   const createHospitalMutation = useMutation(trpc.hospitals.create.mutationOptions());
 
   const [formData, setFormData] = useState({
-    name: "مستشفى السلام الملكي",
-    location: "بغداد العراق",
-    phone: "07882288229",
-    workingHours: "24",
-    description: "مستشفى السلام الملكي اكبر مستشفى في الشرق الاوسط لعلاج الحيوانات الاليفة وغير الاليفة",
-    specialties: "متخصصة في العلاج بالاعشاب",
-    province: "بغداد",
+    name: "",
+    location: "",
+    phone: "",
+    workingHours: "",
+    description: "",
+    specialties: "",
+    province: "",
     image: "", // Optional image URL
     isMain: false, // Default to false for new hospitals
   });

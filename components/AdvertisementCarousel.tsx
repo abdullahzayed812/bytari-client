@@ -16,6 +16,7 @@ import { trpc } from "@/lib/trpc";
 import { Edit3, Trash2 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useApp } from "@/providers/AppProvider";
+import { useI18n } from "@/providers/I18nProvider";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 // Using hardcoded colors for now
@@ -488,7 +489,10 @@ export default function AdvertisementCarousel({
 
                 {/* Admin Controls */}
                 {showAdminControls && isSuperAdmin && (
-                  <View style={styles.adminControls}>
+                  <View style={[styles.adminControls, {
+                    right: isRTL ? undefined : 12,
+                    left: isRTL ? 12 : undefined,
+                  }]}>
                     <TouchableOpacity
                       style={[styles.adminControlButton, styles.editControlButton]}
                       onPress={(e) => {

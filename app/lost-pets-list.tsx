@@ -119,19 +119,21 @@ export default function LostPetsListScreen() {
               {/* Pet Info */}
               <View style={styles.lostPetDetails}>
                 <Text style={styles.lostPetName} numberOfLines={1}>
-                  {pet.petName || pet.title}
+                  {pet.name}
                 </Text>
                 <Text style={styles.lostPetType} numberOfLines={1}>
-                  {pet.petType ? t(`pets.types.${pet.petType}`) : pet.petType}
+                  {pet.type}
                 </Text>
 
                 {/* Location */}
-                <View style={styles.lostPetInfoRow}>
-                  <MapPin size={12} color="#10B981" />
-                  <Text style={styles.lostPetInfoRowText} numberOfLines={1}>
-                    {pet.location}
-                  </Text>
-                </View>
+                {pet.location ? (
+                  <View style={styles.lostPetInfoRow}>
+                    <MapPin size={12} color="#10B981" />
+                    <Text style={styles.lostPetInfoRowText} numberOfLines={1}>
+                      {pet.location}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {/* Date */}
                 <View style={styles.lostPetInfoRow}>
@@ -253,19 +255,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 2,
-    textAlign: "center",
+    textAlign: "right",
   },
   lostPetType: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginBottom: 6,
-    textAlign: "center",
+    textAlign: "right",
   },
   lostPetInfoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 3,
-    justifyContent: "center",
   },
   lostPetInfoRowText: {
     fontSize: 10,
@@ -274,7 +275,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   lostPetActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 6,
   },

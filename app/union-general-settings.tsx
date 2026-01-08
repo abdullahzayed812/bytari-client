@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,20 +9,13 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
-} from 'react-native';
-import {
-  ArrowRight,
-  Save,
-  Settings,
-  Globe,
-  Shield,
-  Edit3,
-} from 'lucide-react-native';
-import { useRouter, Stack } from 'expo-router';
+} from "react-native";
+import { ArrowRight, Save, Settings, Globe, Shield, Edit3 } from "lucide-react-native";
+import { useRouter, Stack } from "expo-router";
 import { COLORS } from "../constants/colors";
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { trpc } from '../lib/trpc';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SafeAreaView } from "react-native-safe-area-context";
+import { trpc } from "../lib/trpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function UnionGeneralSettingsScreen() {
   const router = useRouter();
@@ -30,18 +23,18 @@ export default function UnionGeneralSettingsScreen() {
 
   const { data: settings, isLoading, error } = useQuery(trpc.union.settings.get.queryOptions());
 
-  const [unionName, setUnionName] = useState('');
-  const [unionDescription, setUnionDescription] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
+  const [unionName, setUnionName] = useState("");
+  const [unionDescription, setUnionDescription] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
   const [allowRegistration, setAllowRegistration] = useState(true);
   const [requireApproval, setRequireApproval] = useState(true);
 
   useEffect(() => {
     if (settings) {
-      setUnionName(settings.name);
-      setUnionDescription(settings.description);
+      setUnionName(settings.unionName);
+      setUnionDescription(settings.unionDescription);
       setContactEmail(settings.contactEmail);
       setContactPhone(settings.contactPhone);
       setIsMaintenanceMode(settings.isMaintenanceMode);
@@ -50,26 +43,16 @@ export default function UnionGeneralSettingsScreen() {
     }
   }, [settings]);
 
-  const updateSettingsMutation = useMutation(trpc.union.settings.update.mutationOptions({
-    onSuccess: () => {
-      queryClient.invalidateQueries(trpc.union.settings.get.queryKey);
-      Alert.alert('تم الحفظ', 'تم حفظ الإعدادات بنجاح');
-    },
-    onError: (error) => {
-      Alert.alert('خطأ', 'حدث خطأ أثناء حفظ الإعدادات');
-    }
-  }));
+  const updateSettingsMutation = useMutation(trpc.union.settings.update.mutationOptions());
 
   const handleSave = () => {
-    Alert.alert(
-      'حفظ الإعدادات',
-      'هل تريد حفظ التغييرات؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حفظ',
-          onPress: () => {
-            updateSettingsMutation.mutate({
+    Alert.alert("حفظ الإعدادات", "هل تريد حفظ التغييرات؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حفظ",
+        onPress: () => {
+          updateSettingsMutation.mutate(
+            {
               name: unionName,
               description: unionDescription,
               contactEmail,
@@ -77,15 +60,24 @@ export default function UnionGeneralSettingsScreen() {
               isMaintenanceMode,
               allowRegistration,
               requireApproval,
-            });
-          },
+            } as any,
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries(trpc.union.settings.get.queryKey as any);
+                Alert.alert("تم الحفظ", "تم حفظ الإعدادات بنجاح");
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", "حدث خطأ أثناء حفظ الإعدادات");
+              },
+            }
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleEditMainInfo = () => {
-    router.push('/edit-union-main');
+    router.push("/edit-union-main");
   };
 
   if (isLoading) {
@@ -105,7 +97,7 @@ export default function UnionGeneralSettingsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -124,18 +116,13 @@ export default function UnionGeneralSettingsScreen() {
             <Settings size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>معلومات النقابة</Text>
           </View>
-          
-          <TouchableOpacity 
-            style={styles.editMainInfoButton}
-            onPress={handleEditMainInfo}
-          >
+
+          <TouchableOpacity style={styles.editMainInfoButton} onPress={handleEditMainInfo}>
             <Edit3 size={20} color={COLORS.primary} />
-            <Text style={styles.editMainInfoText}>
-              تعديل المعلومات الأساسية للنقابة
-            </Text>
+            <Text style={styles.editMainInfoText}>تعديل المعلومات الأساسية للنقابة</Text>
             <ArrowRight size={16} color={COLORS.primary} />
           </TouchableOpacity>
-          
+          {/* 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>اسم النقابة</Text>
             <TextInput
@@ -158,16 +145,16 @@ export default function UnionGeneralSettingsScreen() {
               multiline
               numberOfLines={3}
             />
-          </View>
+          </View> */}
         </View>
 
         {/* معلومات الاتصال */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Globe size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>البريد الإلكتروني</Text>
             <TextInput
@@ -191,7 +178,7 @@ export default function UnionGeneralSettingsScreen() {
               keyboardType="phone-pad"
             />
           </View>
-        </View>
+        </View> */}
 
         {/* إعدادات النظام */}
         <View style={styles.section}>
@@ -199,7 +186,7 @@ export default function UnionGeneralSettingsScreen() {
             <Shield size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>إعدادات النظام</Text>
           </View>
-          
+
           <View style={styles.switchGroup}>
             <View style={styles.switchInfo}>
               <Text style={styles.switchTitle}>وضع الصيانة</Text>
@@ -208,8 +195,8 @@ export default function UnionGeneralSettingsScreen() {
             <Switch
               value={isMaintenanceMode}
               onValueChange={setIsMaintenanceMode}
-              trackColor={{ false: '#E5E7EB', true: COLORS.primary }}
-              thumbColor={isMaintenanceMode ? COLORS.white : '#F3F4F6'}
+              trackColor={{ false: "#E5E7EB", true: COLORS.primary }}
+              thumbColor={isMaintenanceMode ? COLORS.white : "#F3F4F6"}
             />
           </View>
 
@@ -221,8 +208,8 @@ export default function UnionGeneralSettingsScreen() {
             <Switch
               value={allowRegistration}
               onValueChange={setAllowRegistration}
-              trackColor={{ false: '#E5E7EB', true: COLORS.primary }}
-              thumbColor={allowRegistration ? COLORS.white : '#F3F4F6'}
+              trackColor={{ false: "#E5E7EB", true: COLORS.primary }}
+              thumbColor={allowRegistration ? COLORS.white : "#F3F4F6"}
             />
           </View>
 
@@ -234,8 +221,8 @@ export default function UnionGeneralSettingsScreen() {
             <Switch
               value={requireApproval}
               onValueChange={setRequireApproval}
-              trackColor={{ false: '#E5E7EB', true: COLORS.primary }}
-              thumbColor={requireApproval ? COLORS.white : '#F3F4F6'}
+              trackColor={{ false: "#E5E7EB", true: COLORS.primary }}
+              thumbColor={requireApproval ? COLORS.white : "#F3F4F6"}
             />
           </View>
         </View>
@@ -247,12 +234,12 @@ export default function UnionGeneralSettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -262,10 +249,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     flex: 1,
-    textAlign: 'center',
+    textAlign: "center",
   },
   saveButton: {
     padding: 8,
@@ -279,20 +266,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginLeft: 8,
   },
@@ -301,14 +288,14 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: "#E5E7EB",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
@@ -317,35 +304,35 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   switchGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: "#F3F4F6",
   },
   switchInfo: {
     flex: 1,
   },
   switchTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 4,
   },
   switchDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   editMainInfoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F9FF',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F0F9FF",
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
@@ -355,9 +342,9 @@ const styles = StyleSheet.create({
   editMainInfoText: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
-    textAlign: 'right',
+    textAlign: "right",
     marginHorizontal: 12,
   },
 });

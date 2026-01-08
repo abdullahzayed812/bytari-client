@@ -21,10 +21,14 @@ export default function ProductDetailsScreen() {
   const [quantity, setQuantity] = useState(1);
 
   // Determine store type if not passed in params
-  const effectiveStoreType = (storeType as "veterinarian" | "pet_owner") ||
-    (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
+  const effectiveStoreType =
+    (storeType as "veterinarian" | "pet_owner") || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
 
-  const { data: product, isLoading, error } = useQuery(
+  const {
+    data: product,
+    isLoading,
+    error,
+  } = useQuery(
     trpc.unifiedStore.getProduct.queryOptions({
       id: Number(productId),
       storeType: effectiveStoreType,
@@ -68,7 +72,7 @@ export default function ProductDetailsScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -76,7 +80,7 @@ export default function ProductDetailsScreen() {
 
   if (error || !product) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
         <Text>المنتج غير موجود</Text>
       </View>
     );
@@ -96,10 +100,7 @@ export default function ProductDetailsScreen() {
         <View style={styles.imageContainer}>
           <Image source={{ uri: product.image }} style={styles.productImage} />
           <TouchableOpacity style={styles.favoriteButton} onPress={handleToggleFavorite}>
-            <Heart
-              size={24}
-              color={COLORS.gray}
-            />
+            <Heart size={24} color={COLORS.gray} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
             <Share size={20} color={COLORS.gray} />
@@ -115,12 +116,7 @@ export default function ProductDetailsScreen() {
           <View style={styles.ratingContainer}>
             <View style={styles.starsContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={16}
-                  color={COLORS.lightGray}
-                  fill={"transparent"}
-                />
+                <Star key={star} size={16} color={COLORS.lightGray} fill={"transparent"} />
               ))}
             </View>
             <Text style={styles.ratingText}>(0)</Text>
@@ -139,9 +135,7 @@ export default function ProductDetailsScreen() {
           {/* Description */}
           <View style={styles.descriptionContainer}>
             <Text style={styles.sectionTitle}>الوصف</Text>
-            <Text style={styles.description}>
-              {product.description || "لا يوجد وصف متاح"}
-            </Text>
+            <Text style={styles.description}>{product.description || "لا يوجد وصف متاح"}</Text>
           </View>
 
           {/* Features */}
@@ -152,14 +146,14 @@ export default function ProductDetailsScreen() {
                 <Shield size={16} color={COLORS.primary} />
                 <Text style={styles.featureText}>جودة مضمونة</Text>
               </View>
-              <View style={styles.featureItem}>
+              {/* <View style={styles.featureItem}>
                 <Truck size={16} color={COLORS.primary} />
                 <Text style={styles.featureText}>توصيل مجاني</Text>
-              </View>
-              <View style={styles.featureItem}>
+              </View> */}
+              {/* <View style={styles.featureItem}>
                 <RotateCcw size={16} color={COLORS.primary} />
                 <Text style={styles.featureText}>إمكانية الإرجاع</Text>
-              </View>
+              </View> */}
             </View>
           </View>
 

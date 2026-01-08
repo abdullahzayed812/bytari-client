@@ -17,11 +17,11 @@ export default function AddArticleScreen() {
   const { user } = useApp();
 
   const [formData, setFormData] = useState({
-    title: "عنوان المقال",
-    author: "محمد عمر هاشم الماجدي",
-    authorTitle: "كتاب عن تربيه الحيوانات",
-    content: "محتوى الكتاب",
-    category: "التصنيف",
+    title: "",
+    author: "",
+    authorTitle: "",
+    content: "",
+    category: "",
   });
 
   const [selectedImages, setSelectedImages] = useState<string[]>([]);

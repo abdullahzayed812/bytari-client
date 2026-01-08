@@ -26,10 +26,10 @@ export default function AddPetScreen() {
 
   const [formData, setFormData] = useState({
     name: "",
-    type: "dog" as Pet["type"],
+    type: "" as Pet["type"],
     breed: "",
     age: "",
-    gender: "male" as Pet["gender"],
+    gender: "" as Pet["gender"],
     weight: "",
     color: "",
     birthDate: "",
@@ -42,8 +42,6 @@ export default function AddPetScreen() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
-
 
   /** 🐶 Handle Form Submission **/
   const handleSubmit = async () => {
@@ -136,8 +134,6 @@ export default function AddPetScreen() {
       ))}
     </View>
   );
-
-
 
   return (
     <>

@@ -20,10 +20,10 @@ export default function AddBreedingPetScreen() {
   const [formData, setFormData] = useState({
     // Basic pet info (pre-filled from existing pet)
     name: "",
-    type: "dog" as Pet["type"],
+    type: "",
     breed: "",
     age: "",
-    gender: "male" as Pet["gender"],
+    gender: "" as Pet["gender"],
     weight: "",
     color: "",
     images: [] as string[],
@@ -35,7 +35,7 @@ export default function AddBreedingPetScreen() {
     healthCertificates: "",
     studFee: "",
     availabilityPeriod: "",
-    contactPreference: "phone" as "phone" | "message" | "both",
+    contactPreference: "" as "phone" | "message" | "both",
     specialRequirements: "",
   });
 

@@ -1,9 +1,8 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ImageIcon } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { trpc } from "@/lib/trpc";
@@ -24,12 +23,12 @@ interface ProductFormData {
 export default function AddProductScreen() {
   const { isRTL } = useI18n();
   const [formData, setFormData] = useState<ProductFormData>({
-    name: "باراسيتامول 500 مجم",
-    description: "دواء مسكن وخافض للحرارة",
-    category: "medicine",
-    price: "5.50",
-    stock: "100",
-    brand: "شركة فارما",
+    name: "",
+    description: "",
+    category: "",
+    price: "",
+    stock: "",
+    brand: "",
     images: [],
   });
 
@@ -89,7 +88,6 @@ export default function AddProductScreen() {
       }
     );
   };
-
 
   return (
     <>

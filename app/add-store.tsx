@@ -30,29 +30,31 @@ interface StoreFormData {
   website: string;
 }
 
+const initialFormData: StoreFormData = {
+  name: "",
+  description: "",
+  address: "",
+  phone: "",
+  email: "",
+  category: "",
+  licenseNumber: "",
+  licenseImages: [],
+  identityImages: [],
+  images: [],
+  workingHours: "",
+  facebook: "",
+  instagram: "",
+  whatsapp: "",
+  website: "",
+};
+
 export default function AddStoreScreen() {
   const { isRTL } = useI18n();
   const { isSuperAdmin, user } = useApp();
   const { showToast } = useToastContext();
 
   const [showSubscription, setShowSubscription] = useState(false);
-  const [formData, setFormData] = useState<StoreFormData>({
-    name: "متجر الرعاية للحيوانات الأليفة",
-    description: "نوفر جميع مستلزمات الحيوانات الأليفة من طعام، أدوات عناية، ألعاب، وأدوية بيطرية بأفضل الأسعار.",
-    address: "شارع التحلية، حي الروضة، جدة، المملكة العربية السعودية",
-    phone: "+966500112233",
-    email: "info@petcarestore.sa",
-    category: "متجر مستلزمات حيوانات",
-    licenseNumber: "STORE-2025-98765",
-    licenseImages: ["http://bytari/media/img1.png"],
-    identityImages: ["http://bytari/media/img1.png"],
-    images: [],
-    workingHours: "من السبت إلى الخميس: 10:00 صباحًا - 10:00 مساءً",
-    facebook: "https://facebook.com/mohamed-ali",
-    instagram: "https://instagram.com/mohamed-ali",
-    whatsapp: "07993322113",
-    website: "https://bytari.com",
-  });
+  const [formData, setFormData] = useState<StoreFormData>(initialFormData);
 
   const createStoreMutation = useMutation(trpc.stores.create.mutationOptions({}));
 
@@ -101,7 +103,6 @@ export default function AddStoreScreen() {
         website: formData.website,
       };
 
-
       // ✅ Add adminId only if user has admin access
       if (isSuperAdmin && user?.id) {
         payload.adminId = user.id;
@@ -110,6 +111,7 @@ export default function AddStoreScreen() {
       createStoreMutation.mutate(payload, {
         onSuccess: (data) => {
           showToast({ type: "success", message: data.message });
+          setFormData(initialFormData); // Reset form data
           queryClient.invalidateQueries(trpc.content.stores.list.queryKey);
           router.back();
         },
@@ -122,8 +124,6 @@ export default function AddStoreScreen() {
       showToast({ type: "error", message: "حدث خطأ أثناء إرسال الطلب" });
     }
   };
-
-
 
   return (
     <>

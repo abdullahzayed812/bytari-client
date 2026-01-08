@@ -77,7 +77,7 @@ const AnimatedTabIcon = ({
 
   const glowColor = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ["rgba(76, 175, 80, 0)", "rgba(76, 175, 80, 0.3)"],
+    outputRange: ["rgba(76, 175, 80, 0.3)", "rgba(76, 175, 80, 0.3)"],
   });
 
   return (
@@ -160,37 +160,13 @@ export default function TabLayout() {
         }}
       >
         <Tabs.Screen
-          name="profile"
+          name="sections"
           options={{
-            title: t("profile.title"),
+            title: t("sections.title"),
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <User size={22} color={focused ? COLORS.white : COLORS.primary} />
-              </AnimatedTabIcon>
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="store"
-          options={{
-            title: t("store.title"),
-            tabBarLabel: "",
-            tabBarIcon: ({ color, size, focused }) => (
-              <AnimatedTabIcon focused={focused}>
-                <ShoppingBag size={22} color={focused ? COLORS.white : COLORS.primary} />
-              </AnimatedTabIcon>
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: t("home.title"),
-            tabBarLabel: "",
-            tabBarIcon: ({ color, size, focused }) => (
-              <AnimatedTabIcon focused={focused}>
-                <Home size={22} color={focused ? COLORS.white : COLORS.primary} />
+                <Grid size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}
@@ -212,13 +188,37 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="sections"
+          name="index"
           options={{
-            title: t("sections.title"),
+            title: t("home.title"),
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <Grid size={22} color={focused ? COLORS.white : COLORS.primary} />
+                <Home size={22} color={focused ? COLORS.white : COLORS.primary} />
+              </AnimatedTabIcon>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="store"
+          options={{
+            title: t("store.title"),
+            tabBarLabel: "",
+            tabBarIcon: ({ color, size, focused }) => (
+              <AnimatedTabIcon focused={focused}>
+                <ShoppingBag size={22} color={focused ? COLORS.white : COLORS.primary} />
+              </AnimatedTabIcon>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: t("profile.title"),
+            tabBarLabel: "",
+            tabBarIcon: ({ color, size, focused }) => (
+              <AnimatedTabIcon focused={focused}>
+                <User size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}

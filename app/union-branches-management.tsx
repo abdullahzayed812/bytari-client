@@ -50,19 +50,18 @@ export default function UnionBranchesManagementScreen() {
   const updateBranchMutation = useMutation(trpc.union.branch.update.mutationOptions());
 
   const deleteBranchMutation = useMutation(trpc.union.branch.delete.mutationOptions());
-
   const [formData, setFormData] = useState<Partial<UnionBranch>>({
-    name: "فرع جديد",
-    governorate: "ديالى",
-    region: "central",
-    address: "بعقوبة - مركز المدينة",
-    phone: "07761234567",
-    email: "new@iraqveterinary.org",
-    president: "د. علي حسن",
-    membersCount: 50,
+    name: "",
+    governorate: "",
+    region: "",
+    address: "",
+    phone: "",
+    email: "",
+    president: "",
+    membersCount: undefined,
     isFollowing: false,
-    announcements: 0,
-    rating: 4.0,
+    announcements: undefined,
+    rating: undefined,
   });
 
   const regions = [

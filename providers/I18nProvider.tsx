@@ -1,11 +1,8 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { I18nManager } from "react-native";
+// import { configureRTL } from "../lib/rtl-config"; // configureRTL is not directly used here, its logic is integrated
+import RNRestart from "react-native-restart"; // Import react-native-restart
 
 type Language = "ar" | "en";
 
@@ -82,8 +79,7 @@ const translations = {
 
     "home.title": "الرئيسية",
     "home.consultation": "أرسل استشارتك وسنجيبك فوراً\nلدينا طاقم طبي ومتخصص",
-    "home.consultationVet":
-      "اذا كان لديك اي استفسار عن مرض معين او عن علاج او اي شيء يخص الطب البيطري فتفضل بمراسلتنا",
+    "home.consultationVet": "اذا كان لديك اي استفسار عن مرض معين او عن علاج او اي شيء يخص الطب البيطري فتفضل بمراسلتنا",
     "home.sendConsultation": "إرسال استشارة",
     "home.availableClinics": "العيادات المتاحة",
     "home.vetMagazine": "المجلة البيطرية",
@@ -109,8 +105,7 @@ const translations = {
     "store.title": "المتجر",
     "pets.title": "الحيوانات الأليفة",
     "sections.title": "الأقسام",
-    "validation.usernameEmailRequired":
-      "يرجى إدخال اسم المستخدم أو البريد الإلكتروني",
+    "validation.usernameEmailRequired": "يرجى إدخال اسم المستخدم أو البريد الإلكتروني",
     "validation.passwordRequired": "يرجى إدخال كلمة المرور",
     "validation.passwordTooShort": "كلمة المرور يجب أن تكون 6 أحرف على الأقل",
     "validation.nameRequired": "يرجى إدخال الاسم",
@@ -137,10 +132,8 @@ const translations = {
     "auth.passwordResetSent": "تم إرسال رابط إعادة تعيين كلمة المرور",
     "auth.passwordResetEmailSent":
       "تم إرسال رابط إعادة تعيين كلمة المرور إلى {email}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.",
-    "auth.passwordResetError":
-      "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
-    "auth.invalidCredentials":
-      "بيانات الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
+    "auth.passwordResetError": "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
+    "auth.invalidCredentials": "بيانات الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
   },
   en: {
     "auth.login": "Login",
@@ -257,10 +250,8 @@ const translations = {
     "auth.passwordResetSent": "Password reset link sent",
     "auth.passwordResetEmailSent":
       "Password reset link has been sent to {email}. Please check your email and follow the instructions.",
-    "auth.passwordResetError":
-      "An error occurred while sending password reset link. Please try again.",
-    "auth.invalidCredentials":
-      "Invalid login credentials. Please check your email and password.",
+    "auth.passwordResetError": "An error occurred while sending password reset link. Please try again.",
+    "auth.invalidCredentials": "Invalid login credentials. Please check your email and password.",
   },
 };
 
@@ -273,15 +264,31 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     loadLanguage();
   }, []);
 
-  console.log({ language });
-
   const loadLanguage = async () => {
     try {
       const savedLanguage = await AsyncStorage.getItem("language");
+      let initialLanguage: Language = "ar"; // Default to Arabic for RTL
+
       if (savedLanguage && (savedLanguage === "ar" || savedLanguage === "en")) {
-        setLanguageState(savedLanguage);
+        initialLanguage = savedLanguage;
       }
-      setLanguageState("ar");
+
+      setLanguageState(initialLanguage);
+
+      // Configure I18nManager based on the loaded language
+      if (initialLanguage === "ar") {
+        if (!I18nManager.isRTL) {
+          I18nManager.forceRTL(true);
+          I18nManager.allowRTL(true);
+          // RNRestart.Restart(); // Don't restart here, only when language is changed by user
+        }
+      } else {
+        if (I18nManager.isRTL) {
+          I18nManager.forceRTL(false);
+          I18nManager.allowRTL(false);
+          // RNRestart.Restart(); // Don't restart here, only when language is changed by user
+        }
+      }
     } catch (error) {
       console.error("Error loading language:", error);
     }
@@ -291,6 +298,21 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     try {
       await AsyncStorage.setItem("language", lang);
       setLanguageState(lang);
+
+      if (lang === "ar") {
+        if (!I18nManager.isRTL) {
+          I18nManager.forceRTL(true);
+          I18nManager.allowRTL(true);
+          RNRestart.Restart(); // Restart to apply native RTL layout
+        }
+      } else {
+        if (I18nManager.isRTL) {
+          I18nManager.forceRTL(false);
+          I18nManager.allowRTL(false);
+          RNRestart.Restart(); // Restart to apply native LTR layout
+        }
+      }
+      console.log("Language changed to", lang);
     } catch (error) {
       console.error("Error saving language:", error);
     }
@@ -298,36 +320,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   // Alias for changeLanguage (some components might use this name)
   const changeLanguage = async (lang: Language) => {
-    try {
-      await AsyncStorage.setItem("language", lang);
-      setLanguageState(lang);
-
-      // Update RTL configuration when language changes
-      if (lang === "ar") {
-        // RTL configuration is handled globally, but we can trigger a re-render
-        console.log("Language changed to Arabic (RTL)");
-      } else {
-        console.log("Language changed to English (LTR)");
-      }
-    } catch (error) {
-      console.error("Error changing language:", error);
-      throw error;
-    }
+    await setLanguage(lang); // Delegate to setLanguage for consistency
   };
 
   const t = (key: string): string => {
-    return (
-      translations[language][
-        key as keyof (typeof translations)[typeof language]
-      ] || key
-    );
+    return translations[language][key as keyof (typeof translations)[typeof language]] || key;
   };
 
   return (
     <I18nContext.Provider
       value={{
         language,
-        isRTL: language === "ar",
+        isRTL: language === "ar", // This will still be used for JS-side styling
         setLanguage,
         changeLanguage,
         t,

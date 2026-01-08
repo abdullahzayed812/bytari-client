@@ -27,17 +27,17 @@ export default function AddPetScreen() {
   const isEditMode = params.editMode === "true";
 
   const [formData, setFormData] = useState({
-    name: "Poppy",
-    type: "dog" as Pet["type"],
-    breed: "bread test",
-    age: "4",
-    gender: "male" as Pet["gender"],
-    weight: "3",
-    color: "#FFF",
-    birthDate: "12/12/2012",
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=1000&q=80",
-    medicalHistory: "Some notes to test medical history",
-    vaccinations: "You have some vaccinations, antiputic, or others",
+    name: "",
+    type: "" as Pet["type"],
+    breed: "",
+    age: "",
+    gender: "" as Pet["gender"],
+    weight: "",
+    color: "",
+    birthDate: "",
+    image: "",
+    medicalHistory: "",
+    vaccinations: "",
   });
 
   const createPetMutation = useMutation(trpc.pets.create.mutationOptions({}));

@@ -6,6 +6,8 @@
     "start": "npx expo start",
     "start-tunnel": "npx expo start --tunnel",
     "android": "npx expo start --android",
+    "build:production": "npx eas-cli build --platform android --profile production",
+    "build:preview": "npx eas-cli build --platform android --profile preview",
     "ios": "npx expo start --ios",
     "web": "npx expo start --web"
   },
@@ -53,6 +55,7 @@
     "react-native-date-picker": "^5.0.13",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-maps": "1.20.1",
+    "react-native-restart": "^0.0.27",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",

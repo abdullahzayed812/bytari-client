@@ -40,23 +40,23 @@ export default function AddPoultryFarmScreen() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: "حقل دواجن جيدي",
-    location: "بغداد العراق",
-    farmType: "broiler" as FarmType,
-    capacity: "1000",
-    currentPopulation: "800",
-    establishedDate: "12/12/2000",
-    licenseNumber: "LIC123123123",
-    contactPerson: "Mohamed ali",
-    phone: "01080028800",
-    email: "mohamed@ali.com",
-    facilities: "kkk",
-    healthStatus: "healthy" as HealthStatus,
-    lastInspection: "some last",
-    description: "this is the poultry farm description",
-    address: "شارع النحاس بغداد البرصرة",
-    latitude: "122.1",
-    longitude: "33.2",
+    name: "",
+    location: "",
+    farmType: "" as FarmType,
+    capacity: "",
+    currentPopulation: "",
+    establishedDate: "",
+    licenseNumber: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    facilities: "",
+    healthStatus: "" as HealthStatus,
+    lastInspection: "",
+    description: "",
+    address: "",
+    latitude: "",
+    longitude: "",
     licenseImage: "",
     images: [] as string[],
   });
@@ -595,7 +595,7 @@ export default function AddPoultryFarmScreen() {
             <View style={styles.inputGroup}>
               <ImageGalleryUploader
                 images={formData.licenseImage ? [formData.licenseImage] : []}
-                onImagesChange={(images) => setFormData(prev => ({ ...prev, licenseImage: images[0] || "" }))}
+                onImagesChange={(images) => setFormData((prev) => ({ ...prev, licenseImage: images[0] || "" }))}
                 maxImages={1}
                 label="صورة الترخيص"
                 aspect={[4, 3]}
@@ -612,7 +612,7 @@ export default function AddPoultryFarmScreen() {
 
             <ImageGalleryUploader
               images={formData.images}
-              onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+              onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
               maxImages={5}
               label="صور الحقل"
               aspect={[4, 3]}

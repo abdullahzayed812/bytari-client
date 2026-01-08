@@ -54,23 +54,20 @@ export default function AdminAdsManagement() {
     imageUrl: string;
     targetUrl: string;
     type: "banner" | "popup" | "inline" | "image_only" | "image_with_link";
-    // position: string;
     interface: "pet_owner" | "vet" | "both";
     clickAction: "none" | "open_link" | "open_file";
     startDate: string;
     endDate: string;
   }>({
-    title: "عنوان الاعلان",
-    description: "محتوى الاعلان",
-    imageUrl:
-      "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2126&q=80",
-    targetUrl: "https://gitnub.com",
+    title: "",
+    description: "",
+    imageUrl: "",
+    targetUrl: "",
     type: "banner",
-    // position: "اسفل",
     interface: "both",
     clickAction: "none",
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    startDate: "",
+    endDate: "",
   });
 
   const {

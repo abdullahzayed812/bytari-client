@@ -2,7 +2,6 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Alert,
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../constants/colors";
-import { useI18n } from "../providers/I18nProvider";
 import {
   Building2,
   Phone,
@@ -20,9 +19,7 @@ import {
   Edit3,
   Eye,
   EyeOff,
-  Upload,
   FileText,
-  Image as ImageIcon,
 } from "lucide-react-native";
 
 import { Stack, useRouter } from "expo-router";
@@ -190,8 +187,6 @@ export default function ClinicSystemScreen() {
       [field]: value,
     }));
   };
-
-
 
   const handleRegisterClinic = async () => {
     if (
@@ -416,8 +411,6 @@ export default function ClinicSystemScreen() {
     setShowFollowUpConfirmation(true);
   };
 
-
-
   const submitMedicalRecord = () => {
     if (!medicalRecordData.diagnosis || !medicalRecordData.treatment) {
       Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
@@ -495,7 +488,7 @@ export default function ClinicSystemScreen() {
       </View>
 
       {/* Admin Controls */}
-      {(hasAdminAccess || isSuperAdmin) && (
+      {isSuperAdmin && (
         <View style={styles.adminControls}>
           <View style={styles.adminHeader}>
             <Text style={styles.adminTitle}>🔧 إعدادات الإدارة</Text>
@@ -562,7 +555,7 @@ export default function ClinicSystemScreen() {
       )}
 
       {/* Edit Mode Indicator */}
-      {(hasAdminAccess || isSuperAdmin) && isEditMode && (
+      {isSuperAdmin && isEditMode && (
         <View style={styles.editModeIndicator}>
           <Edit3 size={16} color={COLORS.primary} />
           <Text style={styles.editModeText}>وضع التعديل مفعل</Text>
@@ -910,8 +903,8 @@ export default function ClinicSystemScreen() {
                             {animal.status === "active"
                               ? "نشط"
                               : animal.status === "recovered"
-                                ? "متعافي"
-                                : "تحت العلاج"}
+                              ? "متعافي"
+                              : "تحت العلاج"}
                           </Text>
                         </View>
                       </View>

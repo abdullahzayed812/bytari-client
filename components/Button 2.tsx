@@ -1,6 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, ActivityIndicator, View } from 'react-native';
 import React from 'react';
 import { COLORS } from '@/constants/colors';
+import { useI18n } from "@/providers/I18nProvider";
 
 interface ButtonProps {
   title: string;
@@ -23,6 +24,7 @@ export default function Button({
   icon,
   style,
 }: ButtonProps) {
+  const { isRTL } = useI18n();
   const buttonStyles = [
     styles.button,
     styles[`${type}Button`],
@@ -48,8 +50,8 @@ export default function Button({
       {loading ? (
         <ActivityIndicator color={type === 'primary' ? COLORS.white : COLORS.primary} />
       ) : (
-        <View style={styles.contentContainer}>
-          {icon && <View style={styles.iconContainer}>{icon}</View>}
+        <View style={[styles.contentContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+          {icon && <View style={[styles.iconContainer, { marginRight: isRTL ? 0 : 8, marginLeft: isRTL ? 8 : 0 }]}>{icon}</View>}
           <Text style={textStyles}>{title}</Text>
         </View>
       )}

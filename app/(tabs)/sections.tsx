@@ -680,7 +680,7 @@ export default function SectionsScreen() {
 
       )} */}
       {/* Management Header - Only visible for admin users */}
-      {hasAdminAccess && (
+      {isSuperAdmin && (
         <View style={styles.managementHeader}>
           <TouchableOpacity
             style={[styles.managementToggle, isManagementMode && styles.managementToggleActive]}

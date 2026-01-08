@@ -1,8 +1,8 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking } from "react-native";
+import React from "react";
 import { COLORS } from "../constants/colors";
-import { Stack, router } from 'expo-router';
-import { ArrowRight, Info, Heart, Users, Shield, Star, ExternalLink, ArrowLeft } from 'lucide-react-native';
+import { Stack, router } from "expo-router";
+import { ArrowRight, Info, Heart, Users, Shield, Star, ExternalLink, ArrowLeft } from "lucide-react-native";
 
 export default function AboutScreen() {
   const handleLinkPress = (url: string) => {
@@ -11,11 +11,11 @@ export default function AboutScreen() {
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'حول التطبيق',
+          title: "حول التطبيق",
           headerStyle: { backgroundColor: COLORS.white },
-          headerTitleStyle: { color: COLORS.black, fontWeight: 'bold' },
+          headerTitleStyle: { color: COLORS.black, fontWeight: "bold" },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -23,13 +23,11 @@ export default function AboutScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Heart size={40} color={COLORS.white} />
-          <Text style={styles.headerText}>
-            تطبيق رعاية الحيوانات الأليفة
-          </Text>
+          <Text style={styles.headerText}>تطبيق رعاية الحيوانات الأليفة</Text>
           <Text style={styles.versionText}>الإصدار 1.0.0</Text>
         </View>
 
@@ -37,7 +35,9 @@ export default function AboutScreen() {
           <Text style={styles.sectionTitle}>عن التطبيق</Text>
           <View style={styles.aboutCard}>
             <Text style={styles.aboutText}>
-              تطبيق رعاية الحيوانات الأليفة هو منصة شاملة مصممة لمساعدة الأطباء البيطريين و أصحاب الحيوانات الأليفة في العناية بحيواناتهم الأليفة بأفضل طريقة ممكنة. نوفر خدمات متنوعة من حجز المواعيد البيطرية إلى متجر لوازم الحيوانات الأليفة.
+              تطبيق رعاية الحيوانات الأليفة هو منصة شاملة مصممة لمساعدة الأطباء البيطريين و أصحاب الحيوانات الأليفة في
+              العناية بحيواناتهم الأليفة بأفضل طريقة ممكنة. نوفر خدمات متنوعة من حجز المواعيد البيطرية إلى متجر لوازم
+              الحيوانات الأليفة.
             </Text>
           </View>
         </View>
@@ -75,7 +75,8 @@ export default function AboutScreen() {
           <Text style={styles.sectionTitle}>فريق العمل</Text>
           <View style={styles.teamCard}>
             <Text style={styles.teamText}>
-              تم تطوير هذا التطبيق بواسطة فريق متخصص من الاطباءالبيطريين ومحبي الحيوانات الأليفة. نحن نعمل بشغف لتوفير أفضل تجربة ممكنة للأطباء البيطريين واصحاب الحيوانات الاليفة
+              تم تطوير هذا التطبيق بواسطة فريق متخصص من الاطباءالبيطريين ومحبي الحيوانات الأليفة. نحن نعمل بشغف لتوفير
+              أفضل تجربة ممكنة للأطباء البيطريين واصحاب الحيوانات الاليفة
             </Text>
           </View>
         </View>
@@ -83,26 +84,17 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>تواصل معنا</Text>
           <View style={styles.contactCard}>
-            <TouchableOpacity 
-              style={styles.contactItem}
-              onPress={() => handleLinkPress('https://petcare.com')}
-            >
+            <TouchableOpacity style={styles.contactItem} onPress={() => handleLinkPress("https://petcare.com")}>
               <ExternalLink size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>الموقع الإلكتروني</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.contactItem}
-              onPress={() => handleLinkPress('mailto:info@petcare.com')}
-            >
+            <TouchableOpacity style={styles.contactItem} onPress={() => handleLinkPress("mailto:info@petcare.com")}>
               <ExternalLink size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>البريد الإلكتروني</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.contactItem}
-              onPress={() => router.push('/contact-us')}
-            >
+            <TouchableOpacity style={styles.contactItem} onPress={() => router.push("/contact-us")}>
               <ExternalLink size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>صفحة التواصل</Text>
             </TouchableOpacity>
@@ -112,10 +104,7 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الشروط والأحكام</Text>
           <View style={styles.legalCard}>
-            <TouchableOpacity 
-              style={styles.legalItem}
-              onPress={() => router.push('/privacy')}
-            >
+            <TouchableOpacity style={styles.legalItem} onPress={() => router.push("/privacy")}>
               <Text style={styles.legalText}>سياسة الخصوصية</Text>
               <ArrowRight size={16} color={COLORS.darkGray} />
             </TouchableOpacity>
@@ -133,12 +122,8 @@ export default function AboutScreen() {
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            © 2025 Veterinary App. جميع الحقوق محفوظة
-          </Text>
-          <Text style={styles.footerSubtext}>
-            صنع بـ ❤️ للأطباء البيطريين ولمحبي الحيوانات الأليفة
-          </Text>
+          <Text style={styles.footerText}>©2026 Bytari App. جميع الحقوق محفوظة</Text>
+          <Text style={styles.footerSubtext}>صنع بـ ❤️ للأطباء البيطريين ولمحبي الحيوانات الأليفة</Text>
         </View>
       </ScrollView>
     </>
@@ -158,13 +143,13 @@ const styles = StyleSheet.create({
     padding: 20,
     margin: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerText: {
     fontSize: 20,
     color: COLORS.white,
-    textAlign: 'center',
-    fontWeight: 'bold',
+    textAlign: "center",
+    fontWeight: "bold",
     marginTop: 12,
     marginBottom: 8,
   },
@@ -179,10 +164,10 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   aboutCard: {
     backgroundColor: COLORS.white,
@@ -198,7 +183,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: 'right',
+    textAlign: "right",
   },
   featuresCard: {
     backgroundColor: COLORS.white,
@@ -211,25 +196,25 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   featureItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 16,
   },
   featureInfo: {
     marginRight: 16,
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   featureTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
   },
   featureDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   teamCard: {
     backgroundColor: COLORS.white,
@@ -245,7 +230,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: 'right',
+    textAlign: "right",
   },
   contactCard: {
     backgroundColor: COLORS.white,
@@ -257,8 +242,8 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   contactItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -267,7 +252,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.primary,
     marginRight: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   legalCard: {
     backgroundColor: COLORS.white,
@@ -279,9 +264,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   legalItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -289,10 +274,10 @@ const styles = StyleSheet.create({
   legalText: {
     fontSize: 16,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
     marginBottom: 20,
   },

@@ -17,15 +17,15 @@ export default function AddClinicScreen() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: "test clinic name",
-    description: "test description",
-    address: "test address",
-    phone: "010000000000000000",
-    email: "clinic@mail.com",
-    workingHours: "3",
-    licenseNumber: "191919191919191",
-    licenseImages: ["http://bytari/media/img1.png"],
-    identityImages: ["http://bytari/media/img1.png"],
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    workingHours: "",
+    licenseNumber: "",
+    licenseImages: [""],
+    identityImages: [""],
     images: [] as string[],
   });
   const { showToast } = useToastContext();

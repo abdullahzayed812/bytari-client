@@ -5,7 +5,7 @@ import { I18nProvider } from "../providers/I18nProvider";
 import { AppProvider } from "../providers/AppProvider";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StyleSheet, TouchableOpacity } from "react-native";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeft, ArrowRight } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { configureRTL } from "../lib/rtl-config";
@@ -16,14 +16,22 @@ import { NotificationProvider } from "@/providers/NotificationProvider";
 import { FavoritesProvider } from "@/providers/FavoritesProvider";
 import { OrdersProvider } from "@/providers/OrdersProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
+import { useI18n } from "../providers/I18nProvider";
 
 function BackButton() {
+  const { isRTL } = useI18n();
   return (
     <TouchableOpacity
       onPress={() => handleBackNavigation()}
-      style={styles.backButton}
+      style={[
+        styles.backButton,
+        {
+          marginLeft: isRTL ? 0 : 8,
+          marginRight: isRTL ? 8 : 0,
+        },
+      ]}
     >
-      <ArrowLeft size={24} color={COLORS.black} />
+      {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
     </TouchableOpacity>
   );
 }

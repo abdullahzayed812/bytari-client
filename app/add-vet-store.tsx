@@ -8,14 +8,14 @@ export default function AddVetStoreScreen() {
   const router = useRouter();
 
   const [formData, setFormData] = useState({
-    name: "عيادة الحيوانات الأليفة السعيدة",
-    ownerName: "د. أحمد العتيبي",
-    ownerEmail: "ahmad.vet@example.com",
-    phone: "+966501234567",
-    address: "شارع الملك فهد، حي العليا، الرياض",
-    city: "الرياض",
-    description: "نقدم أفضل رعاية بيطرية للحيوانات الأليفة، تشمل التطعيمات، الفحوصات، والجراحة.",
-    specialties: "الكلاب، القطط، الطيور، الحيوانات الصغيرة",
+    name: "",
+    ownerName: "",
+    ownerEmail: "",
+    phone: "",
+    address: "",
+    city: "",
+    description: "",
+    specialties: "",
   });
 
   const handleBack = () => {

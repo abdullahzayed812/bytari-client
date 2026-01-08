@@ -31,17 +31,18 @@ export default function AddUnionAnnouncementScreen() {
 
   // Form state - must be declared before any conditional returns
   const [formData, setFormData] = useState<Partial<Announcement>>({
-    title: "إعلان جديد من النقابة",
-    content: "هذا إعلان تجريبي من النقابة البيطرية العراقية. يمكنك تعديل هذا النص ليتناسب مع محتوى الإعلان الفعلي.",
-    date: new Date().toISOString().split("T")[0],
-    type: "general",
+    title: "",
+    content: "",
+    date: "",
+    type: "",
     isImportant: false,
-    image: "", // Initialize image as empty string
+    image: "",
     link: "",
     linkText: "",
-    author: user?.name || "النقابة البيطرية العراقية",
-    branchId: branchId as string,
+    author: "",
+    branchId: "",
   });
+
   // selectedImage state is no longer needed if ImageUpload component handles it
   // const [selectedImage, setSelectedImage] = useState<string | null>(null);
 

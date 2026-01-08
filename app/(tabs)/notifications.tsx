@@ -128,7 +128,14 @@ export default function NotificationsScreen() {
           notifications?.map((notification: any) => (
             <TouchableOpacity
               key={notification.id}
-              style={[styles.notificationCard, !notification.isRead && styles.unreadCard]}
+              style={[
+                styles.notificationCard,
+                !notification.isRead && {
+                  borderLeftWidth: isRTL ? 0 : 4,
+                  borderRightWidth: isRTL ? 4 : 0,
+                  borderColor: COLORS.primary,
+                },
+              ]}
               onPress={() => handleNotificationPress(notification)}
             >
               <View style={[styles.notificationContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -193,10 +200,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  unreadCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
   },
   notificationContent: {
     alignItems: "flex-start",

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { ScrollView, NativeScrollEvent, NativeSyntheticEvent, Platform, View } from "react-native";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface AutoScrollViewProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export default function AutoScrollView({
   contentContainerStyle,
   style,
 }: AutoScrollViewProps) {
+  const { isRTL } = useI18n();
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
@@ -34,7 +36,9 @@ export default function AutoScrollView({
   const middleSetIndex = originalCount;
 
   // Initial scroll position (start of middle set)
-  const [contentOffsetX, setContentOffsetX] = useState(isSingleItem ? 0 : middleSetIndex * itemWidth);
+  const [contentOffsetX, setContentOffsetX] = useState(
+    isSingleItem ? 0 : (isRTL ? data.length - (originalCount + 1) : middleSetIndex) * itemWidth
+  );
 
   // Initialize scroll position
   const [isInitialized, setIsInitialized] = useState(false);
@@ -42,18 +46,18 @@ export default function AutoScrollView({
   const startAutoScroll = useCallback(() => {
     if (isSingleItem) return; // Don't auto scroll if single item
 
-    if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+    stopAutoScroll(); // Clear any existing interval
 
     scrollIntervalRef.current = setInterval(() => {
       if (scrollViewRef.current && !isUserScrolling) {
         setContentOffsetX((prevOffset) => {
-          const nextOffset = prevOffset + itemWidth;
+          const nextOffset = isRTL ? prevOffset - itemWidth : prevOffset + itemWidth;
           scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
           return nextOffset;
         });
       }
     }, autoScrollInterval);
-  }, [autoScrollInterval, isUserScrolling, itemWidth, isSingleItem]);
+  }, [autoScrollInterval, isUserScrolling, itemWidth, isSingleItem, isRTL, stopAutoScroll]);
 
   const stopAutoScroll = useCallback(() => {
     if (scrollIntervalRef.current) {
@@ -76,9 +80,10 @@ export default function AutoScrollView({
     }
 
     if (!isInitialized && scrollViewRef.current) {
-      // Jump to middle set without animation
-      scrollViewRef.current.scrollTo({ x: middleSetIndex * itemWidth, animated: false });
-      setContentOffsetX(middleSetIndex * itemWidth);
+      // Jump to middle set without animation, accounting for RTL
+      const initialScrollX = isRTL ? data.length - (originalCount + 1) : middleSetIndex * itemWidth;
+      scrollViewRef.current.scrollTo({ x: initialScrollX, animated: false });
+      setContentOffsetX(initialScrollX);
       setIsInitialized(true);
     }
   };
@@ -94,28 +99,32 @@ export default function AutoScrollView({
     const totalWidth = originalCount * itemWidth;
     const threshold = itemWidth / 2;
 
-    // Check if we've scrolled past the last set (or close to it)
-    if (offsetX >= totalWidth * 2) {
-      // Reset to middle set
-      const resetOffsetX = offsetX - totalWidth;
-      scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
-      setContentOffsetX(resetOffsetX);
-    }
-    // Check if we've scrolled before the first set
-    else if (offsetX < totalWidth) {
-      // Reset to middle set
-      const resetOffsetX = offsetX + totalWidth;
-      scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
-      setContentOffsetX(resetOffsetX);
+    if (isRTL) {
+      // RTL: offsetX decreases as we scroll to the "next" item (visually right)
+      // If we've scrolled past the first set (too far right, offsetX is too small)
+      if (offsetX <= totalWidth / 2) {
+        // Scrolled near the start of the first copy
+        const resetOffsetX = offsetX + totalWidth;
+        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
+        setContentOffsetX(resetOffsetX);
+      }
+      // If we've scrolled past the last set (too far left, offsetX is too large)
+      else if (offsetX >= totalWidth * 2.5) {
+        // Scrolled near the end of the last copy
+        const resetOffsetX = offsetX - totalWidth;
+        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
+        setContentOffsetX(resetOffsetX);
+      }
     } else {
-      // Just update local state if needed, but be careful not to cause re-renders loop
-      // We mainly use contentOffsetX for the auto-scroll target
-      if (!isUserScrolling) {
-        // Sync state with actual position if we are auto-scrolling
-        // This helps keep the target correct
-        if (Math.abs(contentOffsetX - offsetX) > itemWidth) {
-          setContentOffsetX(offsetX);
-        }
+      // LTR: offsetX increases as we scroll to the "next" item (visually left)
+      if (offsetX >= totalWidth * 2) {
+        const resetOffsetX = offsetX - totalWidth;
+        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
+        setContentOffsetX(resetOffsetX);
+      } else if (offsetX < totalWidth) {
+        const resetOffsetX = offsetX + totalWidth;
+        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
+        setContentOffsetX(resetOffsetX);
       }
     }
   };
@@ -155,9 +164,7 @@ export default function AutoScrollView({
       onMomentumScrollEnd={onMomentumScrollEnd}
     >
       {data.map((child, index) => (
-        <View key={index} style={{ width: itemWidth }}>
-          {child}
-        </View>
+        <View key={index}>{child}</View>
       ))}
     </ScrollView>
   );

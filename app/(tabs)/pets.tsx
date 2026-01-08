@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, ScrollView, ActivityIndicator } from "react-native";
 import React, { useRef, useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
@@ -425,7 +416,6 @@ export default function PetsScreen() {
         </View>
 
         {clinic.images?.[0] ? (
-
           <Image
             source={{
               uri: clinic.images?.[0] || "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=400",
@@ -470,17 +460,17 @@ export default function PetsScreen() {
         <View style={styles.clinicStats}>
           <View style={styles.clinicStat}>
             <Users size={16} color={COLORS.primary} />
-            <Text style={styles.clinicStatValue}>85</Text>
+            <Text style={styles.clinicStatValue}>{clinic.totalAnimals}</Text>
             <Text style={styles.clinicStatLabel}>مريض</Text>
           </View>
           <View style={styles.clinicStat}>
             <Activity size={16} color={COLORS.success} />
-            <Text style={styles.clinicStatValue}>18</Text>
+            <Text style={styles.clinicStatValue}>{clinic.activePatients}</Text>
             <Text style={styles.clinicStatLabel}>نشط</Text>
           </View>
           <View style={styles.clinicStat}>
             <CheckCircle size={16} color={COLORS.primary} />
-            <Text style={styles.clinicStatValue}>256</Text>
+            <Text style={styles.clinicStatValue}>{clinic.completedTreatments}</Text>
             <Text style={styles.clinicStatLabel}>مكتمل</Text>
           </View>
         </View>
@@ -529,8 +519,7 @@ export default function PetsScreen() {
         {store?.images?.length > 0 ? (
           <Image
             source={{
-              uri:
-                store.images[0]
+              uri: store.images[0],
             }}
             style={styles.warehouseImage}
           />
@@ -581,17 +570,17 @@ export default function PetsScreen() {
         <View style={styles.warehouseStats}>
           <View style={styles.warehouseStat}>
             <Package size={16} color={COLORS.primary} />
-            <Text style={styles.warehouseStatValue}>{store.totalProducts || 45}</Text>
+            <Text style={styles.warehouseStatValue}>{store.totalProducts}</Text>
             <Text style={styles.warehouseStatLabel}>منتج</Text>
           </View>
           <View style={styles.warehouseStat}>
             <DollarSign size={16} color={COLORS.success} />
-            <Text style={styles.warehouseStatValue}>{store.totalSales || 1247}</Text>
+            <Text style={styles.warehouseStatValue}>{store.totalSales}</Text>
             <Text style={styles.warehouseStatLabel}>مبيعات</Text>
           </View>
           <View style={styles.warehouseStat}>
             <Users size={16} color={COLORS.warning} />
-            <Text style={styles.warehouseStatValue}>{store.followers || 892}</Text>
+            <Text style={styles.warehouseStatValue}>{store.followers}</Text>
             <Text style={styles.warehouseStatLabel}>متابع</Text>
           </View>
         </View>

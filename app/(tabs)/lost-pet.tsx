@@ -228,7 +228,7 @@ export default function LostPetScreen() {
             </View>
           </View>
 
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Phone size={20} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
@@ -250,7 +250,7 @@ export default function LostPetScreen() {
                 <Text style={styles.infoValue}>{pet.contactInfo.email}</Text>
               </View>
             )}
-          </View>
+          </View> */}
 
           {pet.description && (
             <View style={styles.section}>
@@ -327,27 +327,27 @@ export default function LostPetScreen() {
             </View>
           )}
         </View>
-      </ScrollView>
 
-      <View style={styles.bottomActions}>
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.callButton} onPress={handleCall}>
-            <Phone size={20} color={COLORS.white} />
-            <Text style={styles.callButtonText}>اتصال بالمالك</Text>
-          </TouchableOpacity>
-
-          {pet.contactInfo.email && (
-            <TouchableOpacity style={styles.emailButton} onPress={handleEmail}>
-              <Mail size={20} color={COLORS.primary} />
-              <Text style={styles.emailButtonText}>إرسال بريد</Text>
+        <View style={styles.bottomActions}>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity style={styles.callButton} onPress={handleCall}>
+              <Phone size={20} color={COLORS.white} />
+              <Text style={styles.callButtonText}>اتصال بالمالك</Text>
             </TouchableOpacity>
-          )}
-        </View>
 
-        <TouchableOpacity style={styles.reportButton} onPress={handleReportSighting}>
-          <Text style={styles.reportButtonText}>الإبلاغ عن مشاهدة</Text>
-        </TouchableOpacity>
-      </View>
+            {pet.contactInfo.email && (
+              <TouchableOpacity style={styles.emailButton} onPress={handleEmail}>
+                <Mail size={20} color={COLORS.primary} />
+                <Text style={styles.emailButtonText}>إرسال بريد</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.reportButton} onPress={handleReportSighting}>
+            <Text style={styles.reportButtonText}>الإبلاغ عن مشاهدة</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {/* Sighting Report Modal */}
       <Modal
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingBottom: 200,
+    // paddingBottom: 200,
   },
   petName: {
     fontSize: 28,
@@ -516,10 +516,10 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   bottomActions: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // position: "absolute",
+    // bottom: 0,
+    // left: 0,
+    // right: 0,
     backgroundColor: COLORS.white,
     paddingHorizontal: 20,
     paddingVertical: 16,

@@ -1,6 +1,10 @@
 {
   "android": {
-    "package": "com.anonymous.expoapp"
+    "package": "com.anonymous.expoapp",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/appicon.jpeg",
+      "backgroundColor": "#ffffff"
+    }
   },
   "extra": {
     "eas": {

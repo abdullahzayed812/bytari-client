@@ -22,17 +22,15 @@ export default function PostJobVacancyScreen() {
 
   // Initial form data with sample values
   const [formData, setFormData] = useState({
-    title: "طبيب بيطري - عيادة الحيوانات الأليفة",
-    company: "عيادة الرحمة البيطرية",
-    location: "بغداد، العراق",
-    type: "full-time", // Changed to match enum
-    salary: "800000 - 1200000 د.ع",
-    description:
-      "نبحث عن طبيب بيطري مؤهل وذو خبرة للانضمام إلى فريقنا في عيادة الرحمة البيطرية. المسؤوليات تشمل فحص وعلاج الحيوانات الأليفة، إجراء العمليات الجراحية البسيطة، وتقديم الاستشارات الطبية لأصحاب الحيوانات.",
-    requirements:
-      "شهادة بكالوريوس في الطب البيطري، خبرة لا تقل عن سنتين في مجال العيادات البيطرية، مهارات تواصل جيدة، القدرة على التعامل مع الحيوانات بلطف ومهنية",
-    contactEmail: "info@alrahma-vet.com",
-    contactPhone: "07701234567",
+    title: "",
+    company: "",
+    location: "",
+    type: "", // could be "full-time" | "part-time" | "contract", etc.
+    salary: "",
+    description: "",
+    requirements: "",
+    contactEmail: "",
+    contactPhone: "",
   });
 
   const [selectedJobType, setSelectedJobType] = useState<string>("full-time");

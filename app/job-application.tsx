@@ -40,19 +40,16 @@ export default function JobApplicationScreen() {
 
   // Initial form data with sample values
   const [formData, setFormData] = useState<JobApplicationFormData>({
-    applicantName: "د. أحمد محمد علي",
-    applicantEmail: "vet1@example.com",
-    applicantPhone: "07701234567",
-    location: "بغداد، العراق",
-    desiredPosition: decodedJobTitle || "طبيب بيطري",
-    skills:
-      "خبرة في علاج الحيوانات الأليفة، مهارات تواصل ممتازة، القدرة على العمل تحت الضغط، إتقان استخدام الأجهزة الطبية البيطرية الحديثة",
-    expectedSalary: "800000",
-    coverLetter:
-      "أتقدم بطلب للعمل في منشأتكم الموقرة. لدي خبرة واسعة في مجال الطب البيطري وأرغب في الانضمام إلى فريقكم المتميز للمساهمة في تقديم أفضل الخدمات الطبية للحيوانات.",
-    experience:
-      "5 سنوات خبرة في عيادة الأمل البيطرية - بغداد، متخصص في علاج القطط والكلاب والطيور، إجراء العمليات الجراحية البسيطة والمتوسطة",
-    education: "بكالوريوس الطب البيطري - جامعة بغداد (2018)، دورات تدريبية في الجراحة البيطرية الحديثة",
+    applicantName: "",
+    applicantEmail: "",
+    applicantPhone: "",
+    location: "",
+    desiredPosition: "",
+    skills: "",
+    expectedSalary: "",
+    coverLetter: "",
+    experience: "",
+    education: "",
   });
 
   const submitApplicationMutation = useMutation(trpc.admin.jobs.submitJobApplication.mutationOptions());

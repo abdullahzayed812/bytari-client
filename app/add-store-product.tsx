@@ -30,11 +30,11 @@ export default function AddStoreProductScreen() {
   // Determine store type from params or userMode
   const currentStoreType = storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
   const [formData, setFormData] = useState<StoreProductFormData>({
-    name: "اسم منتج جديد",
-    description: "وصف المنتج للاختبار",
+    name: "",
+    description: "",
     category: "",
-    price: "300",
-    stock: "12",
+    price: "",
+    stock: "",
     images: [],
   });
 

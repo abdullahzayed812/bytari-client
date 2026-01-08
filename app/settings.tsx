@@ -1,9 +1,9 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import React from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import React from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { Stack, router } from 'expo-router';
-import { ArrowRight, Phone, Bell, Shield, HelpCircle, Info, Globe, User, ArrowLeft } from 'lucide-react-native';
+import { Stack, router } from "expo-router";
+import { ArrowRight, Phone, Bell, Shield, HelpCircle, Info, Globe, User, ArrowLeft } from "lucide-react-native";
 import { handleBackNavigation } from "../lib/navigation-utils";
 
 export default function SettingsScreen() {
@@ -11,47 +11,47 @@ export default function SettingsScreen() {
 
   const settingsItems = [
     {
-      id: 'contact',
-      title: 'تواصل معنا',
+      id: "contact",
+      title: "تواصل معنا",
       icon: <Phone size={24} color={COLORS.primary} />,
-      route: '/contact-us'
+      route: "/contact-us",
     },
     {
-      id: 'notifications',
-      title: 'إعدادات الإشعارات',
+      id: "notifications",
+      title: "إعدادات الإشعارات",
       icon: <Bell size={24} color={COLORS.primary} />,
-      route: '/notifications'
+      route: "/notifications",
     },
     {
-      id: 'privacy',
-      title: 'الخصوصية والأمان',
+      id: "privacy",
+      title: "الخصوصية والأمان",
       icon: <Shield size={24} color={COLORS.primary} />,
-      route: '/privacy'
+      route: "/privacy",
     },
     {
-      id: 'language',
-      title: 'اللغة',
+      id: "language",
+      title: "اللغة",
       icon: <Globe size={24} color={COLORS.primary} />,
-      route: '/language'
+      route: "/language",
     },
     {
-      id: 'account',
-      title: 'إعدادات الحساب',
+      id: "account",
+      title: "إعدادات الحساب",
       icon: <User size={24} color={COLORS.primary} />,
-      route: '/account-settings'
+      route: "/account-settings",
     },
     {
-      id: 'help',
-      title: 'المساعدة والدعم',
+      id: "help",
+      title: "المساعدة والدعم",
       icon: <HelpCircle size={24} color={COLORS.primary} />,
-      route: '/help'
+      route: "/help",
     },
     {
-      id: 'about',
-      title: 'حول التطبيق',
+      id: "about",
+      title: "حول التطبيق",
       icon: <Info size={24} color={COLORS.primary} />,
-      route: '/about'
-    }
+      route: "/about",
+    },
   ];
 
   const handleItemPress = (route: string) => {
@@ -60,11 +60,11 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'الإعدادات',
+          title: "الإعدادات",
           headerStyle: { backgroundColor: COLORS.white },
-          headerTitleStyle: { color: COLORS.black, fontWeight: 'bold' },
+          headerTitleStyle: { color: COLORS.black, fontWeight: "bold" },
           headerLeft: () => (
             <TouchableOpacity onPress={() => handleBackNavigation()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -72,25 +72,20 @@ export default function SettingsScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>
-            إدارة إعدادات التطبيق والحساب الشخصي
-          </Text>
+          <Text style={styles.headerText}>إدارة إعدادات التطبيق والحساب الشخصي</Text>
         </View>
 
         <View style={styles.settingsSection}>
           <Text style={styles.sectionTitle}>الإعدادات العامة</Text>
-          
+
           <View style={styles.settingsCard}>
             {settingsItems.map((item, index) => (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={item.id}
-                style={[
-                  styles.settingItem,
-                  index === settingsItems.length - 1 && styles.lastItem
-                ]}
+                style={[styles.settingItem, index === settingsItems.length - 1 && styles.lastItem]}
                 onPress={() => handleItemPress(item.route)}
               >
                 <View style={styles.settingItemContent}>
@@ -107,9 +102,9 @@ export default function SettingsScreen() {
 
         <View style={styles.appInfo}>
           <Text style={styles.appVersion}>إصدار التطبيق: 1.0.0</Text>
-          <Text style={styles.appCopyright}>©2025 Veterinary App. جميع الحقوق محفوظة</Text>
+          <Text style={styles.appCopyright}>©2026 Bytari App. جميع الحقوق محفوظة</Text>
         </View>
-        
+
         {/* مساحة إضافية في الأسفل */}
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -134,19 +129,19 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 16,
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   settingsSection: {
     margin: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   settingsCard: {
     backgroundColor: COLORS.white,
@@ -158,9 +153,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   settingItem: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -169,24 +164,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   settingItemContent: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     flex: 1,
   },
   settingInfo: {
     marginRight: 16,
     flex: 1,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   settingTitle: {
     fontSize: 16,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   appInfo: {
     margin: 16,
     marginTop: 32,
-    alignItems: 'center',
+    alignItems: "center",
     paddingBottom: 32,
   },
   appVersion: {
@@ -197,6 +192,6 @@ const styles = StyleSheet.create({
   appCopyright: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

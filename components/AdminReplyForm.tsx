@@ -1,10 +1,11 @@
-import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch } from "react-native";
 import { COLORS } from "@/constants/colors";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { Send } from "lucide-react-native";
 import { useToastContext } from "@/providers/ToastProvider";
+import { isRTL as getIsRTL } from "../lib/rtl-config";
+import { useState } from "react";
 
 interface AdminReplyFormProps {
   type: "inquiry" | "consultation";
@@ -78,7 +79,9 @@ export default function AdminReplyForm({ type, itemId, moderatorId, onReplySucce
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>الرد على {type === "inquiry" ? "الاستفسار" : "الاستشارة"}</Text>
+      <Text style={[styles.title, { textAlign: getIsRTL() ? "right" : "left" }]}>
+        الرد على {type === "inquiry" ? "الاستفسار" : "الاستشارة"}
+      </Text>
 
       <TextInput
         style={styles.textInput}
@@ -88,11 +91,13 @@ export default function AdminReplyForm({ type, itemId, moderatorId, onReplySucce
         onChangeText={setReplyContent}
         multiline
         numberOfLines={4}
-        textAlign="right"
+        textAlign={getIsRTL() ? "right" : "left"}
       />
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.switchLabel}>إبقاء المحادثة مفتوحة للرد</Text>
+      <View style={[styles.switchContainer, { flexDirection: getIsRTL() ? "row-reverse" : "row" }]}>
+        <Text style={[styles.switchLabel, { marginRight: getIsRTL() ? 0 : 12, marginLeft: getIsRTL() ? 12 : 0 }]}>
+          إبقاء المحادثة مفتوحة للرد
+        </Text>
         <Switch
           value={keepConversationOpen}
           onValueChange={setKeepConversationOpen}
@@ -101,14 +106,18 @@ export default function AdminReplyForm({ type, itemId, moderatorId, onReplySucce
         />
       </View>
 
-      <Text style={styles.helpText}>
+      <Text style={[styles.helpText, { textAlign: getIsRTL() ? "right" : "left" }]}>
         {keepConversationOpen
           ? "سيتمكن المستخدم من الرد مرة أخرى على هذه المحادثة"
           : "سيتم إغلاق المحادثة ولن يتمكن المستخدم من الرد"}
       </Text>
 
       <TouchableOpacity
-        style={[styles.submitButton, (!replyContent.trim() || isSubmitting) && styles.submitButtonDisabled]}
+        style={[
+          styles.submitButton,
+          (!replyContent.trim() || isSubmitting) && styles.submitButtonDisabled,
+          { flexDirection: getIsRTL() ? "row-reverse" : "row" },
+        ]}
         onPress={handleSubmitReply}
         disabled={!replyContent.trim() || isSubmitting}
       >
@@ -136,7 +145,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "center",
+    textAlign: getIsRTL() ? "right" : "left",
   },
   textInput: {
     borderWidth: 1,
@@ -166,7 +175,7 @@ const styles = StyleSheet.create({
   helpText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "center",
+    textAlign: getIsRTL() ? "right" : "left",
     marginBottom: 16,
     lineHeight: 20,
   },

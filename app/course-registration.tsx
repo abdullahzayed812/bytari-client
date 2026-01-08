@@ -31,10 +31,10 @@ export default function CourseRegistrationScreen() {
   const courseOrganizer = params.courseOrganizer as string;
 
   const [formData, setFormData] = useState<RegistrationFormData>({
-    participantName: "Mohamed ali",
-    participantEmail: "mohameali@mail.com",
-    participantPhone: "01008877666",
-    specialRequests: "Some text to test register in course/seminar",
+    participantName: "",
+    participantEmail: "",
+    participantPhone: "",
+    specialRequests: "",
   });
 
   const submitRegistrationMutation = useMutation(trpc.courses.register.mutationOptions());
