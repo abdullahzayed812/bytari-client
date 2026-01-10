@@ -24,7 +24,7 @@ const translations = {
     "auth.registerTitle": "إنشاء حساب جديد",
     "auth.selectAccountType": "اختر نوع الحساب",
     "auth.petOwner": "صاحب حيوان",
-    "auth.veterinarian": "طبيب بيطري أو صاحب عيادة",
+    "auth.veterinarian": "طبيب بيطري ",
     "auth.selectVetType": "حدد نوع الحساب",
     "auth.vetStudent": "طالب في كلية الطب البيطري",
     "auth.vetDoctor": "طبيب بيطري",

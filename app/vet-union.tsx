@@ -329,6 +329,16 @@ function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
     return <Text>لا توجد إعلانات حالياً</Text>;
   }
 
+  const handleLinkPress = async (url: string) => {
+    if (!url) return;
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("خطأ", `لا يمكن فتح الرابط: ${url}`);
+    }
+  };
+
   return (
     <View>
       {announcements?.reverse()?.map((announcement) => (
@@ -346,6 +356,11 @@ function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
                   style={{ width: "100%", height: 150, resizeMode: "cover", borderRadius: 10 }}
                 />
               </View>
+            ) : null}
+            {announcement?.link ? (
+              <TouchableOpacity onPress={() => handleLinkPress(announcement.link)}>
+                <Text style={[styles.announcementText, styles.linkText]}>{announcement.link}</Text>
+              </TouchableOpacity>
             ) : null}
             <Text style={styles.announcementText}>{announcement.content}</Text>
             <Text style={styles.announcementDate}>
@@ -608,6 +623,10 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: "600",
     textAlign: "right",
+  },
+  linkText: {
+    color: COLORS.primary,
+    textDecorationLine: "underline",
   },
   branchesSection: {
     padding: 16,

@@ -1,14 +1,23 @@
 {
-  "android": {
-    "package": "com.anonymous.expoapp",
-    "adaptiveIcon": {
-      "foregroundImage": "./assets/appicon.jpeg",
+  "expo": {
+    "name": "Bytari",
+    "slug": "bytari",
+    "android": {
+      "package": "com.anonymous.expoapp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/appicon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "splash": {
+      "image": "./assets/appicon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
-    }
-  },
-  "extra": {
-    "eas": {
-      "projectId": "8a476979-04a9-4aae-a277-0a451db3066e"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8a476979-04a9-4aae-a277-0a451db3066e"
+      }
     }
   }
 }

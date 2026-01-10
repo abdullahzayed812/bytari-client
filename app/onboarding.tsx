@@ -6,22 +6,14 @@ import { useRouter } from "expo-router";
 import { useI18n } from "../providers/I18nProvider";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useApp } from "@/providers/AppProvider";
 
 const { width } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
-  const { isAuthenticated, setHasSeenOnboarding } = useApp();
   const router = useRouter();
   const { t } = useI18n();
 
-  if (isAuthenticated) {
-    router.replace("/(tabs)");
-    return;
-  }
-
   const handleGetStarted = () => {
-    setHasSeenOnboarding(true);
     router.replace("/auth");
   };
 

@@ -82,6 +82,14 @@ export default function StoreDetailsScreen() {
   const { data: followerCountData } = useQuery(trpc.stores.getFollowerCount.queryOptions({ storeId: Number(id) }));
   const followerCount = followerCountData?.count;
 
+  // Fetch store reviews
+  const { data: reviewsData, isLoading: areReviewsLoading } = useQuery(
+    trpc.reviews.getStoreReviews.queryOptions({
+      storeId: Number(id),
+    })
+  );
+  const reviews = (reviewsData as any)?.reviews;
+
   const followMutation = useMutation(trpc.stores.follow.mutationOptions());
 
   const unfollowMutation = useMutation(trpc.stores.unfollow.mutationOptions());
@@ -195,10 +203,55 @@ export default function StoreDetailsScreen() {
     Alert.alert("إعدادات الإشعارات", message);
   };
 
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
+    }
+
+    if (hasHalfStar) {
+      stars.push(<Star key="half" size={16} color="#FFD700" fill="#FFD700" />);
+    }
+
+    const remainingStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < remainingStars; i++) {
+      stars.push(<Star key={`empty-${i}`} size={16} color="#E5E7EB" />);
+    }
+
+    return stars;
+  };
+
+  const addReviewMutation = useMutation(trpc.reviews.addStoreReview.mutationOptions());
+
   const handleRatingSubmit = async (rating: number, comment: string) => {
     if (storeData) {
-      console.log("Rating submitted:", { rating, comment, storeId: storeData.id });
-      // TODO: Implement API call to submit rating
+      addReviewMutation.mutate(
+        {
+          storeId: storeData.id,
+          rating,
+          comment,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries(trpc.reviews.getStoreReviews.queryKey as any);
+            queryClient.invalidateQueries(trpc.stores.getById.queryKey as any);
+            setShowRatingModal(false);
+            showToast({
+              type: "success",
+              message: "تم إرسال تقييمك بنجاح",
+            });
+          },
+          onError: (error) => {
+            showToast({
+              type: "error",
+              message: error.message,
+            });
+          },
+        }
+      );
     }
   };
 
@@ -265,12 +318,11 @@ export default function StoreDetailsScreen() {
             <View style={styles.storeInfo}>
               <Text style={styles.storeName}>{storeData.name}</Text>
               <Text style={styles.followerCount}>{followerCount} متابع</Text>
-              <View style={styles.ratingContainer}>
+              {/* <View style={styles.ratingContainer}>
                 <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
                 <Text style={styles.rating}>{storeData.rating.toFixed(1)}</Text>
-                {/* Removed reviewCount as it's not in schema */}
-                {/* <Text style={styles.reviewCount}>({storeData.reviewCount} تقييم)</Text> */}
-              </View>
+                <Text style={styles.reviewCount}>({storeData.reviewCount} تقييم)</Text>
+              </View> */}
             </View>
 
             <View style={[styles.statusBadge, { backgroundColor: storeData.isActive ? COLORS.success : COLORS.error }]}>
@@ -395,6 +447,29 @@ export default function StoreDetailsScreen() {
                 type="outline"
                 style={styles.viewAllButton}
               />
+            </View>
+          )}
+
+          {/* Reviews */}
+          {reviews && reviews.length > 0 && (
+            <View style={styles.reviewsSection}>
+              <Text style={styles.sectionTitle}>التقييمات</Text>
+              {reviews.map((review: any) => (
+                <View key={review.id} style={styles.reviewItem}>
+                  <View style={styles.reviewHeader}>
+                    <Image
+                      source={{ uri: review.user.avatar || "https://via.placeholder.com/40" }}
+                      style={styles.reviewerAvatar}
+                    />
+                    <View>
+                      <Text style={styles.reviewerName}>{review.user.name}</Text>
+                      <View style={styles.starsContainer}>{renderStars(review.rating)}</View>
+                    </View>
+                  </View>
+                  <Text style={styles.reviewComment}>{review.comment}</Text>
+                  <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
+                </View>
+              ))}
             </View>
           )}
 
@@ -648,5 +723,54 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  reviewsSection: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  reviewItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  reviewHeader: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  reviewerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  reviewerName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "right",
+  },
+  starsContainer: {
+    flexDirection: "row-reverse",
+    gap: 4,
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    lineHeight: 22,
+    textAlign: "right",
+    marginBottom: 8,
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    textAlign: "left",
   },
 });

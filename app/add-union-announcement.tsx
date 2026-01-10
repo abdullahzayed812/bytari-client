@@ -34,7 +34,7 @@ export default function AddUnionAnnouncementScreen() {
     title: "",
     content: "",
     date: "",
-    type: "",
+    type: "general",
     isImportant: false,
     image: "",
     link: "",
@@ -47,8 +47,6 @@ export default function AddUnionAnnouncementScreen() {
   // const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const createAnnouncementMutation = useMutation(trpc.union.announcement.create.mutationOptions());
-
-  console.log(user);
 
   // Check if user has permission to add announcements
   if (!isSuperAdmin && !isModerator && !supervisedBranchIds.length) {
@@ -371,6 +369,7 @@ export default function AddUnionAnnouncementScreen() {
 
               <Text style={styles.previewTitle}>{formData.title}</Text>
               <Text style={styles.previewContent}>{formData.content}</Text>
+              <Text style={styles.previewContent}>{formData.link}</Text>
 
               {formData.author && <Text style={styles.previewAuthor}>بواسطة: {formData.author}</Text>}
 

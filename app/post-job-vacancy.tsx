@@ -22,15 +22,17 @@ export default function PostJobVacancyScreen() {
 
   // Initial form data with sample values
   const [formData, setFormData] = useState({
-    title: "",
-    company: "",
-    location: "",
-    type: "", // could be "full-time" | "part-time" | "contract", etc.
-    salary: "",
-    description: "",
-    requirements: "",
-    contactEmail: "",
-    contactPhone: "",
+    title: "Field Supervisor",
+    company: "GreenGrow Agriculture Ltd",
+    location: "Nakuru, Kenya",
+    type: "full-time", // "full-time" | "part-time" | "contract"
+    salary: "KSh 80,000 – 120,000",
+    description:
+      "We are seeking an experienced Field Supervisor to oversee daily farm operations, ensure compliance with best agricultural practices, and support farmers in improving productivity.",
+    requirements:
+      "Diploma or Degree in Agriculture, 3+ years field experience, strong communication skills, ability to travel to farm sites.",
+    contactEmail: "hr@greengrowagri.com",
+    contactPhone: "+254 712 345 678",
   });
 
   const [selectedJobType, setSelectedJobType] = useState<string>("full-time");

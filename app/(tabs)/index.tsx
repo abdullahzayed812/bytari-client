@@ -353,8 +353,6 @@ export default function HomeScreen() {
     router.push("/report-lost-pet");
   };
 
-  console.log(isRTL);
-
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -551,7 +549,7 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {isVet ? (
               inquiriesLoading ? (
@@ -566,7 +564,7 @@ export default function HomeScreen() {
                     ]}
                     onPress={() => router.push({ pathname: "/inquiry-details", params: { id: inquiry?.id } })}
                   >
-                    <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}>
                         <View
                           style={[
@@ -632,7 +630,7 @@ export default function HomeScreen() {
                     })
                   }
                 >
-                  <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                  <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                     <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}>
                       <View
                         style={[
@@ -725,7 +723,7 @@ export default function HomeScreen() {
           <AutoScrollView
             itemWidth={320}
             autoScrollInterval={3000}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian"
               ? vetStores?.map((store) => (
@@ -744,7 +742,7 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Store Info */}
                       <View
                         style={[
@@ -772,7 +770,7 @@ export default function HomeScreen() {
                         <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{store.name}</Text>
 
                         {/* Location */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -788,7 +786,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -804,7 +802,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -817,7 +815,7 @@ export default function HomeScreen() {
                             {store.rating}
                           </Text>
                           <Star size={16} color="#FFD700" fill="#FFD700" />
-                        </View>
+                        </View> */}
                       </View>
 
                       {/* Store Image */}
@@ -827,7 +825,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
@@ -867,7 +865,7 @@ export default function HomeScreen() {
                       })
                     }
                   >
-                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Clinic Info */}
                       <View
                         style={[
@@ -895,7 +893,7 @@ export default function HomeScreen() {
                         <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{clinic.name}</Text>
 
                         {/* Location */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -911,7 +909,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -927,7 +925,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -940,7 +938,7 @@ export default function HomeScreen() {
                             {clinic.rating}
                           </Text>
                           <Star size={16} color="#FFD700" fill="#FFD700" />
-                        </View>
+                        </View> */}
                       </View>
 
                       {/* Clinic Image */}
@@ -950,7 +948,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
@@ -991,7 +989,7 @@ export default function HomeScreen() {
           <AutoScrollView
             itemWidth={264}
             autoScrollInterval={3000}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian" ? (
               articlesLoading ? (
@@ -1019,7 +1017,7 @@ export default function HomeScreen() {
                       >
                         {article.description}
                       </Text>
-                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <User size={14} color={COLORS.darkGray} />
                         <Text
                           style={[
@@ -1039,8 +1037,8 @@ export default function HomeScreen() {
                       >
                         {article.authorTitle}
                       </Text>
-                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Heart size={14} color="#EF4444" />
                           <Text
                             style={[
@@ -1054,7 +1052,7 @@ export default function HomeScreen() {
                             {article.likes}
                           </Text>
                         </View>
-                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MessageCircle size={14} color={COLORS.darkGray} />
                           <Text
                             style={[
@@ -1106,7 +1104,7 @@ export default function HomeScreen() {
             <AutoScrollView
               itemWidth={316}
               autoScrollInterval={3000}
-              contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
+              contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
             >
               {adoptionPetsLoading ? (
                 <ActivityIndicator />
@@ -1130,7 +1128,7 @@ export default function HomeScreen() {
                       }
                     }}
                   >
-                    <View style={[styles.adoptionPetCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.adoptionPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       {/* Pet Image */}
                       <Image source={{ uri: pet.image }} style={styles.adoptionPetImage} />
 
@@ -1174,7 +1172,7 @@ export default function HomeScreen() {
                         </Text>
 
                         {/* Age */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Calendar size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1190,7 +1188,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Location */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <MapPin size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1206,7 +1204,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1233,7 +1231,7 @@ export default function HomeScreen() {
 
                     {/* Action Buttons */}
                     {pet.isAvailable && !pet.isClosedByOwner && (
-                      <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.adoptionPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <TouchableOpacity
                           style={styles.adoptionActionButton}
                           onPress={() => {
@@ -1278,7 +1276,7 @@ export default function HomeScreen() {
           <AutoScrollView
             itemWidth={264}
             autoScrollInterval={3000}
-            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}
+            contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
             {userMode === "veterinarian" ? (
               vetBooksLoading ? (
@@ -1306,8 +1304,8 @@ export default function HomeScreen() {
                       <Text style={[styles.bookDescription, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
                         {book.description}
                       </Text>
-                      <View style={[styles.bookStats, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                        <View style={[styles.bookStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.bookStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.bookStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Download size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1364,7 +1362,7 @@ export default function HomeScreen() {
                     }
                   }}
                 >
-                  <View style={[styles.lostPetCardContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                  <View style={[styles.lostPetCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                     {/* Pet Image */}
                     <Image source={{ uri: pet.images[0] }} style={styles.lostPetImage} />
 
@@ -1392,7 +1390,7 @@ export default function HomeScreen() {
                       </Text>
 
                       {/* Location */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <MapPin size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1408,7 +1406,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Date */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <Calendar size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1424,7 +1422,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Phone */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <Phone size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1448,7 +1446,7 @@ export default function HomeScreen() {
 
                   {/* Action Buttons */}
                   {pet.status === "lost" && (
-                    <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                    <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                       <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
@@ -1626,7 +1624,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   adScrollContent: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
   },
   adImageWrapper: {
     width: screenWidth - 32,
@@ -1667,7 +1665,7 @@ const styles = StyleSheet.create({
     bottom: 16,
     left: 0,
     right: 0,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
@@ -1783,7 +1781,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -2134,7 +2132,7 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     backgroundColor: "#10B981",
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
@@ -2239,14 +2237,14 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   sectionHeaderContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 8,
   },
   sectionHeaderWithAdmin: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
@@ -2259,7 +2257,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   adminActionsCenter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     flex: 1,
@@ -2278,7 +2276,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   adminActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -2296,14 +2294,14 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   sectionHeaderWithEdit: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
     marginBottom: 12,
   },
   sectionHeaderWithCenteredEdit: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
@@ -2313,7 +2311,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   adSectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,

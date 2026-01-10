@@ -14,22 +14,7 @@ import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, useLocalSearchParams, Stack } from "expo-router";
-import {
-  Building2,
-  MapPin,
-  Phone,
-  Mail,
-  Users,
-  Save,
-  Trash2,
-  Plus,
-  Edit3,
-  Calendar,
-  X,
-  Link,
-  Upload,
-  Camera,
-} from "lucide-react-native";
+import { Save, Trash2, Plus, Edit3, X, Upload, Camera } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -44,7 +29,6 @@ interface UnionBranch {
   president: string;
   membersCount: number;
   isFollowing: boolean;
-  announcements: Announcement[];
   rating: number;
   description: string;
   establishedYear: number;
@@ -63,6 +47,7 @@ interface Announcement {
   linkText?: string;
   author?: string;
   views?: number;
+  createdAt: string;
 }
 
 export default function EditUnionBranchScreen() {
@@ -77,22 +62,13 @@ export default function EditUnionBranchScreen() {
     error,
   } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
 
+  const { data: announcements, isLoading: isAnnouncementsLoading } = useQuery({
+    ...trpc.union.announcement.list.queryOptions({ branchId: Number(id) }),
+    enabled: !!id,
+  });
+
   const [formData, setFormData] = useState<UnionBranch | null>(null);
   const [newService, setNewService] = useState<string>("");
-  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
-  const [showAddAnnouncement, setShowAddAnnouncement] = useState<boolean>(false);
-  const [newAnnouncement, setNewAnnouncement] = useState<Partial<Announcement>>({
-    title: "",
-    content: "",
-    date: new Date().toISOString().split("T")[0],
-    type: "general",
-    isImportant: false,
-    image: "",
-    link: "",
-    linkText: "",
-    author: "",
-  });
-  const [selectedAnnouncementImage, setSelectedAnnouncementImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (originalBranch) {
@@ -102,39 +78,9 @@ export default function EditUnionBranchScreen() {
 
   const updateBranchMutation = useMutation(trpc.union.branch.update.mutationOptions());
 
-  if (
-    !isSuperAdmin &&
-    !hasAdminAccess &&
-    !(isModerator && moderatorPermissions?.sections?.includes("union-branches"))
-  ) {
-    return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ title: "غير مصرح" }} />
-        <View style={styles.noPermissionContainer}>
-          <Text style={styles.noPermissionText}>ليس لديك صلاحية لتعديل معلومات النقابة</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>العودة</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
-  if (error || !formData) {
-    return (
-      <View style={styles.container}>
-        <Text>Error fetching data</Text>
-      </View>
-    );
-  }
+  const navigateToAddAnnouncement = () => {
+    router.push(`/add-union-announcement?branchId=${id}`);
+  };
 
   const handleSave = () => {
     Alert.alert("حفظ التغييرات", "هل أنت متأكد من حفظ جميع التغييرات؟", [
@@ -173,51 +119,7 @@ export default function EditUnionBranchScreen() {
     }));
   };
 
-  const handleAddAnnouncement = () => {
-    if (newAnnouncement.title && newAnnouncement.content) {
-      const announcement: Announcement = {
-        id: Date.now().toString(),
-        title: newAnnouncement.title,
-        content: newAnnouncement.content,
-        date: newAnnouncement.date || new Date().toISOString().split("T")[0],
-        type: newAnnouncement.type as "general" | "urgent" | "event" | "meeting",
-        isImportant: newAnnouncement.isImportant || false,
-      };
-
-      setFormData((prev) => ({
-        ...prev,
-        announcements: [announcement, ...prev.announcements],
-      }));
-
-      setNewAnnouncement({
-        title: "",
-        content: "",
-        date: new Date().toISOString().split("T")[0],
-        type: "general",
-        isImportant: false,
-        image: "",
-        link: "",
-        linkText: "",
-        author: "",
-      });
-      setSelectedAnnouncementImage(null);
-      setShowAddAnnouncement(false);
-    }
-  };
-
-  const handleEditAnnouncement = (announcement: Announcement) => {
-    setEditingAnnouncement(announcement);
-  };
-
-  const handleUpdateAnnouncement = () => {
-    if (editingAnnouncement) {
-      setFormData((prev) => ({
-        ...prev,
-        announcements: prev.announcements.map((ann) => (ann.id === editingAnnouncement.id ? editingAnnouncement : ann)),
-      }));
-      setEditingAnnouncement(null);
-    }
-  };
+  const deleteAnnouncementMutation = useMutation(trpc.union.announcement.delete.mutationOptions());
 
   const handleDeleteAnnouncement = (announcementId: string) => {
     Alert.alert("حذف الإعلان", "هل أنت متأكد من حذف هذا الإعلان؟", [
@@ -226,10 +128,11 @@ export default function EditUnionBranchScreen() {
         text: "حذف",
         style: "destructive",
         onPress: () => {
-          setFormData((prev) => ({
-            ...prev,
-            announcements: prev.announcements.filter((ann) => ann.id !== announcementId),
-          }));
+          deleteAnnouncementMutation.mutate(parseInt(announcementId), {
+            onSuccess: () => {
+              queryClient.invalidateQueries(trpc.union.announcement.list.queryKey as any);
+            },
+          });
         },
       },
     ]);
@@ -248,18 +151,39 @@ export default function EditUnionBranchScreen() {
     }
   };
 
-  const getAnnouncementTypeLabel = (type: string) => {
-    switch (type) {
-      case "urgent":
-        return "عاجل";
-      case "meeting":
-        return "اجتماع";
-      case "event":
-        return "فعالية";
-      default:
-        return "عام";
-    }
-  };
+  if (
+    !isSuperAdmin &&
+    !hasAdminAccess &&
+    !(isModerator && moderatorPermissions?.sections?.includes("union-branches"))
+  ) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ title: "غير مصرح" }} />
+        <View style={styles.noPermissionContainer}>
+          <Text style={styles.noPermissionText}>ليس لديك صلاحية لتعديل معلومات النقابة</Text>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backButtonText}>العودة</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (isLoading || !formData) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>Error fetching data</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -429,291 +353,61 @@ export default function EditUnionBranchScreen() {
         {/* Announcements */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <TouchableOpacity onPress={() => setShowAddAnnouncement(true)} style={styles.addButton}>
+            <TouchableOpacity onPress={navigateToAddAnnouncement} style={styles.addButton}>
               <Plus size={16} color={COLORS.white} />
               <Text style={styles.addButtonText}>إضافة إعلان</Text>
             </TouchableOpacity>
             <Text style={styles.sectionTitle}>الإعلانات والأخبار</Text>
           </View>
 
-          {/* Add Announcement Form */}
-          {showAddAnnouncement && (
-            <View style={styles.announcementForm}>
-              <Text style={styles.formTitle}>إضافة إعلان جديد</Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>عنوان الإعلان</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newAnnouncement.title}
-                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, title: text }))}
-                  placeholder="عنوان الإعلان"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>محتوى الإعلان</Text>
-                <TextInput
-                  style={[styles.textInput, styles.multilineInput]}
-                  value={newAnnouncement.content}
-                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, content: text }))}
-                  placeholder="محتوى الإعلان"
-                  multiline
-                  numberOfLines={4}
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>المؤلف/المسؤول</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newAnnouncement.author}
-                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, author: text }))}
-                  placeholder="اسم المؤلف أو المسؤول"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>رابط ذات صلة</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newAnnouncement.link}
-                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, link: text }))}
-                  placeholder="رابط الموقع أو الملف"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>نص الرابط</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newAnnouncement.linkText}
-                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, linkText: text }))}
-                  placeholder="نص يظهر للرابط (مثال: رابط التسجيل)"
-                  textAlign="right"
-                />
-              </View>
-
-              {/* Image Upload for Announcement */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>صورة الإعلان</Text>
-                {selectedAnnouncementImage ? (
-                  <View style={styles.imagePreviewContainer}>
-                    <Image source={{ uri: selectedAnnouncementImage }} style={styles.imagePreview} />
-                    <View style={styles.imageActions}>
+          {isAnnouncementsLoading ? (
+            <ActivityIndicator />
+          ) : (
+            <View style={styles.announcementsList}>
+              {announcements?.map((announcement) => (
+                <View key={announcement.id} style={styles.announcementCard}>
+                  <View style={styles.announcementHeader}>
+                    <View style={styles.announcementActions}>
                       <TouchableOpacity
-                        style={styles.changeImageButton}
-                        onPress={() => {
-                          /* Add image picker logic */
-                        }}
+                        onPress={() => handleDeleteAnnouncement(announcement.id)}
+                        style={styles.deleteButton}
                       >
-                        <Camera size={16} color={COLORS.white} />
-                        <Text style={styles.imageActionText}>تغيير</Text>
+                        <Trash2 size={14} color={COLORS.error} />
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.removeImageButton}
-                        onPress={() => {
-                          setSelectedAnnouncementImage(null);
-                          setNewAnnouncement((prev) => ({ ...prev, image: "" }));
-                        }}
+                        onPress={() => router.push(`/edit-union-announcement?id=${announcement.id}`)}
+                        style={styles.editButton}
                       >
-                        <X size={16} color={COLORS.white} />
-                        <Text style={styles.imageActionText}>حذف</Text>
+                        <Edit3 size={14} color={COLORS.primary} />
                       </TouchableOpacity>
                     </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.uploadButton}
-                    onPress={() => {
-                      /* Add image picker logic */
-                    }}
-                  >
-                    <Upload size={24} color={COLORS.primary} />
-                    <Text style={styles.uploadButtonText}>اختيار صورة</Text>
-                    <Text style={styles.uploadButtonSubtext}>من المعرض أو التقاط صورة جديدة</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>تاريخ الإعلان</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={newAnnouncement.date}
-                  onChangeText={(text) => setNewAnnouncement((prev) => ({ ...prev, date: text }))}
-                  placeholder="YYYY-MM-DD"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.switchContainer}>
-                <Switch
-                  value={newAnnouncement.isImportant}
-                  onValueChange={(value) => setNewAnnouncement((prev) => ({ ...prev, isImportant: value }))}
-                  trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-                  thumbColor={newAnnouncement.isImportant ? COLORS.white : COLORS.gray}
-                />
-                <Text style={styles.switchLabel}>إعلان مهم</Text>
-              </View>
-
-              <View style={styles.formActions}>
-                <TouchableOpacity
-                  onPress={() => setShowAddAnnouncement(false)}
-                  style={[styles.formButton, styles.cancelButton]}
-                >
-                  <Text style={styles.cancelButtonText}>إلغاء</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleAddAnnouncement} style={[styles.formButton, styles.saveFormButton]}>
-                  <Text style={styles.saveFormButtonText}>إضافة</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* Edit Announcement Form */}
-          {editingAnnouncement && (
-            <View style={styles.announcementForm}>
-              <Text style={styles.formTitle}>تعديل الإعلان</Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>عنوان الإعلان</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={editingAnnouncement.title}
-                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, title: text } : null))}
-                  placeholder="عنوان الإعلان"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>محتوى الإعلان</Text>
-                <TextInput
-                  style={[styles.textInput, styles.multilineInput]}
-                  value={editingAnnouncement.content}
-                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, content: text } : null))}
-                  placeholder="محتوى الإعلان"
-                  multiline
-                  numberOfLines={4}
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>المؤلف/المسؤول</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={editingAnnouncement.author}
-                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, author: text } : null))}
-                  placeholder="اسم المؤلف أو المسؤول"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>رابط ذات صلة</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={editingAnnouncement.link}
-                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, link: text } : null))}
-                  placeholder="رابط الموقع أو الملف"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>نص الرابط</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={editingAnnouncement.linkText}
-                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, linkText: text } : null))}
-                  placeholder="نص يظهر للرابط"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>تاريخ الإعلان</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={editingAnnouncement.date}
-                  onChangeText={(text) => setEditingAnnouncement((prev) => (prev ? { ...prev, date: text } : null))}
-                  placeholder="YYYY-MM-DD"
-                  textAlign="right"
-                />
-              </View>
-
-              <View style={styles.switchContainer}>
-                <Switch
-                  value={editingAnnouncement.isImportant}
-                  onValueChange={(value) =>
-                    setEditingAnnouncement((prev) => (prev ? { ...prev, isImportant: value } : null))
-                  }
-                  trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-                  thumbColor={editingAnnouncement.isImportant ? COLORS.white : COLORS.gray}
-                />
-                <Text style={styles.switchLabel}>إعلان مهم</Text>
-              </View>
-
-              <View style={styles.formActions}>
-                <TouchableOpacity
-                  onPress={() => setEditingAnnouncement(null)}
-                  style={[styles.formButton, styles.cancelButton]}
-                >
-                  <Text style={styles.cancelButtonText}>إلغاء</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleUpdateAnnouncement} style={[styles.formButton, styles.saveFormButton]}>
-                  <Text style={styles.saveFormButtonText}>حفظ</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          {/* Announcements List */}
-          <View style={styles.announcementsList}>
-            {formData.announcements.map((announcement) => (
-              <View key={announcement.id} style={styles.announcementCard}>
-                <View style={styles.announcementHeader}>
-                  <View style={styles.announcementActions}>
-                    <TouchableOpacity
-                      onPress={() => handleDeleteAnnouncement(announcement.id)}
-                      style={styles.deleteButton}
-                    >
-                      <Trash2 size={14} color={COLORS.error} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleEditAnnouncement(announcement)} style={styles.editButton}>
-                      <Edit3 size={14} color={COLORS.primary} />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.announcementMeta}>
-                    <View
-                      style={[
-                        styles.announcementType,
-                        { backgroundColor: getAnnouncementTypeColor(announcement.type) },
-                      ]}
-                    >
-                      <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
-                    </View>
-                    {announcement.isImportant && (
-                      <View style={styles.importantBadge}>
-                        <Text style={styles.importantText}>مهم</Text>
+                    <View style={styles.announcementMeta}>
+                      <View
+                        style={[
+                          styles.announcementType,
+                          { backgroundColor: getAnnouncementTypeColor(announcement.type) },
+                        ]}
+                      >
+                        <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
                       </View>
-                    )}
-                    <Text style={styles.announcementDate}>{announcement.date}</Text>
+                      {announcement.isImportant && (
+                        <View style={styles.importantBadge}>
+                          <Text style={styles.importantText}>مهم</Text>
+                        </View>
+                      )}
+                      <Text style={styles.announcementDate}>
+                        {new Date(announcement.createdAt).toLocaleDateString()}
+                      </Text>
+                    </View>
                   </View>
-                </View>
 
-                <Text style={styles.announcementTitle}>{announcement.title}</Text>
-                <Text style={styles.announcementContent}>{announcement.content}</Text>
-              </View>
-            ))}
-          </View>
+                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                  <Text style={styles.announcementContent}>{announcement.content}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

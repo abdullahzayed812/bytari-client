@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import React from "react";
 import { Stack, useRouter } from "expo-router";
 import {
@@ -12,11 +12,12 @@ import {
   FileText,
   UserPlus,
   Shield,
+  Trash2,
 } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 interface JobVacancy {
   id: number;
@@ -48,6 +49,31 @@ export default function JobVacanciesScreen() {
       status: "approved",
     })
   );
+
+  const deleteJobMutation = useMutation(trpc.admin.jobs.deleteJob.mutationOptions());
+
+  const handleDeleteJob = (jobId: number) => {
+    Alert.alert("حذف الوظيفة", "هل أنت متأكد من حذف هذه الوظيفة؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deleteJobMutation.mutate(
+            { jobId: jobId.toString(), adminId: Number(user?.id) },
+            {
+              onSuccess: () => {
+                refetch();
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", error.message);
+              },
+            }
+          );
+        },
+      },
+    ]);
+  };
 
   const handleApplyNow = (job: JobVacancy) => {
     // Navigate to job application page with job details
@@ -92,6 +118,11 @@ export default function JobVacanciesScreen() {
             <Text style={styles.jobTitle}>{job.title}</Text>
             <Text style={styles.companyName}>{job.postedBy}</Text>
           </View>
+          {isSuperAdmin && (
+            <TouchableOpacity style={styles.deleteButton} onPress={() => handleDeleteJob(job.id)}>
+              <Trash2 size={20} color={COLORS.error} />
+            </TouchableOpacity>
+          )}
           <View style={styles.jobIcon}>
             <Briefcase size={24} color={COLORS.primary} />
           </View>
@@ -315,6 +346,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F9FF",
     justifyContent: "center",
     alignItems: "center",
+  },
+  deleteButton: {
+    padding: 8,
   },
   jobDetails: {
     marginBottom: 12,

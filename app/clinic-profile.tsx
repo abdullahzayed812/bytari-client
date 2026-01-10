@@ -29,19 +29,27 @@ import {
 import RatingComponent from "../components/RatingComponent";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const { width } = Dimensions.get("window");
 
 export default function ClinicProfileScreen() {
   const { user } = useApp();
   const { id } = useLocalSearchParams();
+  const queryClient = useQueryClient();
   const clinicId = parseInt(id as string);
   const userId = Number(user?.id);
 
   const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
 
   // Fetch clinic details
+  const { data: reviewsData, isLoading: areReviewsLoading } = useQuery(
+    trpc.reviews.getClinicReviews.queryOptions({
+      clinicId,
+    })
+  );
+  const reviews = (reviewsData as any)?.reviews;
+
   const { data, isLoading, error } = useQuery(
     trpc.clinics.getDetails.queryOptions({
       clinicId,
@@ -75,10 +83,27 @@ export default function ClinicProfileScreen() {
     return stars;
   };
 
+  const addReviewMutation = useMutation(trpc.reviews.addClinicReview.mutationOptions());
+
   const handleRatingSubmit = async (rating: number, comment: string) => {
-    console.log("Rating submitted:", { rating, comment, clinicId: clinic?.id });
-    // TODO: Implement API call to submit rating
-    // await submitClinicRating(clinic.id, rating, comment);
+    if (!clinic) return;
+    addReviewMutation.mutate(
+      {
+        clinicId: Number(clinic.id),
+        rating,
+        comment,
+      } as any,
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.reviews.getClinicReviews.queryKey as any);
+          queryClient.invalidateQueries(trpc.clinics.getDetails.queryKey as any);
+          setShowRatingModal(false);
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message);
+        },
+      }
+    );
   };
 
   // Open external links
@@ -164,12 +189,7 @@ export default function ClinicProfileScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Clinic Header */}
         <View style={styles.clinicHeader}>
-          {clinic.images.length > 0 && (
-            <Image
-              source={{ uri: clinic.images[0] }}
-              style={styles.clinicHeaderImage}
-            />
-          )}
+          {clinic.images.length > 0 && <Image source={{ uri: clinic.images[0] }} style={styles.clinicHeaderImage} />}
           <View style={styles.clinicHeaderOverlay}>
             <Text style={styles.clinicHeaderName}>{clinic.name}</Text>
             <View style={[styles.statusBadge, !clinic.isActive && styles.closedBadge]}>
@@ -188,13 +208,13 @@ export default function ClinicProfileScreen() {
           )}
 
           {/* Rating and Reviews */}
-          <View style={styles.ratingSection}>
+          {/* <View style={styles.ratingSection}>
             <View style={styles.ratingContainer}>
               <Text style={styles.ratingText}>{clinic.rating?.toFixed(1) || "0.0"}</Text>
               <View style={styles.starsContainer}>{renderStars(clinic.rating || 0)}</View>
               <Text style={styles.reviewsCount}>({clinic.reviewsCount || 0} تقييم)</Text>
             </View>
-          </View>
+          </View> */}
 
           {/* Description */}
           {clinic.description && (
@@ -279,6 +299,29 @@ export default function ClinicProfileScreen() {
               {doctors?.map((doctor: string, index: number) => (
                 <View key={index} style={styles.doctorItem}>
                   <Text style={styles.doctorName}>{doctor}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Reviews */}
+          {reviews && reviews.length > 0 && (
+            <View style={styles.reviewsSection}>
+              <Text style={styles.sectionTitle}>التقييمات</Text>
+              {reviews.map((review: any) => (
+                <View key={review.id} style={styles.reviewItem}>
+                  <View style={styles.reviewHeader}>
+                    <Image
+                      source={{ uri: review.user.avatar || "https://via.placeholder.com/40" }}
+                      style={styles.reviewerAvatar}
+                    />
+                    <View>
+                      <Text style={styles.reviewerName}>{review.user.name}</Text>
+                      <View style={styles.starsContainer}>{renderStars(review.rating)}</View>
+                    </View>
+                  </View>
+                  <Text style={styles.reviewComment}>{review.comment}</Text>
+                  <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
                 </View>
               ))}
             </View>
@@ -628,5 +671,50 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 16,
     fontWeight: "bold",
+  },
+  reviewsSection: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  reviewItem: {
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  reviewHeader: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  reviewerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginLeft: 12,
+  },
+  reviewerName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "right",
+  },
+  reviewComment: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    lineHeight: 22,
+    textAlign: "right",
+    marginBottom: 8,
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    textAlign: "left",
   },
 });

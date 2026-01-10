@@ -36,7 +36,7 @@ export default function SectionHeader({
       {/* See All Button - Left Side */}
       {showSeeAll && onSeeAll && (
         <TouchableOpacity style={styles.seeAllButton} onPress={onSeeAll}>
-          <View style={[styles.seeAllContainer, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+          <View style={[styles.seeAllContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <Text style={styles.seeAllText}>عرض الكل</Text>
             {isRTL ? (
               <ChevronLeft size={16} color={COLORS.primary} style={{ marginRight: 4 }} />

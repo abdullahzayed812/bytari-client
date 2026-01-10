@@ -123,6 +123,16 @@ export default function UnionBranchDetailsScreen() {
     }
   };
 
+  const handleLinkPress = async (url: string) => {
+    if (!url) return;
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("خطأ", `لا يمكن فتح الرابط: ${url}`);
+    }
+  };
+
   const getAnnouncementTypeColor = (type: string) => {
     switch (type) {
       case "urgent":
@@ -392,6 +402,12 @@ export default function UnionBranchDetailsScreen() {
 
                   <Text style={styles.announcementTitle}>{announcement.title}</Text>
                   <Text style={styles.announcementContent}>{announcement.content}</Text>
+
+                  {announcement?.link ? (
+                    <TouchableOpacity onPress={() => handleLinkPress(announcement.link)}>
+                      <Text style={[styles.announcementText, styles.linkText]}>{announcement.link}</Text>
+                    </TouchableOpacity>
+                  ) : null}
 
                   {announcement.image && (
                     <View style={styles.announcementImageContainer}>
@@ -850,5 +866,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 16,
     textAlign: "right",
+  },
+  announcementText: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    lineHeight: 20,
+    textAlign: "right",
+    marginBottom: 8,
+  },
+  linkText: {
+    color: COLORS.primary,
+    textDecorationLine: "underline",
   },
 });

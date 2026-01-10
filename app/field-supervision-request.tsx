@@ -51,18 +51,18 @@ export default function FieldSupervisionRequestScreen() {
 
   // Initial form data with sample values
   const [formData, setFormData] = useState<FieldSupervisionFormData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    education: "",
-    experience: "",
-    qualifications: "",
-    previousExperience: "",
-    farmName: "",
-    farmLocation: "",
-    farmCapacity: "",
-    requestType: "",
+    fullName: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+1 555 123 4567",
+    location: "Nairobi, Kenya",
+    education: "Bachelor's Degree in Agriculture",
+    experience: "5 years",
+    qualifications: "Certified Field Supervisor",
+    previousExperience: "Worked with small and medium-scale farms",
+    farmName: "Green Valley Farm",
+    farmLocation: "Kiambu County",
+    farmCapacity: "50 acres",
+    requestType: "supervision",
   });
 
   const submitSupervisionMutation = useMutation(trpc.admin.jobs.submitFieldSupervisionRequest.mutationOptions());
@@ -117,10 +117,10 @@ export default function FieldSupervisionRequestScreen() {
       return;
     }
 
-    if (!isValidPhone(trimmedData.phone)) {
-      Alert.alert("خطأ", "يرجى إدخال رقم هاتف صحيح (مثال: 07701234567)");
-      return;
-    }
+    // if (!isValidPhone(trimmedData.phone)) {
+    //   Alert.alert("خطأ", "يرجى إدخال رقم هاتف صحيح (مثال: 07701234567)");
+    //   return;
+    // }
 
     if (!trimmedData.farmName) {
       Alert.alert("خطأ", "يرجى إدخال اسم المزرعة");
@@ -328,7 +328,7 @@ export default function FieldSupervisionRequestScreen() {
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>معلومات المزرعة</Text>
+          {/* <Text style={styles.sectionTitle}>معلومات المزرعة</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>اسم المزرعة *</Text>
@@ -371,7 +371,7 @@ export default function FieldSupervisionRequestScreen() {
                 keyboardType="numeric"
               />
             </View>
-          </View>
+          </View> */}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>نوع الطلب *</Text>
