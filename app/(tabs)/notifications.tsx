@@ -56,7 +56,7 @@ export default function NotificationsScreen() {
   const handleNotificationPress = async (notification: any) => {
     markNotificationAsRead.mutate({ userId: user?.id, notificationId: notification?.id } as any, {
       onSuccess: () => {
-        queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
+        // queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
 
         if (notification?.type === "appointment") {
           router.push("/appointments");
@@ -73,7 +73,7 @@ export default function NotificationsScreen() {
           const data = notification?.data;
           router.push({ pathname: "/union-branch-details", params: { id: data.branchId } });
         } else if (notification?.type === "announcement") {
-          const data = JSON.parse(notification.data);
+          const data = notification.data;
           if (data.branchId) {
             router.push({
               pathname: "/union-branch-details",
@@ -90,6 +90,12 @@ export default function NotificationsScreen() {
           router.push({
             pathname: "/clinic-dashboard",
             params: { clinicId: notification?.data?.clinicId },
+          });
+        } else if (notification?.type === "clinic_access_request") {
+          // console.log(notification);
+          router.push({
+            pathname: "/pet-details",
+            params: { petId: notification?.data?.petId },
           });
         }
       },

@@ -64,10 +64,9 @@ export interface Product {
 }
 
 export interface CartItem {
-  productId: string;
+  productId: number;
   product: Product;
   quantity: number;
-  price: number;
 }
 
 export interface VetStore {

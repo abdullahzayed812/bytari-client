@@ -44,6 +44,17 @@ export default function LostPetsListScreen() {
     });
   }, [lostPetsData?.pets, user?.country, user?.city]);
 
+  const getPetStatus = (status: string) => {
+    switch (status) {
+      case "found":
+        return { text: "تم العثور عليه", color: COLORS.success };
+      case "closed":
+        return { text: "مغلق", color: COLORS.darkGray };
+      default:
+        return { text: "مفقود", color: COLORS.error };
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -96,7 +107,14 @@ export default function LostPetsListScreen() {
           renderItem={({ item: pet }) => (
             <TouchableOpacity
               style={styles.lostPetCard}
-              onPress={() => router.push({ pathname: "/lost-pet", params: { id: pet.id } })}
+              onPress={() => {
+                if (pet.status !== "found" && pet.status !== "closed") {
+                  router.push({
+                    pathname: "/lost-pet",
+                    params: { id: pet.id },
+                  });
+                }
+              }}
             >
               {/* Pet Image */}
               <Image
@@ -111,8 +129,10 @@ export default function LostPetsListScreen() {
 
               {/* Status Badge */}
               <View style={styles.statusBadgeContainer}>
-                <View style={[styles.statusBadge, styles.lostBadge]}>
-                  <Text style={styles.statusBadgeText}>مفقود</Text>
+                <View
+                  style={[styles.statusBadge, styles.lostBadge, { backgroundColor: getPetStatus(pet.status).color }]}
+                >
+                  <Text style={styles.statusBadgeText}>{getPetStatus(pet.status).text}</Text>
                 </View>
               </View>
 

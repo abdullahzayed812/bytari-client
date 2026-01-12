@@ -38,7 +38,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 
 export default function PoultryFarmDetailsScreen() {
-  const { user } = useApp();
+  const { isSuperAdmin, user } = useApp();
   const { isRTL } = useI18n();
   const router = useRouter();
   const { showToast } = useToastContext();
@@ -118,21 +118,21 @@ export default function PoultryFarmDetailsScreen() {
         status: farmData.status,
         assignedVet: farmData.assignedVetId
           ? {
-            id: farmData.assignedVetId.toString(),
-            name: farmData.assignedVetName || "",
-            phone: farmData.assignedVetPhone || "",
-            specialization: "طب الدواجن",
-            assignedAt: farmData.updatedAt.toISOString(),
-          }
+              id: farmData.assignedVetId.toString(),
+              name: farmData.assignedVetName || "",
+              phone: farmData.assignedVetPhone || "",
+              specialization: "طب الدواجن",
+              assignedAt: farmData.updatedAt.toISOString(),
+            }
           : undefined,
         assignedSupervisor: farmData.assignedSupervisorId
           ? {
-            id: farmData.assignedSupervisorId.toString(),
-            name: farmData.assignedSupervisorName || "",
-            phone: farmData.assignedSupervisorPhone || "",
-            experience: "5 سنوات",
-            assignedAt: farmData.updatedAt.toISOString(),
-          }
+              id: farmData.assignedSupervisorId.toString(),
+              name: farmData.assignedSupervisorName || "",
+              phone: farmData.assignedSupervisorPhone || "",
+              experience: "5 سنوات",
+              assignedAt: farmData.updatedAt.toISOString(),
+            }
           : undefined,
       });
 
@@ -261,19 +261,19 @@ export default function PoultryFarmDetailsScreen() {
 
     const treatments = dailyDataForm.treatments
       ? dailyDataForm.treatments
-        .split(",")
-        .map((t, index) => ({
-          id: `treatment${Date.now()}_${index}`,
-          name: t.trim(),
-          dosage: "",
-          frequency: "",
-          duration: 0,
-          administeredBy: "owner",
-          cost: 0,
-          reason: "preventive",
-          notes: "",
-        }))
-        .filter((t) => t.name.length > 0)
+          .split(",")
+          .map((t, index) => ({
+            id: `treatment${Date.now()}_${index}`,
+            name: t.trim(),
+            dosage: "",
+            frequency: "",
+            duration: 0,
+            administeredBy: "owner",
+            cost: 0,
+            reason: "preventive",
+            notes: "",
+          }))
+          .filter((t) => t.name.length > 0)
       : [];
 
     addDailyDataMutation.mutate(
@@ -282,9 +282,9 @@ export default function PoultryFarmDetailsScreen() {
         mortality,
         mortalityReasons: dailyDataForm.mortalityReasons
           ? dailyDataForm.mortalityReasons
-            .split(",")
-            .map((r) => r.trim())
-            .filter((r) => r.length > 0)
+              .split(",")
+              .map((r) => r.trim())
+              .filter((r) => r.length > 0)
           : [],
         feedConsumption,
         averageWeight,
@@ -602,10 +602,10 @@ export default function PoultryFarmDetailsScreen() {
               {currentBatch.status === "active"
                 ? "نشط"
                 : currentBatch.status === "completed"
-                  ? "مكتمل"
-                  : currentBatch.status === "sold"
-                    ? "مباع"
-                    : "غير محدد"}
+                ? "مكتمل"
+                : currentBatch.status === "sold"
+                ? "مباع"
+                : "غير محدد"}
             </Text>
           </View>
         </View>
@@ -846,7 +846,7 @@ export default function PoultryFarmDetailsScreen() {
                     <Text style={styles.batchItemStatValue}>
                       {Math.ceil(
                         (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
-                        (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                       )}{" "}
                       يوم
                     </Text>
@@ -869,105 +869,109 @@ export default function PoultryFarmDetailsScreen() {
     );
   };
 
-  const renderSupervision = () => (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>الإشراف والمتابعة</Text>
+  const renderSupervision = () => {
+    if (isSuperAdmin) {
+      return (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>الإشراف والمتابعة</Text>
 
-      {farmQuery.isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>جاري تحميل بيانات التعيين...</Text>
+          {farmQuery.isLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>جاري تحميل بيانات التعيين...</Text>
+            </View>
+          ) : (
+            <>
+              {farm?.assignedVet ? (
+                <View style={styles.assignedPersonContainer}>
+                  <View style={styles.assignedPerson}>
+                    <Stethoscope size={20} color={COLORS.success} />
+                    <View style={styles.personInfo}>
+                      <Text style={styles.personName}>{farm?.assignedVet.name}</Text>
+                      <Text style={styles.personRole}>طبيب بيطري - {farm?.assignedVet.specialization}</Text>
+                      <Text style={styles.personPhone}>{farm?.assignedVet.phone}</Text>
+                      <Text style={styles.assignmentDate}>
+                        تم التعيين: {new Date(farm?.assignedVet.assignedAt!).toLocaleDateString("ar")}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.personActions}>
+                    <Button
+                      title="تواصل"
+                      onPress={handleContactVet}
+                      type="primary"
+                      size="small"
+                      icon={<MessageCircle size={14} color={COLORS.white} />}
+                      style={styles.contactButton}
+                    />
+                    <Button
+                      title="إلغاء الطبيب"
+                      onPress={handleRemoveVet}
+                      type="secondary"
+                      size="small"
+                      icon={<X size={14} color={COLORS.error} />}
+                      style={[styles.contactButton, { borderColor: COLORS.error }]}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <Button
+                  title="تعيين طبيب بيطري"
+                  onPress={handleRequestVet}
+                  type="secondary"
+                  size="medium"
+                  icon={<Stethoscope size={16} color={COLORS.primary} />}
+                  style={styles.supervisionButton}
+                />
+              )}
+
+              {farm?.assignedSupervisor ? (
+                <View style={styles.assignedPersonContainer}>
+                  <View style={styles.assignedPerson}>
+                    <UserCheck size={20} color={COLORS.primary} />
+                    <View style={styles.personInfo}>
+                      <Text style={styles.personName}>{farm?.assignedSupervisor.name}</Text>
+                      <Text style={styles.personRole}>مشرف - خبرة {farm?.assignedSupervisor.experience}</Text>
+                      <Text style={styles.personPhone}>{farm?.assignedSupervisor.phone}</Text>
+                      <Text style={styles.assignmentDate}>
+                        تم التعيين: {new Date(farm?.assignedSupervisor.assignedAt!).toLocaleDateString("ar")}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.personActions}>
+                    <Button
+                      title="تواصل"
+                      onPress={() => handleContactSupervisor()}
+                      type="primary"
+                      size="small"
+                      icon={<MessageCircle size={14} color={COLORS.white} />}
+                      style={styles.contactButton}
+                    />
+                    <Button
+                      title="إلغاء المشرف"
+                      onPress={handleRemoveSupervisor}
+                      type="secondary"
+                      size="small"
+                      icon={<X size={14} color={COLORS.error} />}
+                      style={[styles.contactButton, { borderColor: COLORS.error }]}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <Button
+                  title="طلب إشراف"
+                  onPress={handleRequestSupervisor}
+                  type="secondary"
+                  size="medium"
+                  icon={<UserCheck size={16} color={COLORS.primary} />}
+                  style={styles.supervisionButton}
+                />
+              )}
+            </>
+          )}
         </View>
-      ) : (
-        <>
-          {farm?.assignedVet ? (
-            <View style={styles.assignedPersonContainer}>
-              <View style={styles.assignedPerson}>
-                <Stethoscope size={20} color={COLORS.success} />
-                <View style={styles.personInfo}>
-                  <Text style={styles.personName}>{farm?.assignedVet.name}</Text>
-                  <Text style={styles.personRole}>طبيب بيطري - {farm?.assignedVet.specialization}</Text>
-                  <Text style={styles.personPhone}>{farm?.assignedVet.phone}</Text>
-                  <Text style={styles.assignmentDate}>
-                    تم التعيين: {new Date(farm?.assignedVet.assignedAt!).toLocaleDateString("ar")}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.personActions}>
-                <Button
-                  title="تواصل"
-                  onPress={handleContactVet}
-                  type="primary"
-                  size="small"
-                  icon={<MessageCircle size={14} color={COLORS.white} />}
-                  style={styles.contactButton}
-                />
-                <Button
-                  title="إلغاء الطبيب"
-                  onPress={handleRemoveVet}
-                  type="secondary"
-                  size="small"
-                  icon={<X size={14} color={COLORS.error} />}
-                  style={[styles.contactButton, { borderColor: COLORS.error }]}
-                />
-              </View>
-            </View>
-          ) : (
-            <Button
-              title="تعيين طبيب بيطري"
-              onPress={handleRequestVet}
-              type="secondary"
-              size="medium"
-              icon={<Stethoscope size={16} color={COLORS.primary} />}
-              style={styles.supervisionButton}
-            />
-          )}
-
-          {farm?.assignedSupervisor ? (
-            <View style={styles.assignedPersonContainer}>
-              <View style={styles.assignedPerson}>
-                <UserCheck size={20} color={COLORS.primary} />
-                <View style={styles.personInfo}>
-                  <Text style={styles.personName}>{farm?.assignedSupervisor.name}</Text>
-                  <Text style={styles.personRole}>مشرف - خبرة {farm?.assignedSupervisor.experience}</Text>
-                  <Text style={styles.personPhone}>{farm?.assignedSupervisor.phone}</Text>
-                  <Text style={styles.assignmentDate}>
-                    تم التعيين: {new Date(farm?.assignedSupervisor.assignedAt!).toLocaleDateString("ar")}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.personActions}>
-                <Button
-                  title="تواصل"
-                  onPress={() => handleContactSupervisor()}
-                  type="primary"
-                  size="small"
-                  icon={<MessageCircle size={14} color={COLORS.white} />}
-                  style={styles.contactButton}
-                />
-                <Button
-                  title="إلغاء المشرف"
-                  onPress={handleRemoveSupervisor}
-                  type="secondary"
-                  size="small"
-                  icon={<X size={14} color={COLORS.error} />}
-                  style={[styles.contactButton, { borderColor: COLORS.error }]}
-                />
-              </View>
-            </View>
-          ) : (
-            <Button
-              title="طلب إشراف"
-              onPress={handleRequestSupervisor}
-              type="secondary"
-              size="medium"
-              icon={<UserCheck size={16} color={COLORS.primary} />}
-              style={styles.supervisionButton}
-            />
-          )}
-        </>
-      )}
-    </View>
-  );
+      );
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -984,13 +988,13 @@ export default function PoultryFarmDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowLeft size={24} color={COLORS.white} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
         </TouchableOpacity>
         <Text style={styles.title}>حقل الدواجن</Text>
         <View style={styles.placeholder} />
-      </View>
+      </View> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderFarmInfo()}
@@ -1254,11 +1258,11 @@ export default function PoultryFarmDetailsScreen() {
                   <Text style={styles.weekReportDays}>عدد الأيام المسجلة: {week.days.length}</Text>
                 </View>
               )) || (
-                  <View style={styles.emptyReport}>
-                    <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
-                    <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
-                  </View>
-                )}
+                <View style={styles.emptyReport}>
+                  <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
+                  <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
+                </View>
+              )}
             </ScrollView>
 
             <View style={styles.modalActions}>

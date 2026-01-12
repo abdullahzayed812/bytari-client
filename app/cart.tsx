@@ -4,10 +4,9 @@ import { Stack, router } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { formatPrice } from "../constants/currency";
 import { useI18n } from "../providers/I18nProvider";
-import { useApp } from "../providers/AppProvider";
 import { CartItem } from "../types";
 import Button from "../components/Button";
-import { ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from "lucide-react-native";
+import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react-native";
 import { useCart } from "@/providers/CartProvider";
 import { useToastContext } from "@/providers/ToastProvider";
 import { ConfirmationModal } from "@/components/ConfirmationModal";
@@ -15,41 +14,41 @@ import { ConfirmationModal } from "@/components/ConfirmationModal";
 export default function CartScreen() {
   const { t } = useI18n();
   const { showToast } = useToastContext();
-  const { cart, removeFromCart, clearCart } = useCart();
-  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; type: 'remove' | 'clear'; productId?: string }>({
+  const { cart, removeFromCart, clearCart, updateQuantity } = useCart();
+  const [confirmModal, setConfirmModal] = useState<{ visible: boolean; type: "remove" | "clear"; productId?: number }>({
     visible: false,
-    type: 'remove'
+    type: "remove",
   });
 
   const getTotalPrice = () => {
     return cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
   };
 
-  const handleQuantityChange = (productId: string, newQuantity: number) => {
+  const handleQuantityChange = (productId: number, newQuantity: number) => {
     if (newQuantity < 1) {
-      setConfirmModal({ visible: true, type: 'remove', productId });
+      setConfirmModal({ visible: true, type: "remove", productId });
     } else {
-      // updateCartQuantity(productId, newQuantity);
+      updateQuantity(productId, newQuantity);
     }
   };
 
   const handleClearCart = () => {
-    setConfirmModal({ visible: true, type: 'clear' });
+    setConfirmModal({ visible: true, type: "clear" });
   };
 
   const handleConfirm = () => {
-    if (confirmModal.type === 'remove' && confirmModal.productId) {
+    if (confirmModal.type === "remove" && confirmModal.productId) {
       removeFromCart(confirmModal.productId);
       showToast({ type: "success", message: "تم حذف المنتج من السلة" });
-    } else if (confirmModal.type === 'clear') {
+    } else if (confirmModal.type === "clear") {
       clearCart();
       showToast({ type: "success", message: "تم إفراغ السلة" });
     }
-    setConfirmModal({ visible: false, type: 'remove' });
+    setConfirmModal({ visible: false, type: "remove" });
   };
 
   const handleCancel = () => {
-    setConfirmModal({ visible: false, type: 'remove' });
+    setConfirmModal({ visible: false, type: "remove" });
   };
 
   const handleCheckout = () => {
@@ -133,10 +132,10 @@ export default function CartScreen() {
 
       <ConfirmationModal
         visible={confirmModal.visible}
-        title={confirmModal.type === 'remove' ? "حذف المنتج" : "إفراغ السلة"}
-        message={confirmModal.type === 'remove' ? "هل تريد حذف هذا المنتج من السلة؟" : "هل تريد إفراغ السلة بالكامل؟"}
+        title={confirmModal.type === "remove" ? "حذف المنتج" : "إفراغ السلة"}
+        message={confirmModal.type === "remove" ? "هل تريد حذف هذا المنتج من السلة؟" : "هل تريد إفراغ السلة بالكامل؟"}
         type="warning"
-        confirmText={confirmModal.type === 'remove' ? "حذف" : "إفراغ"}
+        confirmText={confirmModal.type === "remove" ? "حذف" : "إفراغ"}
         cancelText="إلغاء"
         onConfirm={handleConfirm}
         onCancel={handleCancel}

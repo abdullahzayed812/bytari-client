@@ -1,11 +1,11 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import React, { useRef } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import React, { useRef } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
-import { useRouter, useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
-import { ArrowLeft, ArrowRight, Share, Heart, BookOpen, Clock } from 'lucide-react-native';
-import { trpc } from '../lib/trpc';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useRouter, useLocalSearchParams, Stack, useFocusEffect } from "expo-router";
+import { ArrowLeft, ArrowRight, Share, Heart, BookOpen, Clock } from "lucide-react-native";
+import { trpc } from "../lib/trpc";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 export default function TipDetailsScreen() {
   const { t, isRTL } = useI18n();
@@ -37,7 +37,7 @@ export default function TipDetailsScreen() {
       <View style={styles.container}>
         <Stack.Screen
           options={{
-            title: 'جاري التحميل...',
+            title: "جاري التحميل...",
             headerStyle: { backgroundColor: COLORS.white },
             headerTitleStyle: { color: COLORS.black },
           }}
@@ -52,17 +52,14 @@ export default function TipDetailsScreen() {
       <View style={styles.container}>
         <Stack.Screen
           options={{
-            title: 'النصيحة غير موجودة',
+            title: "النصيحة غير موجودة",
             headerStyle: { backgroundColor: COLORS.white },
             headerTitleStyle: { color: COLORS.black },
           }}
         />
         <View style={styles.notFoundContainer}>
           <Text style={styles.notFoundText}>النصيحة غير موجودة</Text>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>العودة</Text>
           </TouchableOpacity>
         </View>
@@ -73,7 +70,7 @@ export default function TipDetailsScreen() {
   const tip = data.tip;
 
   const handleShare = () => {
-    console.log('Share tip:', tip.title);
+    console.log("Share tip:", tip.title);
     // TODO: Implement share functionality
   };
 
@@ -85,37 +82,30 @@ export default function TipDetailsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'النصيحة',
+          title: "النصيحة",
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.headerButton}
-            >
-              {isRTL ? (
-                <ArrowRight size={24} color={COLORS.black} />
-              ) : (
-                <ArrowLeft size={24} color={COLORS.black} />
-              )}
+            <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
             </TouchableOpacity>
           ),
-          headerRight: () => (
-            <View style={styles.headerActions}>
-              <TouchableOpacity
-                onPress={handleLike}
-                style={styles.headerButton}
-              >
-                <Heart size={24} color={COLORS.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleShare}
-                style={styles.headerButton}
-              >
-                <Share size={24} color={COLORS.primary} />
-              </TouchableOpacity>
-            </View>
-          ),
+          // headerRight: () => (
+          //   <View style={styles.headerActions}>
+          //     <TouchableOpacity
+          //       onPress={handleLike}
+          //       style={styles.headerButton}
+          //     >
+          //       <Heart size={24} color={COLORS.primary} />
+          //     </TouchableOpacity>
+          //     <TouchableOpacity
+          //       onPress={handleShare}
+          //       style={styles.headerButton}
+          //     >
+          //       <Share size={24} color={COLORS.primary} />
+          //     </TouchableOpacity>
+          //   </View>
+          // ),
         }}
       />
 
@@ -123,7 +113,7 @@ export default function TipDetailsScreen() {
         {/* Hero Image */}
         <Image
           source={{
-            uri: tip.images?.[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1'
+            uri: tip.images?.[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
           }}
           style={styles.heroImage}
         />
@@ -133,16 +123,18 @@ export default function TipDetailsScreen() {
           {/* Category Badge */}
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryText}>
-              {tip.category === 'grooming' ? 'العناية' :
-                tip.category === 'training' ? 'التدريب' :
-                  tip.category === 'nutrition' ? 'التغذية' : tip.category}
+              {tip.category === "grooming"
+                ? "العناية"
+                : tip.category === "training"
+                ? "التدريب"
+                : tip.category === "nutrition"
+                ? "التغذية"
+                : tip.category}
             </Text>
           </View>
 
           {/* Title */}
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>
-            {tip.title}
-          </Text>
+          <Text style={[styles.title, { textAlign: isRTL ? "right" : "left" }]}>{tip.title}</Text>
 
           {/* Meta Info */}
           <View style={styles.metaInfo}>
@@ -158,9 +150,7 @@ export default function TipDetailsScreen() {
 
           {/* Content */}
           <View style={styles.textContent}>
-            <Text style={[styles.contentText, { textAlign: isRTL ? 'right' : 'left' }]}>
-              {tip.content}
-            </Text>
+            <Text style={[styles.contentText, { textAlign: isRTL ? "right" : "left" }]}>{tip.content}</Text>
 
             {/* Additional Tips Section */}
             <View style={styles.additionalTips}>
@@ -185,7 +175,8 @@ export default function TipDetailsScreen() {
             <View style={styles.warningSection}>
               <Text style={styles.warningTitle}>تنبيه مهم:</Text>
               <Text style={styles.warningText}>
-                هذه النصائح للإرشاد العام فقط ولا تغني عن استشارة الطبيب البيطري المختص. في حالة وجود أي مشاكل صحية، يرجى مراجعة أقرب عيادة بيطرية.
+                هذه النصائح للإرشاد العام فقط ولا تغني عن استشارة الطبيب البيطري المختص. في حالة وجود أي مشاكل صحية،
+                يرجى مراجعة أقرب عيادة بيطرية.
               </Text>
             </View>
           </View>
@@ -203,24 +194,24 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   content: {
     flex: 1,
   },
   heroImage: {
-    width: '100%',
+    width: "100%",
     height: 250,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   contentContainer: {
     padding: 20,
   },
   categoryBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#EEF2FF',
+    alignSelf: "flex-start",
+    backgroundColor: "#EEF2FF",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -229,27 +220,27 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     lineHeight: 32,
     marginBottom: 16,
   },
   metaInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 20,
     marginBottom: 24,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: "#F3F4F6",
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   metaText: {
@@ -265,23 +256,23 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   additionalTips: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: "#F8FAFC",
     borderRadius: 12,
     padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   tipsList: {
     gap: 12,
   },
   tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
   },
   bulletPoint: {
@@ -296,39 +287,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     lineHeight: 22,
-    textAlign: 'right',
+    textAlign: "right",
   },
   warningSection: {
-    backgroundColor: '#FEF3F2',
+    backgroundColor: "#FEF3F2",
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#F97316',
+    borderLeftColor: "#F97316",
   },
   warningTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#DC2626',
+    fontWeight: "bold",
+    color: "#DC2626",
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   warningText: {
     fontSize: 14,
-    color: '#7C2D12',
+    color: "#7C2D12",
     lineHeight: 22,
-    textAlign: 'right',
+    textAlign: "right",
   },
   notFoundContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   notFoundText: {
     fontSize: 18,
     color: COLORS.darkGray,
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   backButton: {
     backgroundColor: COLORS.primary,
@@ -339,6 +330,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

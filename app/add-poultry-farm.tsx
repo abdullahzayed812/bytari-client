@@ -42,7 +42,7 @@ export default function AddPoultryFarmScreen() {
   const [formData, setFormData] = useState({
     name: "",
     location: "",
-    farmType: "" as FarmType,
+    farmType: "broiler" as FarmType,
     capacity: "",
     currentPopulation: "",
     establishedDate: "",
@@ -51,7 +51,7 @@ export default function AddPoultryFarmScreen() {
     phone: "",
     email: "",
     facilities: "",
-    healthStatus: "" as HealthStatus,
+    healthStatus: "healthy" as HealthStatus,
     lastInspection: "",
     description: "",
     address: "",
@@ -149,7 +149,7 @@ export default function AddPoultryFarmScreen() {
         contactPerson: formData.contactPerson.trim() || undefined,
         phone: formData.phone.trim() || undefined,
         email: formData.email.trim() || undefined,
-        facilities: facilitiesJson,
+        // facilities: facilitiesJson,
         healthStatus: formData.healthStatus,
         lastInspection: formData.lastInspection || undefined,
         // Additional fields for procedure
@@ -458,14 +458,14 @@ export default function AddPoultryFarmScreen() {
           </View>
 
           {/* Dates Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+          {/* <View style={styles.section}> */}
+          {/* <View style={styles.sectionHeader}>
               <Calendar size={24} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>التواريخ المهمة</Text>
-            </View>
+            </View> */}
 
-            {/* Established Date Input */}
-            <View style={styles.inputGroup}>
+          {/* Established Date Input */}
+          {/* <View style={styles.inputGroup}>
               <View style={styles.inputHeader}>
                 <Calendar size={20} color={COLORS.primary} />
                 <Text style={styles.inputLabel}>تاريخ التأسيس</Text>
@@ -478,10 +478,10 @@ export default function AddPoultryFarmScreen() {
                 placeholderTextColor={COLORS.darkGray}
                 textAlign="right"
               />
-            </View>
+            </View> */}
 
-            {/* Last Inspection Date Input */}
-            <View style={styles.inputGroup}>
+          {/* Last Inspection Date Input */}
+          {/* <View style={styles.inputGroup}>
               <View style={styles.inputHeader}>
                 <Calendar size={20} color={COLORS.primary} />
                 <Text style={styles.inputLabel}>تاريخ آخر فحص</Text>
@@ -494,10 +494,10 @@ export default function AddPoultryFarmScreen() {
                 placeholderTextColor={COLORS.darkGray}
                 textAlign="right"
               />
-            </View>
+            </View> */}
 
-            {/* License Number */}
-            <View style={styles.inputGroup}>
+          {/* License Number */}
+          {/* <View style={styles.inputGroup}>
               <View style={styles.inputHeader}>
                 <FileCheck size={20} color={COLORS.primary} />
                 <Text style={styles.inputLabel}>رقم الترخيص</Text>
@@ -510,11 +510,11 @@ export default function AddPoultryFarmScreen() {
                 placeholderTextColor={COLORS.darkGray}
                 textAlign="right"
               />
-            </View>
-          </View>
+            </View> */}
+          {/* </View> */}
 
           {/* Health & Facilities Section */}
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <ShieldCheck size={24} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>الصحة والمرافق</Text>
@@ -568,10 +568,10 @@ export default function AddPoultryFarmScreen() {
               />
               <Text style={styles.helperText}>افصل المرافق بفواصل (,)</Text>
             </View>
-          </View>
+          </View> */}
 
           {/* License Section */}
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <FileCheck size={24} color={COLORS.primary} />
               <Text style={styles.sectionTitle}>معلومات الترخيص</Text>
@@ -601,7 +601,7 @@ export default function AddPoultryFarmScreen() {
                 aspect={[4, 3]}
               />
             </View>
-          </View>
+          </View> */}
 
           {/* Images Section */}
           <View style={styles.section}>

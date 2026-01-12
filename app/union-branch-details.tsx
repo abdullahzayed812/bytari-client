@@ -228,6 +228,95 @@ export default function UnionBranchDetailsScreen() {
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Union Announcements - Top Priority */}
+        <View style={styles.topAnnouncementsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
+            {canManageBranch && (
+              <TouchableOpacity
+                onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
+                style={styles.addAnnouncementButton}
+              >
+                <Plus size={16} color={COLORS.primary} />
+                <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.topAnnouncementsList}>
+            {isAnnouncementsLoading ? (
+              <ActivityIndicator />
+            ) : (
+              announcements?.slice(0, 2)?.map((announcement) => (
+                <View key={announcement.id} style={styles.topAnnouncementCard}>
+                  <View style={styles.announcementHeader}>
+                    <View
+                      style={[
+                        styles.announcementType,
+                        { backgroundColor: getAnnouncementTypeColor(announcement.type) },
+                      ]}
+                    >
+                      <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
+                    </View>
+                    {announcement.isImportant && (
+                      <View style={styles.importantBadge}>
+                        <Text style={styles.importantText}>مهم</Text>
+                      </View>
+                    )}
+                    <Text style={styles.announcementDate}>{announcement.date}</Text>
+                  </View>
+
+                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                  <Text style={styles.announcementContent}>{announcement.content}</Text>
+
+                  {announcement?.link ? (
+                    <TouchableOpacity onPress={() => handleLinkPress(announcement.link)}>
+                      <Text style={[styles.announcementText, styles.linkText]}>{announcement.link}</Text>
+                    </TouchableOpacity>
+                  ) : null}
+
+                  {announcement.image && (
+                    <View style={styles.announcementImageContainer} onPress={() => handleLinkPress(announcement.link)}>
+                      <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
+                    </View>
+                  )}
+
+                  {announcement.link && (
+                    <TouchableOpacity style={styles.announcementLink}>
+                      <Link size={16} color={COLORS.primary} />
+                      <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
+                      <ExternalLink size={14} color={COLORS.primary} />
+                    </TouchableOpacity>
+                  )}
+
+                  <View style={styles.announcementFooter}>
+                    {announcement.author && (
+                      <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>
+                    )}
+                    {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
+                  </View>
+
+                  {canManageBranch && (
+                    <View style={styles.announcementActions}>
+                      <TouchableOpacity
+                        style={styles.editAnnouncementButton}
+                        onPress={() =>
+                          router.push(
+                            `/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`
+                          )
+                        }
+                      >
+                        <Edit3 size={14} color={COLORS.primary} />
+                        <Text style={styles.editAnnouncementText}>تعديل</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              ))
+            )}
+          </View>
+        </View>
+
         {/* Branch Header */}
         <View style={styles.branchHeader}>
           <View style={styles.branchIcon}>
@@ -359,95 +448,6 @@ export default function UnionBranchDetailsScreen() {
                 <Text style={styles.serviceText}>{service}</Text>
               </View>
             ))}
-          </View>
-        </View>
-
-        {/* Union Announcements - Top Priority */}
-        <View style={styles.topAnnouncementsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
-            {canManageBranch && (
-              <TouchableOpacity
-                onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
-                style={styles.addAnnouncementButton}
-              >
-                <Plus size={16} color={COLORS.primary} />
-                <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <View style={styles.topAnnouncementsList}>
-            {isAnnouncementsLoading ? (
-              <ActivityIndicator />
-            ) : (
-              announcements?.slice(0, 2)?.map((announcement) => (
-                <View key={announcement.id} style={styles.topAnnouncementCard}>
-                  <View style={styles.announcementHeader}>
-                    <View
-                      style={[
-                        styles.announcementType,
-                        { backgroundColor: getAnnouncementTypeColor(announcement.type) },
-                      ]}
-                    >
-                      <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
-                    </View>
-                    {announcement.isImportant && (
-                      <View style={styles.importantBadge}>
-                        <Text style={styles.importantText}>مهم</Text>
-                      </View>
-                    )}
-                    <Text style={styles.announcementDate}>{announcement.date}</Text>
-                  </View>
-
-                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
-                  <Text style={styles.announcementContent}>{announcement.content}</Text>
-
-                  {announcement?.link ? (
-                    <TouchableOpacity onPress={() => handleLinkPress(announcement.link)}>
-                      <Text style={[styles.announcementText, styles.linkText]}>{announcement.link}</Text>
-                    </TouchableOpacity>
-                  ) : null}
-
-                  {announcement.image && (
-                    <View style={styles.announcementImageContainer}>
-                      <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
-                    </View>
-                  )}
-
-                  {announcement.link && (
-                    <TouchableOpacity style={styles.announcementLink}>
-                      <Link size={16} color={COLORS.primary} />
-                      <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
-                      <ExternalLink size={14} color={COLORS.primary} />
-                    </TouchableOpacity>
-                  )}
-
-                  <View style={styles.announcementFooter}>
-                    {announcement.author && (
-                      <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>
-                    )}
-                    {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
-                  </View>
-
-                  {canManageBranch && (
-                    <View style={styles.announcementActions}>
-                      <TouchableOpacity
-                        style={styles.editAnnouncementButton}
-                        onPress={() =>
-                          router.push(
-                            `/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`
-                          )
-                        }
-                      >
-                        <Edit3 size={14} color={COLORS.primary} />
-                        <Text style={styles.editAnnouncementText}>تعديل</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              ))
-            )}
           </View>
         </View>
       </ScrollView>

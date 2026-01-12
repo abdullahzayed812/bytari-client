@@ -83,7 +83,7 @@ export default function ReportLostPetScreen() {
                 {
                   text: "موافق",
                   onPress: () => {
-                    router.back();
+                    router.navigate("/(tabs)");
                   },
                 },
               ]

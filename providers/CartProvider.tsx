@@ -1,68 +1,114 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Product } from "../types";
+import { trpc } from "@/lib/trpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Cart Item Type
 type CartItem = {
-  productId: string;
+  productId: number;
   product: Product;
   quantity: number;
 };
 
-// Context Type
 type CartContextType = {
   cart: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (productId: string) => void;
+  isLoadingCart: boolean;
+  addToCart: (productId: number, quantity: number) => void;
+  removeFromCart: (productId: number) => void;
   clearCart: () => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  updateQuantity: (productId: number, quantity: number) => void;
   getCartItemCount: () => number;
+  newOrderCount: number;
+  orderCreated: () => void;
+  resetOrderCounter: () => void;
 };
 
-// Create Context
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// Provider Component
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const queryClient = useQueryClient();
 
-  const addToCart = (item: CartItem) => {
-    setCart((prevCart) => {
-      const existing = prevCart.find((i) => i.productId === item.productId);
-      if (existing) {
-        return prevCart.map((i) =>
-          i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i
-        );
-      }
-      return [...prevCart, item];
-    });
+  const { data: serverCart, isLoading: isLoadingCart } = useQuery(trpc.cart.getCart.queryOptions());
+
+  const cart = serverCart || [];
+  const [newOrderCount, setNewOrderCount] = useState(0);
+
+  const invalidateCart = () => {
+    queryClient.invalidateQueries(trpc.cart.getCart.queryKey as any);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.productId !== productId));
+  // ✅ Mutations
+  const addToCartMutation = useMutation(trpc.cart.addToCart.mutationOptions());
+
+  const removeFromCartMutation = useMutation(trpc.cart.removeFromCart.mutationOptions());
+
+  const updateQuantityMutation = useMutation(trpc.cart.updateQuantity.mutationOptions());
+
+  const clearCartMutation = useMutation(trpc.cart.clearCart.mutationOptions());
+
+  // ✅ Actions (mutate + onSuccess)
+  const addToCart = (productId: number, quantity: number) => {
+    addToCartMutation.mutate(
+      { productId, quantity },
+      {
+        onSuccess: invalidateCart,
+      }
+    );
+  };
+
+  const removeFromCart = (productId: number) => {
+    removeFromCartMutation.mutate(
+      { productId },
+      {
+        onSuccess: invalidateCart,
+      }
+    );
+  };
+
+  const updateQuantity = (productId: number, quantity: number) => {
+    updateQuantityMutation.mutate(
+      { productId, quantity },
+      {
+        onSuccess: invalidateCart,
+      }
+    );
   };
 
   const clearCart = () => {
-    setCart([]);
+    clearCartMutation.mutate(undefined, {
+      onSuccess: invalidateCart,
+    });
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
-    setCart((prev) => prev.map((item) => (item.productId === productId ? { ...item, quantity } : item)));
-  };
+  const getCartItemCount = () => cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const getCartItemCount = () => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  };
+  const orderCreated = () => setNewOrderCount((prev) => prev + 1);
+  const resetOrderCounter = () => setNewOrderCount(0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, updateQuantity, getCartItemCount }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        isLoadingCart,
+        addToCart,
+        removeFromCart,
+        clearCart,
+        updateQuantity,
+        getCartItemCount,
+        newOrderCount,
+        orderCreated,
+        resetOrderCounter,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
 };
 
-// Hook for easy access
 export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
-  if (!context) throw new Error("useCart must be used within a CartProvider");
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
   return context;
 };

@@ -151,7 +151,7 @@ export default function AddProductScreen() {
                 style={styles.input}
                 value={formData.price}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
-                placeholder="السعر بالدولار"
+                placeholder="السعر بالدينار"
                 keyboardType="numeric"
                 textAlign={isRTL ? "right" : "left"}
               />

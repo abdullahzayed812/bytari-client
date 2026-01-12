@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Bytari",
-    "slug": "bytari",
+    "slug": "expo-app",
     "android": {
       "package": "com.anonymous.expoapp",
       "adaptiveIcon": {

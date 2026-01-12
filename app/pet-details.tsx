@@ -34,7 +34,7 @@ export default function PetDetailsScreen() {
   }>();
   const { showToast } = useToastContext();
 
-  const [activeTab, setActiveTab] = useState<"info" | "medical" | "vaccinations" | "reminders">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "requests">("info");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({
     name: "",
@@ -73,6 +73,9 @@ export default function PetDetailsScreen() {
   const pet = petQuery.data;
   const isLoading = petQuery.isLoading;
 
+  const { data: pendingRequests, isLoading: isLoadingRequests } = trpc.pets.getPendingMedicalActionsCount.useQuery({ petId: Number(petId) });
+  const pendingRequestsCount = pendingRequests?.count || 0;
+  
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
   // Update pet mutation for admin
@@ -430,24 +433,17 @@ export default function PetDetailsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === "medical" && styles.activeTab]}
-          onPress={() => setActiveTab("medical")}
+          style={[styles.tab, activeTab === "requests" && styles.activeTab]}
+          onPress={() => setActiveTab("requests")}
         >
-          <Text style={[styles.tabText, activeTab === "medical" && styles.activeTabText]}>السجل الطبي</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]}
-          onPress={() => setActiveTab("vaccinations")}
-        >
-          <Text style={[styles.tabText, activeTab === "vaccinations" && styles.activeTabText]}>التطعيمات</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "reminders" && styles.activeTab]}
-          onPress={() => setActiveTab("reminders")}
-        >
-          <Text style={[styles.tabText, activeTab === "reminders" && styles.activeTabText]}>التذكيرات</Text>
+          <View style={styles.tabItem}>
+            <Text style={[styles.tabText, activeTab === "requests" && styles.activeTabText]}>الطلبات</Text>
+            {pendingRequestsCount > 0 && (
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>{pendingRequestsCount}</Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -883,6 +879,25 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: COLORS.primary,
     fontWeight: "600",
+  },
+  tabItem: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+  },
+  badgeContainer: {
+    backgroundColor: COLORS.red,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
   },
   content: {
     padding: 16,

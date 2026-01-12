@@ -1,23 +1,30 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Stack, router } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
-import { Address, Order } from "../types";
+import { Address } from "../types";
 import Button from "../components/Button";
 import { MapPin, CreditCard, Banknote, Plus, Check } from "lucide-react-native";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/providers/CartProvider";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function CheckoutScreen() {
   const { t } = useI18n();
-  const { cart, clearCart } = useCart();
-  const { user, addresses, addAddress, userMode } = useApp();
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(
-    addresses.find((addr) => addr.isDefault) || addresses[0] || null
-  );
+  const queryClient = useQueryClient();
+  const { cart, clearCart, orderCreated } = useCart();
+  const { user, userMode } = useApp();
+  const { data: addresses, isLoading: isLoadingAddresses } = useQuery(trpc.addresses.getAddresses.queryOptions());
+  const addAddressMutation = useMutation(trpc.addresses.addAddress.mutationOptions());
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+
+  useEffect(() => {
+    if (addresses) {
+      setSelectedAddress(addresses.find((addr) => addr.isDefault) || addresses[0] || null);
+    }
+  }, [addresses]);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("cash");
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [newAddress, setNewAddress] = useState({
@@ -38,18 +45,25 @@ export default function CheckoutScreen() {
       return;
     }
 
-    const address: Address = {
-      id: Date.now().toString(),
-      name: newAddress.name,
-      phone: newAddress.phone,
-      address: newAddress.address,
-      isDefault: addresses.length === 0,
-    };
-
-    await addAddress(address);
-    setSelectedAddress(address);
-    setShowAddressForm(false);
-    setNewAddress({ name: user?.name || "", phone: user?.phone || "", address: "" });
+    addAddressMutation.mutate(
+      {
+        name: newAddress.name,
+        phone: newAddress.phone,
+        address: newAddress.address,
+        isDefault: !addresses || addresses.length === 0,
+      },
+      {
+        onSuccess: (newAddr) => {
+          queryClient.invalidateQueries(trpc.addresses.getAddresses.queryKey as any);
+          setSelectedAddress(newAddr);
+          setShowAddressForm(false);
+          setNewAddress({ name: user?.name || "", phone: user?.phone || "", address: "" });
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message || "حدث خطأ أثناء إضافة العنوان");
+        },
+      }
+    );
   };
 
   const handlePlaceOrder = async () => {
@@ -86,6 +100,7 @@ export default function CheckoutScreen() {
       {
         onSuccess: () => {
           clearCart();
+          orderCreated();
           Alert.alert("تم تأكيد الطلب", "تم إرسال طلبك بنجاح. سيتم التواصل معك قريباً لتأكيد التوصيل.", [
             {
               text: "موافق",
@@ -166,14 +181,14 @@ export default function CheckoutScreen() {
             </TouchableOpacity>
           </View>
 
-          {addresses.length === 0 && !showAddressForm ? (
+          {addresses?.length === 0 && !showAddressForm ? (
             <View style={styles.emptyState}>
               <MapPin size={40} color={COLORS.gray} />
               <Text style={styles.emptyStateText}>لا توجد عناوين محفوظة</Text>
               <Button title="إضافة عنوان جديد" onPress={() => setShowAddressForm(true)} type="outline" size="small" />
             </View>
           ) : (
-            <View style={styles.addressList}>{addresses.map(renderAddressItem)}</View>
+            <View style={styles.addressList}>{addresses?.map(renderAddressItem)}</View>
           )}
 
           {showAddressForm && (

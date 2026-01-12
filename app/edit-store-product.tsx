@@ -1,15 +1,15 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ArrowRight, Upload, ImageIcon } from 'lucide-react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { Stack } from 'expo-router';
+import { ArrowRight, Upload, ImageIcon } from "lucide-react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { Stack } from "expo-router";
 import { useApp } from "../providers/AppProvider";
-import * as ImagePicker from 'expo-image-picker';
-import { useQuery } from '@tanstack/react-query';
-import { trpc } from '../lib/trpc';
+import * as ImagePicker from "expo-image-picker";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "../lib/trpc";
 
 interface StoreProductFormData {
   name: string;
@@ -28,7 +28,7 @@ export default function EditStoreProductScreen() {
   const { id, storeType } = useLocalSearchParams<{ id?: string; storeType?: string }>();
 
   // Determine store type from params or userMode
-  const currentStoreType = storeType || (userMode === 'veterinarian' ? 'veterinarian' : 'pet_owner');
+  const currentStoreType = storeType || (userMode === "veterinarian" ? "veterinarian" : "pet_owner");
 
   const { data: categoriesData } = useQuery(
     trpc.unifiedStore.getCategories.queryOptions({
@@ -39,57 +39,57 @@ export default function EditStoreProductScreen() {
   const categories = categoriesData || [];
 
   const [formData, setFormData] = useState<StoreProductFormData>({
-    name: '',
-    description: '',
-    category: '',
-    price: '',
-    stock: '',
-    brand: '',
+    name: "",
+    description: "",
+    category: "",
+    price: "",
+    stock: "",
+    brand: "",
     images: [],
     petType: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const petTypes = [
-    { id: 'cat', name: 'قطط' },
-    { id: 'dog', name: 'كلاب' },
-    { id: 'bird', name: 'طيور' },
-    { id: 'fish', name: 'أسماك' },
-    { id: 'rabbit', name: 'أرانب' },
-    { id: 'other', name: 'أخرى' },
+    { id: "cat", name: "قطط" },
+    { id: "dog", name: "كلاب" },
+    { id: "bird", name: "طيور" },
+    { id: "fish", name: "أسماك" },
+    { id: "rabbit", name: "أرانب" },
+    { id: "other", name: "أخرى" },
   ];
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      Alert.alert('خطأ', 'اسم المنتج مطلوب');
+      Alert.alert("خطأ", "اسم المنتج مطلوب");
       return;
     }
     if (!formData.price.trim()) {
-      Alert.alert('خطأ', 'السعر مطلوب');
+      Alert.alert("خطأ", "السعر مطلوب");
       return;
     }
     if (!formData.stock.trim()) {
-      Alert.alert('خطأ', 'الكمية مطلوبة');
+      Alert.alert("خطأ", "الكمية مطلوبة");
       return;
     }
     if (formData.petType.length === 0) {
-      Alert.alert('خطأ', 'يجب اختيار نوع الحيوان المناسب');
+      Alert.alert("خطأ", "يجب اختيار نوع الحيوان المناسب");
       return;
     }
 
     setIsSubmitting(true);
     try {
       // TODO: Implement store product update API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('نجح', 'تم تحديث المنتج بنجاح', [
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      Alert.alert("نجح", "تم تحديث المنتج بنجاح", [
         {
-          text: 'موافق',
-          onPress: () => router.back()
-        }
+          text: "موافق",
+          onPress: () => router.back(),
+        },
       ]);
     } catch (error) {
-      console.error('Error updating store product:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تحديث المنتج');
+      console.error("Error updating store product:", error);
+      Alert.alert("خطأ", "حدث خطأ أثناء تحديث المنتج");
     } finally {
       setIsSubmitting(false);
     }
@@ -97,51 +97,47 @@ export default function EditStoreProductScreen() {
 
   const handleImageUpload = async () => {
     try {
-      if (Platform.OS === 'web') {
+      if (Platform.OS === "web") {
         // For web, simulate image selection
         const newImage = `https://images.unsplash.com/photo-${Date.now()}?w=400`;
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, newImage]
+          images: [...prev.images, newImage],
         }));
       } else {
         // Request permission for camera/gallery access
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('خطأ', 'نحتاج إذن للوصول إلى الصور');
+        if (status !== "granted") {
+          Alert.alert("خطأ", "نحتاج إذن للوصول إلى الصور");
           return;
         }
 
         // Show options for camera or gallery
-        Alert.alert(
-          'اختر مصدر الصورة',
-          'من أين تريد اختيار الصورة؟',
-          [
-            {
-              text: 'الكاميرا',
-              onPress: () => pickImageFromCamera()
-            },
-            {
-              text: 'المعرض',
-              onPress: () => pickImageFromGallery()
-            },
-            {
-              text: 'إلغاء',
-              style: 'cancel'
-            }
-          ]
-        );
+        Alert.alert("اختر مصدر الصورة", "من أين تريد اختيار الصورة؟", [
+          {
+            text: "الكاميرا",
+            onPress: () => pickImageFromCamera(),
+          },
+          {
+            text: "المعرض",
+            onPress: () => pickImageFromGallery(),
+          },
+          {
+            text: "إلغاء",
+            style: "cancel",
+          },
+        ]);
       }
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
     }
   };
 
   const pickImageFromCamera = async () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إذن للوصول إلى الكاميرا');
+      if (status !== "granted") {
+        Alert.alert("خطأ", "نحتاج إذن للوصول إلى الكاميرا");
         return;
       }
 
@@ -153,13 +149,13 @@ export default function EditStoreProductScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, result.assets[0].uri]
+          images: [...prev.images, result.assets[0].uri],
         }));
       }
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء التقاط الصورة');
+      Alert.alert("خطأ", "حدث خطأ أثناء التقاط الصورة");
     }
   };
 
@@ -173,29 +169,29 @@ export default function EditStoreProductScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          images: [...prev.images, result.assets[0].uri]
+          images: [...prev.images, result.assets[0].uri],
         }));
       }
     } catch {
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة');
+      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الصورة");
     }
   };
 
   const handleRemoveImage = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
   const togglePetType = (petTypeId: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       petType: prev.petType.includes(petTypeId)
-        ? prev.petType.filter(type => type !== petTypeId)
-        : [...prev.petType, petTypeId]
+        ? prev.petType.filter((type) => type !== petTypeId)
+        : [...prev.petType, petTypeId],
     }));
   };
 
@@ -203,10 +199,10 @@ export default function EditStoreProductScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'تعديل منتج المتجر',
+          title: "تعديل منتج المتجر",
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold' }
+          headerTitleStyle: { fontWeight: "bold" },
         }}
       />
 
@@ -214,7 +210,7 @@ export default function EditStoreProductScreen() {
         <View style={styles.content}>
           <View style={styles.storeTypeIndicator}>
             <Text style={styles.storeTypeText}>
-              {currentStoreType === 'veterinarian' ? 'متجر الطبيب البيطري' : 'متجر صاحب الحيوان'}
+              {currentStoreType === "veterinarian" ? "متجر الطبيب البيطري" : "متجر صاحب الحيوان"}
             </Text>
           </View>
 
@@ -226,9 +222,9 @@ export default function EditStoreProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
                 placeholder="أدخل اسم المنتج"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -237,11 +233,11 @@ export default function EditStoreProductScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
                 placeholder="وصف المنتج"
                 multiline
                 numberOfLines={3}
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -251,17 +247,11 @@ export default function EditStoreProductScreen() {
                 {categories.map((category: any) => (
                   <TouchableOpacity
                     key={category.id}
-                    style={[
-                      styles.categoryButton,
-                      formData.category === category.id && styles.selectedCategoryButton
-                    ]}
-                    onPress={() => setFormData(prev => ({ ...prev, category: category.id }))}
+                    style={[styles.categoryButton, formData.category === category.id && styles.selectedCategoryButton]}
+                    onPress={() => setFormData((prev) => ({ ...prev, category: category.id }))}
                   >
                     <Text
-                      style={[
-                        styles.categoryText,
-                        formData.category === category.id && styles.selectedCategoryText
-                      ]}
+                      style={[styles.categoryText, formData.category === category.id && styles.selectedCategoryText]}
                     >
                       {category.name}
                     </Text>
@@ -278,14 +268,14 @@ export default function EditStoreProductScreen() {
                     key={petType.id}
                     style={[
                       styles.categoryButton,
-                      formData.petType.includes(petType.id) && styles.selectedCategoryButton
+                      formData.petType.includes(petType.id) && styles.selectedCategoryButton,
                     ]}
                     onPress={() => togglePetType(petType.id)}
                   >
                     <Text
                       style={[
                         styles.categoryText,
-                        formData.petType.includes(petType.id) && styles.selectedCategoryText
+                        formData.petType.includes(petType.id) && styles.selectedCategoryText,
                       ]}
                     >
                       {petType.name}
@@ -300,10 +290,10 @@ export default function EditStoreProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.price}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, price: text }))}
-                placeholder="السعر بالدولار"
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
+                placeholder="السعر بالدينار"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -312,10 +302,10 @@ export default function EditStoreProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.stock}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, stock: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, stock: text }))}
                 placeholder="عدد القطع المتوفرة"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -324,9 +314,9 @@ export default function EditStoreProductScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.brand}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, brand: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, brand: text }))}
                 placeholder="اسم العلامة التجارية"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -336,10 +326,7 @@ export default function EditStoreProductScreen() {
                 {formData.images.map((image, index) => (
                   <View key={index} style={styles.imageItem}>
                     <Image source={{ uri: image }} style={styles.productImage} />
-                    <TouchableOpacity
-                      style={styles.removeImageButton}
-                      onPress={() => handleRemoveImage(index)}
-                    >
+                    <TouchableOpacity style={styles.removeImageButton} onPress={() => handleRemoveImage(index)}>
                       <Text style={styles.removeImageText}>×</Text>
                     </TouchableOpacity>
                   </View>
@@ -353,7 +340,7 @@ export default function EditStoreProductScreen() {
           </View>
 
           <Button
-            title={isSubmitting ? 'جاري التحديث...' : 'تحديث المنتج'}
+            title={isSubmitting ? "جاري التحديث..." : "تحديث المنتج"}
             onPress={handleSubmit}
             disabled={isSubmitting}
             style={styles.submitButton}
@@ -377,12 +364,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   storeTypeText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   section: {
     backgroundColor: COLORS.white,
@@ -397,20 +384,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   inputGroup: {
     marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   input: {
     borderWidth: 1,
@@ -423,11 +410,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   categoryContainer: {
-    flexDirection: 'row-reverse',
-    flexWrap: 'wrap',
+    flexDirection: "row-reverse",
+    flexWrap: "wrap",
     gap: 8,
   },
   categoryButton: {
@@ -445,19 +432,19 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   selectedCategoryText: {
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   imagesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   imageItem: {
-    position: 'relative',
+    position: "relative",
   },
   productImage: {
     width: 80,
@@ -466,20 +453,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
   },
   removeImageButton: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     right: -8,
     backgroundColor: COLORS.red,
     width: 24,
     height: 24,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   removeImageText: {
     color: COLORS.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   addImageButton: {
     width: 80,
@@ -487,16 +474,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 2,
     borderColor: COLORS.lightGray,
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLORS.white,
   },
   addImageText: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   submitButton: {
     marginBottom: 20,

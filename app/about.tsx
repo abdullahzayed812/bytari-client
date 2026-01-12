@@ -84,12 +84,15 @@ export default function AboutScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>تواصل معنا</Text>
           <View style={styles.contactCard}>
-            <TouchableOpacity style={styles.contactItem} onPress={() => handleLinkPress("https://petcare.com")}>
+            {/* <TouchableOpacity style={styles.contactItem} onPress={() => handleLinkPress("https://petcare.com")}>
               <ExternalLink size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>الموقع الإلكتروني</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
-            <TouchableOpacity style={styles.contactItem} onPress={() => handleLinkPress("mailto:info@petcare.com")}>
+            <TouchableOpacity
+              style={styles.contactItem}
+              onPress={() => handleLinkPress("mailto:info@baytariapp@gmail.com")}
+            >
               <ExternalLink size={20} color={COLORS.primary} />
               <Text style={styles.contactText}>البريد الإلكتروني</Text>
             </TouchableOpacity>

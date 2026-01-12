@@ -116,7 +116,8 @@ export default function StoreScreen() {
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
   const { favorites, removeFromFavorites, addToFavorites } = useFavorites();
-  const { addToCart, getCartItemCount } = useCart();
+  const { addToCart, getCartItemCount, isLoadingCart } = useCart();
+
   const [selectedAnimal, setSelectedAnimal] = useState<AnimalType | null>(null);
   const [selectedSpecialty, setSelectedSpecialty] = useState<VetSpecialty | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category>("all");
@@ -125,10 +126,19 @@ export default function StoreScreen() {
   const animalFlatListRef = useRef<FlatList>(null);
   const specialtyFlatListRef = useRef<FlatList>(null);
   const productFlatListRef = useRef<FlatList>(null);
-
   const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
 
-  const { data: backendCategories } = useQuery(trpc.unifiedStore.getCategories.queryOptions({ storeType: storeType }));
+  const { data: pendingOrdersCount, isLoading: isOrdersLoading } = useQuery(
+    trpc.unifiedStore.getPendingOrdersCount.queryOptions({
+      storeType,
+    })
+  );
+
+  const isCartAndOrdersLoading = isLoadingCart || isOrdersLoading;
+
+  const { data: backendCategories, isLoading: isCategoriesLoading } = useQuery(
+    trpc.unifiedStore.getCategories.queryOptions({ storeType: storeType })
+  );
   // const allBackendCategories = backendCategoriesData?.json;
 
   const animalCategories = getPetOwnerCategories(backendCategories);
@@ -161,15 +171,7 @@ export default function StoreScreen() {
   const filteredProducts = productsData?.items || [];
 
   const handleAddToCart = (product: any) => {
-    addToCart({
-      productId: product.id,
-      quantity: 1,
-      product: {
-        ...product,
-        price: product.price,
-        image: product.image,
-      },
-    });
+    addToCart(product.id, 1);
   };
 
   const handleToggleFavorite = (product: any) => {
@@ -412,12 +414,17 @@ export default function StoreScreen() {
                   }}
                 >
                   <ClipboardList size={20} color={COLORS.white} />
+                  {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
+                    <View style={styles.adminBadge}>
+                      <Text style={styles.adminBadgeText}>{pendingOrdersCount}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             )}
             <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
               <ShoppingBag size={24} color={COLORS.primary} />
-              {getCartItemCount() > 0 && (
+              {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
                 <View style={styles.cartBadge}>
                   <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
                 </View>
@@ -470,6 +477,11 @@ export default function StoreScreen() {
                   }}
                 >
                   <ClipboardList size={20} color={COLORS.white} />
+                  {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
+                    <View style={styles.adminBadge}>
+                      <Text style={styles.adminBadgeText}>{pendingOrdersCount}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.adminButton} onPress={handlePetStoreSettings}>
                   <Cog size={20} color={COLORS.white} />
@@ -478,7 +490,7 @@ export default function StoreScreen() {
             )}
             <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
               <ShoppingBag size={24} color={COLORS.primary} />
-              {getCartItemCount() > 0 && (
+              {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
                 <View style={styles.cartBadge}>
                   <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
                 </View>
@@ -515,7 +527,7 @@ export default function StoreScreen() {
           style={styles.backButton}
           onPress={userMode === "veterinarian" ? handleBackToSpecialties : handleBackToAnimals}
         >
-          <ArrowRight size={20} color={COLORS.primary} style={{ transform: [{ rotate: "180deg" }] }} />
+          <ArrowRight size={20} color={COLORS.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.title}>{selectedMainCategory?.label}</Text>
@@ -534,11 +546,26 @@ export default function StoreScreen() {
               <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
                 <Settings size={20} color={COLORS.white} />
               </TouchableOpacity>
+              {/* This is the third ClipboardList button */}
+              <TouchableOpacity
+                style={styles.adminButton}
+                onPress={() => {
+                  const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
+                  router.push(`/store-orders?storeType=${storeType}`);
+                }}
+              >
+                <ClipboardList size={20} color={COLORS.white} />
+                {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
+                  <View style={styles.adminBadge}>
+                    <Text style={styles.adminBadgeText}>{pendingOrdersCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
             </View>
           )}
           <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
             <ShoppingBag size={24} color={COLORS.primary} />
-            {getCartItemCount() > 0 && (
+            {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
               </View>
@@ -605,27 +632,27 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    padding: 8,
     backgroundColor: COLORS.white,
   },
   headerLeft: {
-    flex: 1,
-    alignItems: "flex-start",
+    // flex: 1,
+    // alignItems: "flex-start",
   },
   headerCenter: {
     flex: 1,
     alignItems: "center",
   },
   headerRight: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   adminButtons: {
-    flexDirection: "row",
-    marginRight: 12,
+    flexDirection: "row-reverse",
+    // marginRight: 2,
   },
   adminButton: {
     width: 36,
@@ -640,6 +667,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  adminBadge: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "red",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  adminBadgeText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
   },
   storeTypeLabel: {
     fontSize: 12,

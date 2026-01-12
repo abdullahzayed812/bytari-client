@@ -158,19 +158,7 @@ export default function StoreOrdersScreen() {
   // We need a mutation to update order status.
   // Assuming we can use the existing orders.update mutation or need a new one in unifiedStore?
   // Let's use the existing one for now as it takes ID and status.
-  const updateOrderStatusMutation = useMutation(
-    trpc.orders.update.mutationOptions({
-      onSuccess: () => {
-        Alert.alert("تم التحديث", "تم تحديث حالة الطلب بنجاح");
-        setShowStatusModal(false);
-        setSelectedOrder(null);
-        refetch();
-      },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message || "فشل تحديث حالة الطلب");
-      },
-    })
-  );
+  const updateOrderStatusMutation = useMutation(trpc.orders.update.mutationOptions());
 
   if (isLoading) {
     return (
@@ -192,7 +180,20 @@ export default function StoreOrdersScreen() {
   };
 
   const handleUpdateOrderStatus = (orderId: string, status: Order["status"]) => {
-    updateOrderStatusMutation.mutate({ orderId, status });
+    updateOrderStatusMutation.mutate(
+      { orderId: Number(orderId), status },
+      {
+        onSuccess: () => {
+          Alert.alert("تم التحديث", "تم تحديث حالة الطلب بنجاح");
+          setShowStatusModal(false);
+          setSelectedOrder(null);
+          refetch();
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", error.message || "فشل تحديث حالة الطلب");
+        },
+      }
+    );
   };
 
   const handleViewOrderDetails = (order: Order) => {

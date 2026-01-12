@@ -392,7 +392,7 @@ export default function StoreDetailsScreen() {
 
           <View style={styles.actionsSection}>
             <Button title="الاتصال" onPress={handleCall} type="primary" style={styles.actionButton} />
-            <Button title="الاتجاهات" onPress={handleGetDirections} type="outline" style={styles.actionButton} />
+            {/* <Button title="الاتجاهات" onPress={handleGetDirections} type="outline" style={styles.actionButton} /> */}
           </View>
 
           <View style={styles.followSection}>
