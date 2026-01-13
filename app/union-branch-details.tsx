@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
   TextInput,
+  Linking,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants/colors";
@@ -282,7 +283,10 @@ export default function UnionBranchDetailsScreen() {
                   )}
 
                   {announcement.link && (
-                    <TouchableOpacity style={styles.announcementLink}>
+                    <TouchableOpacity
+                      style={styles.announcementLink}
+                      onPress={() => handleLinkPress(announcement.link)}
+                    >
                       <Link size={16} color={COLORS.primary} />
                       <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
                       <ExternalLink size={14} color={COLORS.primary} />

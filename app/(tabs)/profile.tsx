@@ -38,7 +38,7 @@ import {
   Camera,
 } from "lucide-react-native";
 import { router, useFocusEffect } from "expo-router";
-import { Language } from "../../types";
+// import { Language } from "../../types";
 import { Linking, Share } from "react-native";
 import { useImageUpload } from "../../hooks/useImageUpload";
 import { useMutation } from "@tanstack/react-query";
@@ -46,12 +46,12 @@ import { trpc } from "../../lib/trpc";
 
 const languages = [
   { code: "ar" as Language, name: "العربية", flag: "🇸🇦" },
-  { code: "en" as Language, name: "English", flag: "🇬🇧" },
-  { code: "ku" as Language, name: "کوردی", flag: "🇮🇶" },
-  { code: "fr" as Language, name: "Français", flag: "🇫🇷" },
-  { code: "tr" as Language, name: "Türkçe", flag: "🇹🇷" },
-  { code: "de" as Language, name: "Deutsch", flag: "🇩🇪" },
-  { code: "fa" as Language, name: "فارسی", flag: "🇮🇷" },
+  // { code: "en" as Language, name: "English", flag: "🇬🇧" },
+  // { code: "ku" as Language, name: "کوردی", flag: "🇮🇶" },
+  // { code: "fr" as Language, name: "Français", flag: "🇫🇷" },
+  // { code: "tr" as Language, name: "Türkçe", flag: "🇹🇷" },
+  // { code: "de" as Language, name: "Deutsch", flag: "🇩🇪" },
+  // { code: "fa" as Language, name: "فارسی", flag: "🇮🇷" },
 ];
 
 export default function ProfileScreen() {
@@ -192,8 +192,8 @@ export default function ProfileScreen() {
   };
 
   const handleLanguageSelect = (lang: Language) => {
-    changeLanguage(lang);
-    setShowLanguageModal(false);
+    // changeLanguage(lang);
+    // setShowLanguageModal(false);
   };
 
   const handleImagePicker = () => {

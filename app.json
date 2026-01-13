@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Bytari",
-    "slug": "expo-app",
+    "slug": "bytari",
     "android": {
       "package": "com.anonymous.expoapp",
       "adaptiveIcon": {
@@ -16,7 +16,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "8a476979-04a9-4aae-a277-0a451db3066e"
+        "projectId": "2e383e4c-de6d-4835-bd6e-9b621555c654"
       }
     }
   }
