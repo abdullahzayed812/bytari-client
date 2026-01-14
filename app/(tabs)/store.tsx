@@ -618,7 +618,7 @@ export default function StoreScreen() {
         data={filteredProducts}
         renderItem={renderProductItem}
         keyExtractor={(item) => item.id}
-        numColumns={2}
+        numColumns={3}
         contentContainerStyle={[styles.productsList, { paddingBottom: 100 }]}
         columnWrapperStyle={styles.productsRow}
       />
@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row-reverse",
     justifyContent: "space-between",
-    flexWrap: "wrap",
+    // flexWrap: "wrap",
     alignItems: "center",
     padding: 8,
     backgroundColor: COLORS.gray,
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    alignSelf: "center",
+    // alignSelf: "center",
   },
   adminButtons: {
     flexDirection: "row-reverse",
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   productCard: {
-    width: "48%",
+    width: "32%",
     backgroundColor: COLORS.gray,
     borderRadius: 12,
     overflow: "hidden",

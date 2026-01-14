@@ -181,8 +181,8 @@ export default function StoreDetailsScreen() {
               type: "success",
               message: "تم المتابعة بنجاح",
             });
-            queryClient.invalidateQueries(trpc.stores.isFollowing.getQueryKey({ storeId: Number(id) }));
-            queryClient.invalidateQueries(trpc.stores.getFollowerCount.getQueryKey({ storeId: Number(id) }));
+            queryClient.invalidateQueries(trpc.stores.isFollowing.queryKey as any);
+            queryClient.invalidateQueries(trpc.stores.getFollowerCount.queryKey as any);
           },
           onError: (error) => {
             showToast({
