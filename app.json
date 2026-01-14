@@ -18,6 +18,9 @@
       "eas": {
         "projectId": "2e383e4c-de6d-4835-bd6e-9b621555c654"
       }
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.expoapp"
     }
   }
 }
