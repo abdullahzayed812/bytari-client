@@ -1,29 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../../constants/colors";
-import {
-  ArrowLeft,
-  Plus,
-  Edit3,
-  Eye,
-  EyeOff,
-  Trash2,
-  Star,
-  MapPin,
-  Phone,
-  Download,
-} from "lucide-react-native";
+import { ArrowLeft, Plus, Edit3, Eye, EyeOff, Trash2, Star, MapPin, Phone, Download } from "lucide-react-native";
 
 import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
@@ -131,9 +111,7 @@ export default function ClinicsScreen() {
 
             <View style={styles.ratingContainer}>
               <Star size={16} color="#FFD700" fill="#FFD700" />
-              <Text style={styles.ratingText}>
-                {clinic.rating?.toFixed(1) || "0.0"}
-              </Text>
+              <Text style={styles.ratingText}>{clinic.rating?.toFixed(1) || "0.0"}</Text>
             </View>
           </View>
         </View>
@@ -182,9 +160,7 @@ export default function ClinicsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>جميع العيادات المسجلة</Text>
-          <Text style={styles.headerSubtitle}>
-            تصفح جميع العيادات البيطرية المسجلة في النظام
-          </Text>
+          <Text style={styles.headerSubtitle}>تصفح جميع العيادات البيطرية المسجلة في النظام</Text>
         </View>
 
         {/* Add Clinic Button - Only for Super Admin */}
@@ -203,9 +179,7 @@ export default function ClinicsScreen() {
 
         {/* Clinics List */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            العيادات المتاحة ({clinics?.length})
-          </Text>
+          <Text style={styles.sectionTitle}>العيادات المتاحة ({clinics?.length})</Text>
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={COLORS.primary} />
@@ -241,13 +215,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: COLORS.black,
-    // textAlign: "right",
+    // textAlign: "left",
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
     color: COLORS.darkGray,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   addSection: {
     padding: 20,
@@ -266,7 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    // textAlign: "right",
+    // textAlign: "left",
     marginBottom: 15,
   },
   clinicCard: {
@@ -310,7 +284,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -346,7 +320,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,

@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   inputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#ffffff",
     borderRadius: 12,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   backButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,

@@ -134,7 +134,7 @@ export default function TipDetailsScreen() {
           </View>
 
           {/* Title */}
-          <Text style={[styles.title, { textAlign: isRTL ? "right" : "left" }]}>{tip.title}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? "left" : "right" }]}>{tip.title}</Text>
 
           {/* Meta Info */}
           <View style={styles.metaInfo}>
@@ -150,7 +150,7 @@ export default function TipDetailsScreen() {
 
           {/* Content */}
           <View style={styles.textContent}>
-            <Text style={[styles.contentText, { textAlign: isRTL ? "right" : "left" }]}>{tip.content}</Text>
+            <Text style={[styles.contentText, { textAlign: isRTL ? "left" : "right" }]}>{tip.content}</Text>
 
             {/* Additional Tips Section */}
             <View style={styles.additionalTips}>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   metaInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 20,
     marginBottom: 24,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   metaItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -265,13 +265,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   tipsList: {
     gap: 12,
   },
   tipItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     gap: 12,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
   },
   warningSection: {
     backgroundColor: "#FEF3F2",
@@ -301,13 +301,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#DC2626",
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   warningText: {
     fontSize: 14,
     color: "#7C2D12",
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
   },
   notFoundContainer: {
     flex: 1,

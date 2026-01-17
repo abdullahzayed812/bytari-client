@@ -1257,7 +1257,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     paddingHorizontal: 16,
@@ -1268,7 +1268,7 @@ const styles = StyleSheet.create({
   },
   searchInputContainer: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
     borderRadius: 8,
@@ -1280,10 +1280,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   viewModeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: "#F3F4F6",
     borderRadius: 6,
     padding: 2,
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
@@ -1375,24 +1375,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   itemDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   itemAuthor: {
     fontSize: 12,
     color: COLORS.primary,
     marginBottom: 2,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   itemCategory: {
     fontSize: 12,
     color: COLORS.darkGray,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   itemImage: {
     width: 80,
@@ -1400,13 +1400,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   itemActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 8,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
@@ -1433,7 +1433,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -1468,7 +1468,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.black,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -1477,7 +1477,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: COLORS.black,
-    // textAlign: "right",
+    // textAlign: "left",
     backgroundColor: COLORS.white,
   },
   textArea: {
@@ -1517,13 +1517,13 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   imageActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 12,
     gap: 8,
   },
   changeImageButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -1533,7 +1533,7 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.error,
@@ -1550,7 +1550,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   radioOption: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1569,12 +1569,12 @@ const styles = StyleSheet.create({
   radioText: {
     fontSize: 16,
     color: COLORS.black,
-    // textAlign: "right",
+    // textAlign: "left",
   },
   itemDate: {
     fontSize: 11,
     color: COLORS.darkGray,
     marginTop: 2,
-    // textAlign: "right",
+    // textAlign: "left",
   },
 });

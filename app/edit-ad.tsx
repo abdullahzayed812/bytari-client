@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   labelContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 8,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     backgroundColor: colors.white,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     height: 100,
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     height: 150,
   },
   typeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   typeButton: {
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   switchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: colors.white,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     borderColor: colors.lightGray,
   },
   saveButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.primary,

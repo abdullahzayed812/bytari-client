@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image } from "react-native";
 import React from "react";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -82,7 +73,7 @@ export default function JobDetailsScreen() {
         {request && (
           <View style={styles.detailsCard}>
             <View style={styles.header}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 10 }}>
                 {request.type === "job_posting" && <Briefcase size={24} color={COLORS.primary} />}
                 {request.type === "job_application" && <FileText size={24} color={"#28a745"} />}
                 {request.type === "field_supervision" && <Shield size={24} color={"#6f42c1"} />}
@@ -191,7 +182,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
@@ -219,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -237,7 +228,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     paddingVertical: 4,
   },
@@ -269,7 +260,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   cvButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -284,14 +275,14 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginTop: 24,
     gap: 16,
   },
   approveButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#28a745",
@@ -301,7 +292,7 @@ const styles = StyleSheet.create({
   },
   rejectButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#dc3545",

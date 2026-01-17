@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   filterButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     paddingHorizontal: 4,
   },
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   caseCard: {
     backgroundColor: COLORS.white,
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
   notesText: {
     fontSize: 12,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   emptyContainer: {
     padding: 40,

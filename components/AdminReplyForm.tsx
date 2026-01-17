@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   switchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
     marginRight: 12,
   },
   helpText: {
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   submitButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,

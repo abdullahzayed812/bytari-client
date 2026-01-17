@@ -73,7 +73,7 @@ export default function ConsultationsListScreen() {
               </Text>
             </View>
             {consultation.answer && (
-              <Text style={[styles.answerText, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={3}>
+              <Text style={[styles.answerText, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={3}>
                 {consultation.answer.text}
               </Text>
             )}

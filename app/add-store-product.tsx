@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     backgroundColor: COLORS.white,
@@ -285,11 +285,11 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   row: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-end",
   },
   categoryGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   petTypeGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   imagesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
   },

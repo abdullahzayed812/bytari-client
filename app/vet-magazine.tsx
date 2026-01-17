@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   articlesSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingVertical: 8,
     gap: 12,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 18,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
     minHeight: 36,
   },
   articleExcerpt: {
@@ -286,11 +286,11 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     lineHeight: 16,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
     minHeight: 32,
   },
   authorSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 6,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   authorInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     flex: 1,
@@ -322,12 +322,12 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   articleStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     alignItems: "center",
   },
   statItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },

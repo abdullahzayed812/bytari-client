@@ -337,7 +337,7 @@ export default function AdminStoresManagement() {
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>رخصة تجارية:</Text>
                     <TouchableOpacity onPress={() => handleViewImage(selectedStore.businessLicense!)}>
-                      <Text style={[styles.infoValue, { color: COLORS.primary, textDecorationLine: 'underline' }]}>
+                      <Text style={[styles.infoValue, { color: COLORS.primary, textDecorationLine: "underline" }]}>
                         عرض الرخصة
                       </Text>
                     </TouchableOpacity>
@@ -653,11 +653,7 @@ export default function AdminStoresManagement() {
 
       {renderDetailModal()}
       {renderActionModal()}
-      <ImageViewerModal
-        visible={showImageModal}
-        imageUrl={selectedImageUrl}
-        onClose={() => setShowImageModal(false)}
-      />
+      <ImageViewerModal visible={showImageModal} imageUrl={selectedImageUrl} onClose={() => setShowImageModal(false)} />
     </SafeAreaView>
   );
 }
@@ -674,7 +670,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   searchBar: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
     borderRadius: 25,
@@ -716,7 +712,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   storeHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 10,
@@ -728,20 +724,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    // textAlign: "right",
+    // textAlign: "left",
     fontFamily: "System",
   },
   storeAddress: {
     fontSize: 14,
     color: "#666",
-    // textAlign: "right",
+    // textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
   ownerName: {
     fontSize: 12,
     color: "#999",
-    // textAlign: "right",
+    // textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
@@ -761,7 +757,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   premiumBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#fff9c4",
     paddingHorizontal: 6,
@@ -792,7 +788,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   detailItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -802,7 +798,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   storeFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 10,
@@ -815,7 +811,7 @@ const styles = StyleSheet.create({
   categoriesText: {
     fontSize: 12,
     color: "#999",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   viewButton: {
@@ -852,7 +848,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   detailModalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -864,7 +860,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   closeButton: {
@@ -904,11 +900,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
@@ -924,13 +920,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
     marginLeft: 10,
     fontFamily: "System",
   },
   ratingContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -946,7 +942,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   categoriesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -962,7 +958,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 20,
     gap: 10,
     borderTopWidth: 1,
@@ -970,7 +966,7 @@ const styles = StyleSheet.create({
   },
   activateButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#27AE60",
@@ -980,7 +976,7 @@ const styles = StyleSheet.create({
   },
   suspendButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#9B59B6",
@@ -990,7 +986,7 @@ const styles = StyleSheet.create({
   },
   banButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F39C12",
@@ -1000,7 +996,7 @@ const styles = StyleSheet.create({
   },
   unbanButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#27AE60",
@@ -1010,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#E74C3C",
@@ -1050,7 +1046,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   actionModalButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   confirmActionButton: {
@@ -1085,7 +1081,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },

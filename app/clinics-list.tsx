@@ -489,7 +489,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   premiumBadge: {
     backgroundColor: "#10B981",
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     marginRight: 8,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   ratingContainer: {
     flexDirection: "row-reverse",
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: "center",
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     gap: 4,
   },
@@ -587,7 +587,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },

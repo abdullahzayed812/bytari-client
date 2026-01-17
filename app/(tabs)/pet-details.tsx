@@ -1051,7 +1051,7 @@ export default function PetDetailsScreen() {
           <View style={styles.petNameRow}>
             <Text style={styles.petName}>{pet.name}</Text>
             {isOwner && (
-              <View style={{ flexDirection: "row" }}>
+              <View style={{ flexDirection: "row-reverse" }}>
                 <TouchableOpacity onPress={handleEditPet} style={styles.editIcon}>
                   <Edit3 size={20} color={COLORS.primary} />
                 </TouchableOpacity>
@@ -2579,7 +2579,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   adoptionBreedingButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   actionButton: {
@@ -2631,7 +2631,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     height: 100,
@@ -2771,7 +2771,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   formInput: {
     borderWidth: 1,
@@ -2779,11 +2779,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     backgroundColor: COLORS.white,
   },
   formRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     marginBottom: 20,
   },
@@ -2985,7 +2985,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     lineHeight: 20,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   prescriptionThumbnail: {
     width: 80,

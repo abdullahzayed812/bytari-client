@@ -275,13 +275,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   lostPetType: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginBottom: 6,
-    textAlign: "right",
+    textAlign: "left",
   },
   lostPetInfoRow: {
     flexDirection: "row-reverse",
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },

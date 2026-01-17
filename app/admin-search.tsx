@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.lightGray,
   },
   searchInputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.lightGray,
     borderRadius: 12,
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   searchButton: {
     backgroundColor: COLORS.primary,
@@ -654,7 +654,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 16,
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.lightGray,
   },
   resultHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 6,
   },
   actionButton: {
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.error,
   },
   resultInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     flex: 1,
     gap: 12,
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     backgroundColor: COLORS.white,
   },
   userTypeContainer: {

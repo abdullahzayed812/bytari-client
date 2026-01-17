@@ -156,12 +156,7 @@ export const StoreBasicInfoModal = ({
             </View>
 
             <View style={styles.inputGroup}>
-              <ImageGalleryUploader
-                images={images}
-                onImagesChange={setImages}
-                maxImages={5}
-                label="صور المذخر"
-              />
+              <ImageGalleryUploader images={images} onImagesChange={setImages} maxImages={5} label="صور المذخر" />
             </View>
           </ScrollView>
 
@@ -497,7 +492,7 @@ export const ManageStoreStaffModal = ({
       onRemove(confirmModal.employeeId);
       showToast({
         type: "success",
-        message: `تم إزالة ${confirmModal.name} من المذخر`
+        message: `تم إزالة ${confirmModal.name} من المذخر`,
       });
     }
     setConfirmModal({ visible: false, employeeId: null, name: "" });
@@ -536,10 +531,10 @@ export const ManageStoreStaffModal = ({
                         {member.role === "all"
                           ? "صلاحيات كاملة"
                           : member.role === "view_edit_inventory"
-                            ? "عرض وتعديل المخزون"
-                            : member.role === "view_only"
-                              ? "عرض فقط"
-                              : "إدارة الطلبات"}
+                          ? "عرض وتعديل المخزون"
+                          : member.role === "view_only"
+                          ? "عرض فقط"
+                          : "إدارة الطلبات"}
                       </Text>
                     )}
                   </View>
@@ -756,7 +751,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
@@ -788,7 +783,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   labelRow: {
     flexDirection: "row-reverse",
@@ -802,7 +797,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
   },
@@ -821,7 +816,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 18,
   },
   radioOption: {
@@ -853,7 +848,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   saveButton: {
     backgroundColor: COLORS.primary,
@@ -900,26 +895,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   staffEmail: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   staffDetail: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginBottom: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   staffRole: {
     fontSize: 12,
     color: COLORS.primary,
     fontWeight: "600",
     marginTop: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   removeButton: {
     padding: 8,
@@ -936,7 +931,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   permissionRow: {
     flexDirection: "row-reverse",
@@ -949,7 +944,7 @@ const styles = StyleSheet.create({
   permissionLabel: {
     fontSize: 14,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
   },
 
@@ -959,7 +954,7 @@ const styles = StyleSheet.create({
   permissionRole: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
   },
   permissionOptions: {
     gap: 8,
@@ -998,7 +993,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   permissionTitleSelected: {
@@ -1007,7 +1002,7 @@ const styles = StyleSheet.create({
   permissionDescription: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   permissionDivider: {
     height: 1,

@@ -517,10 +517,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   statsSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     gap: 16,
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   branchCard: {
     backgroundColor: COLORS.white,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   branchHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     marginBottom: 12,
   },
@@ -586,23 +586,23 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   branchGovernorate: {
     fontSize: 14,
     color: COLORS.primary,
     fontWeight: "600",
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   ratingContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 4,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 2,
   },
   ratingText: {
@@ -610,7 +610,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   branchActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   actionBtn: {
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -638,17 +638,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   branchStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     flexWrap: "wrap",
     gap: 8,
   },
   statItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
@@ -717,7 +717,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     backgroundColor: "#F3F4F6",
@@ -726,7 +726,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   regionSelector: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -759,7 +759,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     gap: 12,
     borderTopWidth: 1,
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,

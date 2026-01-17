@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
   },
   content: {
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   emptyState: {
     alignItems: "center",
@@ -453,13 +453,13 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   cardHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
   },
   applicantInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flex: 1,
     marginRight: 12,
   },
@@ -483,19 +483,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   applicantEmail: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 2,
   },
   applicantType: {
     fontSize: 12,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -508,17 +508,17 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   cardFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
   submissionDate: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   quickActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   quickActionButton: {
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   profileSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 24,
     paddingBottom: 20,
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 12,
   },
@@ -572,14 +572,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginLeft: 12,
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
   },
   documentsSection: {
     marginBottom: 24,
   },
   documentsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 12,
   },
@@ -600,12 +600,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.lightGray,
   },
   actionsSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,

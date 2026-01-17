@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  TextInput,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from "react-native";
 import React, { useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import {
@@ -63,35 +54,20 @@ interface FieldAssignment {
 
 export default function AdminFieldAssignmentsScreen() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"requests" | "assignments">(
-    "requests"
-  );
-  const [selectedRequest, setSelectedRequest] =
-    useState<SupervisionRequest | null>(null);
+  const [activeTab, setActiveTab] = useState<"requests" | "assignments">("requests");
+  const [selectedRequest, setSelectedRequest] = useState<SupervisionRequest | null>(null);
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [assignmentModalVisible, setAssignmentModalVisible] = useState(false);
-  const [newAssignmentModalVisible, setNewAssignmentModalVisible] =
-    useState(false);
-  const [selectedAssignment, setSelectedAssignment] =
-    useState<FieldAssignment | null>(null);
+  const [newAssignmentModalVisible, setNewAssignmentModalVisible] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<FieldAssignment | null>(null);
 
   // Queries
-  const supervisionRequestsQuery = useQuery(
-    trpc.admin.fieldAssignments.getSupervisionRequests.queryOptions()
-  );
-  const fieldAssignmentsQuery = useQuery(
-    trpc.admin.fieldAssignments.getAll.queryOptions()
-  );
-  const availableVetsQuery = useQuery(
-    trpc.admin.fieldAssignments.getAvailableVets.queryOptions()
-  );
-  const availableSupervisorsQuery = useQuery(
-    trpc.admin.fieldAssignments.getAvailableSupervisors.queryOptions()
-  );
-  const allFarmsQuery = useQuery(
-    trpc.poultryFarms.getAllForAdmin.queryOptions()
-  );
+  const supervisionRequestsQuery = useQuery(trpc.admin.fieldAssignments.getSupervisionRequests.queryOptions());
+  const fieldAssignmentsQuery = useQuery(trpc.admin.fieldAssignments.getAll.queryOptions());
+  const availableVetsQuery = useQuery(trpc.admin.fieldAssignments.getAvailableVets.queryOptions());
+  const availableSupervisorsQuery = useQuery(trpc.admin.fieldAssignments.getAvailableSupervisors.queryOptions());
+  const allFarmsQuery = useQuery(trpc.poultryFarms.getAllForAdmin.queryOptions());
 
   // Mutations
   const reviewRequestMutation = useMutation(
@@ -184,12 +160,7 @@ export default function AdminFieldAssignmentsScreen() {
     });
   };
 
-  const handleAssignVet = (
-    assignment: FieldAssignment,
-    vetId: string,
-    vetName: string,
-    vetPhone: string
-  ) => {
+  const handleAssignVet = (assignment: FieldAssignment, vetId: string, vetName: string, vetPhone: string) => {
     assignVetMutation.mutate({
       farmId: assignment.farmId,
       vetId,
@@ -213,19 +184,14 @@ export default function AdminFieldAssignmentsScreen() {
   };
 
   const handleRemoveVet = (assignment: FieldAssignment) => {
-    Alert.alert(
-      "تأكيد الإلغاء",
-      "هل أنت متأكد من إلغاء تعيين الطبيب البيطري؟",
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "تأكيد",
-          style: "destructive",
-          onPress: () =>
-            removeVetMutation.mutate({ farmId: assignment.farmId }),
-        },
-      ]
-    );
+    Alert.alert("تأكيد الإلغاء", "هل أنت متأكد من إلغاء تعيين الطبيب البيطري؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "تأكيد",
+        style: "destructive",
+        onPress: () => removeVetMutation.mutate({ farmId: assignment.farmId }),
+      },
+    ]);
   };
 
   const handleRemoveSupervisor = (assignment: FieldAssignment) => {
@@ -234,8 +200,7 @@ export default function AdminFieldAssignmentsScreen() {
       {
         text: "تأكيد",
         style: "destructive",
-        onPress: () =>
-          removeSupervisorMutation.mutate({ farmId: assignment.farmId }),
+        onPress: () => removeSupervisorMutation.mutate({ farmId: assignment.farmId }),
       },
     ]);
   };
@@ -288,15 +253,8 @@ export default function AdminFieldAssignmentsScreen() {
           <View key={request.id} style={styles.requestCard}>
             <View style={styles.requestHeader}>
               <Text style={styles.requestName}>{request.fullName}</Text>
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: getStatusColor(request.status) },
-                ]}
-              >
-                <Text style={styles.statusText}>
-                  {getStatusText(request.status)}
-                </Text>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(request.status) }]}>
+                <Text style={styles.statusText}>{getStatusText(request.status)}</Text>
               </View>
             </View>
 
@@ -315,16 +273,11 @@ export default function AdminFieldAssignmentsScreen() {
               </View>
             </View>
 
-            <Text style={styles.requestEducation}>
-              المؤهل: {request.education}
-            </Text>
+            <Text style={styles.requestEducation}>المؤهل: {request.education}</Text>
 
             {request.status === "pending" && (
               <View style={styles.requestActions}>
-                <TouchableOpacity
-                  style={styles.reviewButton}
-                  onPress={() => handleReviewRequest(request)}
-                >
+                <TouchableOpacity style={styles.reviewButton} onPress={() => handleReviewRequest(request)}>
                   <Eye size={16} color={COLORS.white} />
                   <Text style={styles.reviewButtonText}>مراجعة</Text>
                 </TouchableOpacity>
@@ -333,17 +286,9 @@ export default function AdminFieldAssignmentsScreen() {
 
             {request.status !== "pending" && request.reviewedAt && (
               <View style={styles.reviewInfo}>
-                <Text style={styles.reviewedBy}>
-                  تمت المراجعة بواسطة: {request.reviewedBy}
-                </Text>
-                <Text style={styles.reviewedAt}>
-                  في: {new Date(request.reviewedAt).toLocaleDateString("ar-SA")}
-                </Text>
-                {request.notes && (
-                  <Text style={styles.reviewNotes}>
-                    ملاحظات: {request.notes}
-                  </Text>
-                )}
+                <Text style={styles.reviewedBy}>تمت المراجعة بواسطة: {request.reviewedBy}</Text>
+                <Text style={styles.reviewedAt}>في: {new Date(request.reviewedAt).toLocaleDateString("ar-SA")}</Text>
+                {request.notes && <Text style={styles.reviewNotes}>ملاحظات: {request.notes}</Text>}
               </View>
             )}
           </View>
@@ -370,17 +315,12 @@ export default function AdminFieldAssignmentsScreen() {
 
     return (
       <View style={styles.assignmentsList}>
-        <Button
-          title="Create New Assignment"
-          onPress={() => setNewAssignmentModalVisible(true)}
-        />
+        <Button title="Create New Assignment" onPress={() => setNewAssignmentModalVisible(true)} />
         {assignments.map((assignment) => (
           <View key={assignment.id} style={styles.assignmentCard}>
             <View style={styles.assignmentHeader}>
               <Text style={styles.farmName}>{assignment.farmName}</Text>
-              <Text style={styles.ownerName}>
-                المالك: {assignment.ownerName}
-              </Text>
+              <Text style={styles.ownerName}>المالك: {assignment.ownerName}</Text>
             </View>
 
             <View style={styles.assignmentDetails}>
@@ -389,17 +329,10 @@ export default function AdminFieldAssignmentsScreen() {
                 {assignment.assignedVetName ? (
                   <View style={styles.assignedPerson}>
                     <View style={styles.personInfo}>
-                      <Text style={styles.personName}>
-                        {assignment.assignedVetName}
-                      </Text>
-                      <Text style={styles.personPhone}>
-                        {assignment.assignedVetPhone}
-                      </Text>
+                      <Text style={styles.personName}>{assignment.assignedVetName}</Text>
+                      <Text style={styles.personPhone}>{assignment.assignedVetPhone}</Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleRemoveVet(assignment)}
-                    >
+                    <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveVet(assignment)}>
                       <UserX size={16} color={COLORS.white} />
                     </TouchableOpacity>
                   </View>
@@ -425,17 +358,10 @@ export default function AdminFieldAssignmentsScreen() {
                 {assignment.assignedSupervisorName ? (
                   <View style={styles.assignedPerson}>
                     <View style={styles.personInfo}>
-                      <Text style={styles.personName}>
-                        {assignment.assignedSupervisorName}
-                      </Text>
-                      <Text style={styles.personPhone}>
-                        {assignment.assignedSupervisorPhone}
-                      </Text>
+                      <Text style={styles.personName}>{assignment.assignedSupervisorName}</Text>
+                      <Text style={styles.personPhone}>{assignment.assignedSupervisorPhone}</Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleRemoveSupervisor(assignment)}
-                    >
+                    <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveSupervisor(assignment)}>
                       <UserX size={16} color={COLORS.white} />
                     </TouchableOpacity>
                   </View>
@@ -471,10 +397,7 @@ export default function AdminFieldAssignmentsScreen() {
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
             </TouchableOpacity>
           ),
@@ -486,43 +409,21 @@ export default function AdminFieldAssignmentsScreen() {
           style={[styles.tab, activeTab === "requests" && styles.activeTab]}
           onPress={() => setActiveTab("requests")}
         >
-          <Shield
-            size={20}
-            color={activeTab === "requests" ? COLORS.white : COLORS.darkGray}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "requests" && styles.activeTabText,
-            ]}
-          >
-            طلبات الإشراف
-          </Text>
+          <Shield size={20} color={activeTab === "requests" ? COLORS.white : COLORS.darkGray} />
+          <Text style={[styles.tabText, activeTab === "requests" && styles.activeTabText]}>طلبات الإشراف</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === "assignments" && styles.activeTab]}
           onPress={() => setActiveTab("assignments")}
         >
-          <Users
-            size={20}
-            color={activeTab === "assignments" ? COLORS.white : COLORS.darkGray}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "assignments" && styles.activeTabText,
-            ]}
-          >
-            التعيينات
-          </Text>
+          <Users size={20} color={activeTab === "assignments" ? COLORS.white : COLORS.darkGray} />
+          <Text style={[styles.tabText, activeTab === "assignments" && styles.activeTabText]}>التعيينات</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === "requests"
-          ? renderSupervisionRequests()
-          : renderFieldAssignments()}
+        {activeTab === "requests" ? renderSupervisionRequests() : renderFieldAssignments()}
       </ScrollView>
 
       {/* Review Request Modal */}
@@ -538,30 +439,14 @@ export default function AdminFieldAssignmentsScreen() {
 
             {selectedRequest && (
               <View style={styles.requestDetails}>
-                <Text style={styles.detailLabel}>
-                  الاسم: {selectedRequest.fullName}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  البريد: {selectedRequest.email}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  الهاتف: {selectedRequest.phone}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  الموقع: {selectedRequest.location}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  المؤهل: {selectedRequest.education}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  الخبرة: {selectedRequest.experience}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  المؤهلات: {selectedRequest.qualifications}
-                </Text>
-                <Text style={styles.detailLabel}>
-                  الخبرة السابقة: {selectedRequest.previousExperience}
-                </Text>
+                <Text style={styles.detailLabel}>الاسم: {selectedRequest.fullName}</Text>
+                <Text style={styles.detailLabel}>البريد: {selectedRequest.email}</Text>
+                <Text style={styles.detailLabel}>الهاتف: {selectedRequest.phone}</Text>
+                <Text style={styles.detailLabel}>الموقع: {selectedRequest.location}</Text>
+                <Text style={styles.detailLabel}>المؤهل: {selectedRequest.education}</Text>
+                <Text style={styles.detailLabel}>الخبرة: {selectedRequest.experience}</Text>
+                <Text style={styles.detailLabel}>المؤهلات: {selectedRequest.qualifications}</Text>
+                <Text style={styles.detailLabel}>الخبرة السابقة: {selectedRequest.previousExperience}</Text>
               </View>
             )}
 
@@ -595,10 +480,7 @@ export default function AdminFieldAssignmentsScreen() {
                 <Text style={styles.rejectButtonText}>رفض</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setReviewModalVisible(false)}
-              >
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setReviewModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
             </View>
@@ -621,10 +503,7 @@ export default function AdminFieldAssignmentsScreen() {
             {/* TODO: Implement a proper dropdown component */}
             <ScrollView style={{ maxHeight: 100 }}>
               {allFarmsQuery.data?.map((farm) => (
-                <TouchableOpacity
-                  key={farm.id}
-                  onPress={() => console.log("Selected farm:", farm.id)}
-                >
+                <TouchableOpacity key={farm.id} onPress={() => console.log("Selected farm:", farm.id)}>
                   <Text>{farm.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -634,10 +513,7 @@ export default function AdminFieldAssignmentsScreen() {
             <Text style={styles.notesLabel}>اختر طبيب بيطري:</Text>
             <ScrollView style={{ maxHeight: 100 }}>
               {availableVetsQuery.data?.map((vet) => (
-                <TouchableOpacity
-                  key={vet.id}
-                  onPress={() => console.log("Selected vet:", vet.id)}
-                >
+                <TouchableOpacity key={vet.id} onPress={() => console.log("Selected vet:", vet.id)}>
                   <Text>{vet.name}</Text>
                 </TouchableOpacity>
               ))}
@@ -649,9 +525,7 @@ export default function AdminFieldAssignmentsScreen() {
               {availableSupervisorsQuery.data?.map((supervisor) => (
                 <TouchableOpacity
                   key={supervisor.id}
-                  onPress={() =>
-                    console.log("Selected supervisor:", supervisor.id)
-                  }
+                  onPress={() => console.log("Selected supervisor:", supervisor.id)}
                 >
                   <Text>{supervisor.name}</Text>
                 </TouchableOpacity>
@@ -661,16 +535,11 @@ export default function AdminFieldAssignmentsScreen() {
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.approveButton}
-                onPress={() =>
-                  Alert.alert("TODO", "Implement assignment logic")
-                }
+                onPress={() => Alert.alert("TODO", "Implement assignment logic")}
               >
                 <Text style={styles.approveButtonText}>حفظ التعيين</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setNewAssignmentModalVisible(false)}
-              >
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setNewAssignmentModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
             </View>
@@ -690,7 +559,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tabContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     marginHorizontal: 16,
     marginTop: 16,
@@ -699,7 +568,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
@@ -752,7 +621,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   requestHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
@@ -778,7 +647,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -792,11 +661,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   requestActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
   },
   reviewButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
@@ -869,7 +738,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   assignedPerson: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -891,7 +760,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   unassigned: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -901,7 +770,7 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   assignButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
@@ -963,12 +832,12 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   approveButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#4CAF50",
@@ -983,7 +852,7 @@ const styles = StyleSheet.create({
   },
   rejectButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F44336",

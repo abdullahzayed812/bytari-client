@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   ratingContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
   },
@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
     color: "#FFD700",
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   animalActionsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   specialtyActionsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -958,7 +958,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E7EB",
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
     borderRadius: 8,

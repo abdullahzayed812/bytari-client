@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   petTypesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
   },
   petTypeButton: {
@@ -332,10 +332,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
 
   sendButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.95 }],
   },
   statusContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     padding: 12,
     borderRadius: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   previousConsultationsSubtitle: {
     fontSize: 14,
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   responseContainer: {
@@ -486,6 +486,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.success,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

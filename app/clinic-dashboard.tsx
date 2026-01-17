@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   premiumBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 8,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     paddingTop: 20,
     borderTopWidth: 1,
@@ -486,10 +486,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   searchButton: {
     backgroundColor: COLORS.success,
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   settingsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   actionsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },

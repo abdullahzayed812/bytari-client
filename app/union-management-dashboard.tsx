@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: COLORS.primary,
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tabContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     marginHorizontal: 16,
     marginTop: 16,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
     marginBottom: 24,
@@ -513,16 +513,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   quickActionsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
   },
   quickActionCard: {
     width: "47%",
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
@@ -535,13 +535,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   unionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 12,
@@ -579,10 +579,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   unionMeta: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     marginBottom: 4,
@@ -604,13 +604,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   ratingContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 4,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 2,
   },
   ratingText: {
@@ -628,12 +628,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   unionStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 16,
     marginBottom: 12,
   },
   statItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -642,7 +642,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   unionActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   actionButton: {
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   announcementHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
@@ -690,20 +690,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   announcementUnion: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   announcementActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   announcementActionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },

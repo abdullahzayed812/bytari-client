@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginBottom: 16,
     gap: 8,
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   filterButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     paddingHorizontal: 4,
   },
@@ -757,7 +757,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   reminderCard: {
     backgroundColor: COLORS.white,
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   overdueWarning: {
@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   datePickerButton: {
     flexDirection: "row-reverse",
@@ -1106,12 +1106,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   completeSubtext: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   // Delete modal content
   deleteContent: {
@@ -1121,11 +1121,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   deleteSubtext: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

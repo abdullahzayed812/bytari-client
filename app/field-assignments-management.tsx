@@ -569,14 +569,14 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tabContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
   tab: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
@@ -603,7 +603,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   searchInputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 8,
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   filterContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   filterButton: {
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 16,
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   assignmentRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#f8f9fa",
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   assignmentInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     flex: 1,
     gap: 12,
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     marginBottom: 16,
   },
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   requestHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -788,7 +788,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   requestDetailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -797,12 +797,12 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   requestActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   approveButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#4CAF50",
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   },
   rejectButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#F44336",
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   personCard: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#f8f9fa",
@@ -909,7 +909,7 @@ const styles = StyleSheet.create({
     borderColor: "#4CAF50",
   },
   personInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     flex: 1,
     gap: 12,
@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   personContactRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     marginBottom: 2,
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   confirmButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#4CAF50",

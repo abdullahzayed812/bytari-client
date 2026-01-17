@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginBottom: 16,
     gap: 8,
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   filterButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     paddingHorizontal: 4,
   },
@@ -850,7 +850,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   followupCard: {
     backgroundColor: COLORS.white,
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   veterinarian: {
@@ -981,12 +981,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     marginBottom: 8,
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1057,7 +1057,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -1067,14 +1067,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     height: 80,
     textAlignVertical: "top",
   },
   typeButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -1099,7 +1099,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   modalFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     padding: 16,
     borderTopWidth: 1,
@@ -1269,7 +1269,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
 
   // Reschedule modal content
@@ -1280,7 +1280,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   datePickerButton: {
     flexDirection: "row-reverse",
@@ -1302,12 +1302,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   deleteSubtext: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
 
   closeButton: {

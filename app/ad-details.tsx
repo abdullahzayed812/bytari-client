@@ -189,7 +189,7 @@ export default function AdDetailsScreen() {
         {/* Ad Content */}
         <View style={styles.contentContainer}>
           {/* Title */}
-          <Text style={[styles.title, { textAlign: isRTL ? "right" : "left" }]}>{ad.title}</Text>
+          <Text style={[styles.title, { textAlign: isRTL ? "left" : "right" }]}>{ad.title}</Text>
 
           {/* Meta Information */}
           <View style={styles.metaContainer}>
@@ -225,7 +225,7 @@ export default function AdDetailsScreen() {
           {ad.description && (
             <View style={styles.descriptionContainer}>
               <Text style={styles.sectionTitle}>الوصف</Text>
-              <Text style={[styles.description, { textAlign: isRTL ? "right" : "left" }]}>{ad.description}</Text>
+              <Text style={[styles.description, { textAlign: isRTL ? "left" : "right" }]}>{ad.description}</Text>
             </View>
           )}
 
@@ -235,7 +235,7 @@ export default function AdDetailsScreen() {
               <Text style={styles.sectionTitle}>{pollData.question}</Text>
 
               {pollData.description && (
-                <Text style={[styles.pollDescription, { textAlign: isRTL ? "right" : "left" }]}>
+                <Text style={[styles.pollDescription, { textAlign: isRTL ? "left" : "right" }]}>
                   {pollData.description}
                 </Text>
               )}
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   description: {
     fontSize: 16,
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   pollOption: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     padding: 16,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   pollOptionTextSelected: {
     fontWeight: "600",
@@ -487,13 +487,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   resultItem: {
     gap: 8,
   },
   resultHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   resultPercentage: {
     fontSize: 16,
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
   resultVotes: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   totalVotes: {
     fontSize: 14,

@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     paddingRight: 15,
   },
   tab: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 8,

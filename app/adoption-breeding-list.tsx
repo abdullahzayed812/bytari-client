@@ -354,13 +354,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   petType: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginBottom: 6,
-    textAlign: "right",
+    textAlign: "left",
   },
   petInfoRow: {
     flexDirection: "row-reverse",
@@ -444,12 +444,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   emptyPetsSubText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     opacity: 0.7,
   },
   headerActions: {
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     marginTop: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   errorContainer: {
     flex: 1,
@@ -492,12 +492,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.error || "#EF4444",
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   errorSubText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     opacity: 0.7,
   },
   priceText: {

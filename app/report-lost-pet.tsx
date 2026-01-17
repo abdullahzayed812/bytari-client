@@ -52,7 +52,6 @@ export default function ReportLostPetScreen() {
 
     setIsSubmitting(true);
 
-
     try {
       // Create pet approval request for lost pet
       createApprovalMutation.mutate(
@@ -64,8 +63,9 @@ export default function ReportLostPetScreen() {
           image: images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
           ownerId: parseInt(user.id.toString()),
           requestType: "lost_pet",
-          description: `${description}\n\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
-            }`,
+          description: `${description}\n\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${
+            contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
+          }`,
           images: images,
           contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
 
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 24,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   formGroup: {
     marginBottom: 16,
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 8,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     borderWidth: 1,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     writingDirection: "rtl",
   },
   textArea: {
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     minHeight: 100,
-    textAlign: "right",
+    textAlign: "left",
     writingDirection: "rtl",
   },
   row: {
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
-    textAlign: "right",
+    textAlign: "left",
     writingDirection: "rtl",
   },
   mapButton: {
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   submitButton: {
     width: "100%",
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   noticeText: {
     fontSize: 14,
     color: "#1976D2",
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
 });

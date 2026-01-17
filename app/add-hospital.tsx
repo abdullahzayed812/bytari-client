@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#0EA5E9",
@@ -292,10 +292,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     backgroundColor: COLORS.white,

@@ -560,7 +560,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   ratingContainer: {
     flexDirection: "row-reverse",
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   storeDetails: {
@@ -596,13 +596,13 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     marginRight: 8,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   storeActions: {
     position: "absolute",
     top: 16,
     left: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   actionButton: {
@@ -632,7 +632,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -750,13 +750,13 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   imageActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 12,
     gap: 8,
   },
   changeImageButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.error,

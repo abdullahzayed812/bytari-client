@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 20,
-    textAlign: "right",
+    textAlign: "left",
   },
   settingCard: {
     flexDirection: "row-reverse",
@@ -160,11 +160,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   settingDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

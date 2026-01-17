@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   contactCard: {
     backgroundColor: COLORS.white,
@@ -513,11 +513,11 @@ const styles = StyleSheet.create({
   supportDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.primary,
     paddingVertical: 4,
-    textAlign: "right",
+    textAlign: "left",
     minWidth: 200,
   },
   editTimeInput: {
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.primary,
     paddingVertical: 4,
-    textAlign: "right",
+    textAlign: "left",
     minWidth: 120,
   },
   linkText: {
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     backgroundColor: COLORS.white,
   },
   messageInput: {

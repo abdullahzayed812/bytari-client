@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   addButtonText: {
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   summaryRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   addressItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   mapButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     padding: 12,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   formButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   formButton: {
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   paymentMethod: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary + "10",
   },
   paymentInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   paymentTitle: {

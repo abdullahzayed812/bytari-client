@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputContainer: {
     marginBottom: 16,
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     backgroundColor: COLORS.white,
   },
   inputWithIcon: {
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   imagesGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
     marginTop: 12,

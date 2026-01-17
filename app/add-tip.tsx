@@ -52,8 +52,6 @@ export default function AddTipScreen() {
     );
   };
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
@@ -169,7 +167,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
@@ -189,7 +187,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   input: {

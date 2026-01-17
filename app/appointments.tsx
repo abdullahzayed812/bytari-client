@@ -301,7 +301,7 @@ export default function AppointmentsScreen() {
           </View>
           <View style={[styles.appointmentInfo, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
             <View style={[styles.titleRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <Text style={[styles.appointmentTitle, { textAlign: isRTL ? "right" : "left" }]}>
+              <Text style={[styles.appointmentTitle, { textAlign: isRTL ? "left" : "right" }]}>
                 {appointment.title}
               </Text>
               <View style={[styles.statusContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -316,7 +316,7 @@ export default function AppointmentsScreen() {
                 </Text>
               </View>
             </View>
-            <Text style={[styles.appointmentDescription, { textAlign: isRTL ? "right" : "left" }]}>
+            <Text style={[styles.appointmentDescription, { textAlign: isRTL ? "left" : "right" }]}>
               {appointment.description}
             </Text>
           </View>
@@ -327,8 +327,8 @@ export default function AppointmentsScreen() {
           <View style={[styles.petContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <Image source={{ uri: appointment.pet.image }} style={styles.petImage} />
             <View style={[styles.petInfo, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
-              <Text style={[styles.petName, { textAlign: isRTL ? "right" : "left" }]}>{appointment.pet.name}</Text>
-              <Text style={[styles.petType, { textAlign: isRTL ? "right" : "left" }]}>{appointment.pet.type}</Text>
+              <Text style={[styles.petName, { textAlign: isRTL ? "left" : "right" }]}>{appointment.pet.name}</Text>
+              <Text style={[styles.petType, { textAlign: isRTL ? "left" : "right" }]}>{appointment.pet.type}</Text>
             </View>
           </View>
         )}

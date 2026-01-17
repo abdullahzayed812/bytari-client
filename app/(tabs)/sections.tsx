@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     paddingBottom: 116,
   },
   sectionsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 16,
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
   },
   // Inquiry form styles
   inquiryHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: COLORS.primary,
@@ -887,7 +887,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   sendButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -912,10 +912,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -967,13 +967,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   inquiryCardHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
   statusContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 24,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   answerContainer: {
     backgroundColor: "#F0FDF4",
@@ -1029,17 +1029,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.success,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   answerText: {
     fontSize: 14,
     color: COLORS.black,
     lineHeight: 20,
-    textAlign: "right",
+    textAlign: "left",
   },
   // Management styles
   managementHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: COLORS.white,
@@ -1049,7 +1049,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E7EB",
   },
   managementToggle: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   addSectionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#10B981",
     paddingHorizontal: 12,
@@ -1090,7 +1090,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     right: 8,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 6,
     backgroundColor: "rgba(0,0,0,0.1)",
     borderRadius: 12,
@@ -1114,7 +1114,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   formHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: COLORS.primary,
@@ -1147,7 +1147,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   formInput: {
     borderWidth: 1,
@@ -1176,7 +1176,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   colorsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
     marginTop: 8,

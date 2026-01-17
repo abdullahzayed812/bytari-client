@@ -391,13 +391,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 12,
     gap: 6,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     padding: 8,
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   iconOptions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     paddingVertical: 8,
   },
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E3F2FD",
   },
   colorOptions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
   },

@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   tabsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     justifyContent: "space-between",
   },
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     backgroundColor: COLORS.primary,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
@@ -438,14 +438,14 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   productsHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     alignItems: "center",
     backgroundColor: COLORS.white,
   },
   searchContainer: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.gray,
     borderRadius: 8,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   },
   productCard: {
     backgroundColor: COLORS.white,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 8,
@@ -520,23 +520,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   productCategory: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
   },
   productPrice: {
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.green,
-    textAlign: "right",
+    textAlign: "left",
   },
   productStock: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   productStatus: {
     alignItems: "flex-end",

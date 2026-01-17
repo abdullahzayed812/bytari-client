@@ -162,10 +162,10 @@ export default function RemindersScreen() {
           </View>
           <View style={[styles.reminderInfo, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
             <View style={[styles.titleRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <Text style={[styles.reminderTitle, { textAlign: isRTL ? "right" : "left" }]}>{reminder.title}</Text>
+              <Text style={[styles.reminderTitle, { textAlign: isRTL ? "left" : "right" }]}>{reminder.title}</Text>
               <View style={[styles.priorityIndicator, { backgroundColor: priorityColor }]} />
             </View>
-            <Text style={[styles.reminderDescription, { textAlign: isRTL ? "right" : "left" }]}>
+            <Text style={[styles.reminderDescription, { textAlign: isRTL ? "left" : "right" }]}>
               {reminder.description}
             </Text>
           </View>

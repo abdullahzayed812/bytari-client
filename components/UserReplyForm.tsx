@@ -62,7 +62,7 @@ export default function UserReplyForm({
 
       showToast({
         type: "success",
-        message: "تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص."
+        message: "تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص.",
       });
       setReplyContent("");
       onReplySuccess?.();
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   submitButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,

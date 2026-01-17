@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     backgroundColor: "#F3F4F6",
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   filterButton: {
     width: 44,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusFilterChip: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
@@ -460,13 +460,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   cardHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
   cardHeaderLeft: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   urgencyBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     paddingHorizontal: 8,
@@ -506,12 +506,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
   metaInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   responsesInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   emptyButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     backgroundColor: COLORS.primary,

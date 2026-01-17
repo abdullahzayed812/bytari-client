@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   courseHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 12,
     gap: 8,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#F9FAFB",
     borderRadius: 8,

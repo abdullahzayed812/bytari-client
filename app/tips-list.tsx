@@ -1,11 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image } from "react-native";
 import React, { useMemo, useRef } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -22,11 +15,8 @@ export default function TipsListScreen() {
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const { data: tipsData, isLoading: tipsLoading } = useQuery(
-    trpc.content.listTips.queryOptions({})
-  );
+  const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions({}));
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
-
 
   // Scroll to top when screen is focused
   useFocusEffect(
@@ -43,15 +33,8 @@ export default function TipsListScreen() {
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black },
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              {isRTL ? (
-                <ArrowRight size={24} color={COLORS.black} />
-              ) : (
-                <ArrowLeft size={24} color={COLORS.black} />
-              )}
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              {isRTL ? <ArrowRight size={24} color={COLORS.black} /> : <ArrowLeft size={24} color={COLORS.black} />}
             </TouchableOpacity>
           ),
           headerRight: () =>
@@ -78,11 +61,7 @@ export default function TipsListScreen() {
         }}
       />
 
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
         {tips?.map((tip: any) => (
           <TouchableOpacity
             key={tip.id}
@@ -93,27 +72,13 @@ export default function TipsListScreen() {
           >
             <Image
               source={{
-                uri: tip.images?.[0] || 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1'
+                uri: tip.images?.[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
               }}
               style={styles.tipImage}
             />
             <View style={styles.tipContent}>
-              <Text
-                style={[
-                  styles.tipTitle,
-                  { textAlign: isRTL ? "right" : "left" },
-                ]}
-              >
-                {tip.title}
-              </Text>
-              <Text
-                style={[
-                  styles.tipDescription,
-                  { textAlign: isRTL ? "right" : "left" },
-                ]}
-              >
-                {tip.content}
-              </Text>
+              <Text style={[styles.tipTitle, { textAlign: isRTL ? "left" : "right" }]}>{tip.title}</Text>
+              <Text style={[styles.tipDescription, { textAlign: isRTL ? "left" : "right" }]}>{tip.content}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -164,7 +129,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },

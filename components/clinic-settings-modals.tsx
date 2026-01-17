@@ -1,15 +1,5 @@
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Modal,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Switch,
-  Platform,
-} from "react-native";
+import { StyleSheet, Text, View, Modal, ScrollView, TouchableOpacity, TextInput, Switch, Platform } from "react-native";
 import { COLORS } from "../constants/colors";
 import { X, MapPin, Phone, Mail, Globe, Clock, Users, Trash2, Shield } from "lucide-react-native";
 import { ImageGalleryUploader } from "./ImageGalleryUploader";
@@ -129,12 +119,7 @@ export const BasicInfoModal: React.FC<BasicInfoModalProps> = ({ visible, onClose
 
             {/* Clinic Images */}
             <View style={styles.inputGroup}>
-              <ImageGalleryUploader
-                images={images}
-                onImagesChange={setImages}
-                maxImages={5}
-                label="صور العيادة"
-              />
+              <ImageGalleryUploader images={images} onImagesChange={setImages} maxImages={5} label="صور العيادة" />
             </View>
 
             {/* Location Coordinates */}
@@ -609,7 +594,7 @@ export const ManageStaffModal: React.FC<ManageStaffModalProps> = ({ visible, onC
   const { showToast } = useToastContext();
   const [confirmModal, setConfirmModal] = useState<{ visible: boolean; staffMember: any | null }>({
     visible: false,
-    staffMember: null
+    staffMember: null,
   });
 
   const handleRemove = (staffMember: any) => {
@@ -621,7 +606,7 @@ export const ManageStaffModal: React.FC<ManageStaffModalProps> = ({ visible, onC
       onRemove(confirmModal.staffMember.id);
       showToast({
         type: "success",
-        message: `تم إزالة ${confirmModal.staffMember.name} من العيادة`
+        message: `تم إزالة ${confirmModal.staffMember.name} من العيادة`,
       });
     }
     setConfirmModal({ visible: false, staffMember: null });
@@ -904,7 +889,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputContainer: {
     flexDirection: "row-reverse",
@@ -923,7 +908,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     minHeight: 80,
@@ -940,7 +925,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginTop: 16,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   button: {
     flex: 1,
@@ -1045,26 +1030,26 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   staffDetail: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   staffSpecialization: {
     fontSize: 14,
     color: COLORS.primary,
     fontWeight: "600",
     marginTop: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   staffExperience: {
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   removeButton: {
     padding: 8,
@@ -1093,13 +1078,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   permissionStaffRole: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
   },
   permissionOptions: {
     gap: 8,
@@ -1141,7 +1126,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   permissionTitleSelected: {
@@ -1150,7 +1135,7 @@ const styles = StyleSheet.create({
   permissionDescription: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   permissionDivider: {
     height: 1,
@@ -1168,13 +1153,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   permissionLegendText: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
     lineHeight: 18,
   },
@@ -1184,7 +1169,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginVertical: 8,
-    textAlign: "right",
+    textAlign: "left",
     marginHorizontal: 15,
   },
   inputWithIcon: {

@@ -233,18 +233,18 @@ export default function NotificationsScreen() {
   };
 
   const handleNotificationPress = (notification: any) => {
-    if (notification.type === 'announcement' && notification.data) {
+    if (notification.type === "announcement" && notification.data) {
       const data = JSON.parse(notification.data);
       if (data.branchId) {
         router.push({
-          pathname: '/union-branch-details',
+          pathname: "/union-branch-details",
           params: { id: data.branchId },
         });
       } else if (data.mainUnionId) {
-        router.push('/vet-unions');
+        router.push("/vet-unions");
       } else if (data.announcementId) {
         router.push({
-          pathname: '/announcement-details',
+          pathname: "/announcement-details",
           params: { id: data.announcementId },
         });
       }
@@ -646,25 +646,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   notificationClinic: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 2,
   },
   notificationDate: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   notificationMessage: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 16,
   },
   notificationActions: {
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   settingsCard: {
     backgroundColor: COLORS.white,
@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
   settingDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 18,
   },
   separator: {
@@ -771,13 +771,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   additionalDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
     flex: 2,
-    textAlign: "right",
+    textAlign: "left",
     marginRight: 12,
   },
   infoSection: {
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   infoCard: {
     backgroundColor: COLORS.white,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   unreadNotification: {
@@ -863,13 +863,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   storeNotificationDate: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   storeProductInfo: {
     flexDirection: "row-reverse",
@@ -891,13 +891,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   storeNotificationMessage: {
     fontSize: 13,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 18,
   },
   storeNotificationActions: {

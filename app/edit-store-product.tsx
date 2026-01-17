@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputGroup: {
     marginBottom: 16,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     borderWidth: 1,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   imagesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
   },

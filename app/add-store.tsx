@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputGroup: {
     marginBottom: 16,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     borderWidth: 1,
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   inputWithIcon: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.primary,
     marginRight: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   subscriptionInfo: {
     backgroundColor: COLORS.lightBlue,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
   },
   editSubscriptionButton: {
     padding: 4,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   submitButton: {
     marginBottom: 20,

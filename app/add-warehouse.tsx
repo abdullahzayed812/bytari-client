@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   imageGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     marginTop: 15,
     gap: 10,

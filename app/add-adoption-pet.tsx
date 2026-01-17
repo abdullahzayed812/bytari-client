@@ -414,14 +414,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
   },
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   typeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   listingTypeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   listingTypeButton: {
@@ -491,14 +491,14 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   row: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   halfWidth: {
     flex: 1,
   },
   genderContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   genderButton: {
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   noticeText: {
     fontSize: 14,
     color: "#1976D2",
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
 });

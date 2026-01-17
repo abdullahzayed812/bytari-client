@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   button: {

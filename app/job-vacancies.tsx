@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   jobHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   jobFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   footerRight: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 12,
   },
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginBottom: 24,
     gap: 8,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 6,
   },
   applicationButton: {

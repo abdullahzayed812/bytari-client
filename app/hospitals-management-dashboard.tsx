@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
-  Image,
-} from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from "react-native";
 import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -180,7 +171,9 @@ export default function HospitalsManagementDashboardScreen() {
           <View key={hospital.id} style={styles.hospitalCard}>
             <Image
               source={{
-                uri: hospital.image || "https://images.unsplash.com/photo-1516919569045-e2b7c42516f4?auto=format&fit=crop&w=1350&q=80",
+                uri:
+                  hospital.image ||
+                  "https://images.unsplash.com/photo-1516919569045-e2b7c42516f4?auto=format&fit=crop&w=1350&q=80",
               }}
               style={styles.hospitalImage}
             />
@@ -200,7 +193,10 @@ export default function HospitalsManagementDashboardScreen() {
                 </View>
 
                 <View
-                  style={[styles.statusBadge, { backgroundColor: hospital.status === "active" ? "#10B981" : "#EF4444" }]}
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: hospital.status === "active" ? "#10B981" : "#EF4444" },
+                  ]}
                 >
                   <Text style={styles.statusText}>{hospital.status === "active" ? "نشط" : "غير نشط"}</Text>
                 </View>
@@ -357,7 +353,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#0EA5E9",
@@ -378,7 +374,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tabContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     marginHorizontal: 16,
     marginTop: 16,
@@ -392,7 +388,7 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,
@@ -419,7 +415,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
     marginBottom: 24,
@@ -455,16 +451,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   quickActionsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 12,
   },
   quickActionCard: {
     width: "47%",
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
@@ -477,13 +473,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#0EA5E9",
     paddingHorizontal: 12,
@@ -515,7 +511,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   hospitalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     justifyContent: "space-between",
     marginBottom: 12,
@@ -528,10 +524,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   hospitalMeta: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -562,12 +558,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   hospitalStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 16,
     marginBottom: 12,
   },
   statItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -576,7 +572,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   hospitalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   actionButton: {
@@ -600,7 +596,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   announcementHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
@@ -624,20 +620,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   announcementHospital: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   announcementActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   announcementActionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },

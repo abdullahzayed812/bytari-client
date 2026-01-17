@@ -335,38 +335,38 @@ export default function AdminPetApprovals() {
                 selectedRequest.location ||
                 selectedRequest.price ||
                 selectedRequest.specialRequirements) && (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>معلومات إضافية</Text>
+                <View style={styles.section}>
+                  <Text style={styles.sectionTitle}>معلومات إضافية</Text>
 
-                    {selectedRequest.contactInfo && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>معلومات التواصل:</Text>
-                        <Text style={styles.infoValue}>{selectedRequest.contactInfo}</Text>
-                      </View>
-                    )}
+                  {selectedRequest.contactInfo && (
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>معلومات التواصل:</Text>
+                      <Text style={styles.infoValue}>{selectedRequest.contactInfo}</Text>
+                    </View>
+                  )}
 
-                    {selectedRequest.location && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>الموقع:</Text>
-                        <Text style={styles.infoValue}>{selectedRequest.location}</Text>
-                      </View>
-                    )}
+                  {selectedRequest.location && (
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>الموقع:</Text>
+                      <Text style={styles.infoValue}>{selectedRequest.location}</Text>
+                    </View>
+                  )}
 
-                    {selectedRequest.price && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>السعر:</Text>
-                        <Text style={styles.infoValue}>{selectedRequest.price} ريال</Text>
-                      </View>
-                    )}
+                  {selectedRequest.price && (
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>السعر:</Text>
+                      <Text style={styles.infoValue}>{selectedRequest.price} ريال</Text>
+                    </View>
+                  )}
 
-                    {selectedRequest.specialRequirements && (
-                      <View style={styles.descriptionContainer}>
-                        <Text style={styles.infoLabel}>متطلبات خاصة:</Text>
-                        <Text style={styles.descriptionText}>{selectedRequest.specialRequirements}</Text>
-                      </View>
-                    )}
-                  </View>
-                )}
+                  {selectedRequest.specialRequirements && (
+                    <View style={styles.descriptionContainer}>
+                      <Text style={styles.infoLabel}>متطلبات خاصة:</Text>
+                      <Text style={styles.descriptionText}>{selectedRequest.specialRequirements}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
 
               {/* Images */}
               {selectedRequest.images && selectedRequest.images.length > 0 && (
@@ -381,10 +381,7 @@ export default function AdminPetApprovals() {
                           setShowImageModal(true);
                         }}
                       >
-                        <Image
-                          source={{ uri: image }}
-                          style={styles.attachedImage}
-                        />
+                        <Image source={{ uri: image }} style={styles.attachedImage} />
                       </TouchableOpacity>
                     ))}
                   </ScrollView>
@@ -630,11 +627,7 @@ export default function AdminPetApprovals() {
 
       {renderDetailModal()}
       {renderActionModal()}
-      <ImageViewerModal
-        visible={showImageModal}
-        imageUrl={selectedImageUrl}
-        onClose={() => setShowImageModal(false)}
-      />
+      <ImageViewerModal visible={showImageModal} imageUrl={selectedImageUrl} onClose={() => setShowImageModal(false)} />
     </SafeAreaView>
   );
 }
@@ -655,7 +648,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 15,
     gap: 10,
   },
@@ -699,14 +692,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   requestHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 10,
   },
   requestInfo: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   thumbnailImage: {
@@ -723,20 +716,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    // textAlign: "right",
+    // textAlign: "left",
     fontFamily: "System",
   },
   petInfo: {
     fontSize: 14,
     color: "#666",
-    // textAlign: "right",
+    // textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
   ownerInfo: {
     fontSize: 12,
     color: "#999",
-    // textAlign: "right",
+    // textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
@@ -767,7 +760,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   requestFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 10,
@@ -775,7 +768,7 @@ const styles = StyleSheet.create({
     borderTopColor: "#f0f0f0",
   },
   requestDate: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 5,
   },
@@ -785,7 +778,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   quickActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   quickApproveButton: {
@@ -828,7 +821,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   detailModalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -840,7 +833,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   closeButton: {
@@ -868,11 +861,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
@@ -888,7 +881,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
     marginLeft: 10,
     fontFamily: "System",
@@ -899,7 +892,7 @@ const styles = StyleSheet.create({
   descriptionText: {
     fontSize: 14,
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 5,
     lineHeight: 20,
     fontFamily: "System",
@@ -920,7 +913,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 20,
     gap: 10,
     borderTopWidth: 1,
@@ -928,7 +921,7 @@ const styles = StyleSheet.create({
   },
   approveButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#27AE60",
@@ -938,7 +931,7 @@ const styles = StyleSheet.create({
   },
   rejectButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#E74C3C",
@@ -966,7 +959,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   reasonInput: {
@@ -980,7 +973,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   actionModalButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   confirmActionButton: {

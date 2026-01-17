@@ -630,7 +630,7 @@ export default function AdminUsersList() {
                   <View style={styles.permissionsList}>
                     <Text style={styles.permissionsListTitle}>الصلاحيات:</Text>
 
-                    <View style={{ flexDirection: "row", gap: 4, flexWrap: "wrap" }}>
+                    <View style={{ flexDirection: "row-reverse", gap: 4, flexWrap: "wrap" }}>
                       {moderator.permissions?.map((permission) => (
                         <View key={permission.permissionName} style={styles.permissionTag}>
                           <Text style={styles.permissionTagText}>{permission.permissionDisplayName}</Text>
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 15,
     backgroundColor: "#fff",
     borderBottomWidth: 1,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#f8f9fa",
     borderRadius: 8,
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     paddingVertical: 12,
     fontFamily: "System",
   },
@@ -885,11 +885,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   filterButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: "#fff",
     padding: 15,
     borderBottomWidth: 1,
@@ -1007,7 +1007,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   userHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -1019,12 +1019,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 6,
     fontFamily: "System",
   },
   userBadgesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1048,7 +1048,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   userStatusContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1070,7 +1070,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   detailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1078,11 +1078,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   userActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
     gap: 12,
   },
@@ -1098,7 +1098,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
@@ -1139,20 +1139,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   selectedUserEmail: {
     fontSize: 14,
     color: "#666",
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 4,
     fontFamily: "System",
   },
   selectedUserId: {
     fontSize: 12,
     color: "#999",
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
@@ -1165,7 +1165,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   permissionItem: {
@@ -1184,7 +1184,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   permissionContent: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     padding: 16,
   },
@@ -1193,7 +1193,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   permissionActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1206,14 +1206,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
     fontFamily: "System",
   },
   permissionDescription: {
     fontSize: 14,
     color: "#666",
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
     fontFamily: "System",
   },
@@ -1240,7 +1240,7 @@ const styles = StyleSheet.create({
   permissionsNoteText: {
     color: "#856404",
     fontSize: 14,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
     fontFamily: "System",
   },
@@ -1251,7 +1251,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   subOptionItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 8,
@@ -1263,7 +1263,7 @@ const styles = StyleSheet.create({
   subOptionName: {
     fontSize: 14,
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   subOptionToggle: {
@@ -1278,7 +1278,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50",
   },
   moderatorsSectionToggle: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#fff",
     padding: 16,
@@ -1291,7 +1291,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   chevron: {
@@ -1309,7 +1309,7 @@ const styles = StyleSheet.create({
   moderatorsSectionSubtitle: {
     fontSize: 14,
     color: "#666",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 16,
     fontFamily: "System",
   },
@@ -1327,7 +1327,7 @@ const styles = StyleSheet.create({
     borderLeftColor: "#8B5CF6",
   },
   moderatorHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -1339,21 +1339,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
     fontFamily: "System",
   },
   moderatorEmail: {
     fontSize: 14,
     color: "#666",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 2,
     fontFamily: "System",
   },
   moderatorId: {
     fontSize: 12,
     color: "#999",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   moderatorStatusBadge: {
@@ -1374,7 +1374,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
     fontFamily: "System",
   },
@@ -1390,15 +1390,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#1976d2",
     fontWeight: "500",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   moderatorActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
   },
   moderatorActionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#f0f8ff",
     paddingHorizontal: 12,
@@ -1421,7 +1421,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   messageInput: {
@@ -1430,7 +1430,7 @@ const styles = StyleSheet.create({
     padding: 16,
     fontSize: 16,
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     borderWidth: 1,
     borderColor: "#ddd",
     minHeight: 120,
@@ -1450,7 +1450,7 @@ const styles = StyleSheet.create({
   },
 
   categoryHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 14,
@@ -1461,7 +1461,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#444",
-    textAlign: "right",
+    textAlign: "left",
   },
 
   permissionsGroup: {

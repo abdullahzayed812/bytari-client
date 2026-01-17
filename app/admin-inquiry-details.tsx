@@ -180,7 +180,9 @@ export default function AdminInquiryDetailsScreen() {
                       </View>
                       <View>
                         <Text style={styles.responderName}>
-                          {response.isAiGenerated && !response.responder?.name ? "الذكاء الاصطناعي" : response.responder?.name || "مشرف"}
+                          {response.isAiGenerated && !response.responder?.name
+                            ? "الذكاء الاصطناعي"
+                            : response.responder?.name || "مشرف"}
                         </Text>
                         <Text style={styles.responseDate}>
                           {new Date(response.createdAt || "").toLocaleDateString("ar-SA", {
@@ -252,7 +254,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -311,13 +313,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   inquiryHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 16,
   },
   userInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     flex: 1,
   },
@@ -346,7 +348,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   badges: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 4,
   },
   statusBadge: {
@@ -370,13 +372,13 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   inquiryMeta: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 16,
     marginBottom: 16,
   },
   metaItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -405,7 +407,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   responsesSectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 12,
@@ -429,13 +431,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   responseHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
   responderInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     flex: 1,
   },
@@ -462,7 +464,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   officialBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     backgroundColor: "#10B981",
@@ -505,7 +507,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   aiGeneratedBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     backgroundColor: COLORS.secondary,

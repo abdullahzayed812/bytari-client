@@ -102,9 +102,9 @@ export default function AssignVetToFarmScreen() {
       >
         <View style={[styles.cardHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
           <View style={styles.cardInfo}>
-            <Text style={[styles.cardTitle, { textAlign: isRTL ? "right" : "left" }]}>{vet.name}</Text>
-            <Text style={[styles.cardSubtitle, { textAlign: isRTL ? "right" : "left" }]}>{vet.specialization}</Text>
-            <Text style={[styles.cardDetail, { textAlign: isRTL ? "right" : "left" }]}>
+            <Text style={[styles.cardTitle, { textAlign: isRTL ? "left" : "right" }]}>{vet.name}</Text>
+            <Text style={[styles.cardSubtitle, { textAlign: isRTL ? "left" : "right" }]}>{vet.specialization}</Text>
+            <Text style={[styles.cardDetail, { textAlign: isRTL ? "left" : "right" }]}>
               رقم الترخيص: {vet.licenseNumber}
             </Text>
           </View>
@@ -131,9 +131,9 @@ export default function AssignVetToFarmScreen() {
       >
         <View style={[styles.cardHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
           <View style={styles.cardInfo}>
-            <Text style={[styles.cardTitle, { textAlign: isRTL ? "right" : "left" }]}>{farm.name}</Text>
-            <Text style={[styles.cardSubtitle, { textAlign: isRTL ? "right" : "left" }]}>المالك: {farm.ownerName}</Text>
-            <Text style={[styles.cardDetail, { textAlign: isRTL ? "right" : "left" }]}>{farm.address}</Text>
+            <Text style={[styles.cardTitle, { textAlign: isRTL ? "left" : "right" }]}>{farm.name}</Text>
+            <Text style={[styles.cardSubtitle, { textAlign: isRTL ? "left" : "right" }]}>المالك: {farm.ownerName}</Text>
+            <Text style={[styles.cardDetail, { textAlign: isRTL ? "left" : "right" }]}>{farm.address}</Text>
           </View>
 
           {farm.hasAssignedVet ? (
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   typeSelector: {
     gap: 8,

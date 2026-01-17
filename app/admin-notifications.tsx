@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   filterContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     gap: 8,
   },
@@ -335,13 +335,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9ff",
   },
   notificationHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
   },
   notificationInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     flex: 1,
     gap: 12,
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   notificationActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   notificationFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },

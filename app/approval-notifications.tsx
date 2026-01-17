@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   headerTitleContainer: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "flex-end",
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   unreadBadge: {
     backgroundColor: "#F44336",
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     borderLeftColor: COLORS.primary,
   },
   notificationHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     marginBottom: 12,
   },
@@ -332,13 +332,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   notificationTime: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   unreadDot: {
     width: 8,
@@ -350,12 +350,12 @@ const styles = StyleSheet.create({
   notificationMessage: {
     fontSize: 14,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
     marginBottom: 12,
   },
   reasonContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#FFF3E0",
     padding: 8,
@@ -366,16 +366,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#E65100",
     marginLeft: 8,
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
   },
   notificationActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
     gap: 12,
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
   },
   markAllReadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,

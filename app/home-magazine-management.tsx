@@ -256,13 +256,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   addSection: {
     padding: 20,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 15,
   },
   articleCard: {
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
     lineHeight: 22,
   },
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   authorTitle: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   statsContainer: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 10,

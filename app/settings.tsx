@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   settingsCard: {
     backgroundColor: COLORS.white,

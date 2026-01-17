@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 20,
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     borderWidth: 1,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     backgroundColor: COLORS.white,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     height: 100,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   requiredNote: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 8,
   },
   bottomActions: {
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
   },
   createButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,

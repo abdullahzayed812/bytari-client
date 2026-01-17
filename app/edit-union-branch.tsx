@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputGroup: {
     marginBottom: 16,
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.darkGray,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   addServiceContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 16,
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   serviceItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#F8F9FA",
     padding: 12,
@@ -526,10 +526,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     backgroundColor: COLORS.success,
@@ -555,10 +555,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   switchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 8,
@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   formActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
     gap: 8,
   },
@@ -610,13 +610,13 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
   announcementHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
   },
   announcementActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   editButton: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   announcementMeta: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     flex: 1,
@@ -662,13 +662,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   announcementContent: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
-    textAlign: "right",
+    textAlign: "left",
   },
   imagePreviewContainer: {
     borderRadius: 8,
@@ -681,13 +681,13 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   imageActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 12,
     gap: 8,
   },
   changeImageButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
   },
   removeImageButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.error,

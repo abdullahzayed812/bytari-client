@@ -151,16 +151,12 @@ export default function CreatePoultryFarmScreen() {
       // Mock delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      Alert.alert(
-        "تم بنجاح",
-        "تم إنشاء المزرعة بنجاح (نسخة تجريبية - لم يتم الإرسال للخادم بعد)",
-        [
-          {
-            text: "موافق",
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      Alert.alert("تم بنجاح", "تم إنشاء المزرعة بنجاح (نسخة تجريبية - لم يتم الإرسال للخادم بعد)", [
+        {
+          text: "موافق",
+          onPress: () => router.back(),
+        },
+      ]);
     } catch (error) {
       console.error("Error creating farm:", error);
       Alert.alert("خطأ", "حدث خطأ في إنشاء المزرعة");
@@ -179,28 +175,14 @@ export default function CreatePoultryFarmScreen() {
           backgroundColor: farmType.color + "10",
         },
       ]}
-      onPress={() =>
-        handleFarmTypeSelect(farmType.id as "broiler" | "layer" | "mixed")
-      }
+      onPress={() => handleFarmTypeSelect(farmType.id as "broiler" | "layer" | "mixed")}
       activeOpacity={0.7}
     >
-      <View
-        style={[
-          styles.farmTypeIcon,
-          { backgroundColor: farmType.color + "20" },
-        ]}
-      >
-        {farmType.icon}
-      </View>
+      <View style={[styles.farmTypeIcon, { backgroundColor: farmType.color + "20" }]}>{farmType.icon}</View>
       <Text style={styles.farmTypeTitle}>{farmType.title}</Text>
       <Text style={styles.farmTypeDescription}>{farmType.description}</Text>
       {formData.farmType === farmType.id && (
-        <View
-          style={[
-            styles.selectedIndicator,
-            { backgroundColor: farmType.color },
-          ]}
-        />
+        <View style={[styles.selectedIndicator, { backgroundColor: farmType.color }]} />
       )}
     </TouchableOpacity>
   );
@@ -208,10 +190,7 @@ export default function CreatePoultryFarmScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <ArrowRight size={24} color={COLORS.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>إنشاء مزرعة دواجن</Text>
@@ -258,9 +237,7 @@ export default function CreatePoultryFarmScreen() {
         {/* Farm Type */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>نوع المزرعة</Text>
-          <View style={styles.farmTypesGrid}>
-            {farmTypes.map(renderFarmTypeCard)}
-          </View>
+          <View style={styles.farmTypesGrid}>{farmTypes.map(renderFarmTypeCard)}</View>
         </View>
 
         {/* Capacity */}
@@ -285,18 +262,14 @@ export default function CreatePoultryFarmScreen() {
           <Text style={styles.sectionTitle}>تاريخ التأسيس</Text>
           <TouchableOpacity
             style={styles.inputContainer}
-            onPress={() =>
-              Alert.alert("قريباً", "منتقي التاريخ سيكون متاحاً قريباً")
-            }
+            onPress={() => Alert.alert("قريباً", "منتقي التاريخ سيكون متاحاً قريباً")}
           >
             <Calendar size={20} color={COLORS.darkGray} />
             <TextInput
               style={styles.textInput}
               placeholder="اختر تاريخ التأسيس"
               value={formData.establishedDate}
-              onChangeText={(value) =>
-                handleInputChange("establishedDate", value)
-              }
+              onChangeText={(value) => handleInputChange("establishedDate", value)}
               textAlign="right"
               placeholderTextColor={COLORS.lightGray}
               editable={false}
@@ -308,11 +281,7 @@ export default function CreatePoultryFarmScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>الوصف (اختياري)</Text>
           <View style={[styles.inputContainer, styles.textAreaContainer]}>
-            <FileText
-              size={20}
-              color={COLORS.darkGray}
-              style={styles.textAreaIcon}
-            />
+            <FileText size={20} color={COLORS.darkGray} style={styles.textAreaIcon} />
             <TextInput
               style={[styles.textInput, styles.textArea]}
               placeholder="أدخل وصف المزرعة"
@@ -330,15 +299,10 @@ export default function CreatePoultryFarmScreen() {
         {/* Images */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>صور المزرعة (اختياري)</Text>
-          <TouchableOpacity
-            style={styles.imageUploadCard}
-            onPress={handleAddImage}
-          >
+          <TouchableOpacity style={styles.imageUploadCard} onPress={handleAddImage}>
             <Camera size={32} color={COLORS.primary} />
             <Text style={styles.imageUploadText}>إضافة صور</Text>
-            <Text style={styles.imageUploadSubtext}>
-              اختر صور توضح المزرعة والمرافق
-            </Text>
+            <Text style={styles.imageUploadSubtext}>اختر صور توضح المزرعة والمرافق</Text>
           </TouchableOpacity>
         </View>
 
@@ -402,7 +366,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputContainer: {
     flexDirection: "row-reverse",
@@ -419,7 +383,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginRight: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   textAreaContainer: {
     alignItems: "flex-start",

@@ -17,8 +17,6 @@ export default function HomeTipsManagementScreen() {
 
   const tips = tipsData?.tips || [];
 
-
-
   // Toggle visibility
   const toggleVisibilityMutation = useMutation(trpc.content.toggleTipHomeVisibility.mutationOptions());
 
@@ -66,12 +64,7 @@ export default function HomeTipsManagementScreen() {
   const renderTipCard = (tip: any, isVisible: boolean) => (
     <View key={tip.id} style={styles.tipCard}>
       <View style={styles.tipCardContent}>
-        {tip.images?.length > 0 ? (
-
-          <Image source={{ uri: tip.images[0] }} style={styles.tipImage} />
-        ) : (
-          null
-        )}
+        {tip.images?.length > 0 ? <Image source={{ uri: tip.images[0] }} style={styles.tipImage} /> : null}
 
         <View style={styles.tipDetails}>
           <Text style={styles.tipTitle} numberOfLines={2}>
@@ -174,21 +167,21 @@ const styles = StyleSheet.create({
   backButton: { padding: 8 },
   content: { flex: 1 },
   header: { padding: 20, backgroundColor: COLORS.white, marginBottom: 10 },
-  headerTitle: { fontSize: 24, fontWeight: "bold", color: COLORS.black, textAlign: "right", marginBottom: 8 },
+  headerTitle: { fontSize: 24, fontWeight: "bold", color: COLORS.black, textAlign: "left", marginBottom: 8 },
   headerSubtitle: { fontSize: 16, color: COLORS.darkGray, textAlign: "right" },
   addSection: { padding: 20, backgroundColor: COLORS.white, marginBottom: 10 },
   section: { padding: 20, backgroundColor: COLORS.white, marginBottom: 10 },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.black, textAlign: "right", marginBottom: 15 },
+  sectionTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.black, textAlign: "left", marginBottom: 15 },
   tipCard: { backgroundColor: COLORS.lightGray, borderRadius: 12, padding: 16, marginBottom: 12 },
   tipCardContent: { flexDirection: "row-reverse", marginBottom: 12 },
   tipImage: { width: 80, height: 80, borderRadius: 8 },
   tipDetails: { flex: 1, marginRight: 16 },
-  tipTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.black, textAlign: "right", marginBottom: 8 },
+  tipTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.black, textAlign: "left", marginBottom: 8 },
   tipContent: { fontSize: 14, color: COLORS.darkGray, textAlign: "right" },
   tipActions: { flexDirection: "row-reverse", justifyContent: "space-between", gap: 8 },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: 10,

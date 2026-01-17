@@ -885,12 +885,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   subtitle: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 4,
   },
   headerButtons: {
@@ -915,12 +915,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   sectionDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   sectionContainer: {
@@ -943,7 +943,7 @@ const styles = StyleSheet.create({
   renewalSectionDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 4,
   },
   poultryButton: {
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 6,
-    textAlign: "right",
+    textAlign: "left",
   },
   farmLocationRow: {
     flexDirection: "row-reverse",
@@ -1110,13 +1110,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   petType: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   ownerInfo: {
     flexDirection: "row-reverse",
@@ -1253,7 +1253,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   clinicStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginTop: 12,
     paddingTop: 12,
@@ -1318,7 +1318,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   warehouseStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginTop: 12,
     paddingTop: 12,
@@ -1410,13 +1410,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.darkGray,
     marginBottom: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   subscriptionResourceName: {
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   subscriptionContent: {
     gap: 10,
@@ -1447,7 +1447,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   dateValue: {
     fontSize: 13,
@@ -1494,7 +1494,7 @@ const styles = StyleSheet.create({
     color: COLORS.warning,
     fontWeight: "600",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   expiredBanner: {
     flexDirection: "row-reverse",
@@ -1517,6 +1517,6 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontWeight: "600",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

@@ -70,19 +70,19 @@ export default function EditUnionMainScreen() {
                 {isRTL ? <ArrowRight size={24} color={COLORS.white} /> : <ArrowLeft size={24} color={COLORS.white} />}
               </TouchableOpacity>
             ),
-            headerTitleStyle: { fontWeight: "bold", textAlign: isRTL ? "right" : "left" }, // Adjust title alignment
+            headerTitleStyle: { fontWeight: "bold", textAlign: isRTL ? "left" : "right" }, // Adjust title alignment
             headerTitleAlign: isRTL ? "right" : "left",
           }}
         />
         <View style={styles.noPermissionContainer}>
-          <Text style={[styles.noPermissionText, { textAlign: isRTL ? "right" : "left" }]}>
+          <Text style={[styles.noPermissionText, { textAlign: isRTL ? "left" : "right" }]}>
             ليس لديك صلاحية للوصول إلى هذه الصفحة
           </Text>
           <TouchableOpacity
             style={[styles.backButton, { flexDirection: isRTL ? "row-reverse" : "row" }]}
             onPress={() => router.back()}
           >
-            <Text style={[styles.backButtonText, { textAlign: isRTL ? "right" : "left" }]}>العودة</Text>
+            <Text style={[styles.backButtonText, { textAlign: isRTL ? "left" : "right" }]}>العودة</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   sectionHeader: {
     flexDirection: isRTL() ? "row" : "row-reverse",
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     borderWidth: 1,
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     backgroundColor: COLORS.white,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     minHeight: 80,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   logoSection: {
     marginBottom: 16,
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     backgroundColor: COLORS.white,
-    textAlign: "right",
+    textAlign: "left",
   },
   actionButtons: {
     flexDirection: isRTL() ? "row" : "row-reverse",
@@ -637,12 +637,12 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 16,
     fontWeight: "bold",
-    textAlign: "right",
+    textAlign: "left",
   },
   cancelActionText: {
     color: COLORS.darkGray,
     fontSize: 16,
     fontWeight: "bold",
-    textAlign: "right",
+    textAlign: "left",
   },
 });

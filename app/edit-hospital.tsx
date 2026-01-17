@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#0EA5E9",
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   imageContainer: {
     position: "relative",
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   textInput: {
     borderWidth: 1,
@@ -376,13 +376,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   specialtiesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
     marginBottom: 16,
   },
   specialtyTag: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#E0F2FE",
     paddingHorizontal: 12,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   addSpecialtyContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   addSpecialtyInput: {
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   saveButtonLarge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#0EA5E9",

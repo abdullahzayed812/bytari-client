@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputGroup: {
     marginBottom: 16,
@@ -547,20 +547,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   subLabel: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     backgroundColor: COLORS.gray,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
   },
@@ -580,14 +580,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   row: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   halfWidth: {
     flex: 1,
   },
   genderContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   genderButton: {
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   yesNoContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   yesNoButton: {
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   contactContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   contactButton: {

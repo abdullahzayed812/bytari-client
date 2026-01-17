@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   searchBox: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   filtersContainer: {
     paddingHorizontal: 16,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     gap: 12,
     marginBottom: 16,
@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   storeHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -623,7 +623,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   storeTitleRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 4,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   storeLocation: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   statusBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -668,7 +668,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   storeStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     paddingVertical: 12,
     borderTopWidth: 1,
@@ -700,7 +700,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   specialtiesList: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 6,
   },
@@ -715,12 +715,12 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   storeActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     flexWrap: "wrap",
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
     maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -831,6 +831,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

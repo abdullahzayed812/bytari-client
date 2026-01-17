@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "bold",
     marginBottom: 6,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     borderWidth: 1,

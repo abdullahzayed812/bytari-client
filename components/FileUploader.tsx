@@ -52,7 +52,7 @@ export function FileUploader({
           ) : (
             <>
               <Upload size={24} color={COLORS.primary} />
-              <Text style={[styles.uploadText, { textAlign: isRTL ? "right" : "left" }]}>{placeholder}</Text>
+              <Text style={[styles.uploadText, { textAlign: isRTL ? "left" : "right" }]}>{placeholder}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -60,7 +60,7 @@ export function FileUploader({
         <View style={[styles.fileContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
           <View style={[styles.fileInfo, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <FileText size={24} color={COLORS.success} />
-            <Text style={[styles.fileName, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={1}>
+            <Text style={[styles.fileName, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={1}>
               {fileUrl.split("/").pop()}
             </Text>
             <CheckCircle size={16} color={COLORS.success} />
@@ -74,7 +74,7 @@ export function FileUploader({
         </View>
       )}
 
-      {error && <Text style={[styles.errorText, { textAlign: isRTL ? "right" : "left" }]}>{error}</Text>}
+      {error && <Text style={[styles.errorText, { textAlign: isRTL ? "left" : "right" }]}>{error}</Text>}
     </View>
   );
 }

@@ -57,8 +57,6 @@ export default function EditArticleScreen() {
     }
   }, [article]);
 
-
-
   const handleSave = () => {
     updateArticleMutation.mutate(
       {
@@ -222,7 +220,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
@@ -242,7 +240,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   input: {
@@ -302,11 +300,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   fileButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderWidth: 1,

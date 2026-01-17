@@ -290,7 +290,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   sendButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -315,10 +315,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   uploadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -370,13 +370,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   inquiryHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
   statusContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 24,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   answerContainer: {
     backgroundColor: "#F0FDF4",
@@ -432,12 +432,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.success,
     marginBottom: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   answerText: {
     fontSize: 14,
     color: COLORS.black,
     lineHeight: 20,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

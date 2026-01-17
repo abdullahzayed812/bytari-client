@@ -549,14 +549,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 12,
   },
   searchBox: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     borderRadius: 8,
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   orderHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
   },
   statusBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   orderSummary: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
@@ -674,12 +674,12 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
   },
   orderActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 8,
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
     gap: 8,
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   orderItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     padding: 12,
     backgroundColor: COLORS.gray,
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   summaryRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginBottom: 8,
   },
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   statusOption: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
@@ -877,7 +877,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   statusModalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     marginTop: 20,
   },

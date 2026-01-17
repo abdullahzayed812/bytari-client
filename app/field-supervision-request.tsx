@@ -593,7 +593,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   requestTypeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
     flexWrap: "wrap",
   },

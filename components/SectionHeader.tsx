@@ -32,39 +32,41 @@ export default function SectionHeader({
   titleStyle,
 }: SectionHeaderProps) {
   return (
-    <View style={[styles.container, { flexDirection: isRTL ? "row" : "row-reverse" }, containerStyle]}>
-      {/* See All Button - Left Side */}
-      {showSeeAll && onSeeAll && (
-        <TouchableOpacity style={styles.seeAllButton} onPress={onSeeAll}>
-          <View style={[styles.seeAllContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-            <Text style={styles.seeAllText}>عرض الكل</Text>
-            {isRTL ? (
-              <ChevronLeft size={16} color={COLORS.primary} style={{ marginRight: 4 }} />
-            ) : (
-              <ChevronRight size={16} color={COLORS.primary} style={{ marginLeft: 4 }} />
+    <View style={[styles.container, { flexDirection: isRTL ? "row-reverse" : "row" }, containerStyle]}>
+      <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 12 }}>
+        {/* See All Button - Left Side */}
+        {showSeeAll && onSeeAll && (
+          <TouchableOpacity style={styles.seeAllButton} onPress={onSeeAll}>
+            <View style={[styles.seeAllContainer, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+              <Text style={styles.seeAllText}>عرض الكل</Text>
+              {isRTL ? (
+                <ChevronLeft size={16} color={COLORS.primary} style={{ marginRight: 4 }} />
+              ) : (
+                <ChevronRight size={16} color={COLORS.primary} style={{ marginLeft: 4 }} />
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Admin Controls - Center */}
+        {(showEditButton || showAddButton) && (
+          <View style={styles.adminControls}>
+            {showEditButton && onEdit && (
+              <TouchableOpacity onPress={onEdit} style={[styles.adminButton, styles.editButton]}>
+                <Edit3 size={16} color={COLORS.white} />
+              </TouchableOpacity>
+            )}
+            {showAddButton && onAdd && (
+              <TouchableOpacity onPress={onAdd} style={[styles.adminButton, styles.addButton]}>
+                <Plus size={16} color={COLORS.white} />
+              </TouchableOpacity>
             )}
           </View>
-        </TouchableOpacity>
-      )}
-
-      {/* Admin Controls - Center */}
-      {(showEditButton || showAddButton) && (
-        <View style={styles.adminControls}>
-          {showEditButton && onEdit && (
-            <TouchableOpacity onPress={onEdit} style={[styles.adminButton, styles.editButton]}>
-              <Edit3 size={16} color={COLORS.white} />
-            </TouchableOpacity>
-          )}
-          {showAddButton && onAdd && (
-            <TouchableOpacity onPress={onAdd} style={[styles.adminButton, styles.addButton]}>
-              <Plus size={16} color={COLORS.white} />
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
+        )}
+      </View>
 
       {/* Title - Right Side */}
-      <Text style={[styles.title, { textAlign: isRTL ? "right" : "left" }, titleStyle]}>{title}</Text>
+      <Text style={[styles.title, { textAlign: isRTL ? "left" : "right" }, titleStyle]}>{title}</Text>
     </View>
   );
 }
@@ -95,7 +97,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   adminControls: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },

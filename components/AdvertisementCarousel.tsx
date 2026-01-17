@@ -489,10 +489,15 @@ export default function AdvertisementCarousel({
 
                 {/* Admin Controls */}
                 {showAdminControls && isSuperAdmin && (
-                  <View style={[styles.adminControls, {
-                    right: isRTL ? undefined : 12,
-                    left: isRTL ? 12 : undefined,
-                  }]}>
+                  <View
+                    style={[
+                      styles.adminControls,
+                      {
+                        right: isRTL ? undefined : 12,
+                        left: isRTL ? 12 : undefined,
+                      },
+                    ]}
+                  >
                     <TouchableOpacity
                       style={[styles.adminControlButton, styles.editControlButton]}
                       onPress={(e) => {
@@ -581,7 +586,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   slidesContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     height: "100%",
   },
   adContainer: {
@@ -640,7 +645,7 @@ const styles = StyleSheet.create({
     bottom: 16,
     left: 0,
     right: 0,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     gap: 8,
@@ -665,7 +670,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   adminControlButton: {

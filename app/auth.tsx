@@ -409,7 +409,7 @@ export default function AuthScreen() {
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.formTitle, { textAlign: isRTL ? "right" : "center" }]}>
+          <Text style={[styles.formTitle, { textAlign: "center" }]}>
             {activeTab === "login" ? t("auth.loginTitle") : t("auth.registerTitle")}
           </Text>
 
@@ -422,7 +422,7 @@ export default function AuthScreen() {
           <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: "center", marginBottom: 16 }]}>
+                <Text style={[styles.inputLabel, { textAlign: "left", marginBottom: 16 }]}>
                   {t("auth.selectAccountType")}
                 </Text>
                 <View style={styles.accountTypeButtons}>
@@ -508,9 +508,9 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.name")}</Text>
+                <Text style={[styles.inputLabel]}>{t("auth.name")}</Text>
                 <TextInput
-                  style={[styles.input, { textAlign: isRTL ? "right" : "left" }, errors.name && styles.inputError]}
+                  style={[styles.input, errors.name && styles.inputError]}
                   placeholder={t("auth.nameLabel")}
                   value={name}
                   onChangeText={(text) => {
@@ -526,15 +526,11 @@ export default function AuthScreen() {
             )}
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
+              <Text style={[styles.inputLabel]}>
                 {activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}
               </Text>
               <TextInput
-                style={[
-                  styles.input,
-                  { textAlign: isRTL ? "right" : "left" },
-                  errors.usernameOrEmail && styles.inputError,
-                ]}
+                style={[styles.input, errors.usernameOrEmail && styles.inputError]}
                 placeholder={activeTab === "login" ? t("auth.emailUsername") : t("auth.emailLabel")}
                 value={usernameOrEmail}
                 onChangeText={(text) => {
@@ -552,9 +548,7 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
-                  {t("auth.phoneNumber")}
-                </Text>
+                <Text style={[styles.inputLabel]}>{t("auth.phoneNumber")}</Text>
                 <View style={styles.phoneContainer}>
                   <TouchableOpacity
                     style={styles.countrySelector}
@@ -565,11 +559,7 @@ export default function AuthScreen() {
                     <ChevronDown size={16} color={COLORS.darkGray} />
                   </TouchableOpacity>
                   <TextInput
-                    style={[
-                      styles.phoneInput,
-                      { textAlign: isRTL ? "right" : "left" },
-                      errors.phoneNumber && styles.inputError,
-                    ]}
+                    style={[styles.phoneInput, errors.phoneNumber && styles.inputError]}
                     placeholder={t("auth.phoneNumber")}
                     value={phoneNumber}
                     onChangeText={(text) => {
@@ -607,9 +597,9 @@ export default function AuthScreen() {
             )}
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.password")}</Text>
+              <Text style={[styles.inputLabel]}>{t("auth.password")}</Text>
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? "right" : "left" }, errors.password && styles.inputError]}
+                style={[styles.input, { textAlign: "right" }, errors.password && styles.inputError]}
                 placeholder={t("auth.passwordLabel")}
                 value={password}
                 onChangeText={(text) => {
@@ -626,15 +616,9 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>
-                  {t("auth.confirmPassword")}
-                </Text>
+                <Text style={[styles.inputLabel]}>{t("auth.confirmPassword")}</Text>
                 <TextInput
-                  style={[
-                    styles.input,
-                    { textAlign: isRTL ? "right" : "left" },
-                    errors.confirmPassword && styles.inputError,
-                  ]}
+                  style={[styles.input, { textAlign: "right" }, errors.confirmPassword && styles.inputError]}
                   placeholder={t("auth.confirmPasswordLabel")}
                   value={confirmPassword}
                   onChangeText={(text) => {
@@ -652,7 +636,7 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.country")}</Text>
+                <Text style={[styles.inputLabel]}>{t("auth.country")}</Text>
                 <TouchableOpacity
                   style={[styles.pickerButton, errors.country && styles.inputError]}
                   onPress={() => {
@@ -689,7 +673,7 @@ export default function AuthScreen() {
 
             {activeTab === "register" && selectedLocationCountry && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.province")}</Text>
+                <Text style={[styles.inputLabel]}>{t("auth.province")}</Text>
                 <TouchableOpacity
                   style={[styles.pickerButton, errors.province && styles.inputError]}
                   onPress={() => {
@@ -726,7 +710,7 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: isRTL ? "right" : "left" }]}>{t("auth.gender")}</Text>
+                <Text style={[styles.inputLabel]}>{t("auth.gender")}</Text>
                 <TouchableOpacity
                   style={[styles.pickerButton, errors.gender && styles.inputError]}
                   onPress={() => {
@@ -975,11 +959,11 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   phoneContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   countrySelector: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 15,
@@ -1035,7 +1019,7 @@ const styles = StyleSheet.create({
     maxHeight: 200,
   },
   countryItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -1110,7 +1094,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.lightGray,
     borderRadius: 8,
     paddingHorizontal: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: COLORS.white,
@@ -1151,7 +1135,7 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   errorContainer: {
     backgroundColor: "#ffebee",
@@ -1165,14 +1149,14 @@ const styles = StyleSheet.create({
     color: "#f44336",
     fontSize: 14,
     marginTop: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputError: {
     borderColor: "#f44336",
     borderWidth: 1,
   },
   accountTypeButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 12,
   },
@@ -1235,7 +1219,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   documentButtonContent: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   documentButtonText: {
@@ -1253,7 +1237,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   topIcons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
     alignItems: "center",
     paddingHorizontal: 20,
@@ -1293,14 +1277,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   fakeLoginButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 8,
     marginBottom: 8,
   },
   fakeLoginButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,

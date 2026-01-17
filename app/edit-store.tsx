@@ -1,10 +1,10 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ArrowLeft, MapPin, Phone, Mail, Clock } from 'lucide-react-native';
-import { router, useLocalSearchParams, Stack } from 'expo-router';
+import { ArrowLeft, MapPin, Phone, Mail, Clock } from "lucide-react-native";
+import { router, useLocalSearchParams, Stack } from "expo-router";
 import { mockVetStores } from "../mocks/data";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 import { ImageUploader } from "../components/ImageUploader";
@@ -25,15 +25,15 @@ export default function EditStoreScreen() {
   const { isRTL } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [formData, setFormData] = useState<StoreFormData>({
-    name: '',
-    description: '',
-    address: '',
-    phone: '',
-    email: '',
-    licenseImage: '',
-    identityImage: '',
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    licenseImage: "",
+    identityImage: "",
     images: [],
-    workingHours: '',
+    workingHours: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,14 +41,14 @@ export default function EditStoreScreen() {
   // Load store data
   useEffect(() => {
     if (id) {
-      const store = mockVetStores.find(s => s.id === id);
+      const store = mockVetStores.find((s) => s.id === id);
       if (store) {
         setFormData({
           name: store.name,
-          description: store.description || '',
+          description: store.description || "",
           address: store.address,
           phone: store.phone,
-          email: store.email || '',
+          email: store.email || "",
           licenseImage: store.image,
           workingHours: `${store.workingHours.days}: ${store.workingHours.open} - ${store.workingHours.close}`,
         });
@@ -59,27 +59,27 @@ export default function EditStoreScreen() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      Alert.alert('خطأ', 'اسم المتجر مطلوب');
+      Alert.alert("خطأ", "اسم المتجر مطلوب");
       return;
     }
     if (!formData.address.trim()) {
-      Alert.alert('خطأ', 'العنوان مطلوب');
+      Alert.alert("خطأ", "العنوان مطلوب");
       return;
     }
 
     setIsSubmitting(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      Alert.alert('نجح', 'تم تحديث المتجر بنجاح', [
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      Alert.alert("نجح", "تم تحديث المتجر بنجاح", [
         {
-          text: 'موافق',
-          onPress: () => router.back()
-        }
+          text: "موافق",
+          onPress: () => router.back(),
+        },
       ]);
     } catch (error) {
-      console.error('Error updating store:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء تحديث المتجر');
+      console.error("Error updating store:", error);
+      Alert.alert("خطأ", "حدث خطأ أثناء تحديث المتجر");
     } finally {
       setIsSubmitting(false);
     }
@@ -99,10 +99,10 @@ export default function EditStoreScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'تعديل المتجر',
+          title: "تعديل المتجر",
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
-          headerTitleStyle: { fontWeight: 'bold' },
+          headerTitleStyle: { fontWeight: "bold" },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -121,9 +121,9 @@ export default function EditStoreScreen() {
               <TextInput
                 style={styles.input}
                 value={formData.name}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
                 placeholder="أدخل اسم المتجر"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -132,11 +132,11 @@ export default function EditStoreScreen() {
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+                onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
                 placeholder="وصف المتجر والخدمات المقدمة"
                 multiline
                 numberOfLines={3}
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -147,9 +147,9 @@ export default function EditStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.address}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, address: text }))}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, address: text }))}
                   placeholder="العنوان الكامل للمتجر"
-                  textAlign={isRTL ? 'right' : 'left'}
+                  textAlign={isRTL ? "right" : "left"}
                 />
               </View>
             </View>
@@ -165,10 +165,10 @@ export default function EditStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.phone}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, phone: text }))}
                   placeholder="رقم الهاتف"
                   keyboardType="phone-pad"
-                  textAlign={isRTL ? 'right' : 'left'}
+                  textAlign={isRTL ? "right" : "left"}
                 />
               </View>
             </View>
@@ -180,10 +180,10 @@ export default function EditStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.email}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, email: text }))}
                   placeholder="البريد الإلكتروني"
                   keyboardType="email-address"
-                  textAlign={isRTL ? 'right' : 'left'}
+                  textAlign={isRTL ? "right" : "left"}
                 />
               </View>
             </View>
@@ -195,9 +195,9 @@ export default function EditStoreScreen() {
                 <TextInput
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.workingHours}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, workingHours: text }))}
+                  onChangeText={(text) => setFormData((prev) => ({ ...prev, workingHours: text }))}
                   placeholder="مثال: السبت - الخميس: 8:00 ص - 10:00 م"
-                  textAlign={isRTL ? 'right' : 'left'}
+                  textAlign={isRTL ? "right" : "left"}
                 />
               </View>
             </View>
@@ -209,7 +209,7 @@ export default function EditStoreScreen() {
             {/* Store Images */}
             <ImageGalleryUploader
               images={formData.images}
-              onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+              onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
               maxImages={5}
               label="صور المتجر"
             />
@@ -218,7 +218,7 @@ export default function EditStoreScreen() {
             <View style={styles.inputGroup}>
               <ImageUploader
                 imageUri={formData.licenseImage}
-                onUploadComplete={(url) => setFormData(prev => ({ ...prev, licenseImage: url }))}
+                onUploadComplete={(url) => setFormData((prev) => ({ ...prev, licenseImage: url }))}
                 label="صورة الترخيص"
                 aspect={[4, 3]}
               />
@@ -228,7 +228,7 @@ export default function EditStoreScreen() {
             <View style={styles.inputGroup}>
               <ImageUploader
                 imageUri={formData.identityImage}
-                onUploadComplete={(url) => setFormData(prev => ({ ...prev, identityImage: url }))}
+                onUploadComplete={(url) => setFormData((prev) => ({ ...prev, identityImage: url }))}
                 label="صورة الهوية"
                 aspect={[4, 3]}
               />
@@ -236,7 +236,7 @@ export default function EditStoreScreen() {
           </View>
 
           <Button
-            title={isSubmitting ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+            title={isSubmitting ? "جاري الحفظ..." : "حفظ التغييرات"}
             onPress={handleSubmit}
             disabled={isSubmitting}
             style={styles.submitButton}
@@ -254,8 +254,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLORS.background,
   },
   loadingText: {
@@ -281,20 +281,20 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: 'right',
+    textAlign: "right",
   },
   inputGroup: {
     marginBottom: 16,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   input: {
     borderWidth: 1,
@@ -307,11 +307,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   inputWithIcon: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
     borderRadius: 8,
@@ -324,12 +324,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   uploadButton: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: COLORS.primary,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: 8,
     padding: 20,
     backgroundColor: COLORS.gray,
@@ -338,10 +338,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.primary,
     marginRight: 8,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   previewImage: {
-    width: '100%',
+    width: "100%",
     height: 200,
     borderRadius: 8,
     marginTop: 12,

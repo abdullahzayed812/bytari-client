@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     margin: 16,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   filterContainer: {
     paddingHorizontal: 16,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     maxHeight: 50,
   },
   filterButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -333,13 +333,13 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   inquiryHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
   },
   inquiryUserInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     flex: 1,
   },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   inquiryBadges: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 4,
   },
   statusBadge: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   inquiryFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },

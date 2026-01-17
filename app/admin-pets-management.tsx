@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   searchBar: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
     borderRadius: 25,
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   filterTab: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 8,
@@ -649,7 +649,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   petHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 10,
@@ -661,20 +661,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   petType: {
     fontSize: 14,
     color: "#666",
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
   ownerName: {
     fontSize: 12,
     color: "#999",
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   petFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 10,
@@ -714,11 +714,11 @@ const styles = StyleSheet.create({
     borderTopColor: "#f0f0f0",
   },
   specialTags: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 5,
   },
   lostTag: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#ffebee",
     paddingHorizontal: 8,
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   breedingTag: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#f3e5f5",
     paddingHorizontal: 8,
@@ -774,7 +774,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   detailModalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   closeButton: {
@@ -820,11 +820,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   infoRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 8,
@@ -840,13 +840,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
-    textAlign: "right",
+    textAlign: "left",
     flex: 1,
     marginLeft: 10,
     fontFamily: "System",
   },
   specialBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
     paddingHorizontal: 10,
@@ -862,7 +862,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 20,
     gap: 10,
     borderTopWidth: 1,
@@ -870,7 +870,7 @@ const styles = StyleSheet.create({
   },
   banButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F39C12",
@@ -880,7 +880,7 @@ const styles = StyleSheet.create({
   },
   unbanButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#27AE60",
@@ -890,7 +890,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#E74C3C",
@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   actionModalButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   confirmActionButton: {

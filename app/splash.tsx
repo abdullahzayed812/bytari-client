@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated, Dimensions } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useApp } from "../providers/AppProvider";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
 export default function SplashScreen() {
-  const { setHasSeenSplash, isAuthenticated } = useApp();
+  const { isLoading, hasSeenOnboarding, isAuthenticated } = useApp();
   const logoScale = useRef(new Animated.Value(0.3)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const backgroundOpacity = useRef(new Animated.Value(0)).current;
 
-  const animateSequence = useCallback(() => {
+  // Effect for handling animations only
+  useEffect(() => {
     // Background fade in
     Animated.timing(backgroundOpacity, {
       toValue: 1,
@@ -23,7 +23,6 @@ export default function SplashScreen() {
 
     // Logo animations sequence
     Animated.sequence([
-      // Logo fade in and scale up
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
@@ -37,7 +36,6 @@ export default function SplashScreen() {
           useNativeDriver: true,
         }),
       ]),
-      // Small bounce effect
       Animated.spring(logoScale, {
         toValue: 1.1,
         tension: 100,
@@ -50,25 +48,27 @@ export default function SplashScreen() {
         friction: 5,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      // Mark splash as seen and navigate appropriately after animation completes
-      setTimeout(async () => {
-        // setHasSeenSplash(true);
-        // await AsyncStorage.setItem("hasSeenSplash", "true");
+    ]).start();
+  }, []); // This effect runs only once to start the animations
 
-        // Navigate based on authentication status and first launch
-        if (isAuthenticated) {
-          router.replace("/(tabs)/" as any);
-        } else {
-          router.replace("/onboarding");
-        }
-      }, 2000);
-    });
-  }, [backgroundOpacity, logoOpacity, logoScale, setHasSeenSplash, isAuthenticated]);
-
+  // Effect for handling navigation after loading is complete
   useEffect(() => {
-    animateSequence();
-  }, [animateSequence]);
+    // Wait until the app is done loading its initial state
+    if (!isLoading) {
+      // Add a small delay to ensure the animation has time to be pleasant
+      const timer = setTimeout(() => {
+        if (isAuthenticated) {
+          router.replace("/(tabs)/");
+        } else if (!hasSeenOnboarding) {
+          router.replace("/onboarding");
+        } else {
+          router.replace("/auth");
+        }
+      }, 1500); // This delay is for aesthetic purposes, not for logic
+
+      return () => clearTimeout(timer); // Cleanup the timer
+    }
+  }, [isLoading, isAuthenticated, hasSeenOnboarding]); // Re-run when loading or auth state changes
 
   return (
     <View style={styles.container}>

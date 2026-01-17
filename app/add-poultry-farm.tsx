@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontSize: 12,
     marginTop: 4,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     minHeight: 80,
@@ -746,7 +746,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     marginTop: 4,
-    textAlign: "right",
+    textAlign: "left",
     fontStyle: "italic",
   },
   dateButton: {
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
   noteText: {
     fontSize: 13,
     color: "#856404",
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   footer: {

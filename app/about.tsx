@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   aboutCard: {
     backgroundColor: COLORS.white,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
   },
   featuresCard: {
     backgroundColor: COLORS.white,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   featureDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   teamCard: {
     backgroundColor: COLORS.white,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
   },
   contactCard: {
     backgroundColor: COLORS.white,

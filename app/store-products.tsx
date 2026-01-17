@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   categoriesContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   categoryChip: {
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   productsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
@@ -330,19 +330,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   productCategory: {
     fontSize: 11,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   productDescription: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 16,
     marginBottom: 8,
   },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -415,13 +415,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   modalProductCategory: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   ratingContainer: {
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     marginLeft: 8,
   },
   ratingText: {
@@ -460,13 +460,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   modalProductDescription: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 24,
   },
   featuresContainer: {
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   featuresList: {
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   featureItem: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
     lineHeight: 22,
   },

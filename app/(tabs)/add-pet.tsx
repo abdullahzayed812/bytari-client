@@ -338,19 +338,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
   },
   typeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -375,14 +375,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   row: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   halfWidth: {
     flex: 1,
   },
   genderContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   genderButton: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 8,
     padding: 12,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1,

@@ -732,7 +732,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginRight: 12,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   selectedLanguageName: {
     color: COLORS.primary,

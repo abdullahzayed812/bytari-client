@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -540,14 +540,14 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tabsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   tab: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: COLORS.white,
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   },
   searchInputContainer: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#F5F5F5",
     borderRadius: 8,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   courseHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -665,12 +665,12 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   courseFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
   priceContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -683,14 +683,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   actionButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 6,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -725,7 +725,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   registrationHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   registrationActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "flex-end",
     gap: 8,
   },
@@ -801,7 +801,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   filterOptions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 12,
     marginTop: 24,

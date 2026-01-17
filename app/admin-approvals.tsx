@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.lightGray,
   },
   filterTab: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -1210,13 +1210,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.lightGray,
   },
   requestHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
   },
   requestInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     flex: 1,
     gap: 12,
@@ -1264,7 +1264,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   detailItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1273,12 +1273,12 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   requestActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
   viewButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -1288,7 +1288,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   quickButtonText: {
@@ -1355,7 +1355,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -1386,7 +1386,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
@@ -1401,7 +1401,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     flex: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   documentGroup: {
     backgroundColor: COLORS.lightGray,
@@ -1420,7 +1420,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
@@ -1428,7 +1428,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
@@ -1469,10 +1469,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.black,
     minHeight: 100,
-    textAlign: "right",
+    textAlign: "left",
   },
   rejectModalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
@@ -1493,13 +1493,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   paymentStatusRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
   paymentStatusInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1519,7 +1519,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   paymentReceiptContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginTop: 8,
@@ -1537,7 +1537,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   documentItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     paddingVertical: 4,
@@ -1548,7 +1548,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   documentHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
     gap: 8,
@@ -1583,7 +1583,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   paymentIndicatorContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginVertical: 12,
     paddingVertical: 12,
@@ -1616,7 +1616,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   paymentWarning: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginTop: 12,
@@ -1632,7 +1632,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   paymentSuccess: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginTop: 12,
@@ -1648,7 +1648,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   sectionHeaderWithIcon: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 16,
     gap: 8,
@@ -1695,7 +1695,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   documentImageItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: COLORS.white,
@@ -1732,7 +1732,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   documentFileItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
     padding: 10,
@@ -1763,7 +1763,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   documentFileActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   downloadButton: {
@@ -1796,7 +1796,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.lightGray,
   },
   paymentRequirementHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 12,
     gap: 12,
@@ -1818,7 +1818,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   paymentRequirementRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -1832,7 +1832,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   paymentStatusIndicator: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginTop: 8,
@@ -1859,7 +1859,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   paymentDetailRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
     gap: 8,
@@ -1873,10 +1873,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.black,
     flex: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   paymentReceiptButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -1893,7 +1893,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   paymentAlert: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: "#FFF3CD",
     borderRadius: 8,
     padding: 16,
@@ -1925,7 +1925,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 14,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   dateNote: {
     fontSize: 12,

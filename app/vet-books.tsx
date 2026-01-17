@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   booksGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
@@ -337,11 +337,11 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 18,
     marginBottom: 6,
-    textAlign: "right",
+    textAlign: "left",
     minHeight: 36,
   },
   authorSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     marginBottom: 6,
@@ -353,13 +353,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   ratingSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     marginBottom: 8,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 1,
   },
   ratingText: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   bookInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginBottom: 8,
     paddingBottom: 8,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   downloadStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 3,
     marginBottom: 10,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     backgroundColor: COLORS.primary,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 8,
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },

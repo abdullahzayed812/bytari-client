@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 32,
     marginBottom: 20,
-    textAlign: "right",
+    textAlign: "left",
   },
   articleDescription: {
     fontSize: 20,
@@ -361,10 +361,10 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 32,
     marginBottom: 20,
-    textAlign: "right",
+    textAlign: "left",
   },
   authorSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   authorInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 12,
   },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   statsSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "center",
     alignItems: "center",
     gap: 32,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -434,16 +434,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     lineHeight: 26,
-    textAlign: "right",
+    textAlign: "left",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     marginBottom: 20,
   },
   actionButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   commentItem: {
     backgroundColor: COLORS.white,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   commentHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginBottom: 8,
   },
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   },
   commentContent: {
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   noCommentsText: {
     textAlign: "center",
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
     minHeight: 300,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 20,
@@ -554,12 +554,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     height: 120,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 20,
   },
   sendButton: {
     backgroundColor: COLORS.primary,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     padding: 16,

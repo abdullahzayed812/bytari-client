@@ -792,12 +792,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    // textAlign: "right",
+    // textAlign: "left",
     marginBottom: 10,
     fontFamily: "System",
   },
   filterButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   filterButton: {
@@ -822,7 +822,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   addButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#4ECDC4",
     paddingHorizontal: 20,
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   adHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 10,
@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    // textAlign: "right",
+    // textAlign: "left",
     marginBottom: 8,
     fontFamily: "System",
   },
@@ -872,7 +872,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   adMetaItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -921,12 +921,12 @@ const styles = StyleSheet.create({
   adContent: {
     fontSize: 14,
     color: "#666",
-    // textAlign: "right",
+    // textAlign: "left",
     marginBottom: 10,
     fontFamily: "System",
   },
   adStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 10,
@@ -935,7 +935,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   statItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -945,11 +945,11 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   adActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -1003,7 +1003,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
     fontFamily: "System",
   },
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     fontFamily: "System",
   },
   textArea: {
@@ -1021,11 +1021,11 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   formRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
   },
   pickerContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -1051,7 +1051,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 10,
     padding: 20,
     borderTopWidth: 1,
@@ -1084,7 +1084,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   imagePickerButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,

@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   bookHeader: {
     backgroundColor: COLORS.white,
     padding: 20,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 16,
   },
   bookCover: {
@@ -267,10 +267,10 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     lineHeight: 24,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   authorSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     marginBottom: 12,
@@ -281,12 +281,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   ratingSection: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 2,
   },
   ratingText: {
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
   },
   infoItem: {
@@ -335,13 +335,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   descriptionText: {
     fontSize: 14,
     color: COLORS.black,
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
   },
   bookDetailsSection: {
     backgroundColor: COLORS.white,
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   detailItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 4,
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   downloadButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,

@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   professionContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     marginBottom: 20,
@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   messageButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     backgroundColor: COLORS.primary,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   infoItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     gap: 12,
     marginBottom: 16,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -595,7 +595,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   recipientInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 12,
     backgroundColor: "#F8F9FA",
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   subjectInput: {
     borderWidth: 1,
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
   messageInfoText: {
     fontSize: 14,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   statusBadge: {
@@ -674,7 +674,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   actionButtonsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     paddingHorizontal: 16,

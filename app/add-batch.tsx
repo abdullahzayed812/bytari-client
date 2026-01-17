@@ -64,7 +64,7 @@ export default function AddBatchScreen() {
             <View style={styles.inputContainer}>
               <Package size={20} color={COLORS.darkGray} style={styles.inputIcon} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
+                style={[styles.input, { textAlign: isRTL ? "left" : "right" }]}
                 value={formData.batchNumber}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, batchNumber: text }))}
                 placeholder="مثال: B-2024-003"
@@ -78,7 +78,7 @@ export default function AddBatchScreen() {
             <View style={styles.inputContainer}>
               <Users size={20} color={COLORS.darkGray} style={styles.inputIcon} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
+                style={[styles.input, { textAlign: isRTL ? "left" : "right" }]}
                 value={formData.initialCount}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, initialCount: text }))}
                 placeholder="عدد الطيور"
@@ -93,7 +93,7 @@ export default function AddBatchScreen() {
             <View style={styles.inputContainer}>
               <Calendar size={20} color={COLORS.darkGray} style={styles.inputIcon} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
+                style={[styles.input, { textAlign: isRTL ? "left" : "right" }]}
                 value={formData.startDate}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, startDate: text }))}
                 placeholder="YYYY-MM-DD"
@@ -105,7 +105,7 @@ export default function AddBatchScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>ملاحظات</Text>
             <TextInput
-              style={[styles.textArea, { textAlign: isRTL ? "right" : "left" }]}
+              style={[styles.textArea, { textAlign: isRTL ? "left" : "right" }]}
               value={formData.notes}
               onChangeText={(text) => setFormData((prev) => ({ ...prev, notes: text }))}
               placeholder="ملاحظات إضافية حول الدفعة"
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputContainer: {
     flexDirection: "row-reverse",

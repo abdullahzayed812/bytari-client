@@ -6,14 +6,20 @@ import { useRouter } from "expo-router";
 import { useI18n } from "../providers/I18nProvider";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+import { useApp } from "../providers/AppProvider";
 
 const { width } = Dimensions.get("window");
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const { t } = useI18n();
+  const { setHasSeenOnboarding } = useApp();
 
-  const handleGetStarted = () => {
+  const handleGetStarted = async () => {
+    setHasSeenOnboarding(true);
+    await AsyncStorage.setItem("hasSeenOnboarding", "true");
     router.replace("/auth");
   };
 

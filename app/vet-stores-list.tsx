@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   ratingContainer: {
     flexDirection: "row-reverse",
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   storeDetails: {
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     marginRight: 8,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   emptyState: {
     alignItems: "center",
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   },
   storeActions: {
     marginTop: 12,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   mapButton: {
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,

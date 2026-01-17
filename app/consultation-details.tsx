@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statusBanner: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     padding: 16,
     borderRadius: 12,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   cardHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   urgencyBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     paddingHorizontal: 10,
@@ -412,13 +412,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   metaRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 16,
     marginBottom: 16,
   },
   metaItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   infoItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 12,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   responsesSectionHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 12,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   responderInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   responderAvatar: {
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   responderNameRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 4,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   vetBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
     backgroundColor: "#10B981",
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   helpButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,

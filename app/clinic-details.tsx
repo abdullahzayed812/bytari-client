@@ -390,7 +390,7 @@ export default function ClinicDetailsScreen() {
       <View style={[styles.searchInputContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
         <Search size={20} color={COLORS.darkGray} />
         <TextInput
-          style={[styles.searchInput, { textAlign: isRTL ? "right" : "left" }]}
+          style={[styles.searchInput, { textAlign: isRTL ? "left" : "right" }]}
           placeholder="البحث في الحالات..."
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   starsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 2,
   },
   reviewsCount: {
@@ -606,7 +606,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     padding: 20,
   },
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   addCaseButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
@@ -643,7 +643,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
   },
@@ -846,6 +846,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

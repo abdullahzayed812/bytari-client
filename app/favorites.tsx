@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   favoriteItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   ratingContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 12,
   },
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     color: "#FFD700",
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
   },

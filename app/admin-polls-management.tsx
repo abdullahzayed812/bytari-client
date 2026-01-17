@@ -157,7 +157,13 @@ export default function AdminPollsManagement() {
       <ScrollView>
         <View style={styles.header}>
           <Text style={styles.title}>Polls</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => { resetForm(); setShowModal(true); }}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              resetForm();
+              setShowModal(true);
+            }}
+          >
             <Plus size={20} color="#fff" />
             <Text style={styles.addButtonText}>Add Poll</Text>
           </TouchableOpacity>
@@ -209,7 +215,9 @@ export default function AdminPollsManagement() {
                 onChangeText={(text) => setFormData({ ...formData, endDate: text })}
               />
               <View style={styles.checkboxContainer}>
-                <TouchableOpacity onPress={() => setFormData({ ...formData, isMultipleChoice: !formData.isMultipleChoice })}>
+                <TouchableOpacity
+                  onPress={() => setFormData({ ...formData, isMultipleChoice: !formData.isMultipleChoice })}
+                >
                   <Text>{formData.isMultipleChoice ? "[x]" : "[ ]"} Multiple Choice</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setFormData({ ...formData, showResults: !formData.showResults })}>
@@ -242,7 +250,13 @@ export default function AdminPollsManagement() {
               <TouchableOpacity style={styles.saveButton} onPress={handleSavePoll}>
                 <Text style={styles.saveButtonText}>Save</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowModal(false); resetForm(); }}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowModal(false);
+                  resetForm();
+                }}
+              >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
@@ -254,26 +268,42 @@ export default function AdminPollsManagement() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 10 },
-    header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
-    title: { fontSize: 24, fontWeight: "bold" },
-    addButton: { flexDirection: "row", backgroundColor: "blue", padding: 10, borderRadius: 5 },
-    addButtonText: { color: "#fff", marginLeft: 5 },
-    pollCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 15, borderWidth: 1, borderColor: "#ccc", borderRadius: 5, marginBottom: 10 },
-    pollQuestion: { fontSize: 16 },
-    pollActions: { flexDirection: "row", gap: 15 },
-    modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
-    modalContent: { backgroundColor: "#fff", padding: 20, borderRadius: 10, width: "90%" },
-    modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 20 },
-    input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 10 },
-    checkboxContainer: { flexDirection: "row", justifyContent: "space-around", marginBottom: 20 },
-    optionsTitle: { fontSize: 16, fontWeight: "bold", marginVertical: 10 },
-    optionContainer: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
-    optionInput: { flex: 1, borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginRight: 10 },
-    addOptionButton: { alignItems: "center", padding: 10, borderWidth: 1, borderColor: "blue", borderRadius: 5, marginTop: 10 },
-    modalActions: { flexDirection: "row", justifyContent: "flex-end", marginTop: 20 },
-    saveButton: { backgroundColor: "blue", padding: 10, borderRadius: 5, marginRight: 10 },
-    saveButtonText: { color: "#fff" },
-    cancelButton: { backgroundColor: "gray", padding: 10, borderRadius: 5 },
-    cancelButtonText: { color: "#fff" },
+  container: { flex: 1, padding: 10 },
+  header: { flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: "bold" },
+  addButton: { flexDirection: "row-reverse", backgroundColor: "blue", padding: 10, borderRadius: 5 },
+  addButtonText: { color: "#fff", marginLeft: 5 },
+  pollCard: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  pollQuestion: { fontSize: 16 },
+  pollActions: { flexDirection: "row-reverse", gap: 15 },
+  modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
+  modalContent: { backgroundColor: "#fff", padding: 20, borderRadius: 10, width: "90%" },
+  modalTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 20 },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginBottom: 10 },
+  checkboxContainer: { flexDirection: "row-reverse", justifyContent: "space-around", marginBottom: 20 },
+  optionsTitle: { fontSize: 16, fontWeight: "bold", marginVertical: 10 },
+  optionContainer: { flexDirection: "row-reverse", alignItems: "center", marginBottom: 10 },
+  optionInput: { flex: 1, borderWidth: 1, borderColor: "#ccc", padding: 10, borderRadius: 5, marginRight: 10 },
+  addOptionButton: {
+    alignItems: "center",
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "blue",
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  modalActions: { flexDirection: "row-reverse", justifyContent: "flex-end", marginTop: 20 },
+  saveButton: { backgroundColor: "blue", padding: 10, borderRadius: 5, marginRight: 10 },
+  saveButtonText: { color: "#fff" },
+  cancelButton: { backgroundColor: "gray", padding: 10, borderRadius: 5 },
+  cancelButtonText: { color: "#fff" },
 });

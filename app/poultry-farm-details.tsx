@@ -1715,7 +1715,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -1756,7 +1756,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   cardHeader: {
     flexDirection: "row-reverse",
@@ -1801,7 +1801,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   batchStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginBottom: 16,
   },
@@ -1852,7 +1852,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   weekStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
   },
   weekStat: {
@@ -1940,7 +1940,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   input: {
     backgroundColor: COLORS.gray,
@@ -1993,12 +1993,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   notesText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 20,
   },
   modalSubtitle: {
@@ -2073,11 +2073,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   weekSummaryStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
   },
   weekSummaryStat: {
@@ -2118,7 +2118,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   dayStat: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -2154,16 +2154,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   weekReportDate: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 4,
   },
   weekReportStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginBottom: 8,
   },
@@ -2185,7 +2185,7 @@ const styles = StyleSheet.create({
   weekReportDays: {
     fontSize: 12,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
     fontWeight: "600",
   },
   emptyReport: {
@@ -2216,19 +2216,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.primary,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   infoText: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 18,
     marginBottom: 4,
   },
   inputHint: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginTop: 4,
     fontStyle: "italic",
   },
@@ -2252,7 +2252,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   batchItemStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginBottom: 8,
   },
@@ -2273,7 +2273,7 @@ const styles = StyleSheet.create({
   batchItemDate: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   viewDetailsText: {
@@ -2296,7 +2296,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   summaryRow: {
@@ -2328,7 +2328,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 12,
   },
   weekDetailCard: {
@@ -2341,11 +2341,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   weekDetailStats: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
     marginBottom: 8,
   },
@@ -2367,7 +2367,7 @@ const styles = StyleSheet.create({
   weekDetailDays: {
     fontSize: 11,
     color: COLORS.primary,
-    textAlign: "right",
+    textAlign: "left",
     fontWeight: "600",
   },
   loadingContainer: {

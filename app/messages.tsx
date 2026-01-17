@@ -183,15 +183,15 @@ export default function MessagesScreen() {
                 style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
               >
                 <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                  <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>System</Text>
+                  <Text style={[styles.senderName, { textAlign: isRTL ? "left" : "right" }]}>System</Text>
                   <Text style={[styles.messageTime, { textAlign: isRTL ? "left" : "right" }]}>
                     {formatTime(message.createdAt)}
                   </Text>
                 </View>
 
-                <Text style={[styles.messageSubject, { textAlign: isRTL ? "right" : "left" }]}>{message.title}</Text>
+                <Text style={[styles.messageSubject, { textAlign: isRTL ? "left" : "right" }]}>{message.title}</Text>
 
-                <Text style={[styles.messagePreview, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                <Text style={[styles.messagePreview, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                   {message.content}
                 </Text>
               </View>
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   messageActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   replyButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
@@ -474,10 +474,10 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     minHeight: 120,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 12,
   },
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,

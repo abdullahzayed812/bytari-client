@@ -73,9 +73,11 @@ export default function PetDetailsScreen() {
   const pet = petQuery.data;
   const isLoading = petQuery.isLoading;
 
-  const { data: pendingRequests, isLoading: isLoadingRequests } = trpc.pets.getPendingMedicalActionsCount.useQuery({ petId: Number(petId) });
+  const { data: pendingRequests, isLoading: isLoadingRequests } = trpc.pets.getPendingMedicalActionsCount.useQuery({
+    petId: Number(petId),
+  });
   const pendingRequestsCount = pendingRequests?.count || 0;
-  
+
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
 
   // Update pet mutation for admin
@@ -379,12 +381,7 @@ export default function PetDetailsScreen() {
       <View style={styles.header}>
         {/* Pet Images Carousel */}
         {pet.images && pet.images.length > 0 ? (
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            style={styles.imageCarousel}
-          >
+          <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.imageCarousel}>
             {pet.images.map((imageUrl: string, index: number) => (
               <Image key={index} source={{ uri: imageUrl }} style={styles.petImage} />
             ))}
@@ -662,12 +659,12 @@ export default function PetDetailsScreen() {
                       {type === "dog"
                         ? "كلب"
                         : type === "cat"
-                          ? "قطة"
-                          : type === "rabbit"
-                            ? "أرنب"
-                            : type === "bird"
-                              ? "طائر"
-                              : "أخرى"}
+                        ? "قطة"
+                        : type === "rabbit"
+                        ? "أرنب"
+                        : type === "bird"
+                        ? "طائر"
+                        : "أخرى"}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -991,7 +988,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   adoptionBreedingButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   actionButton: {
@@ -1040,7 +1037,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   formInput: {
     borderWidth: 1,
@@ -1048,7 +1045,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "right",
+    textAlign: "left",
     backgroundColor: COLORS.white,
   },
   textArea: {
@@ -1056,7 +1053,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   formRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     marginBottom: 20,
   },

@@ -89,14 +89,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const initializeApp = async () => {
     try {
-      const [splashSeen, onboardingSeen, userData, storedUserMode] = await Promise.all([
-        AsyncStorage.getItem("hasSeenSplash"),
+      const [onboardingSeen, userData, storedUserMode] = await Promise.all([
+        // AsyncStorage.getItem("hasSeenSplash"),
         AsyncStorage.getItem("hasSeenOnboarding"),
         AsyncStorage.getItem("userData"),
         AsyncStorage.getItem("userMode"),
       ]);
 
-      setHasSeenSplash(splashSeen === "true");
+      // setHasSeenSplash(splashSeen === "true");
       setHasSeenOnboarding(onboardingSeen === "true");
 
       if (userData) {

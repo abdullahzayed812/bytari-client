@@ -614,7 +614,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   addButton: {
     backgroundColor: COLORS.primary,
@@ -737,12 +737,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginBottom: 2,
-    textAlign: "right",
+    textAlign: "left",
   },
   settingSubtitle: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   separator: {
     height: 1,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   subscriptionDates: {
     gap: 8,
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   dateValue: {
     fontSize: 14,
@@ -868,6 +868,6 @@ const styles = StyleSheet.create({
     color: COLORS.warning,
     fontWeight: "600",
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
 });

@@ -187,12 +187,10 @@ export default function AccountSettingsScreen() {
               imageStyle={{ width: 80, height: 80, borderRadius: 40 }}
               containerStyle={{ marginBottom: 0 }}
             />
+          ) : avatar ? (
+            <Image source={{ uri: avatar }} style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 12 }} />
           ) : (
-            avatar ? (
-              <Image source={{ uri: avatar }} style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 12 }} />
-            ) : (
-              <User size={40} color={COLORS.white} />
-            )
+            <User size={40} color={COLORS.white} />
           )}
           <Text style={styles.headerText}>إدارة معلومات حسابك الشخصي</Text>
         </View>
@@ -410,7 +408,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   infoCard: {
     backgroundColor: COLORS.white,
@@ -430,7 +428,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   inputWrapper: {
     flexDirection: "row-reverse",
@@ -445,7 +443,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   disabledInput: {
     color: COLORS.darkGray,
@@ -525,7 +523,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.error,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   dangerCard: {
     backgroundColor: COLORS.white,
@@ -608,7 +606,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   saveButton: {
     backgroundColor: COLORS.primary,

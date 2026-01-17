@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   input: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   categoryScroll: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
   },
   categoryButton: {
     paddingHorizontal: 16,

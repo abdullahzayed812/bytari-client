@@ -42,24 +42,30 @@ export default function ClinicSubscriptionScreen() {
     const clinicId = 1; // Mock clinic ID
 
     if (isSubscribed) {
-      renewActivationMutation.mutate({ clinicId, months: 1 }, {
-        onSuccess: () => {
-          Alert.alert("نجاح", "تم تجديد الاشتراك بنجاح");
-        },
-        onError: (error) => {
-          Alert.alert("خطأ", error.message);
+      renewActivationMutation.mutate(
+        { clinicId, months: 1 },
+        {
+          onSuccess: () => {
+            Alert.alert("نجاح", "تم تجديد الاشتراك بنجاح");
+          },
+          onError: (error) => {
+            Alert.alert("خطأ", error.message);
+          },
         }
-      });
+      );
     } else {
-      updateActivationMutation.mutate({ clinicId, isActive: true }, {
-        onSuccess: () => {
-          setIsSubscribed(true);
-          Alert.alert("نجاح", "تم الاشتراك بنجاح");
-        },
-        onError: (error) => {
-          Alert.alert("خطأ", error.message);
+      updateActivationMutation.mutate(
+        { clinicId, isActive: true },
+        {
+          onSuccess: () => {
+            setIsSubscribed(true);
+            Alert.alert("نجاح", "تم الاشتراك بنجاح");
+          },
+          onError: (error) => {
+            Alert.alert("خطأ", error.message);
+          },
         }
-      });
+      );
     }
   };
 
@@ -189,7 +195,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   headerActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -264,7 +270,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   featureItem: {
     alignItems: "center",
@@ -301,7 +307,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
   },
   premiumHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -317,7 +323,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   featureRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginBottom: 8,
@@ -326,7 +332,7 @@ const styles = StyleSheet.create({
   planFeatureText: {
     fontSize: 14,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   planPrice: {
     fontSize: 20,

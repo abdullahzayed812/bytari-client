@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cartItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   quantityContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   quantityButton: {
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
   },
   totalContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,

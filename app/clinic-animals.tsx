@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   header: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   statsGrid: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-around",
   },
   statItem: {
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   searchContainer: {
     flexDirection: "row-reverse",
@@ -370,7 +370,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   searchIcon: {
     marginLeft: 8,

@@ -88,7 +88,7 @@ export default function VetInquiriesScreen() {
                   }
                 }}
               >
-                <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                   {/* Status Badge */}
                   <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                     <View
@@ -153,7 +153,7 @@ export default function VetInquiriesScreen() {
                   });
                 }}
               >
-                <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                   {/* 🔵 Status Badge */}
                   <View style={[styles.statusContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                     <View
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   consultationHistoryCard: {
     backgroundColor: COLORS.white,

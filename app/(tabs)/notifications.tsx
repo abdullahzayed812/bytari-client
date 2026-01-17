@@ -157,13 +157,13 @@ export default function NotificationsScreen() {
                     },
                   ]}
                 >
-                  <Text style={[styles.notificationTitle, { textAlign: isRTL ? "right" : "left" }]}>
+                  <Text style={[styles.notificationTitle, { textAlign: isRTL ? "left" : "right" }]}>
                     {notification.title}
                   </Text>
-                  <Text style={[styles.notificationMessage, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                  <Text style={[styles.notificationMessage, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                     {notification.message}
                   </Text>
-                  <Text style={[styles.notificationTime, { textAlign: isRTL ? "right" : "left" }]}>
+                  <Text style={[styles.notificationTime, { textAlign: isRTL ? "left" : "right" }]}>
                     {formatTime(notification.time)}
                   </Text>
                 </View>

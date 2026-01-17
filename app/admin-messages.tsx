@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   filterContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     padding: 16,
     gap: 8,
   },
@@ -1013,13 +1013,13 @@ const styles = StyleSheet.create({
     borderColor: COLORS.lightGray,
   },
   messageHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
   },
   messageInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
     flex: 1,
     gap: 12,
@@ -1044,7 +1044,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   messageActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1060,7 +1060,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   replyInfo: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     marginBottom: 8,
@@ -1074,7 +1074,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   messageFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
   },
   replyButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 12,
@@ -1121,7 +1121,7 @@ const styles = StyleSheet.create({
     maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
@@ -1164,10 +1164,10 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     minHeight: 120,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     gap: 12,
   },
@@ -1187,7 +1187,7 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.primary,
@@ -1209,7 +1209,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.lightGray,
   },
   sendMessageButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
@@ -1239,14 +1239,14 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 14,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   textArea: {
     minHeight: 100,
     textAlignVertical: "top",
   },
   optionsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -1274,7 +1274,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   categoryItem: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 12,
     paddingVertical: 8,
@@ -1298,7 +1298,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   mediaContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -1332,7 +1332,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.error,
   },
   linkPreview: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
     marginTop: 8,
@@ -1347,7 +1347,7 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   locationToggle: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 12,
     paddingVertical: 8,
@@ -1369,7 +1369,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   locationOptions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
   },

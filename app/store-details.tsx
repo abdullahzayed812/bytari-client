@@ -526,12 +526,12 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   followerCount: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   ratingContainer: {
@@ -564,7 +564,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     lineHeight: 24,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 20,
   },
   detailsSection: {
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginRight: 12,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   actionsSection: {
     flexDirection: "row-reverse",
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
-    textAlign: "right",
+    textAlign: "left",
   },
   productsScroll: {
     marginBottom: 16,
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginRight: 8,
-    textAlign: "right",
+    textAlign: "left",
   },
   disabledText: {
     color: COLORS.darkGray,
@@ -698,7 +698,7 @@ const styles = StyleSheet.create({
   notificationSubtext: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 16,
   },
   ratingButton: {
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 16,
@@ -755,7 +755,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   starsContainer: {
     flexDirection: "row-reverse",
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 22,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   reviewDate: {

@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   orderHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   statusBadge: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   orderItemRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
   },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   totalContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,

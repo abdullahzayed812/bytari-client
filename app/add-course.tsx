@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     elevation: 4,
@@ -424,12 +424,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   typeSelector: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
   },
   typeOption: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   switchRow: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
   },
   saveButtonLarge: {
     backgroundColor: COLORS.primary,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,

@@ -377,13 +377,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   cardHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
   },
   cardTitleContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
   },
   iconContainer: {
@@ -423,12 +423,12 @@ const styles = StyleSheet.create({
     color: "#1F2937",
   },
   cardActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     marginTop: 8,
   },
   actionButton: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 12,
     padding: 16,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "flex-start",
   },
   infoText: {

@@ -160,13 +160,13 @@ export default function TabLayout() {
         }}
       >
         <Tabs.Screen
-          name="sections"
+          name="profile"
           options={{
-            title: t("sections.title"),
+            title: t("profile.title"),
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <Grid size={22} color={focused ? COLORS.white : COLORS.primary} />
+                <User size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}
@@ -212,13 +212,13 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="profile"
+          name="sections"
           options={{
-            title: t("profile.title"),
+            title: t("sections.title"),
             tabBarLabel: "",
             tabBarIcon: ({ color, size, focused }) => (
               <AnimatedTabIcon focused={focused}>
-                <User size={22} color={focused ? COLORS.white : COLORS.primary} />
+                <Grid size={22} color={focused ? COLORS.white : COLORS.primary} />
               </AnimatedTabIcon>
             ),
           }}

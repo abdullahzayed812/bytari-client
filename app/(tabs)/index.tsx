@@ -356,9 +356,9 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, { flexDirection: "row-reverse" }]}>
+      <View style={[styles.header, { flexDirection: "row" }]}>
         {/* Left side - User info */}
-        <View style={[styles.userInfoContainer, { flexDirection: "row-reverse" }]}>
+        <View style={[styles.userInfoContainer, { flexDirection: "row" }]}>
           <TouchableOpacity style={styles.profileButton} onPress={() => router.push("/(tabs)/profile")}>
             <UserAvatar uri={user?.avatar} gender={user?.gender} size={36} />
           </TouchableOpacity>
@@ -370,7 +370,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Right side - Icons */}
-        <View style={[styles.rightIcons, { flexDirection: "row-reverse" }]}>
+        <View style={[styles.rightIcons, { flexDirection: "row" }]}>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => {
@@ -767,7 +767,7 @@ export default function HomeScreen() {
                         )}
 
                         {/* Store Name */}
-                        <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{store.name}</Text>
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{store.name}</Text>
 
                         {/* Location */}
                         <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -802,7 +802,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -890,7 +890,7 @@ export default function HomeScreen() {
                         )}
 
                         {/* Clinic Name */}
-                        <Text style={[styles.clinicName, { textAlign: isRTL ? "right" : "left" }]}>{clinic.name}</Text>
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{clinic.name}</Text>
 
                         {/* Location */}
                         <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -925,7 +925,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Rating */}
-                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -1008,11 +1008,11 @@ export default function HomeScreen() {
                   >
                     <Image source={{ uri: article.coverImage }} style={styles.articleImage} />
                     <View style={styles.articleContent}>
-                      <Text style={[styles.articleTitle, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                      <Text style={[styles.articleTitle, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                         {article.title}
                       </Text>
                       <Text
-                        style={[styles.articleDescription, { textAlign: isRTL ? "right" : "left" }]}
+                        style={[styles.articleDescription, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={2}
                       >
                         {article.description}
@@ -1032,7 +1032,7 @@ export default function HomeScreen() {
                         </Text>
                       </View>
                       <Text
-                        style={[styles.articleAuthorTitle, { textAlign: isRTL ? "right" : "left" }]}
+                        style={[styles.articleAuthorTitle, { textAlign: isRTL ? "left" : "right" }]}
                         numberOfLines={1}
                       >
                         {article.authorTitle}
@@ -1084,7 +1084,7 @@ export default function HomeScreen() {
                     router.push(`/tip-details?id=${tip.id}`);
                   }}
                 >
-                  <Text style={[styles.tipContent, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                  <Text style={[styles.tipContent, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                     {tip.content}
                   </Text>
                 </Card>
@@ -1164,10 +1164,10 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Pet Name and Type */}
-                        <Text style={[styles.adoptionPetName, { textAlign: isRTL ? "right" : "left" }]}>
+                        <Text style={[styles.adoptionPetName, { textAlign: isRTL ? "left" : "right" }]}>
                           {pet.name}
                         </Text>
-                        <Text style={[styles.adoptionPetType, { textAlign: isRTL ? "right" : "left" }]}>
+                        <Text style={[styles.adoptionPetType, { textAlign: isRTL ? "left" : "right" }]}>
                           {t(`${pet.type}`)}
                         </Text>
 
@@ -1223,7 +1223,7 @@ export default function HomeScreen() {
 
                     {/* Description */}
                     <Text
-                      style={[styles.adoptionPetDescription, { textAlign: isRTL ? "right" : "left" }]}
+                      style={[styles.adoptionPetDescription, { textAlign: isRTL ? "left" : "right" }]}
                       numberOfLines={2}
                     >
                       {pet.description}
@@ -1295,13 +1295,13 @@ export default function HomeScreen() {
                   >
                     {book.coverImage ? <Image source={{ uri: book.coverImage }} style={styles.bookImage} /> : null}
                     <View style={styles.bookContent}>
-                      <Text style={[styles.bookTitle, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                      <Text style={[styles.bookTitle, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                         {book.title}
                       </Text>
-                      <Text style={[styles.bookAuthor, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={1}>
+                      <Text style={[styles.bookAuthor, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={1}>
                         {book.author}
                       </Text>
-                      <Text style={[styles.bookDescription, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                      <Text style={[styles.bookDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                         {book.description}
                       </Text>
                       <View style={[styles.bookStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -1384,8 +1384,8 @@ export default function HomeScreen() {
                         </View>
                       </View>
                       {/* Pet Name and Type */}
-                      <Text style={[styles.lostPetName, { textAlign: isRTL ? "right" : "left" }]}>{pet.name}</Text>
-                      <Text style={[styles.lostPetType, { textAlign: isRTL ? "right" : "left" }]}>
+                      <Text style={[styles.lostPetName, { textAlign: isRTL ? "left" : "right" }]}>{pet.name}</Text>
+                      <Text style={[styles.lostPetType, { textAlign: isRTL ? "left" : "right" }]}>
                         {t(`${pet.type}`)}
                       </Text>
 
@@ -1440,7 +1440,7 @@ export default function HomeScreen() {
                   </View>
 
                   {/* Description */}
-                  <Text style={[styles.lostPetDescription, { textAlign: isRTL ? "right" : "left" }]} numberOfLines={2}>
+                  <Text style={[styles.lostPetDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                     {pet.description}
                   </Text>
 
@@ -1578,7 +1578,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   userTextContainer: {
-    alignItems: "flex-end",
+    // alignItems: "flex-end",
   },
 
   greetingText: {
@@ -1646,7 +1646,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.white,
     marginBottom: 6,
-    textAlign: "right",
+    textAlign: "left",
     textShadowColor: "rgba(0, 0, 0, 0.8)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -1654,7 +1654,7 @@ const styles = StyleSheet.create({
   adSubtitle: {
     fontSize: 16,
     color: COLORS.white,
-    textAlign: "right",
+    textAlign: "left",
     textShadowColor: "rgba(0, 0, 0, 0.8)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -2392,7 +2392,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
-    textAlign: "right",
+    textAlign: "left",
   },
   infoItem: {
     flexDirection: "row-reverse",
@@ -2404,7 +2404,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     flex: 1,
-    textAlign: "right",
+    textAlign: "left",
   },
   startBtn: {
     width: "100%",

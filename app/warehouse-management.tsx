@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   statsContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 12,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   searchContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     paddingHorizontal: 16,
     paddingBottom: 16,
     gap: 8,
@@ -704,7 +704,7 @@ const styles = StyleSheet.create({
   filtersContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 8,
   },
@@ -766,13 +766,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 4,
   },
   productCategory: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   priceContainer: {
@@ -799,7 +799,7 @@ const styles = StyleSheet.create({
   quantityText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
   },
   productActions: {
     flexDirection: "row-reverse",
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -902,13 +902,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   modalProductCategory: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 20,
   },
   detailRow: {
@@ -935,13 +935,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
     marginBottom: 8,
   },
   modalProductDescription: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: "right",
+    textAlign: "left",
     lineHeight: 24,
   },
   deleteModalOverlay: {
@@ -982,7 +982,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   deleteActions: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 12,
     width: "100%",
   },

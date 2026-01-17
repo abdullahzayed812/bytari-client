@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E5E5",
   },
   searchInputContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: "#F5F5F5",
     borderRadius: 10,
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: COLORS.black,
-    textAlign: "right",
+    textAlign: "left",
   },
   backButton: {
     padding: 8,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E5E5",
   },
   tab: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   requestHeader: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   typeContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     marginBottom: 8,
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   locationContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 6,
     marginBottom: 12,
@@ -567,12 +567,12 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   requestFooter: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
   },
   dateContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     alignItems: "center",
     gap: 4,
   },
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   actionButtons: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
     gap: 8,
   },
   viewButton: {
