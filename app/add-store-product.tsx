@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   categoryGrid: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },

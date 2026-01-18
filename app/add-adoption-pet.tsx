@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    textAlign: "left",
+    textAlign: "right",
     borderWidth: 1,
     borderColor: COLORS.lightGray,
   },
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   typeContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },

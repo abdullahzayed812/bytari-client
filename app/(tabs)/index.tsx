@@ -757,7 +757,7 @@ export default function HomeScreen() {
                         {/* Active Badge */}
                         {store.isActive && (
                           <View
-                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                           >
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
@@ -770,7 +770,7 @@ export default function HomeScreen() {
                         <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{store.name}</Text>
 
                         {/* Location */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -786,7 +786,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -825,7 +825,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
@@ -880,7 +880,7 @@ export default function HomeScreen() {
                         {/* Premium Badge */}
                         {clinic.isPremium && (
                           <View
-                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-end" : "flex-start" }]}
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                           >
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
@@ -893,7 +893,7 @@ export default function HomeScreen() {
                         <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{clinic.name}</Text>
 
                         {/* Location */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MapPin size={16} color="#10B981" />
                           <Text
                             style={[
@@ -909,7 +909,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Phone size={16} color="#10B981" />
                           <Text
                             style={[
@@ -948,7 +948,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Action Buttons */}
-                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
@@ -1017,7 +1017,7 @@ export default function HomeScreen() {
                       >
                         {article.description}
                       </Text>
-                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                         <User size={14} color={COLORS.darkGray} />
                         <Text
                           style={[
@@ -1037,8 +1037,8 @@ export default function HomeScreen() {
                       >
                         {article.authorTitle}
                       </Text>
-                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      <View style={[styles.articleStats, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <Heart size={14} color="#EF4444" />
                           <Text
                             style={[
@@ -1052,7 +1052,7 @@ export default function HomeScreen() {
                             {article.likes}
                           </Text>
                         </View>
-                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <View style={[styles.articleStat, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                           <MessageCircle size={14} color={COLORS.darkGray} />
                           <Text
                             style={[

@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
-import React from 'react';
-import { COLORS } from '@/constants/colors';
-import { useI18n } from '@/providers/I18nProvider';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
+import React from "react";
+import { COLORS } from "@/constants/colors";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface CardProps {
   title: string;
@@ -13,34 +13,16 @@ interface CardProps {
   style?: object;
 }
 
-export default function Card({
-  title,
-  subtitle,
-  image,
-  onPress,
-  children,
-  footer,
-  style,
-}: CardProps) {
+export default function Card({ title, subtitle, image, onPress, children, footer, style }: CardProps) {
   const { isRTL } = useI18n();
   const CardComponent = onPress ? TouchableOpacity : View;
 
   return (
-    <CardComponent
-      style={[styles.card, style]}
-      onPress={onPress}
-      activeOpacity={onPress ? 0.8 : 1}
-    >
-      {image && (
-        <Image
-          source={{ uri: image }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      )}
+    <CardComponent style={[styles.card, style]} onPress={onPress} activeOpacity={onPress ? 0.8 : 1}>
+      {image && <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />}
       <View style={styles.content}>
-        <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>{title}</Text>
-        {subtitle && <Text style={[styles.subtitle, { textAlign: isRTL ? 'right' : 'left' }]}>{subtitle}</Text>}
+        <Text style={[styles.title, { textAlign: isRTL ? "left" : "right" }]}>{title}</Text>
+        {subtitle && <Text style={[styles.subtitle, { textAlign: isRTL ? "left" : "right" }]}>{subtitle}</Text>}
         {children && <View style={styles.children}>{children}</View>}
       </View>
       {footer && <View style={styles.footer}>{footer}</View>}
@@ -52,7 +34,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -61,7 +43,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 150,
   },
   content: {
@@ -69,7 +51,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 4,
     color: COLORS.black,
   },
