@@ -708,7 +708,7 @@ export default function HomeScreen() {
         {/* Available Clinics / Veterinary Stores Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={userMode === "veterinarian" ? "المذاخر البيطرية" : t("home.availableClinics")}
+            title={userMode === "veterinarian" ? "المكاتب البيطرية" : t("home.availableClinics")}
             onSeeAll={handleViewClinics}
             isRTL={isRTL}
             showEditButton={isSuperAdmin}
@@ -872,8 +872,9 @@ export default function HomeScreen() {
                           styles.clinicDetails,
                           {
                             flex: 1,
-                            marginRight: isRTL ? 0 : 12,
-                            marginLeft: isRTL ? 12 : 0,
+                            // marginRight: isRTL ? 0 : 12,
+                            // marginLeft: isRTL ? 12 : 0,
+                            marginHorizontal: 8,
                           },
                         ]}
                       >
@@ -1274,7 +1275,7 @@ export default function HomeScreen() {
             onEdit={() => router.push("/home-books-management")}
           />
           <AutoScrollView
-            itemWidth={264}
+            itemWidth={316}
             autoScrollInterval={3000}
             contentContainerStyle={[styles.horizontalScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
           >
@@ -1758,7 +1759,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    width: 320,
+    // width: 320,
     elevation: 3,
   },
   clinicCardContent: {

@@ -14,6 +14,7 @@ import { trpc } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 
 export default function ProductDetailsScreen() {
+  const { user } = useApp();
   const { productId, storeType } = useLocalSearchParams();
   const { t, isRTL } = useI18n();
   const { addToCart } = useCart();
@@ -38,17 +39,18 @@ export default function ProductDetailsScreen() {
   const handleAddToCart = () => {
     if (!product) return;
 
-    addToCart({
-      productId: product.id.toString(),
-      quantity,
-      product: {
-        ...product,
-        id: product.id.toString(),
-        image: product.image || "", // Handle null image
-        rating: 0, // Default rating as it's not in marketplace_products yet
-      },
-    });
-    Alert.alert("تم الإضافة", "تم إضافة المنتج إلى السلة بنجاح");
+    // addToCart({
+    //   userId: user?.id,
+    //   productId: product.id.toString(),
+    //   quantity,
+    //   product: {
+    //     ...product,
+    //     id: product.id.toString(),
+    //     image: product.image || "", // Handle null image
+    //     rating: 0, // Default rating as it's not in marketplace_products yet
+    //   },
+    // });
+    // Alert.alert("تم الإضافة", "تم إضافة المنتج إلى السلة بنجاح");
   };
 
   const handleToggleFavorite = () => {

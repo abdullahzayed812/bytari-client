@@ -60,7 +60,7 @@ export default function AddStoreScreen() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      showToast({ type: "error", message: "اسم المذخر مطلوب" });
+      showToast({ type: "error", message: "اسم المكتب مطلوب" });
       return;
     }
     if (!formData.address.trim()) {
@@ -136,15 +136,15 @@ export default function AddStoreScreen() {
       <ScrollView style={styles.container}>
         <View style={styles.content}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>معلومات المذخر</Text>
+            <Text style={styles.sectionTitle}>معلومات المكتب</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>اسم المذخر *</Text>
+              <Text style={styles.label}>اسم المكتب *</Text>
               <TextInput
                 style={styles.input}
                 value={formData.name}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, name: text }))}
-                placeholder="أدخل اسم المذخر"
+                placeholder="أدخل اسم المكتب"
                 textAlign={isRTL ? "right" : "left"}
               />
             </View>
@@ -155,7 +155,7 @@ export default function AddStoreScreen() {
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, description: text }))}
-                placeholder="وصف المذخر والخدمات المقدمة"
+                placeholder="وصف المكتب والخدمات المقدمة"
                 multiline
                 numberOfLines={3}
                 textAlign={isRTL ? "right" : "left"}
@@ -170,7 +170,7 @@ export default function AddStoreScreen() {
                   style={[styles.input, styles.inputWithIconText]}
                   value={formData.address}
                   onChangeText={(text) => setFormData((prev) => ({ ...prev, address: text }))}
-                  placeholder="العنوان الكامل للمذخر"
+                  placeholder="العنوان الكامل ببمكتب"
                   textAlign={isRTL ? "right" : "left"}
                 />
               </View>
@@ -304,7 +304,7 @@ export default function AddStoreScreen() {
                 style={styles.input}
                 value={formData.licenseNumber}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, licenseNumber: text }))}
-                placeholder="رقم ترخيص المذخر"
+                placeholder="رقم ترخيص المكتب"
                 textAlign={isRTL ? "right" : "left"}
               />
             </View>
@@ -329,7 +329,7 @@ export default function AddStoreScreen() {
               images={formData.images}
               onImagesChange={(images) => setFormData({ ...formData, images })}
               maxImages={5}
-              label="صور المذخر"
+              label="صور المكتب"
             />
           </View>
 
@@ -361,8 +361,8 @@ export default function AddStoreScreen() {
                 )}
               </View>
               <Text style={styles.subscriptionText}>• الاشتراك الشهري: 25 دولار</Text>
-              <Text style={styles.subscriptionText}>• يتضمن: عرض المذخر في التطبيق، إضافة المنتجات، إدارة المخزون</Text>
-              <Text style={styles.subscriptionText}>• سيتم تفعيل المذخر بعد الموافقة على الطلب ودفع الاشتراك</Text>
+              <Text style={styles.subscriptionText}>• يتضمن: عرض المكتب في التطبيق، إضافة المنتجات، إدارة المخزون</Text>
+              <Text style={styles.subscriptionText}>• سيتم تفعيل المكتب بعد الموافقة على الطلب ودفع الاشتراك</Text>
             </View>
           )}
 

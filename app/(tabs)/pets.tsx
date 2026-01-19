@@ -670,7 +670,7 @@ export default function PetsScreen() {
             />
 
             <Button
-              title="إضافة مذخر بيطري"
+              title="إضافة مكتب بيطري"
               onPress={() => router.push("/add-store")}
               type="primary"
               size="medium"

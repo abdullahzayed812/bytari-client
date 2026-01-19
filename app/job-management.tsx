@@ -302,7 +302,7 @@ export default function JobManagementScreen() {
                 </View>
                 <Text style={styles.requestTitle}>{request.title}</Text>
                 <TouchableOpacity
-                  onPress={() => router.push(`/user-profile?userId=${encodeURIComponent(request.applicantId)}`)}
+                  onPress={() => request.applicantId && router.push(`/user-profile?userId=${request.applicantId}`)}
                 >
                   {" "}
                   <Text style={styles.applicantNameClickable}>المتقدم: {request.applicantName}</Text>

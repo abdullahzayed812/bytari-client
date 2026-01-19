@@ -180,34 +180,30 @@ export default function FieldSupervisionRequestScreen() {
 
             const requestTypeText = getRequestTypeText(trimmedData.requestType);
 
-            Alert.alert(
-              "تم الإرسال بنجاح",
-              `تم إرسال طلب ${requestTypeText} لمزرعة "${trimmedData.farmName}" بنجاح.\n\n${data.message}\n\nسيتم التواصل معك قريباً.`,
-              [
-                {
-                  text: "موافق",
-                  onPress: () => {
-                    // Reset form
-                    setFormData({
-                      fullName: "",
-                      email: "",
-                      phone: "",
-                      location: "",
-                      education: "",
-                      experience: "",
-                      qualifications: "",
-                      previousExperience: "",
-                      farmName: "",
-                      farmLocation: "",
-                      farmCapacity: "",
-                      requestType: "supervision",
-                    });
-                    // Navigate back
-                    router.back();
-                  },
+            Alert.alert("تم الإرسال بنجاح", `تم ارسال الطلب وفي حال وجود وظيفة مناسبة لك سيتم التواصل معك`, [
+              {
+                text: "موافق",
+                onPress: () => {
+                  // Reset form
+                  setFormData({
+                    fullName: "",
+                    email: "",
+                    phone: "",
+                    location: "",
+                    education: "",
+                    experience: "",
+                    qualifications: "",
+                    previousExperience: "",
+                    farmName: "",
+                    farmLocation: "",
+                    farmCapacity: "",
+                    requestType: "supervision",
+                  });
+                  // Navigate back
+                  router.back();
                 },
-              ]
-            );
+              },
+            ]);
           } else {
             Alert.alert("خطأ", data.message || "حدث خطأ أثناء إرسال الطلب");
           }
@@ -494,8 +490,8 @@ export default function FieldSupervisionRequestScreen() {
         </TouchableOpacity>
 
         <Text style={styles.note}>
-          * سيتم مراجعة طلب الإشراف من قبل الإدارة وسيتم التواصل معك لترتيب زيارة ميدانية للمزرعة. في حالة الموافقة،
-          سيتم تعيينك للإشراف على المزرعة.
+          سيتم مراجعة طلبك من قبل الادارة وفي حال وجود وظيفة مناسبة لك او اشراف سيتم التواصل معك على البريد الالكتروني
+          او عن طريق رقم الهاتف
         </Text>
       </ScrollView>
     </View>

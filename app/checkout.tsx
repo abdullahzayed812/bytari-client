@@ -85,7 +85,7 @@ export default function CheckoutScreen() {
         items: cart.map((item) => ({
           productId: Number(item.productId),
           quantity: Number(item.quantity),
-          unitPrice: 1,
+          unitPrice: item.product.price,
         })),
         shippingAddress: {
           name: selectedAddress.name,

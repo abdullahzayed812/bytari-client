@@ -475,7 +475,7 @@ export default function StoreDetailsScreen() {
 
           <TouchableOpacity style={styles.ratingButton} onPress={() => setShowRatingModal(true)}>
             <MessageSquare size={20} color={COLORS.primary} />
-            <Text style={styles.ratingButtonText}>قيم المتجر</Text>
+            <Text style={styles.ratingButtonText}>قيم الكتب</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -484,7 +484,7 @@ export default function StoreDetailsScreen() {
         visible={showRatingModal}
         onClose={() => setShowRatingModal(false)}
         onSubmit={handleRatingSubmit}
-        title="تقييم المتجر"
+        title="تقييم الكتب"
         entityName={storeData.name}
       />
     </>

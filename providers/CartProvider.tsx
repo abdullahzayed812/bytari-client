@@ -13,7 +13,7 @@ type CartItem = {
 type CartContextType = {
   cart: CartItem[];
   isLoadingCart: boolean;
-  addToCart: (productId: number, quantity: number) => void;
+  addToCart: (userId: number, productId: number, quantity: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: () => void;
   updateQuantity: (productId: number, quantity: number) => void;
@@ -25,16 +25,24 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+import { useApp } from "./AppProvider";
+
+// ...
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useApp();
   const queryClient = useQueryClient();
 
-  const { data: serverCart, isLoading: isLoadingCart } = useQuery(trpc.cart.getCart.queryOptions());
+  const { data: serverCart, isLoading: isLoadingCart } = useQuery({
+    ...trpc.cart.getCart.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user,
+  });
 
   const cart = serverCart || [];
   const [newOrderCount, setNewOrderCount] = useState(0);
 
   const invalidateCart = () => {
-    queryClient.invalidateQueries(trpc.cart.getCart.queryKey as any);
+    queryClient.invalidateQueries(trpc.cart.getCart.queryKey() as any);
   };
 
   // ✅ Mutations
@@ -47,9 +55,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const clearCartMutation = useMutation(trpc.cart.clearCart.mutationOptions());
 
   // ✅ Actions (mutate + onSuccess)
-  const addToCart = (productId: number, quantity: number) => {
+  const addToCart = (userId: number, productId: number, quantity: number) => {
     addToCartMutation.mutate(
-      { productId, quantity },
+      { userId, productId, quantity },
       {
         onSuccess: invalidateCart,
       }

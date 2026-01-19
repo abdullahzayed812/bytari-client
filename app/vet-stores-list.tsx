@@ -124,17 +124,17 @@ export default function VetStoresListScreen() {
           <TouchableOpacity
             style={styles.mapButton}
             onPress={(event) => {
-              event.stopPropagation();
-              router.push({
-                pathname: "/map-location",
-                params: {
-                  mode: "directions",
-                  name: item.name,
-                  address: item.address,
-                  latitude: "24.7136", // Mock coordinates - in real app would come from store data
-                  longitude: "46.6753",
-                },
-              });
+              // event.stopPropagation();
+              // router.push({
+              //   pathname: "/map-location",
+              //   params: {
+              //     mode: "directions",
+              //     name: item.name,
+              //     address: item.address,
+              //     latitude: "24.7136", // Mock coordinates - in real app would come from store data
+              //     longitude: "46.6753",
+              //   },
+              // });
             }}
           >
             <MapPin size={16} color={COLORS.info} />
@@ -143,7 +143,7 @@ export default function VetStoresListScreen() {
 
           <TouchableOpacity style={styles.ratingButton} onPress={(event) => handleRateStore(item, event)}>
             <MessageSquare size={16} color={COLORS.primary} />
-            <Text style={styles.ratingButtonText}>تقييم المذخر</Text>
+            <Text style={styles.ratingButtonText}>تقييم المكتب</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -181,7 +181,7 @@ export default function VetStoresListScreen() {
             <Search size={20} color={COLORS.darkGray} />
             <TextInput
               style={styles.searchInput}
-              placeholder="البحث في المذاخر..."
+              placeholder="البحث في المكاتب..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               textAlign={isRTL ? "right" : "left"}
@@ -255,7 +255,7 @@ export default function VetStoresListScreen() {
           setSelectedStore(null);
         }}
         onSubmit={handleRatingSubmit}
-        title="تقييم المذخر"
+        title="تقييم المكتب"
         entityName={selectedStore?.name || ""}
       />
     </>

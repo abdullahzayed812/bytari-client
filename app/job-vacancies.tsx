@@ -243,7 +243,7 @@ export default function JobVacanciesScreen() {
             onPress={() => router.push("/field-supervision-request")}
           >
             <Shield size={20} color={COLORS.white} />
-            <Text style={styles.actionButtonText}>طلب إشراف حقول</Text>
+            <Text style={styles.actionButtonText}>طلب وظيفة بيطرية</Text>
           </TouchableOpacity>
         </View>
 

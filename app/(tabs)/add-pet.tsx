@@ -11,10 +11,9 @@ import { Pet } from "../../types";
 import { Camera, Calendar } from "lucide-react-native";
 import { Stack } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { useToast } from "@/lib/hooks";
 import { useToastContext } from "@/providers/ToastProvider";
+import { PET_TYPE_LABELS, PET_TYPES } from "../add-adoption-pet";
 
-const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
 const GENDERS = ["male", "female"] as const;
 
 export default function AddPetScreen() {
@@ -152,7 +151,7 @@ export default function AddPetScreen() {
           onPress={() => handleInputChange("type", type)}
         >
           <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>
-            {`${type}`}
+            {PET_TYPE_LABELS[type]}
           </Text>
         </TouchableOpacity>
       ))}
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
   typeContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 2,
   },
   typeButton: {
     paddingHorizontal: 16,

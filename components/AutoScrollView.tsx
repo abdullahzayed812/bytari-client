@@ -23,41 +23,19 @@ export default function AutoScrollView({
   const scrollViewRef = useRef<ScrollView>(null);
   const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const currentScrollPos = useRef(0);
 
   // Convert children to array
   const childrenArray = React.Children.toArray(children);
   const originalCount = childrenArray.length;
   const isSingleItem = originalCount <= 1;
 
-  // Duplicate items for infinite scroll effect: [Original, Original, Original]
-  // We start at the middle set
-  // If single item, don't duplicate
+  // Duplicate items for infinite scroll: [Original, Original, Original]
   const data = isSingleItem ? childrenArray : [...childrenArray, ...childrenArray, ...childrenArray];
-  const middleSetIndex = originalCount;
-
-  // Initial scroll position (start of middle set)
-  const [contentOffsetX, setContentOffsetX] = useState(
-    isSingleItem ? 0 : (isRTL ? data.length - (originalCount + 1) : middleSetIndex) * itemWidth
-  );
+  const totalWidth = originalCount * itemWidth;
 
   // Initialize scroll position
   const [isInitialized, setIsInitialized] = useState(false);
-
-  const startAutoScroll = useCallback(() => {
-    if (isSingleItem) return; // Don't auto scroll if single item
-
-    stopAutoScroll(); // Clear any existing interval
-
-    scrollIntervalRef.current = setInterval(() => {
-      if (scrollViewRef.current && !isUserScrolling) {
-        setContentOffsetX((prevOffset) => {
-          const nextOffset = isRTL ? prevOffset - itemWidth : prevOffset + itemWidth;
-          scrollViewRef.current?.scrollTo({ x: nextOffset, animated: true });
-          return nextOffset;
-        });
-      }
-    }, autoScrollInterval);
-  }, [autoScrollInterval, isUserScrolling, itemWidth, isSingleItem, isRTL, stopAutoScroll]);
 
   const stopAutoScroll = useCallback(() => {
     if (scrollIntervalRef.current) {
@@ -65,6 +43,19 @@ export default function AutoScrollView({
       scrollIntervalRef.current = null;
     }
   }, []);
+
+  const startAutoScroll = useCallback(() => {
+    if (isSingleItem) return;
+
+    stopAutoScroll();
+
+    scrollIntervalRef.current = setInterval(() => {
+      if (scrollViewRef.current && !isUserScrolling) {
+        currentScrollPos.current += itemWidth;
+        scrollViewRef.current.scrollTo({ x: currentScrollPos.current, animated: true });
+      }
+    }, autoScrollInterval);
+  }, [autoScrollInterval, isUserScrolling, itemWidth, isSingleItem, stopAutoScroll]);
 
   useEffect(() => {
     if (isInitialized && !isUserScrolling && !isSingleItem) {
@@ -80,10 +71,10 @@ export default function AutoScrollView({
     }
 
     if (!isInitialized && scrollViewRef.current) {
-      // Jump to middle set without animation, accounting for RTL
-      const initialScrollX = isRTL ? data.length - (originalCount + 1) : middleSetIndex * itemWidth;
+      // Start at the beginning of the middle set
+      const initialScrollX = totalWidth;
+      currentScrollPos.current = initialScrollX;
       scrollViewRef.current.scrollTo({ x: initialScrollX, animated: false });
-      setContentOffsetX(initialScrollX);
       setIsInitialized(true);
     }
   };
@@ -93,39 +84,20 @@ export default function AutoScrollView({
 
     const offsetX = event.nativeEvent.contentOffset.x;
 
-    // If we are not scrolling (just tracking position), update our ref
-    // But we need to handle the infinite loop reset
-
-    const totalWidth = originalCount * itemWidth;
-    const threshold = itemWidth / 2;
-
-    if (isRTL) {
-      // RTL: offsetX decreases as we scroll to the "next" item (visually right)
-      // If we've scrolled past the first set (too far right, offsetX is too small)
-      if (offsetX <= totalWidth / 2) {
-        // Scrolled near the start of the first copy
-        const resetOffsetX = offsetX + totalWidth;
-        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
-        setContentOffsetX(resetOffsetX);
-      }
-      // If we've scrolled past the last set (too far left, offsetX is too large)
-      else if (offsetX >= totalWidth * 2.5) {
-        // Scrolled near the end of the last copy
-        const resetOffsetX = offsetX - totalWidth;
-        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
-        setContentOffsetX(resetOffsetX);
-      }
+    // When we scroll past the second set, jump back to the middle set
+    // This creates the infinite loop effect
+    if (offsetX >= totalWidth * 2) {
+      const newOffset = offsetX - totalWidth;
+      currentScrollPos.current = newOffset;
+      scrollViewRef.current?.scrollTo({ x: newOffset, animated: false });
+    }
+    // If user scrolls backwards past the first set, jump forward
+    else if (offsetX < totalWidth) {
+      const newOffset = offsetX + totalWidth;
+      currentScrollPos.current = newOffset;
+      scrollViewRef.current?.scrollTo({ x: newOffset, animated: false });
     } else {
-      // LTR: offsetX increases as we scroll to the "next" item (visually left)
-      if (offsetX >= totalWidth * 2) {
-        const resetOffsetX = offsetX - totalWidth;
-        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
-        setContentOffsetX(resetOffsetX);
-      } else if (offsetX < totalWidth) {
-        const resetOffsetX = offsetX + totalWidth;
-        scrollViewRef.current?.scrollTo({ x: resetOffsetX, animated: false });
-        setContentOffsetX(resetOffsetX);
-      }
+      currentScrollPos.current = offsetX;
     }
   };
 
@@ -134,15 +106,31 @@ export default function AutoScrollView({
     stopAutoScroll();
   };
 
-  const onScrollEndDrag = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setIsUserScrolling(false);
-    // Update our offset tracker to where the user left it
-    setContentOffsetX(event.nativeEvent.contentOffset.x);
+  const onScrollEndDrag = () => {
+    // Let momentum finish before resuming auto-scroll
   };
 
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (isSingleItem) return;
+
+    const offsetX = event.nativeEvent.contentOffset.x;
+
+    // Update our current position tracker
+    currentScrollPos.current = offsetX;
+
+    // Reset if needed after momentum ends
+    if (offsetX >= totalWidth * 2) {
+      const newOffset = offsetX - totalWidth;
+      currentScrollPos.current = newOffset;
+      scrollViewRef.current?.scrollTo({ x: newOffset, animated: false });
+    } else if (offsetX < totalWidth) {
+      const newOffset = offsetX + totalWidth;
+      currentScrollPos.current = newOffset;
+      scrollViewRef.current?.scrollTo({ x: newOffset, animated: false });
+    }
+
+    // Resume auto-scroll
     setIsUserScrolling(false);
-    setContentOffsetX(event.nativeEvent.contentOffset.x);
   };
 
   return (
@@ -164,7 +152,9 @@ export default function AutoScrollView({
       onMomentumScrollEnd={onMomentumScrollEnd}
     >
       {data.map((child, index) => (
-        <View key={index}>{child}</View>
+        <View key={`${index}`} style={{ width: itemWidth }}>
+          {child}
+        </View>
       ))}
     </ScrollView>
   );

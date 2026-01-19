@@ -42,6 +42,8 @@ export default function UserProfileScreen() {
   const [messageSubject, setMessageSubject] = useState<string>("");
   const [messageContent, setMessageContent] = useState<string>("");
 
+  console.log(params);
+
   // Determine which query to use
   const isAdminView = !!params.userId;
   const ownProfileQuery = useQuery(trpc.auth.getProfile.queryOptions({ enabled: !isAdminView }));
@@ -475,7 +477,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   professionContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 6,
     marginBottom: 20,
@@ -490,7 +492,7 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
   messageButton: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
     backgroundColor: COLORS.primary,
@@ -524,7 +526,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   infoItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
     marginBottom: 16,

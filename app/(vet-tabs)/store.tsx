@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, TextInput } from 'react-native';
-import React, { useState, useRef } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, TextInput } from "react-native";
+import React, { useState, useRef } from "react";
 import { COLORS } from "../../constants/colors";
 import { formatPrice } from "../../constants/currency";
 import { useI18n } from "../../providers/I18nProvider";
@@ -7,42 +7,83 @@ import { useApp } from "../../providers/AppProvider";
 import { Product } from "../../types";
 import { mockProducts } from "../../mocks/data";
 import Button from "../../components/Button";
-import { ShoppingBag, ShoppingCart, ArrowRight, Plus, Settings, Search, Heart, Stethoscope, Syringe, Pill, Microscope, Egg, Activity, Wrench, Cat, Dog, Bird, Fish, Zap, Monitor, Scissors, TestTube } from 'lucide-react-native';
-import { router, useFocusEffect } from 'expo-router';
-type VetCategory = 'all' | 'medicine' | 'equipment' | 'surgery' | 'diagnostics' | 'supplements' | 'medical_devices';
-type VetSpecialty = 'small_animals' | 'large_animals' | 'birds' | 'fish' | 'poultry' | 'medical_devices';
+import {
+  ShoppingBag,
+  ShoppingCart,
+  ArrowRight,
+  Plus,
+  Settings,
+  Search,
+  Heart,
+  Stethoscope,
+  Syringe,
+  Pill,
+  Microscope,
+  Egg,
+  Activity,
+  Wrench,
+  Cat,
+  Dog,
+  Bird,
+  Fish,
+  Zap,
+  Monitor,
+  Scissors,
+  TestTube,
+} from "lucide-react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useCart } from "@/providers/CartProvider";
+import { useFavorites } from "@/providers/FavoritesProvider";
+type VetCategory = "all" | "medicine" | "equipment" | "surgery" | "diagnostics" | "supplements" | "medical_devices";
+type VetSpecialty = "small_animals" | "large_animals" | "birds" | "fish" | "poultry" | "medical_devices";
 
 // Veterinarian Store - Specialized categories for veterinarians
 const getVetSpecialties = () => {
   return [
-    { id: 'small_animals' as VetSpecialty, label: 'قطط وكلاب', icon: <Stethoscope size={40} color={COLORS.white} />, color: '#FF6B6B' },
-    { id: 'large_animals' as VetSpecialty, label: 'الحيوانات الصغيرة والكبيرة', icon: <Syringe size={40} color={COLORS.white} />, color: '#4ECDC4' },
-    { id: 'birds' as VetSpecialty, label: 'الطيور', icon: <Bird size={40} color={COLORS.white} />, color: '#45B7D1' },
-    { id: 'fish' as VetSpecialty, label: 'الأسماك', icon: <Fish size={40} color={COLORS.white} />, color: '#96CEB4' },
-    { id: 'poultry' as VetSpecialty, label: 'الدواجن', icon: <Egg size={40} color={COLORS.white} />, color: '#FFA726' },
-    { id: 'medical_devices' as VetSpecialty, label: 'أجهزة ومعدات طبية', icon: <Monitor size={40} color={COLORS.white} />, color: '#9C27B0' },
+    {
+      id: "small_animals" as VetSpecialty,
+      label: "قطط وكلاب",
+      icon: <Stethoscope size={40} color={COLORS.white} />,
+      color: "#FF6B6B",
+    },
+    {
+      id: "large_animals" as VetSpecialty,
+      label: "الحيوانات الصغيرة والكبيرة",
+      icon: <Syringe size={40} color={COLORS.white} />,
+      color: "#4ECDC4",
+    },
+    { id: "birds" as VetSpecialty, label: "الطيور", icon: <Bird size={40} color={COLORS.white} />, color: "#45B7D1" },
+    { id: "fish" as VetSpecialty, label: "الأسماك", icon: <Fish size={40} color={COLORS.white} />, color: "#96CEB4" },
+    { id: "poultry" as VetSpecialty, label: "الدواجن", icon: <Egg size={40} color={COLORS.white} />, color: "#FFA726" },
+    {
+      id: "medical_devices" as VetSpecialty,
+      label: "أجهزة ومعدات طبية",
+      icon: <Monitor size={40} color={COLORS.white} />,
+      color: "#9C27B0",
+    },
   ];
 };
 
 const vetCategories: { id: VetCategory; label: string }[] = [
-  { id: 'all', label: 'جميع المنتجات' },
-  { id: 'medicine', label: 'أدوية' },
-  { id: 'equipment', label: 'معدات طبية' },
-  { id: 'surgery', label: 'أدوات جراحية' },
-  { id: 'supplements', label: 'مكملات غذائية' },
-  { id: 'medical_devices', label: 'أجهزة ومعدات طبية' },
-];  
-
+  { id: "all", label: "جميع المنتجات" },
+  { id: "medicine", label: "أدوية" },
+  { id: "equipment", label: "معدات طبية" },
+  { id: "surgery", label: "أدوات جراحية" },
+  { id: "supplements", label: "مكملات غذائية" },
+  { id: "medical_devices", label: "أجهزة ومعدات طبية" },
+];
 
 export default function VeterinarianStoreScreen() {
   const { t, isRTL } = useI18n();
-  const { addToCart, addToFavorites, removeFromFavorites, favorites, cart, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
+  const { isSuperAdmin, isModerator, moderatorPermissions } = useApp();
+  const { addToCart, cart } = useCart();
+  const { addToFavorites, removeFromFavorites, favorites } = useFavorites();
   const [selectedSpecialty, setSelectedSpecialty] = useState<VetSpecialty | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<VetCategory>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<VetCategory>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const specialtyFlatListRef = useRef<FlatList>(null);
   const productFlatListRef = useRef<FlatList>(null);
-  
+
   // Scroll to top when tab is focused
   useFocusEffect(
     React.useCallback(() => {
@@ -53,19 +94,29 @@ export default function VeterinarianStoreScreen() {
       }
     }, [selectedSpecialty])
   );
-  
+
   const vetSpecialties = getVetSpecialties();
 
   // Filter products for veterinarians only (medical/professional products)
   const filteredProducts = selectedSpecialty
-    ? mockProducts.filter(product => {
-        const matchesSpecialty = product.petType.includes(selectedSpecialty === 'small_animals' ? 'cat' : 
-                                                        selectedSpecialty === 'large_animals' ? 'dog' :
-                                                        selectedSpecialty === 'birds' ? 'bird' :
-                                                        selectedSpecialty === 'fish' ? 'fish' :
-                                                        selectedSpecialty === 'poultry' ? 'poultry' : 'medical');
-        const matchesCategory = selectedCategory === 'all' || product.category === 'medicine' || product.category === 'accessories';
-        const matchesSearch = searchQuery === '' || 
+    ? mockProducts.filter((product) => {
+        const matchesSpecialty = product.petType.includes(
+          selectedSpecialty === "small_animals"
+            ? "cat"
+            : selectedSpecialty === "large_animals"
+            ? "dog"
+            : selectedSpecialty === "birds"
+            ? "bird"
+            : selectedSpecialty === "fish"
+            ? "fish"
+            : selectedSpecialty === "poultry"
+            ? "poultry"
+            : "medical"
+        );
+        const matchesCategory =
+          selectedCategory === "all" || product.category === "medicine" || product.category === "accessories";
+        const matchesSearch =
+          searchQuery === "" ||
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           product.description?.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesSpecialty && matchesCategory && matchesSearch;
@@ -76,10 +127,10 @@ export default function VeterinarianStoreScreen() {
   const hasVetStorePermission = () => {
     if (isSuperAdmin) return true;
     if (!isModerator || !moderatorPermissions) return false;
-    
+
     const storePerms = moderatorPermissions.storeManagement;
     if (!storePerms) return false;
-    
+
     return storePerms.vetStores;
   };
 
@@ -100,7 +151,7 @@ export default function VeterinarianStoreScreen() {
   };
 
   const handleToggleFavorite = (product: Product) => {
-    const isFavorite = favorites.some(f => f.productId === product.id);
+    const isFavorite = favorites.some((f) => f.productId === product.id);
     if (isFavorite) {
       removeFromFavorites(product.id);
     } else {
@@ -118,22 +169,20 @@ export default function VeterinarianStoreScreen() {
 
   const handleSpecialtySelect = (specialty: VetSpecialty) => {
     setSelectedSpecialty(specialty);
-    setSelectedCategory('all');
+    setSelectedCategory("all");
   };
 
   const handleBackToSpecialties = () => {
     setSelectedSpecialty(null);
-    setSelectedCategory('all');
+    setSelectedCategory("all");
   };
 
-  const renderSpecialtyCategory = ({ item }: { item: typeof vetSpecialties[0] }) => (
+  const renderSpecialtyCategory = ({ item }: { item: (typeof vetSpecialties)[0] }) => (
     <TouchableOpacity
       style={[styles.specialtyCard, { backgroundColor: item.color }]}
       onPress={() => handleSpecialtySelect(item.id)}
     >
-      <View style={styles.specialtyIconContainer}>
-        {item.icon}
-      </View>
+      <View style={styles.specialtyIconContainer}>{item.icon}</View>
       <Text style={styles.specialtyLabel}>{item.label}</Text>
       <View style={styles.specialtyArrow}>
         <ArrowRight size={20} color={COLORS.white} />
@@ -143,18 +192,10 @@ export default function VeterinarianStoreScreen() {
 
   const renderCategoryItem = ({ item }: { item: { id: VetCategory; label: string } }) => (
     <TouchableOpacity
-      style={[
-        styles.categoryItem,
-        selectedCategory === item.id && styles.selectedCategoryItem,
-      ]}
+      style={[styles.categoryItem, selectedCategory === item.id && styles.selectedCategoryItem]}
       onPress={() => setSelectedCategory(item.id)}
     >
-      <Text
-        style={[
-          styles.categoryText,
-          selectedCategory === item.id && styles.selectedCategoryText,
-        ]}
-      >
+      <Text style={[styles.categoryText, selectedCategory === item.id && styles.selectedCategoryText]}>
         {item.label}
       </Text>
     </TouchableOpacity>
@@ -165,26 +206,23 @@ export default function VeterinarianStoreScreen() {
   };
 
   const renderProductItem = ({ item }: { item: Product }) => {
-    const isFavorite = favorites.some(f => f.productId === item.id);
-    
+    const isFavorite = favorites.some((f) => f.productId === item.id);
+
     return (
-      <TouchableOpacity 
-        style={styles.productCard}
-        onPress={() => handleProductPress(item)}
-      >
+      <TouchableOpacity style={styles.productCard} onPress={() => handleProductPress(item)}>
         <View style={styles.productImageContainer}>
           <Image source={{ uri: item.image }} style={styles.productImage} />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.favoriteButton}
             onPress={(e) => {
               e.stopPropagation();
               handleToggleFavorite(item);
             }}
           >
-            <Heart 
-              size={20} 
-              color={isFavorite ? COLORS.red : COLORS.gray} 
-              fill={isFavorite ? COLORS.red : 'transparent'}
+            <Heart
+              size={20}
+              color={isFavorite ? COLORS.red : COLORS.gray}
+              fill={isFavorite ? COLORS.red : "transparent"}
             />
           </TouchableOpacity>
         </View>
@@ -203,7 +241,7 @@ export default function VeterinarianStoreScreen() {
             }}
           >
             <ShoppingCart size={16} color={COLORS.white} />
-            <Text style={styles.addButtonText}>{t('store.addToCart')}</Text>
+            <Text style={styles.addButtonText}>{t("store.addToCart")}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -216,31 +254,20 @@ export default function VeterinarianStoreScreen() {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>المتجر البيطري</Text>
-            <Text style={styles.storeTypeLabel}>
-              منتجات طبية متخصصة للأطباء البيطريين
-            </Text>
+            <Text style={styles.storeTypeLabel}>منتجات طبية متخصصة للأطباء البيطريين</Text>
           </View>
           <View style={styles.headerRight}>
             {hasVetStorePermission() && (
               <View style={styles.adminButtons}>
-                <TouchableOpacity 
-                  style={styles.adminButton}
-                  onPress={handleAddProduct}
-                >
+                <TouchableOpacity style={styles.adminButton} onPress={handleAddProduct}>
                   <Plus size={20} color={COLORS.white} />
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.adminButton}
-                  onPress={handleManageStore}
-                >
+                <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
                   <Settings size={20} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
             )}
-            <TouchableOpacity 
-              style={styles.cartButton}
-              onPress={() => router.push('/cart')}
-            >
+            <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
               <ShoppingBag size={24} color={COLORS.primary} />
               {getCartItemCount() > 0 && (
                 <View style={styles.cartBadge}>
@@ -272,41 +299,27 @@ export default function VeterinarianStoreScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={handleBackToSpecialties}
-        >
-          <ArrowRight size={20} color={COLORS.primary} style={{ transform: [{ rotate: '180deg' }] }} />
+        <TouchableOpacity style={styles.backButton} onPress={handleBackToSpecialties}>
+          <ArrowRight size={20} color={COLORS.primary} style={{ transform: [{ rotate: "180deg" }] }} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.title}>
-            {vetSpecialties.find(spec => spec.id === selectedSpecialty)?.label} - المتجر البيطري
+            {vetSpecialties.find((spec) => spec.id === selectedSpecialty)?.label} - المتجر البيطري
           </Text>
-          <Text style={styles.storeTypeLabel}>
-            منتجات طبية متخصصة للأطباء البيطريين
-          </Text>
+          <Text style={styles.storeTypeLabel}>منتجات طبية متخصصة للأطباء البيطريين</Text>
         </View>
         <View style={styles.headerRight}>
           {hasVetStorePermission() && (
             <View style={styles.adminButtons}>
-              <TouchableOpacity 
-                style={styles.adminButton}
-                onPress={handleAddProduct}
-              >
+              <TouchableOpacity style={styles.adminButton} onPress={handleAddProduct}>
                 <Plus size={20} color={COLORS.white} />
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.adminButton}
-                onPress={handleManageStore}
-              >
+              <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
                 <Settings size={20} color={COLORS.white} />
               </TouchableOpacity>
             </View>
           )}
-          <TouchableOpacity 
-            style={styles.cartButton}
-            onPress={() => router.push('/cart')}
-          >
+          <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
             <ShoppingBag size={24} color={COLORS.primary} />
             {getCartItemCount() > 0 && (
               <View style={styles.cartBadge}>
@@ -327,7 +340,7 @@ export default function VeterinarianStoreScreen() {
             placeholderTextColor={COLORS.darkGray}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
       </View>
@@ -362,26 +375,26 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     backgroundColor: COLORS.white,
   },
   headerLeft: {
     flex: 1,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   headerCenter: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   adminButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   adminButton: {
@@ -389,8 +402,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     gap: 6,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
@@ -401,49 +414,49 @@ const styles = StyleSheet.create({
   adminButtonText: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   subtitle: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
     marginTop: 4,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
   },
   cartButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    position: 'relative',
+    position: "relative",
   },
   cartBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: -5,
     right: -5,
     backgroundColor: COLORS.red,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   cartBadgeText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   storesScrollView: {
     flex: 1,
@@ -458,7 +471,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    flexDirection: 'row',
+    flexDirection: "row",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -470,7 +483,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     backgroundColor: COLORS.lightGray,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   storeInfo: {
     flex: 1,
@@ -479,15 +492,15 @@ const styles = StyleSheet.create({
   },
   storeName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 4,
   },
   storeDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 8,
     lineHeight: 18,
   },
@@ -495,8 +508,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   storeDetailRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 4,
   },
   storeDetailText: {
@@ -504,12 +517,12 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     marginRight: 6,
     flex: 1,
-    textAlign: 'right',
+    textAlign: "right",
   },
   storeFooter: {
-    flexDirection: 'row-reverse',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -519,51 +532,51 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   workingHours: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   workingHoursText: {
     fontSize: 11,
     color: COLORS.darkGray,
-    textAlign: 'right',
+    textAlign: "right",
   },
   workingHoursTime: {
     fontSize: 11,
     color: COLORS.primary,
-    fontWeight: '600',
-    textAlign: 'right',
+    fontWeight: "600",
+    textAlign: "right",
   },
   storeArrow: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 60,
   },
   emptyStateText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.darkGray,
     marginTop: 16,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   emptyStateSubtext: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
   },
   specialtyCard: {
     flex: 1,
     margin: 8,
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 140,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
@@ -573,19 +586,19 @@ const styles = StyleSheet.create({
   },
   specialtyIconContainer: {
     marginBottom: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   specialtyLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 8,
   },
   specialtyArrow: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   categoryItem: {
     paddingHorizontal: 16,
@@ -603,14 +616,14 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     color: COLORS.darkGray,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   selectedCategoryText: {
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   productCard: {
-    width: '31%',
+    width: "31%",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     margin: 4,
@@ -621,25 +634,25 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   productImageContainer: {
-    position: 'relative',
+    position: "relative",
   },
   productImage: {
-    width: '100%',
+    width: "100%",
     height: 100,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   favoriteButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
     backgroundColor: COLORS.white,
     borderRadius: 16,
     width: 32,
     height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -651,21 +664,21 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 4,
   },
   productPrice: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
-    textAlign: 'right',
+    textAlign: "right",
     marginBottom: 4,
   },
   ratingContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     marginBottom: 8,
   },
   ratingText: {
@@ -675,12 +688,12 @@ const styles = StyleSheet.create({
   },
   ratingStars: {
     fontSize: 12,
-    color: '#FFD700',
+    color: "#FFD700",
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: COLORS.primary,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -691,12 +704,12 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   storeTypeLabel: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 2,
   },
   welcomeContainer: {
@@ -705,7 +718,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 8,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -714,15 +727,15 @@ const styles = StyleSheet.create({
   },
   welcomeTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 4,
   },
   welcomeSubtitle: {
     fontSize: 12,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 16,
   },
   specialtiesList: {
@@ -730,15 +743,15 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   specialtiesRow: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -751,8 +764,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   searchContainer: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
+    flexDirection: "row-reverse",
+    alignItems: "center",
     backgroundColor: COLORS.lightGray,
     borderRadius: 12,
     paddingHorizontal: 12,
@@ -763,7 +776,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     marginRight: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   categoriesContainer: {
     backgroundColor: COLORS.white,
@@ -777,7 +790,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   productsRow: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
-
 });

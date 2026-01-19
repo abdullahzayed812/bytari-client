@@ -12,7 +12,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 
-const PET_TYPES = ["dog", "cat", "rabbit", "bird", "other"] as const;
+export const PET_TYPE_LABELS = {
+  dog: "كلب",
+  cat: "قط",
+  rabbit: "أرنب",
+  bird: "طائر",
+  other: "أخرى",
+} as const;
+
+export const PET_TYPES = Object.keys(PET_TYPE_LABELS) as Array<keyof typeof PET_TYPE_LABELS>;
+
 const GENDERS = ["male", "female"] as const;
 const LISTING_TYPES = ["adoption", "breeding"] as const;
 
@@ -125,7 +134,7 @@ export default function AddAdoptionPetScreen() {
           onPress={() => handleInputChange("type", type)}
         >
           <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>
-            {`${type}`}
+            {PET_TYPE_LABELS[type]}
           </Text>
         </TouchableOpacity>
       ))}

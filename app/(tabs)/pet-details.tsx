@@ -2362,7 +2362,7 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -2377,7 +2377,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   petNameRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 4,
@@ -2396,7 +2396,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   petDetailsRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
   },
   petDetailItem: {
@@ -2413,7 +2413,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   tabsContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
@@ -2447,7 +2447,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   infoItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -2463,7 +2463,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   lostBanner: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FEE2E2",
     padding: 12,
@@ -2477,7 +2477,7 @@ const styles = StyleSheet.create({
     color: COLORS.error,
   },
   sectionHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,

@@ -11,8 +11,7 @@ import * as ImagePicker from "expo-image-picker";
 import Card from "../components/Card";
 import UserReplyForm from "../components/UserReplyForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-const petTypes = ["dog", "cat", "rabbit", "bird", "other"];
+import { PET_TYPE_LABELS, PET_TYPES } from "./add-adoption-pet";
 
 export default function ConsultationScreen() {
   const queryClient = useQueryClient();
@@ -112,13 +111,15 @@ export default function ConsultationScreen() {
       <View style={styles.formGroup}>
         <Text style={styles.label}>{t("نوع الحيوان")}</Text>
         <View style={styles.petTypesContainer}>
-          {petTypes.map((type) => (
+          {PET_TYPES.map((type) => (
             <TouchableOpacity
               key={type}
               style={[styles.petTypeButton, selectedPetType === type && styles.selectedPetTypeButton]}
               onPress={() => setSelectedPetType(type)}
             >
-              <Text style={[styles.petTypeText, selectedPetType === type && styles.selectedPetTypeText]}>{type}</Text>
+              <Text style={[styles.petTypeText, selectedPetType === type && styles.selectedPetTypeText]}>
+                {PET_TYPE_LABELS[type]}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   petTypesContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     flexWrap: "wrap",
   },
   petTypeButton: {

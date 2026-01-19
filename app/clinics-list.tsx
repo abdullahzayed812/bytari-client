@@ -303,16 +303,16 @@ export default function ClinicsListScreen() {
                 <TouchableOpacity
                   style={styles.clinicActionButton}
                   onPress={() => {
-                    router.push({
-                      pathname: "/map-location",
-                      params: {
-                        mode: "directions",
-                        name: clinic.name,
-                        address: clinic.address,
-                        latitude: "24.7136", // Mock coordinates - in real app would come from clinic data
-                        longitude: "46.6753",
-                      },
-                    });
+                    // router.push({
+                    //   pathname: "/map-location",
+                    //   params: {
+                    //     mode: "directions",
+                    //     name: clinic.name,
+                    //     address: clinic.address,
+                    //     latitude: "24.7136", // Mock coordinates - in real app would come from clinic data
+                    //     longitude: "46.6753",
+                    //   },
+                    // });
                   }}
                 >
                   <MapPin size={16} color="#10B981" />

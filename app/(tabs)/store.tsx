@@ -113,6 +113,7 @@ const getVetSpecialties = (backendCategories: any[] | undefined) => {
 };
 
 export default function StoreScreen() {
+  const { user } = useApp();
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
   const { favorites, removeFromFavorites, addToFavorites } = useFavorites();
@@ -171,7 +172,7 @@ export default function StoreScreen() {
   const filteredProducts = productsData?.items || [];
 
   const handleAddToCart = (product: any) => {
-    addToCart(product.id, 1);
+    addToCart(user?.id, product.id, 1);
   };
 
   const handleToggleFavorite = (product: any) => {

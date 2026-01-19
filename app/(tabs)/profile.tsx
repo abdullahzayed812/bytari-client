@@ -499,8 +499,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   profileInfo: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
+    gap: 12,
     marginBottom: 24,
   },
   avatarContainer: {
@@ -577,7 +578,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   pointsHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
@@ -612,7 +613,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   premiumContent: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 16,
   },
@@ -645,7 +646,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   menuItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 16,
@@ -654,7 +655,8 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.lightGray,
   },
   menuItemLeft: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
+    gap: 12,
     alignItems: "center",
   },
   menuItemText: {
@@ -698,7 +700,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   modalHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 16,
@@ -717,7 +719,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   languageItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -732,7 +734,7 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginRight: 12,
     flex: 1,
-    textAlign: "left",
+    textAlign: "right",
   },
   selectedLanguageName: {
     color: COLORS.primary,
