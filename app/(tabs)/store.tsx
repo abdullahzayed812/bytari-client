@@ -172,6 +172,7 @@ export default function StoreScreen() {
   const filteredProducts = productsData?.items || [];
 
   const handleAddToCart = (product: any) => {
+    if (!user?.id) return;
     addToCart(user?.id, product.id, 1);
   };
 

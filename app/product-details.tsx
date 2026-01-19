@@ -12,11 +12,12 @@ import { useLocalSearchParams, Stack, router } from "expo-router";
 import { useCart } from "@/providers/CartProvider";
 import { trpc } from "@/lib/trpc";
 import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/lib/hooks";
 
 export default function ProductDetailsScreen() {
   const { user } = useApp();
   const { productId, storeType } = useLocalSearchParams();
-  const { t, isRTL } = useI18n();
+
   const { addToCart } = useCart();
   const { userMode } = useApp();
   const [quantity, setQuantity] = useState(1);
@@ -37,7 +38,9 @@ export default function ProductDetailsScreen() {
   );
 
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !user?.id) return;
+
+    addToCart(user?.id, product.id, quantity);
 
     // addToCart({
     //   userId: user?.id,

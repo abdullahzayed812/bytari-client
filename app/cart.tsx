@@ -20,8 +20,6 @@ export default function CartScreen() {
     type: "remove",
   });
 
-  console.log("--------------------", cart);
-
   const getTotalPrice = () => {
     return cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
   };

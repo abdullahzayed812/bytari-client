@@ -26,13 +26,15 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 import { useApp } from "./AppProvider";
+import { useToast } from "@/lib/hooks";
+import { useToastContext } from "./ToastProvider";
 
 // ...
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useApp();
   const queryClient = useQueryClient();
-
+  const { showToast } = useToastContext();
   const { data: serverCart, isLoading: isLoadingCart } = useQuery({
     ...trpc.cart.getCart.queryOptions({ userId: Number(user?.id) }),
     enabled: !!user,
@@ -42,6 +44,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [newOrderCount, setNewOrderCount] = useState(0);
 
   const invalidateCart = () => {
+    showToast({ type: "success", message: "تم اضافة المنتج الي السلة" });
     queryClient.invalidateQueries(trpc.cart.getCart.queryKey() as any);
   };
 
