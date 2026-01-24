@@ -738,6 +738,11 @@ export default function AdminDashboard() {
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/job-management")}>
               <Briefcase size={24} color="#6C63FF" />
               <Text style={styles.actionText}>إدارة الوظائف</Text>
+              {(approvalCounts?.pendingJobs || 0) > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{approvalCounts?.pendingJobs}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
 
@@ -745,6 +750,12 @@ export default function AdminDashboard() {
             <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/courses-management")}>
               <GraduationCap size={24} color="#10B981" />
               <Text style={styles.actionText}>إدارة الدورات والندوات</Text>
+
+              {(approvalCounts?.pendingCourses || 0) > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{approvalCounts?.pendingCourses}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           )}
 
