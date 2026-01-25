@@ -67,7 +67,7 @@ export default function VeterinarianApprovalsScreen() {
   };
 
   const handleReject = (applicationId: string) => {
-    Alert.prompt(
+    Alert.alert(
       "رفض الطلب",
       "يرجى إدخال سبب الرفض (اختياري):",
       [
@@ -318,7 +318,6 @@ export default function VeterinarianApprovalsScreen() {
                     <TouchableOpacity
                       style={[styles.quickActionButton, styles.rejectQuickButton]}
                       onPress={(e) => {
-                        e.stopPropagation();
                         handleReject(application.id);
                       }}
                     >

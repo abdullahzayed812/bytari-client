@@ -32,14 +32,17 @@ import {
   ShoppingCart,
   MessageCircle,
   X,
+  Trash
 } from "lucide-react-native";
 import { PoultryFarm, PoultryBatch, PoultryWeek, PoultryDay } from "../types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PoultryFarmDetailsScreen() {
   const { isSuperAdmin, user } = useApp();
   const { isRTL } = useI18n();
+  const queryclient = useQueryClient();
   const router = useRouter();
   const { showToast } = useToastContext();
 
@@ -64,6 +67,7 @@ export default function PoultryFarmDetailsScreen() {
   const [showContactSupervisorModal, setShowContactSupervisorModal] = useState(false);
   const [showRequestVetModal, setShowRequestVetModal] = useState(false);
   const [showRequestSupervisorModal, setShowRequestSupervisorModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   const [dailyDataForm, setDailyDataForm] = useState({
     mortality: "",
@@ -98,6 +102,7 @@ export default function PoultryFarmDetailsScreen() {
   const requestVetMutation = useMutation(trpc.assignmentRequests.requestVet.mutationOptions());
   const requestSupervisorMutation = useMutation(trpc.assignmentRequests.requestSupervisor.mutationOptions());
   const requestRemovalMutation = useMutation(trpc.assignmentRequests.requestRemoval.mutationOptions());
+  const deleteFarmMutation = useMutation(trpc.poultryFarms.delete.mutationOptions());
 
   useEffect(() => {
     if (farmQuery.data) {
@@ -118,21 +123,21 @@ export default function PoultryFarmDetailsScreen() {
         status: farmData.status,
         assignedVet: farmData.assignedVetId
           ? {
-              id: farmData.assignedVetId.toString(),
-              name: farmData.assignedVetName || "",
-              phone: farmData.assignedVetPhone || "",
-              specialization: "طب الدواجن",
-              assignedAt: farmData.updatedAt.toISOString(),
-            }
+            id: farmData.assignedVetId.toString(),
+            name: farmData.assignedVetName || "",
+            phone: farmData.assignedVetPhone || "",
+            specialization: "طب الدواجن",
+            assignedAt: farmData.updatedAt.toISOString(),
+          }
           : undefined,
         assignedSupervisor: farmData.assignedSupervisorId
           ? {
-              id: farmData.assignedSupervisorId.toString(),
-              name: farmData.assignedSupervisorName || "",
-              phone: farmData.assignedSupervisorPhone || "",
-              experience: "5 سنوات",
-              assignedAt: farmData.updatedAt.toISOString(),
-            }
+            id: farmData.assignedSupervisorId.toString(),
+            name: farmData.assignedSupervisorName || "",
+            phone: farmData.assignedSupervisorPhone || "",
+            experience: "5 سنوات",
+            assignedAt: farmData.updatedAt.toISOString(),
+          }
           : undefined,
       });
 
@@ -211,6 +216,30 @@ export default function PoultryFarmDetailsScreen() {
     }
   }, [farmQuery.data]);
 
+  const handleDeleteFarm = () => {
+    setShowDeleteConfirmModal(true);
+  };
+
+  const handleConfirmDeleteFarm = () => {
+    deleteFarmMutation.mutate(
+      {
+        farmId: Number(id),
+        ownerId: Number(user?.id),
+      },
+      {
+        onSuccess: () => {
+          setShowDeleteConfirmModal(false);
+          showToast({ type: "success", message: "تم حذف حقل الدواجن بنجاح" });
+          queryclient.invalidateQueries(trpc.poultryFarms.getAll.queryKey as any);
+          router.back();
+        },
+        onError: (error) => {
+          showToast({ type: "error", message: error.message });
+        },
+      }
+    );
+  };
+
   if (farmQuery.isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -219,7 +248,6 @@ export default function PoultryFarmDetailsScreen() {
             <ArrowLeft size={24} color={COLORS.white} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
           </TouchableOpacity>
           <Text style={styles.title}>حقل الدواجن</Text>
-          <View style={styles.placeholder} />
         </View>
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator size="large" color={COLORS.primary} />
@@ -261,19 +289,19 @@ export default function PoultryFarmDetailsScreen() {
 
     const treatments = dailyDataForm.treatments
       ? dailyDataForm.treatments
-          .split(",")
-          .map((t, index) => ({
-            id: `treatment${Date.now()}_${index}`,
-            name: t.trim(),
-            dosage: "",
-            frequency: "",
-            duration: 0,
-            administeredBy: "owner",
-            cost: 0,
-            reason: "preventive",
-            notes: "",
-          }))
-          .filter((t) => t.name.length > 0)
+        .split(",")
+        .map((t, index) => ({
+          id: `treatment${Date.now()}_${index}`,
+          name: t.trim(),
+          dosage: "",
+          frequency: "",
+          duration: 0,
+          administeredBy: "owner",
+          cost: 0,
+          reason: "preventive",
+          notes: "",
+        }))
+        .filter((t) => t.name.length > 0)
       : [];
 
     addDailyDataMutation.mutate(
@@ -282,9 +310,9 @@ export default function PoultryFarmDetailsScreen() {
         mortality,
         mortalityReasons: dailyDataForm.mortalityReasons
           ? dailyDataForm.mortalityReasons
-              .split(",")
-              .map((r) => r.trim())
-              .filter((r) => r.length > 0)
+            .split(",")
+            .map((r) => r.trim())
+            .filter((r) => r.length > 0)
           : [],
         feedConsumption,
         averageWeight,
@@ -549,6 +577,8 @@ export default function PoultryFarmDetailsScreen() {
     <View style={styles.card}>
       <Text style={styles.cardTitle}>معلومات الحقل</Text>
 
+
+
       <View style={styles.infoRow}>
         <Home size={20} color={COLORS.primary} />
         <Text style={styles.infoLabel}>اسم الحقل:</Text>
@@ -573,6 +603,16 @@ export default function PoultryFarmDetailsScreen() {
         <Text style={styles.infoValue}>{farm?.capacity} طائر</Text>
       </View>
     </View>
+  );
+
+  const renderDeleteFarmModal = () => (
+    <TouchableOpacity
+      style={styles.deleteButton}
+      onPress={() => setShowDeleteConfirmModal(true)}
+    >
+      <Trash size={20} color={COLORS.primary} />
+      <Text style={styles.deleteButtonText}>حذف الحقل</Text>
+    </TouchableOpacity>
   );
 
   const renderCurrentBatch = () => {
@@ -602,10 +642,10 @@ export default function PoultryFarmDetailsScreen() {
               {currentBatch.status === "active"
                 ? "نشط"
                 : currentBatch.status === "completed"
-                ? "مكتمل"
-                : currentBatch.status === "sold"
-                ? "مباع"
-                : "غير محدد"}
+                  ? "مكتمل"
+                  : currentBatch.status === "sold"
+                    ? "مباع"
+                    : "غير محدد"}
             </Text>
           </View>
         </View>
@@ -846,7 +886,7 @@ export default function PoultryFarmDetailsScreen() {
                     <Text style={styles.batchItemStatValue}>
                       {Math.ceil(
                         (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
-                          (1000 * 60 * 60 * 24)
+                        (1000 * 60 * 60 * 24)
                       )}{" "}
                       يوم
                     </Text>
@@ -997,12 +1037,40 @@ export default function PoultryFarmDetailsScreen() {
       </View> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {renderDeleteFarmModal()}
         {renderFarmInfo()}
         {renderCurrentBatch()}
         {renderDailyData()}
         {renderCompletedBatches()}
         {renderSupervision()}
       </ScrollView>
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteConfirmModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.confirmModal}>
+            <Text style={styles.confirmTitle}>حذف الحقل</Text>
+            <Text style={styles.confirmMessage}>هل أنت متأكد من رغبتك في حذف هذا الحقل؟ سيتم حذف جميع البيانات المرتبطة به نهائياً.</Text>
+            <View style={styles.confirmActions}>
+              <Button
+                title="إلغاء"
+                onPress={() => setShowDeleteConfirmModal(false)}
+                type="secondary"
+                size="small"
+                style={styles.confirmButton}
+              />
+              <Button
+                title="حذف"
+                onPress={handleConfirmDeleteFarm}
+                type="primary"
+                size="small"
+                style={[styles.confirmButton, { backgroundColor: COLORS.error }]}
+                loading={deleteFarmMutation.isPending}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Add Batch Modal */}
       <Modal
@@ -1258,11 +1326,11 @@ export default function PoultryFarmDetailsScreen() {
                   <Text style={styles.weekReportDays}>عدد الأيام المسجلة: {week.days.length}</Text>
                 </View>
               )) || (
-                <View style={styles.emptyReport}>
-                  <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
-                  <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
-                </View>
-              )}
+                  <View style={styles.emptyReport}>
+                    <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
+                    <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
+                  </View>
+                )}
             </ScrollView>
 
             <View style={styles.modalActions}>
@@ -1732,6 +1800,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: COLORS.white,
+    flex: 1,
+    textAlign: "center",
+  },
+  deleteHeaderButton: {
+    padding: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8,
   },
   placeholder: {
     width: 40,
@@ -2224,6 +2299,21 @@ const styles = StyleSheet.create({
     textAlign: "left",
     lineHeight: 18,
     marginBottom: 4,
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.red,
+    marginTop: 16,
+  },
+  deleteButtonText: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: COLORS.white,
+    marginLeft: 8,
   },
   inputHint: {
     fontSize: 12,

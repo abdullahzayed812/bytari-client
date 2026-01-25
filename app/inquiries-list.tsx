@@ -148,7 +148,7 @@ export default function UserInquiriesListScreen() {
         </View>
 
         {/* Category Filters */}
-        <View>
+        {/* <View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -171,7 +171,7 @@ export default function UserInquiriesListScreen() {
               );
             })}
           </ScrollView>
-        </View>
+        </View> */}
 
         {/* Content */}
         <ScrollView

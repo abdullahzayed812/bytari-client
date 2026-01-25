@@ -82,7 +82,7 @@ export default function VetStoresListScreen() {
 
   const renderStoreCard = ({ item }: { item: VetStore }) => (
     <TouchableOpacity style={styles.storeCard} onPress={() => handleStorePress(item)}>
-      <Image source={{ uri: item.image }} style={styles.storeImage} />
+      <Image source={{ uri: item.images[0] }} style={styles.storeImage} />
 
       <View style={styles.storeInfo}>
         <View style={styles.storeHeader}>

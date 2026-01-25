@@ -92,6 +92,10 @@ export default function AddCourseScreen() {
       Alert.alert("خطأ", "يرجى إدخال تاريخ الدورة");
       return;
     }
+    if (!formData?.thumbnailImage?.trim()) {
+      Alert.alert("خطأ", "يرجى إدخال صورة مصغرة للدورة");
+      return;
+    }
     if (!formData.location.trim()) {
       Alert.alert("خطأ", "يرجى إدخال مكان الدورة");
       return;

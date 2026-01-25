@@ -499,7 +499,7 @@ export default function AuthScreen() {
                 <ImageUploader
                   imageUri={profileImageUrl}
                   onUploadComplete={setProfileImageUrl}
-                  label={t("صورة الملف الشخصي")}
+                  label={t("صورة الملف الشخصي (اختياري)")}
                   aspect={[1, 1]}
                 />
                 {errors.profileImage && <Text style={styles.errorText}>{errors.profileImage}</Text>}

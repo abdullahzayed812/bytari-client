@@ -236,7 +236,7 @@ export default function AdminApprovalsScreen() {
     if (rejectionReason.trim()) {
       rejectMutation.mutate(
         {
-          requestId: Number(selectedRequest.requesterId),
+          requestId: Number(selectedRequest.id),
           adminId: Number(user?.id),
           rejectionReason: rejectionReason.trim(),
           adminNotes: "تم رفض الطلب من قبل الإدارة",
@@ -247,6 +247,7 @@ export default function AdminApprovalsScreen() {
             setShowRejectModal(false);
             setRejectionReason("");
             refetch();
+            // queryClient.invalidateQueries(trpc.admin.approvals.getPending.queryKey as any);
 
             // Invalidate based on request type
             if (data.requestType === "clinic_activation" || data.requestType === "clinic_renewal") {
@@ -506,65 +507,65 @@ export default function AdminApprovalsScreen() {
                     {/* Payment Requirements for Clinics and Stores */}
                     {(selectedRequest!.requestType === "clinic_activation" ||
                       selectedRequest!.requestType === "store_activation") && (
-                      <View style={styles.paymentRequirementCard}>
-                        <View style={styles.paymentRequirementHeader}>
-                          <View style={styles.paymentRequirementIcon}>
-                            <CreditCard size={18} color={COLORS.white} />
-                          </View>
-                          <Text style={styles.paymentRequirementTitle}>
-                            {selectedRequest!.requestType === "clinic_activation"
-                              ? "رسوم تفعيل العيادة"
-                              : "رسوم تفعيل المتجر"}
-                          </Text>
-                        </View>
-
-                        <View style={styles.paymentRequirementDetails}>
-                          <View style={styles.paymentRequirementRow}>
-                            <Text style={styles.paymentRequirementLabel}>المبلغ المطلوب:</Text>
-                            <Text style={styles.paymentRequirementAmount}>
-                              {selectedRequest!.paymentAmount || "غير محدد"} ريال
+                        <View style={styles.paymentRequirementCard}>
+                          <View style={styles.paymentRequirementHeader}>
+                            <View style={styles.paymentRequirementIcon}>
+                              <CreditCard size={18} color={COLORS.white} />
+                            </View>
+                            <Text style={styles.paymentRequirementTitle}>
+                              {selectedRequest!.requestType === "clinic_activation"
+                                ? "رسوم تفعيل العيادة"
+                                : "رسوم تفعيل المتجر"}
                             </Text>
                           </View>
 
-                          <View style={styles.paymentStatusIndicator}>
-                            <View
-                              style={[
-                                styles.paymentStatusDot,
-                                {
-                                  backgroundColor:
-                                    selectedRequest!.paymentStatus === "completed"
-                                      ? COLORS.success
-                                      : selectedRequest!.paymentStatus === "pending"
-                                      ? COLORS.warning
-                                      : COLORS.error,
-                                },
-                              ]}
-                            />
-                            <Text
-                              style={[
-                                styles.paymentStatusIndicatorText,
-                                {
-                                  color:
-                                    selectedRequest!.paymentStatus === "completed"
-                                      ? COLORS.success
-                                      : selectedRequest!.paymentStatus === "pending"
-                                      ? COLORS.warning
-                                      : COLORS.error,
-                                },
-                              ]}
-                            >
-                              {selectedRequest!.paymentStatus === "completed"
-                                ? "تم دفع الرسوم"
-                                : selectedRequest!.paymentStatus === "pending"
-                                ? "في انتظار الدفع"
-                                : selectedRequest!.paymentStatus === "failed"
-                                ? "فشل في الدفع"
-                                : "غير مطلوب"}
-                            </Text>
+                          <View style={styles.paymentRequirementDetails}>
+                            <View style={styles.paymentRequirementRow}>
+                              <Text style={styles.paymentRequirementLabel}>المبلغ المطلوب:</Text>
+                              <Text style={styles.paymentRequirementAmount}>
+                                {selectedRequest!.paymentAmount || "غير محدد"} ريال
+                              </Text>
+                            </View>
+
+                            <View style={styles.paymentStatusIndicator}>
+                              <View
+                                style={[
+                                  styles.paymentStatusDot,
+                                  {
+                                    backgroundColor:
+                                      selectedRequest!.paymentStatus === "completed"
+                                        ? COLORS.success
+                                        : selectedRequest!.paymentStatus === "pending"
+                                          ? COLORS.warning
+                                          : COLORS.error,
+                                  },
+                                ]}
+                              />
+                              <Text
+                                style={[
+                                  styles.paymentStatusIndicatorText,
+                                  {
+                                    color:
+                                      selectedRequest!.paymentStatus === "completed"
+                                        ? COLORS.success
+                                        : selectedRequest!.paymentStatus === "pending"
+                                          ? COLORS.warning
+                                          : COLORS.error,
+                                  },
+                                ]}
+                              >
+                                {selectedRequest!.paymentStatus === "completed"
+                                  ? "تم دفع الرسوم"
+                                  : selectedRequest!.paymentStatus === "pending"
+                                    ? "في انتظار الدفع"
+                                    : selectedRequest!.paymentStatus === "failed"
+                                      ? "فشل في الدفع"
+                                      : "غير مطلوب"}
+                              </Text>
+                            </View>
                           </View>
                         </View>
-                      </View>
-                    )}
+                      )}
 
                     {/* Payment Details */}
                     {selectedRequest!.paymentStatus !== "not_required" && (
@@ -675,156 +676,156 @@ export default function AdminApprovalsScreen() {
                 {(selectedRequest!.licenseImages ||
                   selectedRequest!.identityImages ||
                   selectedRequest!.officialDocuments) && (
-                  <View style={styles.detailSection}>
-                    <View style={styles.sectionHeaderWithIcon}>
-                      <Shield size={20} color={COLORS.primary} />
-                      <Text style={styles.sectionTitle}>الأوراق الرسمية والمستندات</Text>
-                      <View style={styles.documentsStatusBadge}>
-                        <Text style={styles.documentsStatusText}>مرفقة</Text>
+                    <View style={styles.detailSection}>
+                      <View style={styles.sectionHeaderWithIcon}>
+                        <Shield size={20} color={COLORS.primary} />
+                        <Text style={styles.sectionTitle}>الأوراق الرسمية والمستندات</Text>
+                        <View style={styles.documentsStatusBadge}>
+                          <Text style={styles.documentsStatusText}>مرفقة</Text>
+                        </View>
                       </View>
+
+                      {/* Identity Images - Most Important First */}
+                      {selectedRequest!.identityImages && (
+                        <View style={styles.documentGroup}>
+                          <View style={styles.documentHeader}>
+                            <View style={styles.documentIconContainer}>
+                              <User size={18} color={COLORS.white} />
+                            </View>
+                            <View style={styles.documentTitleContainer}>
+                              <Text style={styles.documentTitle}>صور الهوية الشخصية</Text>
+                              <Text style={styles.documentSubtitle}>هوية المتقدم الرسمية</Text>
+                            </View>
+                            <View style={[styles.documentBadge, { backgroundColor: "#E67E22" }]}>
+                              <Text style={styles.documentBadgeText}>هوية</Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.documentPreviewContainer}>
+                            <Text style={styles.documentCount}>
+                              {JSON.parse(selectedRequest!.identityImages!).length} صورة مرفقة
+                            </Text>
+                            <View style={styles.documentImageGrid}>
+                              {JSON.parse(selectedRequest!.identityImages!).map((doc: string, index: number) => (
+                                <TouchableOpacity key={index} style={styles.documentImageItem}>
+                                  <View style={styles.documentImageContainer}>
+                                    <Image size={24} color={COLORS.primary} />
+                                    <Text style={styles.documentImageLabel}>صورة {index + 1}</Text>
+                                  </View>
+                                  <View style={styles.documentImageInfo}>
+                                    <Text style={styles.documentImageName}>{doc}</Text>
+                                    <Text style={styles.documentImageType}>
+                                      {doc.includes("student") || doc.includes("طالب")
+                                        ? "هوية طالب"
+                                        : doc.includes("doctor") || doc.includes("طبيب")
+                                          ? "هوية طبيب"
+                                          : doc.includes("national") || doc.includes("وطنية")
+                                            ? "هوية وطنية"
+                                            : "هوية شخصية"}
+                                    </Text>
+                                  </View>
+                                  <TouchableOpacity style={styles.viewImageButton} onPress={() => handleViewImage(doc)}>
+                                    <Eye size={16} color={COLORS.white} />
+                                  </TouchableOpacity>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+                        </View>
+                      )}
+
+                      {/* License Images */}
+                      {selectedRequest!.licenseImages && (
+                        <View style={styles.documentGroup}>
+                          <View style={styles.documentHeader}>
+                            <View style={[styles.documentIconContainer, { backgroundColor: COLORS.info }]}>
+                              <Shield size={18} color={COLORS.white} />
+                            </View>
+                            <View style={styles.documentTitleContainer}>
+                              <Text style={styles.documentTitle}>صور التراخيص المهنية</Text>
+                              <Text style={styles.documentSubtitle}>تراخيص مزاولة المهنة</Text>
+                            </View>
+                            <View style={[styles.documentBadge, { backgroundColor: COLORS.info }]}>
+                              <Text style={styles.documentBadgeText}>ترخيص</Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.documentPreviewContainer}>
+                            <Text style={styles.documentCount}>
+                              {JSON.parse(selectedRequest!.licenseImages!).length} صورة مرفقة
+                            </Text>
+                            <View style={styles.documentImageGrid}>
+                              {JSON.parse(selectedRequest!.licenseImages!).map((doc: string, index: number) => (
+                                <View key={index} style={styles.documentImageItem}>
+                                  <TouchableOpacity
+                                    style={[styles.viewImageButton, { backgroundColor: COLORS.info }]}
+                                    onPress={() => handleViewImage(doc)}
+                                  >
+                                    <RNImage source={{ uri: doc }} style={{ width: 50, height: 50 }} />
+                                  </TouchableOpacity>
+                                </View>
+                              ))}
+                            </View>
+                          </View>
+                        </View>
+                      )}
+
+                      {/* Official Documents */}
+                      {selectedRequest!.officialDocuments && (
+                        <View style={styles.documentGroup}>
+                          <View style={styles.documentHeader}>
+                            <View style={[styles.documentIconContainer, { backgroundColor: COLORS.success }]}>
+                              <FileText size={18} color={COLORS.white} />
+                            </View>
+                            <View style={styles.documentTitleContainer}>
+                              <Text style={styles.documentTitle}>المستندات الرسمية</Text>
+                              <Text style={styles.documentSubtitle}>شهادات ومستندات إضافية</Text>
+                            </View>
+                            <View style={[styles.documentBadge, { backgroundColor: COLORS.success }]}>
+                              <Text style={styles.documentBadgeText}>مستندات</Text>
+                            </View>
+                          </View>
+
+                          <View style={styles.documentPreviewContainer}>
+                            <Text style={styles.documentCount}>
+                              {JSON.parse(selectedRequest!.officialDocuments!).length} مستند مرفق
+                            </Text>
+                            <View style={styles.documentList}>
+                              {JSON.parse(selectedRequest!.officialDocuments!).map((doc: string, index: number) => (
+                                <TouchableOpacity key={index} style={styles.documentFileItem}>
+                                  <View style={[styles.documentFileIcon, { backgroundColor: COLORS.success }]}>
+                                    <FileText size={16} color={COLORS.white} />
+                                  </View>
+                                  <View style={styles.documentFileInfo}>
+                                    <Text style={styles.documentFileName}>{doc}</Text>
+                                    <Text style={styles.documentFileType}>
+                                      {doc.includes("license") || doc.includes("إجازة")
+                                        ? "إجازة مهنية"
+                                        : doc.includes("cert") || doc.includes("شهادة")
+                                          ? "شهادة"
+                                          : doc.includes("commercial") || doc.includes("تجاري")
+                                            ? "سجل تجاري"
+                                            : doc.includes("tax") || doc.includes("ضريبي")
+                                              ? "شهادة ضريبية"
+                                              : "مستند رسمي"}
+                                    </Text>
+                                  </View>
+                                  <View style={styles.documentFileActions}>
+                                    <TouchableOpacity style={styles.downloadButton}>
+                                      <Download size={14} color={COLORS.primary} />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.viewFileButton}>
+                                      <Eye size={14} color={COLORS.success} />
+                                    </TouchableOpacity>
+                                  </View>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+                        </View>
+                      )}
                     </View>
-
-                    {/* Identity Images - Most Important First */}
-                    {selectedRequest!.identityImages && (
-                      <View style={styles.documentGroup}>
-                        <View style={styles.documentHeader}>
-                          <View style={styles.documentIconContainer}>
-                            <User size={18} color={COLORS.white} />
-                          </View>
-                          <View style={styles.documentTitleContainer}>
-                            <Text style={styles.documentTitle}>صور الهوية الشخصية</Text>
-                            <Text style={styles.documentSubtitle}>هوية المتقدم الرسمية</Text>
-                          </View>
-                          <View style={[styles.documentBadge, { backgroundColor: "#E67E22" }]}>
-                            <Text style={styles.documentBadgeText}>هوية</Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.documentPreviewContainer}>
-                          <Text style={styles.documentCount}>
-                            {JSON.parse(selectedRequest!.identityImages!).length} صورة مرفقة
-                          </Text>
-                          <View style={styles.documentImageGrid}>
-                            {JSON.parse(selectedRequest!.identityImages!).map((doc: string, index: number) => (
-                              <TouchableOpacity key={index} style={styles.documentImageItem}>
-                                <View style={styles.documentImageContainer}>
-                                  <Image size={24} color={COLORS.primary} />
-                                  <Text style={styles.documentImageLabel}>صورة {index + 1}</Text>
-                                </View>
-                                <View style={styles.documentImageInfo}>
-                                  <Text style={styles.documentImageName}>{doc}</Text>
-                                  <Text style={styles.documentImageType}>
-                                    {doc.includes("student") || doc.includes("طالب")
-                                      ? "هوية طالب"
-                                      : doc.includes("doctor") || doc.includes("طبيب")
-                                      ? "هوية طبيب"
-                                      : doc.includes("national") || doc.includes("وطنية")
-                                      ? "هوية وطنية"
-                                      : "هوية شخصية"}
-                                  </Text>
-                                </View>
-                                <TouchableOpacity style={styles.viewImageButton} onPress={() => handleViewImage(doc)}>
-                                  <Eye size={16} color={COLORS.white} />
-                                </TouchableOpacity>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* License Images */}
-                    {selectedRequest!.licenseImages && (
-                      <View style={styles.documentGroup}>
-                        <View style={styles.documentHeader}>
-                          <View style={[styles.documentIconContainer, { backgroundColor: COLORS.info }]}>
-                            <Shield size={18} color={COLORS.white} />
-                          </View>
-                          <View style={styles.documentTitleContainer}>
-                            <Text style={styles.documentTitle}>صور التراخيص المهنية</Text>
-                            <Text style={styles.documentSubtitle}>تراخيص مزاولة المهنة</Text>
-                          </View>
-                          <View style={[styles.documentBadge, { backgroundColor: COLORS.info }]}>
-                            <Text style={styles.documentBadgeText}>ترخيص</Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.documentPreviewContainer}>
-                          <Text style={styles.documentCount}>
-                            {JSON.parse(selectedRequest!.licenseImages!).length} صورة مرفقة
-                          </Text>
-                          <View style={styles.documentImageGrid}>
-                            {JSON.parse(selectedRequest!.licenseImages!).map((doc: string, index: number) => (
-                              <View key={index} style={styles.documentImageItem}>
-                                <TouchableOpacity
-                                  style={[styles.viewImageButton, { backgroundColor: COLORS.info }]}
-                                  onPress={() => handleViewImage(doc)}
-                                >
-                                  <RNImage source={{ uri: doc }} style={{ width: 50, height: 50 }} />
-                                </TouchableOpacity>
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </View>
-                    )}
-
-                    {/* Official Documents */}
-                    {selectedRequest!.officialDocuments && (
-                      <View style={styles.documentGroup}>
-                        <View style={styles.documentHeader}>
-                          <View style={[styles.documentIconContainer, { backgroundColor: COLORS.success }]}>
-                            <FileText size={18} color={COLORS.white} />
-                          </View>
-                          <View style={styles.documentTitleContainer}>
-                            <Text style={styles.documentTitle}>المستندات الرسمية</Text>
-                            <Text style={styles.documentSubtitle}>شهادات ومستندات إضافية</Text>
-                          </View>
-                          <View style={[styles.documentBadge, { backgroundColor: COLORS.success }]}>
-                            <Text style={styles.documentBadgeText}>مستندات</Text>
-                          </View>
-                        </View>
-
-                        <View style={styles.documentPreviewContainer}>
-                          <Text style={styles.documentCount}>
-                            {JSON.parse(selectedRequest!.officialDocuments!).length} مستند مرفق
-                          </Text>
-                          <View style={styles.documentList}>
-                            {JSON.parse(selectedRequest!.officialDocuments!).map((doc: string, index: number) => (
-                              <TouchableOpacity key={index} style={styles.documentFileItem}>
-                                <View style={[styles.documentFileIcon, { backgroundColor: COLORS.success }]}>
-                                  <FileText size={16} color={COLORS.white} />
-                                </View>
-                                <View style={styles.documentFileInfo}>
-                                  <Text style={styles.documentFileName}>{doc}</Text>
-                                  <Text style={styles.documentFileType}>
-                                    {doc.includes("license") || doc.includes("إجازة")
-                                      ? "إجازة مهنية"
-                                      : doc.includes("cert") || doc.includes("شهادة")
-                                      ? "شهادة"
-                                      : doc.includes("commercial") || doc.includes("تجاري")
-                                      ? "سجل تجاري"
-                                      : doc.includes("tax") || doc.includes("ضريبي")
-                                      ? "شهادة ضريبية"
-                                      : "مستند رسمي"}
-                                  </Text>
-                                </View>
-                                <View style={styles.documentFileActions}>
-                                  <TouchableOpacity style={styles.downloadButton}>
-                                    <Download size={14} color={COLORS.primary} />
-                                  </TouchableOpacity>
-                                  <TouchableOpacity style={styles.viewFileButton}>
-                                    <Eye size={14} color={COLORS.success} />
-                                  </TouchableOpacity>
-                                </View>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                )}
+                  )}
 
                 {/* Resource Details */}
                 {selectedRequest && selectedRequest.resourceDetails && (
@@ -1129,10 +1130,10 @@ export default function AdminApprovalsScreen() {
               {selectedType === "all"
                 ? "لا توجد طلبات موافقة معلقة حالياً"
                 : selectedType === "clinic_renewal"
-                ? "لا توجد عيادات تحتاج تجديد حالياً"
-                : selectedType === "store_renewal"
-                ? "لا توجد متاجر تحتاج تجديد حالياً"
-                : `لا توجد طلبات ${getRequestTypeText(selectedType)} معلقة`}
+                  ? "لا توجد عيادات تحتاج تجديد حالياً"
+                  : selectedType === "store_renewal"
+                    ? "لا توجد متاجر تحتاج تجديد حالياً"
+                    : `لا توجد طلبات ${getRequestTypeText(selectedType)} معلقة`}
             </Text>
           </View>
         )}

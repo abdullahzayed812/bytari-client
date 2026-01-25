@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 16,
     gap: 8,
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   inputHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
     gap: 8,

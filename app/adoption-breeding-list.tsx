@@ -85,8 +85,8 @@ export default function AdoptionBreedingListScreen() {
               isClosed
                 ? { backgroundColor: COLORS.darkGray }
                 : activeTab === "adoption"
-                ? styles.adoptionBadge
-                : styles.breedingBadge,
+                  ? styles.adoptionBadge
+                  : styles.breedingBadge,
             ]}
           >
             <Text style={styles.badgeText}>{isClosed ? "مغلق" : activeTab === "adoption" ? "للتبني" : "للتزاوج"}</Text>
@@ -134,14 +134,14 @@ export default function AdoptionBreedingListScreen() {
             <TouchableOpacity style={styles.actionButton} onPress={() => handlePetPress(pet.id)}>
               <Text style={styles.actionButtonText}>التفاصيل</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.favoriteButton}
               onPress={() => {
                 // TODO: Implement add to favorites functionality
               }}
             >
               <Heart size={14} color="#EF4444" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity
               style={[styles.actionButton, styles.primaryActionButton]}
               onPress={() => {

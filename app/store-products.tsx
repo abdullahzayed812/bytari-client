@@ -105,7 +105,7 @@ export default function StoreProductsScreen() {
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            <Image source={{ uri: selectedProduct.image }} style={styles.modalProductImage} />
+            <Image source={{ uri: selectedProduct.images[0] }} style={styles.modalProductImage} />
 
             <View style={styles.productDetailsContainer}>
               <Text style={styles.modalProductName}>{selectedProduct.name}</Text>
