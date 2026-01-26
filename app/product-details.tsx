@@ -121,11 +121,11 @@ export default function ProductDetailsScreen() {
           <View style={styles.ratingContainer}>
             <View style={styles.starsContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} size={16} color={COLORS.lightGray} fill={"transparent"} />
+                <Star key={star} size={16} color={COLORS.lightGray} fill={star <= 4 ? COLORS.primary : "transparent"} />
               ))}
             </View>
-            <Text style={styles.ratingText}>(0)</Text>
-            <Text style={styles.reviewsText}>• 0 تقييم</Text>
+            {/* <Text style={styles.ratingText}>(0)</Text>
+            <Text style={styles.reviewsText}>• 0 تقييم</Text> */}
           </View>
 
           {/* Price */}

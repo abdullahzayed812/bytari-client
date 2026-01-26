@@ -7,7 +7,7 @@ import { Search, MapPin, Star, Phone, Clock, Filter, Plus, Edit3, MessageSquare 
 import { router, Stack } from "expo-router";
 import { mockVetStores, VetStore } from "../mocks/data";
 import RatingComponent from "../components/RatingComponent";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 
 export default function VetStoresListScreen() {
@@ -66,11 +66,28 @@ export default function VetStoresListScreen() {
     router.push({ pathname: "/store-details", params: { id: store.id } } as any);
   };
 
+  const queryClient = useQueryClient();
+  const addReviewMutation = useMutation(trpc.reviews.addStoreReview.mutationOptions());
+
   const handleRatingSubmit = async (rating: number, comment: string) => {
     if (selectedStore) {
-      console.log("Rating submitted:", { rating, comment, storeId: selectedStore.id });
-      // TODO: Implement API call to submit rating
-      // await submitStoreRating(selectedStore.id, rating, comment);
+      addReviewMutation.mutate(
+        {
+          storeId: Number(selectedStore.id),
+          rating,
+          comment,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries(trpc.stores.listActive.queryKey as any);
+            setShowRatingModal(false);
+            setSelectedStore(null);
+          },
+          onError: (error) => {
+            console.error("Error submitting rating:", error);
+          },
+        }
+      );
     }
   };
 
@@ -90,7 +107,7 @@ export default function VetStoresListScreen() {
           <View style={styles.ratingContainer}>
             <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
             <Text style={styles.rating}>{item.rating}</Text>
-            <Text style={styles.reviewCount}>({item.reviewCount})</Text>
+            <Text style={styles.reviewCount}>({item.reviewCount || 0} تقييم)</Text>
           </View>
         </View>
 

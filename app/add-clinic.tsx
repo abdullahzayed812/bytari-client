@@ -24,8 +24,8 @@ export default function AddClinicScreen() {
     email: "",
     workingHours: "",
     licenseNumber: "",
-    licenseImages: [""],
-    identityImages: [""],
+    licenseImages: [] as string[],
+    identityImages: [] as string[],
     images: [] as string[],
   });
   const { showToast } = useToastContext();

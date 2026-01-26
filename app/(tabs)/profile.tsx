@@ -43,6 +43,7 @@ import { Linking, Share } from "react-native";
 import { useImageUpload } from "../../hooks/useImageUpload";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
+import { useLanguage, LANGUAGE_LABELS, Language } from "../../providers/LanguageProvider";
 
 const languages = [
   { code: "ar" as Language, name: "العربية", flag: "🇸🇦" },
@@ -57,6 +58,7 @@ const languages = [
 export default function ProfileScreen() {
   const { t, isRTL, changeLanguage, language } = useI18n();
   const { user, pointsHistory, logout, hasAdminAccess, isSuperAdmin, updateUser } = useApp();
+  const { selectedLanguage, getLanguageLabel } = useLanguage();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isPremiumSectionVisible, setIsPremiumSectionVisible] = useState(false);
@@ -205,7 +207,8 @@ export default function ProfileScreen() {
     // TODO: Navigate to premium subscription page
   };
 
-  const currentLanguage = languages.find((lang) => lang.code === language);
+  // Get current language label from context
+  const currentLanguageLabel = getLanguageLabel(selectedLanguage);
 
   const renderLanguageItem = ({ item }: { item: (typeof languages)[0] }) => (
     <TouchableOpacity
@@ -380,14 +383,13 @@ export default function ProfileScreen() {
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.menuItem} onPress={() => setShowLanguageModal(true)}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.navigate("/language")}>
               <View style={styles.menuItemLeft}>
                 <Globe size={20} color={COLORS.darkGray} />
                 <Text style={styles.menuItemText}>{t("profile.language")}</Text>
               </View>
               <View style={styles.languagePreview}>
-                <Text style={styles.languageFlag}>{currentLanguage?.flag}</Text>
-                <Text style={styles.menuItemValue}>{currentLanguage?.name}</Text>
+                <Text style={styles.menuItemValue}>{currentLanguageLabel}</Text>
               </View>
             </TouchableOpacity>
 

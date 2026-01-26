@@ -42,7 +42,7 @@ export default function SearchScreen() {
 
       if (userMode === 'veterinarian') {
         // Veterinarian-specific search
-        
+
         // Search in store products
         if (query.toLowerCase().includes('طعام') || query.toLowerCase().includes('food') || query.toLowerCase().includes('منتج')) {
           results.push({
@@ -54,7 +54,7 @@ export default function SearchScreen() {
             description: 'منتجات طبية بيطرية',
           });
         }
-        
+
         // Search in veterinary books
         if (query.toLowerCase().includes('كتاب') || query.toLowerCase().includes('book') || query.toLowerCase().includes('طب')) {
           results.push({
@@ -66,7 +66,7 @@ export default function SearchScreen() {
             description: 'كتاب علمي متخصص',
           });
         }
-        
+
         // Search in veterinary magazines
         if (query.toLowerCase().includes('مجلة') || query.toLowerCase().includes('magazine') || query.toLowerCase().includes('بحث')) {
           results.push({
@@ -78,11 +78,11 @@ export default function SearchScreen() {
             description: 'مجلة علمية محكمة',
           });
         }
-        
+
         // Search in other clinics
         mockClinics.forEach(clinic => {
           if (clinic.name.toLowerCase().includes(query.toLowerCase()) ||
-              clinic.address.toLowerCase().includes(query.toLowerCase())) {
+            clinic.address.toLowerCase().includes(query.toLowerCase())) {
             results.push({
               id: clinic.id,
               type: 'clinic',
@@ -97,7 +97,7 @@ export default function SearchScreen() {
         // Pet owner search
         mockClinics.forEach(clinic => {
           if (clinic.name.toLowerCase().includes(query.toLowerCase()) ||
-              clinic.address.toLowerCase().includes(query.toLowerCase())) {
+            clinic.address.toLowerCase().includes(query.toLowerCase())) {
             results.push({
               id: clinic.id,
               type: 'clinic',
@@ -114,8 +114,8 @@ export default function SearchScreen() {
       if (query.match(/^[A-Z0-9]+$/) || query.length > 0) {
         // Search for pets by ID or name
         pets.forEach(pet => {
-          if (pet.id.includes(query.toUpperCase()) || 
-              pet.name.toLowerCase().includes(query.toLowerCase())) {
+          if (pet.id.includes(query.toUpperCase()) ||
+            pet.name.toLowerCase().includes(query.toLowerCase())) {
             results.push({
               id: pet.id,
               type: 'pet',
@@ -195,13 +195,13 @@ export default function SearchScreen() {
     }
   };
 
-  const recentSearches = userMode === 'veterinarian' 
+  const recentSearches = userMode === 'veterinarian'
     ? ['أدوية بيطرية', 'كتب الطب البيطري', 'مجلات علمية', 'عيادات أخرى']
     : ['عيادة الرحمة', 'طعام القطط', 'د. أحمد', 'PET001'];
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           headerShown: true,
           title: 'البحث',
@@ -214,7 +214,7 @@ export default function SearchScreen() {
             fontWeight: 'bold',
           },
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => router.back()}
               style={styles.backButton}
             >
@@ -227,14 +227,14 @@ export default function SearchScreen() {
           ),
         }}
       />
-      
+
       <View style={styles.content}>
         {/* Search Input */}
         <View style={[styles.searchContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
           <Search size={20} color={COLORS.darkGray} style={[styles.searchIcon, { marginRight: isRTL ? 0 : 12, marginLeft: isRTL ? 12 : 0 }]} />
           <TextInput
             style={[styles.searchInput, { textAlign: isRTL ? 'right' : 'left' }]}
-            placeholder={userMode === 'veterinarian' 
+            placeholder={userMode === 'veterinarian'
               ? "ابحث عن المنتجات، الكتب، المجلات، العيادات..."
               : "ابحث عن العيادات، الحيوانات، المنتجات..."}
             placeholderTextColor={COLORS.lightGray}
@@ -275,7 +275,7 @@ export default function SearchScreen() {
                 اقتراحات البحث
               </Text>
               <View style={styles.suggestionsContainer}>
-                {(userMode === 'veterinarian' 
+                {(userMode === 'veterinarian'
                   ? ['الأدوية البيطرية', 'الكتب العلمية', 'المجلات البحثية', 'العيادات']
                   : ['العيادات البيطرية', 'طعام الحيوانات', 'الأطباء', 'المنتجات']
                 ).map((suggestion, index) => (
@@ -316,7 +316,7 @@ export default function SearchScreen() {
                         </View>
                       )}
                     </View>
-                    
+
                     <View style={[styles.resultTextContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
                       <Text style={[styles.resultTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
                         {result.title}

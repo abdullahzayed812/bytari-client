@@ -226,7 +226,7 @@ export default function ConsultationDetailsScreen() {
                       </View>
                       <View>
                         <View style={styles.responderNameRow}>
-                          <Text style={styles.responderName}>{"الفريق الطبي"}</Text>
+                          <Text style={styles.responderName}>{response?.user?.name || "الفريق الطبي"}</Text>
                           {response.isFromVet && (
                             <View style={styles.vetBadge}>
                               <CheckCircle size={12} color={COLORS.white} />

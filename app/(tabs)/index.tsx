@@ -1724,7 +1724,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   tipCard: {
-    width: 264,
+    // width: 264,
   },
   tipContent: {
     fontSize: 14,
@@ -1926,7 +1926,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderRadius: 12,
     padding: 16,
-    width: 264,
+    // width: 264,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

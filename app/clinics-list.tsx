@@ -19,7 +19,7 @@ import {
 import { Clinic } from "../types";
 import RatingComponent from "../components/RatingComponent";
 import { trpc } from "../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function ClinicsListScreen() {
   const { isRTL } = useI18n();
@@ -29,6 +29,7 @@ export default function ClinicsListScreen() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "nearest" | "topRated">("all");
   const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
 
@@ -41,13 +42,30 @@ export default function ClinicsListScreen() {
   // Show the "Add Your Clinic" button only for veterinarians in pet owner mode who haven't registered
   const shouldShowAddClinicButton = isVetInPetOwnerMode && !hasRegisteredClinic;
 
+  const addReviewMutation = useMutation(trpc.reviews.addClinicReview.mutationOptions());
+
   const handleRatingSubmit = async (rating: number, comment: string) => {
     if (selectedClinic) {
-      console.log("Rating submitted:", { rating, comment, clinicId: selectedClinic.id });
-      // TODO: Implement API call to submit rating
-      // await submitClinicRating(selectedClinic.id, rating, comment);
+      addReviewMutation.mutate(
+        {
+          clinicId: Number(selectedClinic.id),
+          rating,
+          comment,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey as any);
+            setShowRatingModal(false);
+            setSelectedClinic(null);
+          },
+          onError: (error) => {
+            console.error("Error submitting rating:", error);
+          },
+        }
+      );
     }
   };
+
 
   const handleRateClinic = (clinic: Clinic) => {
     setSelectedClinic(clinic);
@@ -285,6 +303,7 @@ export default function ClinicsListScreen() {
                   <View style={styles.ratingContainer}>
                     <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
                     <Text style={styles.rating}>{clinic.rating}</Text>
+                    <Text style={styles.reviewCount}>({clinic.reviewCount || 0} تقييم)</Text>
                   </View>
                 </View>
               </View>
@@ -528,6 +547,11 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     marginRight: 4,
     fontWeight: "600",
+  },
+  reviewCount: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginRight: 4,
   },
   clinicActions: {
     flexDirection: "row-reverse",

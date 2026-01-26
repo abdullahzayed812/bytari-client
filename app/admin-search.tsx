@@ -644,6 +644,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   categoryContainer: {
+    flexGrow: 0,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,

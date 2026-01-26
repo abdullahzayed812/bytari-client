@@ -276,7 +276,7 @@ export default function MessagesScreen() {
               </ScrollView>
             )}
 
-            <TextInput
+            {/* <TextInput
               style={styles.replyInput}
               placeholder="اكتب ردك هنا..."
               value={replyText}
@@ -284,9 +284,9 @@ export default function MessagesScreen() {
               multiline
               numberOfLines={6}
               textAlignVertical="top"
-            />
+            /> */}
 
-            <View style={styles.modalActions}>
+            {/* <View style={styles.modalActions}>
               <TouchableOpacity style={styles.cancelButton} onPress={() => setReplyModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
@@ -301,7 +301,7 @@ export default function MessagesScreen() {
                   إرسال الرد
                 </Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
           </View>
         </View>
       </Modal>

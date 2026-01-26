@@ -51,17 +51,17 @@ export default function FieldSupervisionRequestScreen() {
 
   // Initial form data with sample values
   const [formData, setFormData] = useState<FieldSupervisionFormData>({
-    fullName: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 555 123 4567",
-    location: "Nairobi, Kenya",
-    education: "Bachelor's Degree in Agriculture",
-    experience: "5 years",
-    qualifications: "Certified Field Supervisor",
-    previousExperience: "Worked with small and medium-scale farms",
-    farmName: "Green Valley Farm",
-    farmLocation: "Kiambu County",
-    farmCapacity: "50 acres",
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    education: "",
+    experience: "",
+    qualifications: "",
+    previousExperience: "",
+    farmName: "",
+    farmLocation: "",
+    farmCapacity: "",
     requestType: "supervision",
   });
 

@@ -96,21 +96,21 @@ export default function ClinicSystemScreen() {
   const { hasAdminAccess, isSuperAdmin } = useApp();
   const [activeTab, setActiveTab] = useState<"overview" | "register" | "subscription">("overview");
   const [registrationData, setRegistrationData] = useState<ClinicRegistration>({
-    name: "عيادة جيدة",
-    description: "وصف العيادة الجيدة",
-    address: "الموصل، العراق",
-    phone: "07288892222",
-    email: "zuhair@mail.com",
-    workingHours: "8",
-    services: "فحص عام، تطعيمات، جراحة، علاج اسنان، عمليات جراحية",
-    licenseNumber: "CLI_LIC322111",
-    licenseImages: ["http://bytari/media/img1.png"],
-    images: ["http://bytari/media/img1.png"],
-    doctors: "محمد علي. طبيب بيطري، احمد حسن. طبيب بيطري",
-    facebook: "https://facebook.com/mohamed-ali",
-    instagram: "https://instagram.com/mohamed-ali",
-    whatsapp: "07993322113",
-    website: "https://bytari.com",
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    workingHours: "",
+    services: "",
+    licenseNumber: "",
+    licenseImages: [""],
+    images: [""],
+    doctors: "",
+    facebook: "",
+    instagram: "",
+    whatsapp: "",
+    website: "",
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);
@@ -903,8 +903,8 @@ export default function ClinicSystemScreen() {
                             {animal.status === "active"
                               ? "نشط"
                               : animal.status === "recovered"
-                              ? "متعافي"
-                              : "تحت العلاج"}
+                                ? "متعافي"
+                                : "تحت العلاج"}
                           </Text>
                         </View>
                       </View>

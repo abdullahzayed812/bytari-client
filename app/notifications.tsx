@@ -275,14 +275,14 @@ export default function NotificationsScreen() {
 
       <View style={styles.container}>
         <View style={styles.tabsContainer}>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.tab, activeTab === "pending" && styles.activeTab]}
             onPress={() => setActiveTab("pending")}
           >
             <Text style={[styles.tabText, activeTab === "pending" && styles.activeTabText]}>
               {userMode === "veterinarian" ? "الإشعارات" : `الطلبات المعلقة (${pendingNotifications.length})`}
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           <TouchableOpacity
             style={[styles.tab, activeTab === "settings" && styles.activeTab]}
@@ -456,35 +456,35 @@ export default function NotificationsScreen() {
                 <View style={styles.settingsCard}>
                   {(userMode === "veterinarian"
                     ? [
-                        {
-                          id: "approvals",
-                          title: "موافقات المرضى",
-                          description: "إشعارات موافقة أو رفض المرضى لطلبات المتابعة",
-                          icon: <Check size={24} color={COLORS.primary} />,
-                          enabled: true,
-                        },
-                        {
-                          id: "appointments",
-                          title: "المواعيد",
-                          description: "تذكيرات بمواعيد المرضى والفحوصات",
-                          icon: <Calendar size={24} color={COLORS.primary} />,
-                          enabled: true,
-                        },
-                        {
-                          id: "system",
-                          title: "النظام",
-                          description: "إشعارات النظام والتحديثات التقنية",
-                          icon: <AlertCircle size={24} color={COLORS.primary} />,
-                          enabled: true,
-                        },
-                        {
-                          id: "advertisements",
-                          title: "الإعلانات",
-                          description: "عروض المنتجات والخدمات البيطرية",
-                          icon: <ShoppingCart size={24} color={COLORS.primary} />,
-                          enabled: false,
-                        },
-                      ]
+                      {
+                        id: "approvals",
+                        title: "موافقات المرضى",
+                        description: "إشعارات موافقة أو رفض المرضى لطلبات المتابعة",
+                        icon: <Check size={24} color={COLORS.primary} />,
+                        enabled: true,
+                      },
+                      {
+                        id: "appointments",
+                        title: "المواعيد",
+                        description: "تذكيرات بمواعيد المرضى والفحوصات",
+                        icon: <Calendar size={24} color={COLORS.primary} />,
+                        enabled: true,
+                      },
+                      {
+                        id: "system",
+                        title: "النظام",
+                        description: "إشعارات النظام والتحديثات التقنية",
+                        icon: <AlertCircle size={24} color={COLORS.primary} />,
+                        enabled: true,
+                      },
+                      {
+                        id: "advertisements",
+                        title: "الإعلانات",
+                        description: "عروض المنتجات والخدمات البيطرية",
+                        icon: <ShoppingCart size={24} color={COLORS.primary} />,
+                        enabled: false,
+                      },
+                    ]
                     : notificationSettings
                   ).map((setting, index, array) => (
                     <View key={setting.id}>

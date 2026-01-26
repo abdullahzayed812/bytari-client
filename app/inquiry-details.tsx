@@ -106,6 +106,7 @@ export default function InquiryDetailsScreen() {
   }
 
   const { inquiry, responses } = data;
+  // console.log("-----------------", responses)
   const status = inquiry.status as InquiryStatusType;
   const StatusIcon = statusConfig[status]?.icon || AlertCircle;
 
@@ -221,7 +222,7 @@ export default function InquiryDetailsScreen() {
                       </View>
                       <View>
                         <View style={styles.responderNameRow}>
-                          <Text style={styles.responderName}>{"الفريق الطبي"}</Text>
+                          <Text style={styles.responderName}>{response?.isAiGenerated ? "الفريق الطبي" : response?.responder?.name}</Text>
                           {response.isOfficial && (
                             <View style={styles.officialBadge}>
                               <CheckCircle size={12} color={COLORS.white} />
