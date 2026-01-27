@@ -62,7 +62,7 @@ export default function UserReplyForm({
 
       showToast({
         type: "success",
-        message: "تم إرسال ردك بنجاح. سيتم إشعار المشرف المختص.",
+        message: "تم إرسال ردك بنجاح",
       });
       setReplyContent("");
       onReplySuccess?.();

@@ -284,281 +284,131 @@ export default function NotificationsScreen() {
             </Text>
           </TouchableOpacity> */}
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={[styles.tab, activeTab === "settings" && styles.activeTab]}
             onPress={() => setActiveTab("settings")}
           >
             <Text style={[styles.tabText, activeTab === "settings" && styles.activeTabText]}>الإعدادات</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <ScrollView style={styles.content}>
-          {activeTab === "pending" ? (
-            <View>
-              {userMode === "veterinarian" ? (
-                // Veterinarian notifications
-                <View>
-                  {mockVetNotifications.length === 0 ? (
-                    <View style={styles.emptyState}>
-                      <Bell size={48} color={COLORS.lightGray} />
-                      <Text style={styles.emptyStateText}>لا توجد إشعارات</Text>
-                      <Text style={styles.emptyStateSubtext}>ستظهر هنا الإشعارات الخاصة بالطبيب البيطري</Text>
-                    </View>
-                  ) : (
-                    mockVetNotifications.map((notification) => (
-                      <View
-                        key={notification.id}
-                        style={[
-                          styles.notificationCard,
-                          !notification.read && styles.unreadNotification,
-                          notification.priority === "high" && styles.highPriorityNotification,
-                        ]}
-                      >
-                        <View style={styles.notificationHeader}>
-                          {getVetNotificationIcon(notification.type, notification.priority)}
-                          <View style={styles.notificationInfo}>
-                            <Text style={styles.notificationTitle}>{notification.title}</Text>
-                            <Text style={styles.notificationDate}>{formatVetTime(notification.time)}</Text>
-                          </View>
-                          {!notification.read && <View style={styles.unreadDot} />}
-                        </View>
 
-                        <Text style={styles.notificationMessage}>{notification.message}</Text>
-
-                        {notification.type === "approval" && (
-                          <View style={styles.approvalBadge}>
-                            <Text style={styles.approvalBadgeText}>
-                              {notification.message.includes("موافقة") ? "تمت الموافقة" : "تم الرفض"}
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-                    ))
-                  )}
-                </View>
-              ) : (
-                // Pet owner notifications
-                <View>
-                  {/* Store Notifications Section */}
-                  {mockStoreNotifications.length > 0 && (
-                    <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>إشعارات المذاخر البيطرية</Text>
-                      {mockStoreNotifications.map((storeNotification) => (
-                        <View key={storeNotification.id} style={styles.storeNotificationCard}>
-                          <View style={styles.storeNotificationHeader}>
-                            <Store size={24} color={COLORS.primary} />
-                            <View style={styles.storeNotificationInfo}>
-                              <Text style={styles.storeNotificationTitle}>{storeNotification.storeName}</Text>
-                              <Text style={styles.storeNotificationDate}>
-                                {new Date(storeNotification.createdAt).toLocaleDateString("ar-SA")}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.storeProductInfo}>
-                            <Image source={{ uri: storeNotification.productImage }} style={styles.storeProductImage} />
-                            <View style={styles.storeProductDetails}>
-                              <Text style={styles.storeProductName}>{storeNotification.productName}</Text>
-                              <Text style={styles.storeNotificationMessage}>{storeNotification.message}</Text>
-                            </View>
-                          </View>
-
-                          <View style={styles.storeNotificationActions}>
-                            <Button
-                              title="عرض المنتج"
-                              onPress={() => router.push(`/store-details?id=${storeNotification.storeId}`)}
-                              type="primary"
-                              size="small"
-                              style={styles.storeActionButton}
-                            />
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Clinic Notifications Section */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>طلبات العيادات</Text>
-                    {pendingNotifications.length === 0 ? (
-                      <View style={styles.emptyState}>
-                        <Bell size={48} color={COLORS.lightGray} />
-                        <Text style={styles.emptyStateText}>لا توجد طلبات معلقة</Text>
-                        <Text style={styles.emptyStateSubtext}>ستظهر هنا طلبات العيادات للموافقة عليها</Text>
-                      </View>
-                    ) : (
-                      pendingNotifications.map((notification) => (
-                        <View key={notification.id} style={styles.notificationCard}>
-                          <View style={styles.notificationHeader}>
-                            {getNotificationIcon(notification.type)}
-                            <View style={styles.notificationInfo}>
-                              <Text style={styles.notificationTitle}>{notification.title}</Text>
-                              <Text style={styles.notificationClinic}>من: {notification.data?.clinicName}</Text>
-                              <Text style={styles.notificationDate}>
-                                {new Date(notification.createdAt).toLocaleDateString()}
-                              </Text>
-                            </View>
-                          </View>
-
-                          <Text style={styles.notificationMessage}>{notification.message}</Text>
-
-                          <View style={styles.notificationActions}>
-                            <Button
-                              title="موافق"
-                              onPress={() => handleApprove(notification.id)}
-                              type="primary"
-                              size="small"
-                              icon={<Check size={16} color={COLORS.white} />}
-                              style={styles.actionButton}
-                            />
-
-                            <Button
-                              title="رفض"
-                              onPress={() => handleReject(notification.id)}
-                              type="outline"
-                              size="small"
-                              icon={<X size={16} color={COLORS.error} />}
-                              style={[styles.actionButton, styles.rejectButton]}
-                            />
-
-                            <Button
-                              title="إبلاغ"
-                              onPress={() =>
-                                handleReport(
-                                  notification.id,
-                                  notification.data?.clinicId ?? "",
-                                  notification.data?.clinicName ?? ""
-                                )
-                              }
-                              type="outline"
-                              size="small"
-                              icon={<Flag size={16} color={COLORS.warning} />}
-                              style={[styles.actionButton, styles.reportButton]}
-                            />
-                          </View>
-                        </View>
-                      ))
-                    )}
-                  </View>
-                </View>
-              )}
+          <View>
+            <View style={styles.header}>
+              <Bell size={40} color={COLORS.white} />
+              <Text style={styles.headerText}>تخصيص الإشعارات حسب تفضيلاتك</Text>
             </View>
-          ) : (
-            <View>
-              <View style={styles.header}>
-                <Bell size={40} color={COLORS.white} />
-                <Text style={styles.headerText}>تخصيص الإشعارات حسب تفضيلاتك</Text>
-              </View>
 
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>أنواع الإشعارات</Text>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>أنواع الإشعارات</Text>
 
-                <View style={styles.settingsCard}>
-                  {(userMode === "veterinarian"
-                    ? [
-                      {
-                        id: "approvals",
-                        title: "موافقات المرضى",
-                        description: "إشعارات موافقة أو رفض المرضى لطلبات المتابعة",
-                        icon: <Check size={24} color={COLORS.primary} />,
-                        enabled: true,
-                      },
-                      {
-                        id: "appointments",
-                        title: "المواعيد",
-                        description: "تذكيرات بمواعيد المرضى والفحوصات",
-                        icon: <Calendar size={24} color={COLORS.primary} />,
-                        enabled: true,
-                      },
-                      {
-                        id: "system",
-                        title: "النظام",
-                        description: "إشعارات النظام والتحديثات التقنية",
-                        icon: <AlertCircle size={24} color={COLORS.primary} />,
-                        enabled: true,
-                      },
-                      {
-                        id: "advertisements",
-                        title: "الإعلانات",
-                        description: "عروض المنتجات والخدمات البيطرية",
-                        icon: <ShoppingCart size={24} color={COLORS.primary} />,
-                        enabled: false,
-                      },
-                    ]
-                    : notificationSettings
-                  ).map((setting, index, array) => (
-                    <View key={setting.id}>
-                      <View style={styles.settingItem}>
-                        <View style={styles.settingContent}>
-                          {setting.icon}
-                          <View style={styles.settingInfo}>
-                            <Text style={styles.settingTitle}>{setting.title}</Text>
-                            <Text style={styles.settingDescription}>{setting.description}</Text>
-                          </View>
+              <View style={styles.settingsCard}>
+                {(userMode === "veterinarian"
+                  ? [
+                    {
+                      id: "approvals",
+                      title: "موافقات المرضى",
+                      description: "إشعارات موافقة أو رفض المرضى لطلبات المتابعة",
+                      icon: <Check size={24} color={COLORS.primary} />,
+                      enabled: true,
+                    },
+                    {
+                      id: "appointments",
+                      title: "المواعيد",
+                      description: "تذكيرات بمواعيد المرضى والفحوصات",
+                      icon: <Calendar size={24} color={COLORS.primary} />,
+                      enabled: true,
+                    },
+                    {
+                      id: "system",
+                      title: "النظام",
+                      description: "إشعارات النظام والتحديثات التقنية",
+                      icon: <AlertCircle size={24} color={COLORS.primary} />,
+                      enabled: true,
+                    },
+                    {
+                      id: "advertisements",
+                      title: "الإعلانات",
+                      description: "عروض المنتجات والخدمات البيطرية",
+                      icon: <ShoppingCart size={24} color={COLORS.primary} />,
+                      enabled: false,
+                    },
+                  ]
+                  : notificationSettings
+                ).map((setting, index, array) => (
+                  <View key={setting.id}>
+                    <View style={styles.settingItem}>
+                      <View style={styles.settingContent}>
+                        {setting.icon}
+                        <View style={styles.settingInfo}>
+                          <Text style={styles.settingTitle}>{setting.title}</Text>
+                          <Text style={styles.settingDescription}>{setting.description}</Text>
                         </View>
-                        <Switch
-                          value={setting.enabled}
-                          onValueChange={() => toggleNotification(setting.id)}
-                          trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-                          thumbColor={setting.enabled ? COLORS.white : COLORS.darkGray}
-                        />
                       </View>
-                      {index < array.length - 1 && <View style={styles.separator} />}
+                      <Switch
+                        value={setting.enabled}
+                        onValueChange={() => toggleNotification(setting.id)}
+                        trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+                        thumbColor={setting.enabled ? COLORS.white : COLORS.darkGray}
+                      />
                     </View>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>إعدادات إضافية</Text>
-
-                <View style={styles.additionalCard}>
-                  <View style={styles.additionalItem}>
-                    <Text style={styles.additionalTitle}>الصوت</Text>
-                    <Text style={styles.additionalDescription}>تشغيل صوت عند وصول الإشعارات</Text>
-                    <Switch
-                      value={true}
-                      trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-                      thumbColor={COLORS.white}
-                    />
+                    {index < array.length - 1 && <View style={styles.separator} />}
                   </View>
-
-                  <View style={styles.separator} />
-
-                  <View style={styles.additionalItem}>
-                    <Text style={styles.additionalTitle}>الاهتزاز</Text>
-                    <Text style={styles.additionalDescription}>اهتزاز الجهاز عند وصول الإشعارات</Text>
-                    <Switch
-                      value={false}
-                      trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
-                      thumbColor={COLORS.darkGray}
-                    />
-                  </View>
-                </View>
+                ))}
               </View>
+            </View>
 
-              <View style={styles.infoSection}>
-                <Text style={styles.infoTitle}>معلومات مهمة</Text>
-                <View style={styles.infoCard}>
-                  {userMode === "veterinarian" ? (
-                    <>
-                      <Text style={styles.infoText}>• ستتلقى إشعارات فورية عند موافقة أو رفض المرضى لطلباتك</Text>
-                      <Text style={styles.infoText}>• تذكيرات المواعيد تساعدك في إدارة جدولك اليومي</Text>
-                      <Text style={styles.infoText}>• يمكنك إيقاف الإعلانات التجارية حسب تفضيلك</Text>
-                      <Text style={styles.infoText}>• إشعارات النظام مهمة لمتابعة التحديثات الجديدة</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.infoText}>• يمكنك تخصيص أنواع الإشعارات التي تريد تلقيها</Text>
-                      <Text style={styles.infoText}>• الإشعارات المهمة مثل المواعيد لا يمكن إيقافها</Text>
-                      <Text style={styles.infoText}>• يمكنك تغيير هذه الإعدادات في أي وقت</Text>
-                      <Text style={styles.infoText}>• بعض الإشعارات قد تتطلب إذن من نظام التشغيل</Text>
-                    </>
-                  )}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>إعدادات إضافية</Text>
+
+              <View style={styles.additionalCard}>
+                <View style={styles.additionalItem}>
+                  <Text style={styles.additionalTitle}>الصوت</Text>
+                  <Text style={styles.additionalDescription}>تشغيل صوت عند وصول الإشعارات</Text>
+                  <Switch
+                    value={true}
+                    trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+                    thumbColor={COLORS.white}
+                  />
+                </View>
+
+                <View style={styles.separator} />
+
+                <View style={styles.additionalItem}>
+                  <Text style={styles.additionalTitle}>الاهتزاز</Text>
+                  <Text style={styles.additionalDescription}>اهتزاز الجهاز عند وصول الإشعارات</Text>
+                  <Switch
+                    value={false}
+                    trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
+                    thumbColor={COLORS.darkGray}
+                  />
                 </View>
               </View>
             </View>
-          )}
+
+            <View style={styles.infoSection}>
+              <Text style={styles.infoTitle}>معلومات مهمة</Text>
+              <View style={styles.infoCard}>
+                {userMode === "veterinarian" ? (
+                  <>
+                    <Text style={styles.infoText}>• ستتلقى إشعارات فورية عند موافقة أو رفض المرضى لطلباتك</Text>
+                    <Text style={styles.infoText}>• تذكيرات المواعيد تساعدك في إدارة جدولك اليومي</Text>
+                    <Text style={styles.infoText}>• يمكنك إيقاف الإعلانات التجارية حسب تفضيلك</Text>
+                    <Text style={styles.infoText}>• إشعارات النظام مهمة لمتابعة التحديثات الجديدة</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.infoText}>• يمكنك تخصيص أنواع الإشعارات التي تريد تلقيها</Text>
+                    <Text style={styles.infoText}>• الإشعارات المهمة مثل المواعيد لا يمكن إيقافها</Text>
+                    <Text style={styles.infoText}>• يمكنك تغيير هذه الإعدادات في أي وقت</Text>
+                    <Text style={styles.infoText}>• بعض الإشعارات قد تتطلب إذن من نظام التشغيل</Text>
+                  </>
+                )}
+              </View>
+            </View>
+          </View>
+
         </ScrollView>
       </View>
     </>

@@ -147,47 +147,47 @@ export default function AuthScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // const handleFakeLogin = async (userType: "pet_owner" | "veterinarian" | "moderator" | "admin") => {
-  //   setErrors({});
+  const handleFakeLogin = async (userType: "pet_owner" | "veterinarian" | "moderator" | "admin") => {
+    setErrors({});
 
-  //   // Map user types to test credentials from seed data
-  //   const credentials = {
-  //     pet_owner: {
-  //       email: "user1@example.com",
-  //       password: "user123",
-  //     },
-  //     veterinarian: {
-  //       email: "vet1@example.com",
-  //       password: "vet123",
-  //     },
-  //     moderator: {
-  //       email: "admin@petapp.com",
-  //       password: "admin123",
-  //     },
-  //     admin: {
-  //       email: "zuhairalrawi0@gmail.com",
-  //       password: "zuh000123000321zuh",
-  //     },
-  //   };
+    // Map user types to test credentials from seed data
+    const credentials = {
+      pet_owner: {
+        email: "user1@example.com",
+        password: "user123",
+      },
+      veterinarian: {
+        email: "vet1@example.com",
+        password: "vet123",
+      },
+      moderator: {
+        email: "admin@petapp.com",
+        password: "admin123",
+      },
+      admin: {
+        email: "zuhairalrawi0@gmail.com",
+        password: "zuh000123000321zuh",
+      },
+    };
 
-  //   const creds = credentials[userType];
+    const creds = credentials[userType];
 
-  //   loginMutation.mutate(
-  //     { email: creds.email, password: creds.password },
-  //     {
-  //       onSuccess: async (data) => {
-  //         await login(data?.user, data?.tokens?.accessToken);
+    loginMutation.mutate(
+      { email: creds.email, password: creds.password },
+      {
+        onSuccess: async (data) => {
+          await login(data?.user, data?.tokens?.accessToken);
 
-  //         console.log(data.user);
-  //         router.replace("/(tabs)");
-  //       },
-  //       onError: (error) => {
-  //         setErrors({ general: error.message || t("auth.loginError") });
-  //         Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [{ text: "OK" }]);
-  //       },
-  //     }
-  //   );
-  // };
+          console.log(data.user);
+          router.replace("/(tabs)");
+        },
+        onError: (error) => {
+          setErrors({ general: error.message || t("auth.loginError") });
+          Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [{ text: "OK" }]);
+        },
+      }
+    );
+  };
 
   const handleLogin = async () => {
     if (!validateLogin()) return;
@@ -777,7 +777,7 @@ export default function AuthScreen() {
                   <Text style={styles.forgotPasswordText}>نسيت كلمة المرور؟</Text>
                 </TouchableOpacity> */}
 
-                {/* <View style={styles.fakeLoginContainer}>
+                <View style={styles.fakeLoginContainer}>
                   <Text style={styles.fakeLoginTitle}>تسجيل دخول وهمي للاختبار:</Text>
 
                   <View style={styles.fakeLoginButtons}>
