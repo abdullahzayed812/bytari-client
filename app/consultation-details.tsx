@@ -53,6 +53,7 @@ export default function ConsultationDetailsScreen() {
     },
   };
 
+
   const urgencyConfig = {
     low: { label: "منخفضة", color: "#6B7280" },
     medium: { label: "متوسطة", color: "#3B82F6" },
@@ -110,6 +111,7 @@ export default function ConsultationDetailsScreen() {
   }
 
   const { consultation, responses } = data;
+  console.log("responses", consultation);
   const status = consultation.status as StatusType;
   const StatusIcon = statusConfig[status]?.icon || AlertCircle;
 
@@ -226,7 +228,7 @@ export default function ConsultationDetailsScreen() {
                       </View>
                       <View>
                         <View style={styles.responderNameRow}>
-                          <Text style={styles.responderName}>{response?.isAiGenerated ? "الفريق الطبي" : response?.responder?.name}</Text>
+                          <Text style={styles.responderName}>{(response?.isAiGenerated || response?.moderatorId) ? "الفريق الطبي" : consultation?.user?.name}</Text>
                           {response.isFromVet && (
                             <View style={styles.vetBadge}>
                               <CheckCircle size={12} color={COLORS.white} />

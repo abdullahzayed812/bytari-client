@@ -13,19 +13,17 @@ export default function ReportLostPetScreen() {
   const { user } = useApp();
   const router = useRouter();
 
-  const [name, setName] = useState("Buddy");
-  const [type, setType] = useState("Dog");
-  const [breed, setBreed] = useState("Golden Retriever");
-  const [color, setColor] = useState("Golden");
-  const [location, setLocation] = useState("Central Park, New York");
+  const [name, setName] = useState("");
+  const [type, setType] = useState("");
+  const [breed, setBreed] = useState("");
+  const [color, setColor] = useState("");
+  const [location, setLocation] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [description, setDescription] = useState(
-    "Friendly and well-trained. Last seen wearing a blue collar. Please contact if found."
-  );
-  const [contactName, setContactName] = useState(user?.name || "John Doe");
-  const [contactPhone, setContactPhone] = useState("+1 555 123 4567");
-  const [contactEmail, setContactEmail] = useState(user?.email || "john@example.com");
-  const [images, setImages] = useState<string[]>(["https://images.unsplash.com/photo-1601758228041-f3b2795255f1"]);
+  const [description, setDescription] = useState("");
+  const [contactName, setContactName] = useState(user?.name || "");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState(user?.email || "");
+  const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Create pet approval request mutation
@@ -66,9 +64,8 @@ export default function ReportLostPetScreen() {
           image: images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
           ownerId: parseInt(user?.id.toString()),
           requestType: "lost_pet",
-          description: `${description}\n\nتاريخ الفقدان: ${date}\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${
-            contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
-          }`,
+          description: `${description}\n\nتاريخ الفقدان: ${date}\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
+            }`,
           images: images,
           contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
           lastSeenLocation: location.trim(),
