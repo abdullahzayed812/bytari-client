@@ -272,7 +272,7 @@ export default function AddPetScreen() {
         </View>
 
         {/* Birth Date */}
-        <View style={styles.inputGroup}>
+        {/* <View style={styles.inputGroup}>
           <Text style={styles.label}>تاريخ الميلاد</Text>
           <TouchableOpacity style={styles.dateInput}>
             <Text style={[styles.dateText, !formData.birthDate && styles.placeholder]}>
@@ -280,7 +280,7 @@ export default function AddPetScreen() {
             </Text>
             <Calendar size={20} color={COLORS.lightGray} />
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Submit Button */}
         <Button

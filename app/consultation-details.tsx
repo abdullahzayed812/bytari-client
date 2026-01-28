@@ -223,18 +223,22 @@ export default function ConsultationDetailsScreen() {
                 <View key={response.id} style={styles.responseCard}>
                   <View style={styles.responseHeader}>
                     <View style={styles.responderInfo}>
-                      <View style={[styles.responderAvatar, response.isFromVet && styles.responderAvatarVet]}>
+                      <View style={[styles.responderAvatar]}>
                         <User size={20} color={COLORS.white} />
                       </View>
                       <View>
                         <View style={styles.responderNameRow}>
-                          <Text style={styles.responderName}>{(response?.isAiGenerated || response?.moderatorId) ? "الفريق الطبي" : consultation?.user?.name}</Text>
-                          {response.isFromVet && (
+                          <Text style={styles.responderName}>
+                            {response.isFromAdmin || response.isAiGenerated
+                              ? "الفريق الطبي"
+                              : consultation?.user?.name}
+                          </Text>
+                          {/* {response.isFromVet && (
                             <View style={styles.vetBadge}>
                               <CheckCircle size={12} color={COLORS.white} />
                               <Text style={styles.vetBadgeText}>طبيب بيطري</Text>
                             </View>
-                          )}
+                          )} */}
                         </View>
                         <Text style={styles.responseDate}>
                           {new Date(response.createdAt || "").toLocaleDateString("ar-SA", {

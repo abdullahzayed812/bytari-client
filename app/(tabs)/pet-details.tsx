@@ -111,42 +111,42 @@ export default function PetDetailsScreen() {
     medications: [
       {
         name: "",
-        dosage: "مرة واحدة يومياً",
-        frequency: "كل 24 ساعة",
-        duration: "7 أيام",
+        dosage: "",
+        frequency: "",
+        duration: "",
       },
     ],
-    instructions: "يؤخذ بعد الطعام",
+    instructions: "",
     followUpDate: "",
   });
 
   const [medicalForm, setMedicalForm] = useState<MedicalForm>({
-    diagnosis: "التهاب في الأذن اليمنى",
-    treatment: "تنظيف الأذن واستخدام قطرات مضاد حيوي مرتين يوميًا",
-    notes: "يجب متابعة الحالة بعد أسبوع للتأكد من تحسن الالتهاب.",
-    prescriptionImage: "https://example.com/prescription-test.jpg",
+    diagnosis: "",
+    treatment: "",
+    notes: "",
+    prescriptionImage: "",
   });
 
   const [vaccinationForm, setVaccinationForm] = useState<VaccinationForm>({
-    name: "تطعيم داء الكلب",
+    name: "",
     nextDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // بعد 30 يوم
-    notes: "يُفضل إعطاء التطعيم في الصباح ومتابعة درجة الحرارة بعد التطعيم.",
+    notes: "",
   });
 
   const [reminderForm, setReminderForm] = useState<ReminderForm>({
-    title: "تذكير بزيارة الطبيب البيطري",
-    description: "زيارة متابعة بعد انتهاء كورس العلاج للتأكد من الشفاء الكامل.",
+    title: "",
+    description: "",
     date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // بعد 7 أيام
   });
 
   const [followUpForm, setFollowUpForm] = useState<FollowUpForm>({
-    reason: "متابعة بعد علاج التهاب الأذن",
-    notes: "يبدو أن الحيوان الأليف يستجيب جيدًا للعلاج، ولكن ما زال يحك أذنه قليلاً.",
+    reason: "",
+    notes: "",
     urgency: "normal", // يمكن أيضًا استخدام "high" أو "low" حسب الحالة
   });
 
   const [accessRequestForm, setAccessRequestForm] = useState<AccessRequestForm>({
-    reason: "أحتاج إلى صلاحية الوصول لإدارة الحالة الصحية للحيوان",
+    reason: "",
   });
 
   const isClinicAccess = (clinicAccess === "true" || fromClinic === "true") && userMode === "veterinarian";
@@ -1487,10 +1487,10 @@ export default function PetDetailsScreen() {
                       {reminder.type === "vaccination"
                         ? "تطعيم"
                         : reminder.type === "medication"
-                        ? "دواء"
-                        : reminder.type === "checkup"
-                        ? "فحص"
-                        : "أخرى"}
+                          ? "دواء"
+                          : reminder.type === "checkup"
+                            ? "فحص"
+                            : "أخرى"}
                     </Text>
                   </View>
 
@@ -1550,8 +1550,8 @@ export default function PetDetailsScreen() {
                       {request.status === "approved"
                         ? "مقبول"
                         : request.status === "rejected"
-                        ? "مرفوض"
-                        : "قيد الانتظار"}
+                          ? "مرفوض"
+                          : "قيد الانتظار"}
                     </Text>
                   </View>
 
@@ -1630,8 +1630,8 @@ export default function PetDetailsScreen() {
                     {request.actionType === "medical_record"
                       ? "سجل طبي"
                       : request.actionType === "vaccination"
-                      ? "تطعيم"
-                      : "تذكير"}
+                        ? "تطعيم"
+                        : "تذكير"}
                   </Text>
 
                   <Text style={styles.requestReason}>{request.reason}</Text>
@@ -2208,12 +2208,12 @@ export default function PetDetailsScreen() {
                       {type === "dog"
                         ? "كلب"
                         : type === "cat"
-                        ? "قطة"
-                        : type === "rabbit"
-                        ? "أرنب"
-                        : type === "bird"
-                        ? "طائر"
-                        : "أخرى"}
+                          ? "قطة"
+                          : type === "rabbit"
+                            ? "أرنب"
+                            : type === "bird"
+                              ? "طائر"
+                              : "أخرى"}
                     </Text>
                   </TouchableOpacity>
                 ))}

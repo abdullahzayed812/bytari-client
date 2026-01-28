@@ -207,7 +207,7 @@ export default function MessagesScreen() {
                 ) : (
                   <Clock size={16} color={COLORS.warning} />
                 )}
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={styles.replyButton}
                   onPress={() => {
                     setSelectedMessage(message);
@@ -216,7 +216,7 @@ export default function MessagesScreen() {
                 >
                   <Send size={14} color={COLORS.white} />
                   <Text style={styles.replyButtonText}>رد</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </View>
           </TouchableOpacity>

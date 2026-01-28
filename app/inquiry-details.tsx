@@ -217,18 +217,22 @@ export default function InquiryDetailsScreen() {
                 <View key={response.id} style={styles.responseCard}>
                   <View style={styles.responseHeader}>
                     <View style={styles.responderInfo}>
-                      <View style={[styles.responderAvatar, response.isOfficial && styles.responderAvatarOfficial]}>
+                      <View style={[styles.responderAvatar, response.isFromAdmin && styles.responderAvatarOfficial]}>
                         <User size={20} color={COLORS.white} />
                       </View>
                       <View>
                         <View style={styles.responderNameRow}>
-                          <Text style={styles.responderName}>{response?.isAiGenerated ? "الفريق الطبي" : response?.responder?.name}</Text>
-                          {response.isOfficial && (
+                          <Text style={styles.responderName}>
+                            {response.isFromAdmin || response.isAiGenerated
+                              ? "الفريق الطبي"
+                              : inquiry?.user?.name}
+                          </Text>
+                          {/* {response.isFromAdmin && (
                             <View style={styles.officialBadge}>
                               <CheckCircle size={12} color={COLORS.white} />
                               <Text style={styles.officialBadgeText}>رد رسمي</Text>
                             </View>
-                          )}
+                          )} */}
                         </View>
                         <Text style={styles.responseDate}>
                           {new Date(response.createdAt || "").toLocaleDateString("ar-SA", {

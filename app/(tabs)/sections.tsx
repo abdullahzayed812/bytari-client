@@ -107,27 +107,27 @@ export default function SectionsScreen() {
   const reorderSectionsMutation = useMutation(trpc.admin.content.reorderSections.mutationOptions());
 
   // Mock data for notifications and messages count
-  const [consultationsCount, setConsultationsCount] = useState<number>(8);
-  const [appointmentsCount, setAppointmentsCount] = useState<number>(3);
-  const [remindersCount, setRemindersCount] = useState<number>(2);
+  // const [consultationsCount, setConsultationsCount] = useState<number>(8);
+  // const [appointmentsCount, setAppointmentsCount] = useState<number>(3);
+  // const [remindersCount, setRemindersCount] = useState<number>(2);
 
   // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly update counts to simulate real-time data
-      if (Math.random() > 0.8) {
-        setConsultationsCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
-      }
-      if (Math.random() > 0.8) {
-        setAppointmentsCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 2) - 1));
-      }
-      if (Math.random() > 0.8) {
-        setRemindersCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 2) - 1));
-      }
-    }, 20000); // Update every 20 seconds
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // Randomly update counts to simulate real-time data
+  //     if (Math.random() > 0.8) {
+  //       setConsultationsCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
+  //     }
+  //     if (Math.random() > 0.8) {
+  //       setAppointmentsCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 2) - 1));
+  //     }
+  //     if (Math.random() > 0.8) {
+  //       setRemindersCount((prev) => Math.max(0, prev + Math.floor(Math.random() * 2) - 1));
+  //     }
+  //   }, 20000); // Update every 20 seconds
 
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
   const availableColors = [
     "#10B981",
     "#3B82F6",
@@ -178,14 +178,14 @@ export default function SectionsScreen() {
     route: section.route,
     hidden: !section.isActive,
     isSystem: section.isSystem,
-    badgeCount:
-      section.name === "consultations" || section.name === "inquiries"
-        ? consultationsCount
-        : section.name === "appointments"
-        ? appointmentsCount
-        : section.name === "reminders"
-        ? remindersCount
-        : 0,
+    // badgeCount:
+    //   section.name === "consultations" || section.name === "inquiries"
+    //     ? consultationsCount
+    //     : section.name === "appointments"
+    //     ? appointmentsCount
+    //     : section.name === "reminders"
+    //     ? remindersCount
+    //     : 0,
   }));
 
   // Filter out hidden sections (but show all in management mode)
