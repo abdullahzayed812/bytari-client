@@ -119,8 +119,11 @@ export default function MessagesScreen() {
     }
   };
 
-  const handleMessagePress = (message: Message) => {
-    markAsRead(message?.id);
+  const handleMessagePress = async (message: Message) => {
+    await markAsRead(message?.id);
+
+    setSelectedMessage(message);
+    setReplyModalVisible(true);
   };
 
   const handleSendReply = () => {

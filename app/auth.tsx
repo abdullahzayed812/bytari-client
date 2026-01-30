@@ -178,7 +178,7 @@ export default function AuthScreen() {
         onSuccess: async (data) => {
           await login(data?.user, data?.tokens?.accessToken);
 
-          console.log(data.user);
+
           router.replace("/(tabs)");
         },
         onError: (error) => {
@@ -278,6 +278,8 @@ export default function AuthScreen() {
         {
           onSuccess: async (data) => {
             await login(data?.user, data?.tokens?.accessToken);
+
+            console.log("_--------------:", data);
             router.replace("/(tabs)");
           },
           onError: (error) => {

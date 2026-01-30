@@ -122,15 +122,15 @@ export default function FieldSupervisionRequestScreen() {
     //   return;
     // }
 
-    if (!trimmedData.farmName) {
-      Alert.alert("خطأ", "يرجى إدخال اسم المزرعة");
-      return;
-    }
+    //if (!trimmedData.farmName) {
+    // Alert.alert("خطأ", "يرجى إدخال اسم المزرعة");
+    //return;
+    //}
 
-    if (!trimmedData.farmLocation) {
-      Alert.alert("خطأ", "يرجى إدخال موقع المزرعة");
-      return;
-    }
+    // if (!trimmedData.farmLocation) {
+    //   Alert.alert("خطأ", "يرجى إدخال موقع المزرعة");
+    //   return;
+    // }
 
     // Map request type to proper format for backend
     const requestTypeMap: Record<string, string> = {
@@ -237,7 +237,7 @@ export default function FieldSupervisionRequestScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "طلب إشراف حقول",
+          title: "طلب وظيفة بيطرية",
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -258,8 +258,7 @@ export default function FieldSupervisionRequestScreen() {
           <View style={styles.iconContainer}>
             <Shield size={32} color={COLORS.white} />
           </View>
-          <Text style={styles.headerTitle}>طلب إشراف حقول</Text>
-          <Text style={styles.headerSubtitle}>قدم طلباً للإشراف على الحقول والمزارع</Text>
+          <Text style={styles.headerTitle}>طلب وظيفة بيطرية</Text>
         </View>
 
         <View style={styles.form}>
