@@ -727,15 +727,17 @@ export default function PetsScreen() {
         renderItem={renderPetItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
+
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
               <Text style={styles.title}>
-                {hasAdminAccess || isSuperAdmin || isModerator ? "إدارة الحيوانات والمزارع" : "حيواناتي"}
+                {hasAdminAccess || isSuperAdmin || isModerator
+                  ? "إدارة الحيوانات والمزارع"
+                  : "حيواناتي"}
               </Text>
             </View>
 
-            {/* Action Buttons */}
             <View style={styles.headerButtons}>
               <Button
                 title={t("اضافة حيوان")}
@@ -755,9 +757,20 @@ export default function PetsScreen() {
               />
             </View>
 
-            {/* Poultry Farms Section */}
+            {/* Pets Section Title */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>حقول الدواجن ({displayFarms.length})</Text>
+              <Text style={styles.sectionTitle}>الحيوانات الأليفة ({displayPets.length})</Text>
+            </View>
+          </View>
+        }
+
+        ListFooterComponent={
+          <View>
+            {/* Farms Section */}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                حقول الدواجن ({displayFarms.length})
+              </Text>
             </View>
 
             {displayFarms.length > 0 ? (
@@ -837,13 +850,10 @@ export default function PetsScreen() {
                 <Text style={styles.emptyPoultryText}>لا يوجد حقول دواجن مسجلة</Text>
               </View>
             )}
-
-            {/* Pets Section Header */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>الحيوانات الأليفة ({displayPets.length})</Text>
-            </View>
           </View>
         }
+
+
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>لا يوجد حيوانات مسجلة</Text>
@@ -1520,3 +1530,23 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -2361,9 +2361,10 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   header: {
-    padding: 16,
     flexDirection: "row",
     alignItems: "center",
+    gap: 16,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },

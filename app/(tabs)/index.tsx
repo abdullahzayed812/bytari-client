@@ -1216,7 +1216,7 @@ export default function HomeScreen() {
                               },
                             ]}
                           >
-                            {pet?.contactInfo?.phone}
+                            {pet?.ownerPhone || "-"}
                           </Text>
                         </View>
                       </View>

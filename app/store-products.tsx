@@ -141,7 +141,7 @@ export default function StoreProductsScreen() {
                 <Text style={styles.featuresTitle}>المميزات</Text>
                 <View style={styles.featuresList}>
                   <Text style={styles.featureItem}>• جودة عالية ومضمونة</Text>
-                  <Text style={styles.featureItem}>• توصيل سريع</Text>
+                  {/* <Text style={styles.featureItem}>• توصيل سريع</Text> */}
                   <Text style={styles.featureItem}>• ضمان الجودة</Text>
                   <Text style={styles.featureItem}>• خدمة عملاء متميزة</Text>
                 </View>

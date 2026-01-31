@@ -147,47 +147,47 @@ export default function AuthScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFakeLogin = async (userType: "pet_owner" | "veterinarian" | "moderator" | "admin") => {
-    setErrors({});
+  // const handleFakeLogin = async (userType: "pet_owner" | "veterinarian" | "moderator" | "admin") => {
+  //   setErrors({});
 
-    // Map user types to test credentials from seed data
-    const credentials = {
-      pet_owner: {
-        email: "user1@example.com",
-        password: "user123",
-      },
-      veterinarian: {
-        email: "vet1@example.com",
-        password: "vet123",
-      },
-      moderator: {
-        email: "admin@petapp.com",
-        password: "admin123",
-      },
-      admin: {
-        email: "zuhairalrawi0@gmail.com",
-        password: "zuh000123000321zuh",
-      },
-    };
+  //   // Map user types to test credentials from seed data
+  //   const credentials = {
+  //     pet_owner: {
+  //       email: "user1@example.com",
+  //       password: "user123",
+  //     },
+  //     veterinarian: {
+  //       email: "vet1@example.com",
+  //       password: "vet123",
+  //     },
+  //     moderator: {
+  //       email: "admin@petapp.com",
+  //       password: "admin123",
+  //     },
+  //     admin: {
+  //       email: "zuhairalrawi0@gmail.com",
+  //       password: "zuh000123000321zuh",
+  //     },
+  //   };
 
-    const creds = credentials[userType];
+  //   const creds = credentials[userType];
 
-    loginMutation.mutate(
-      { email: creds.email, password: creds.password },
-      {
-        onSuccess: async (data) => {
-          await login(data?.user, data?.tokens?.accessToken);
+  //   loginMutation.mutate(
+  //     { email: creds.email, password: creds.password },
+  //     {
+  //       onSuccess: async (data) => {
+  //         await login(data?.user, data?.tokens?.accessToken);
 
 
-          router.replace("/(tabs)");
-        },
-        onError: (error) => {
-          setErrors({ general: error.message || t("auth.loginError") });
-          Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [{ text: "OK" }]);
-        },
-      }
-    );
-  };
+  //         router.replace("/(tabs)");
+  //       },
+  //       onError: (error) => {
+  //         setErrors({ general: error.message || t("auth.loginError") });
+  //         Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [{ text: "OK" }]);
+  //       },
+  //     }
+  //   );
+  // };
 
   const handleLogin = async () => {
     if (!validateLogin()) return;
@@ -766,62 +766,6 @@ export default function AuthScreen() {
                   />
                   {errors.idBack && <Text style={styles.errorText}>{errors.idBack}</Text>}
                 </View>
-              </>
-            )}
-
-            {activeTab === "login" && (
-              <>
-                {/* <TouchableOpacity
-                  style={[styles.forgotPasswordContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                  onPress={handleForgotPassword}
-                  disabled={isLoading}
-                >
-                  <Text style={styles.forgotPasswordText}>نسيت كلمة المرور؟</Text>
-                </TouchableOpacity> */}
-
-                <View style={styles.fakeLoginContainer}>
-                  <Text style={styles.fakeLoginTitle}>تسجيل دخول وهمي للاختبار:</Text>
-
-                  <View style={styles.fakeLoginButtons}>
-                    <TouchableOpacity
-                      style={[styles.fakeLoginButton, styles.fakeLoginPetOwner]}
-                      onPress={() => handleFakeLogin("pet_owner")}
-                      disabled={isLoading}
-                    >
-                      <User size={20} color={COLORS.white} />
-                      <Text style={styles.fakeLoginButtonText}>صاحب حيوان</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.fakeLoginButton, styles.fakeLoginVet]}
-                      onPress={() => handleFakeLogin("veterinarian")}
-                      disabled={isLoading}
-                    >
-                      <Stethoscope size={20} color={COLORS.white} />
-                      <Text style={styles.fakeLoginButtonText}>طبيب بيطري</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.fakeLoginButtons}>
-                    <TouchableOpacity
-                      style={[styles.fakeLoginButton, styles.fakeLoginModerator]}
-                      onPress={() => handleFakeLogin("moderator")}
-                      disabled={isLoading}
-                    >
-                      <User size={20} color={COLORS.white} />
-                      <Text style={styles.fakeLoginButtonText}>مشرف عادي</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.fakeLoginButton, styles.fakeLoginAdmin]}
-                      onPress={() => handleFakeLogin("admin")}
-                      disabled={isLoading}
-                    >
-                      <User size={20} color={COLORS.white} />
-                      <Text style={styles.fakeLoginButtonText}>إدمن أساسي</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View> */}
               </>
             )}
 
