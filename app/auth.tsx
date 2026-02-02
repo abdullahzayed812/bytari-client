@@ -293,28 +293,28 @@ export default function AuthScreen() {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!usernameOrEmail.trim() || !/\S+@\S+\.\S+/.test(usernameOrEmail)) {
-      Alert.alert("تنبيه", "يرجى إدخال بريد إلكتروني صحيح");
-      return;
-    }
-    Alert.alert("Info", "The forgot password functionality is not yet implemented in the backend.");
-    // Uncomment the following when the backend procedure is ready
-    /*
-    forgotPasswordMutation.mutate({ email: usernameOrEmail }, {
-      onSuccess: () => {
-        Alert.alert(
-          "تم إرسال رابط إعادة تعيين كلمة المرور",
-          `تم إرسال رابط إعادة تعيين كلمة المرور إلى ${usernameOrEmail}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.`,
-          [{ text: "موافق" }]
-        );
-      },
-      onError: (error) => {
-        Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور.");
-      }
-    });
-    */
-  };
+  // const handleForgotPassword = async () => {
+  //   if (!usernameOrEmail.trim() || !/\S+@\S+\.\S+/.test(usernameOrEmail)) {
+  //     Alert.alert("تنبيه", "يرجى إدخال بريد إلكتروني صحيح");
+  //     return;
+  //   }
+  //   Alert.alert("Info", "The forgot password functionality is not yet implemented in the backend.");
+  //   // Uncomment the following when the backend procedure is ready
+  //   /*
+  //   forgotPasswordMutation.mutate({ email: usernameOrEmail }, {
+  //     onSuccess: () => {
+  //       Alert.alert(
+  //         "تم إرسال رابط إعادة تعيين كلمة المرور",
+  //         `تم إرسال رابط إعادة تعيين كلمة المرور إلى ${usernameOrEmail}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.`,
+  //         [{ text: "موافق" }]
+  //       );
+  //     },
+  //     onError: (error) => {
+  //       Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور.");
+  //     }
+  //   });
+  //   */
+  // };
 
   const handleLanguageChange = () => {
     if (isLoading) return;
@@ -462,23 +462,6 @@ export default function AuthScreen() {
                   <TouchableOpacity
                     style={[
                       styles.veterinarianTypeButton,
-                      veterinarianType === "student" && styles.veterinarianTypeButtonActive,
-                    ]}
-                    onPress={() => setVeterinarianType("student")}
-                  >
-                    <Text
-                      style={[
-                        styles.veterinarianTypeText,
-                        veterinarianType === "student" && styles.veterinarianTypeTextActive,
-                      ]}
-                    >
-                      {t("auth.vetStudent")}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[
-                      styles.veterinarianTypeButton,
                       veterinarianType === "veterinarian" && styles.veterinarianTypeButtonActive,
                     ]}
                     onPress={() => setVeterinarianType("veterinarian")}
@@ -490,6 +473,22 @@ export default function AuthScreen() {
                       ]}
                     >
                       {t("auth.vetDoctor")}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.veterinarianTypeButton,
+                      veterinarianType === "student" && styles.veterinarianTypeButtonActive,
+                    ]}
+                    onPress={() => setVeterinarianType("student")}
+                  >
+                    <Text
+                      style={[
+                        styles.veterinarianTypeText,
+                        veterinarianType === "student" && styles.veterinarianTypeTextActive,
+                      ]}
+                    >
+                      {t("auth.vetStudent")}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -769,7 +768,7 @@ export default function AuthScreen() {
               </>
             )}
 
-            {activeTab === "login" && (
+            {/* {activeTab === "login" && (
               <TouchableOpacity
                 style={[styles.forgotPasswordContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
                 onPress={handleForgotPassword}
@@ -777,7 +776,7 @@ export default function AuthScreen() {
               >
                 <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
               </TouchableOpacity>
-            )}
+            )} */}
 
             <Button
               title={
