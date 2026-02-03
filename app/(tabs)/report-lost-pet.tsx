@@ -64,9 +64,11 @@ export default function ReportLostPetScreen() {
           image: images[0] || "https://images.unsplash.com/photo-1601758228041-f3b2795255f1",
           ownerId: parseInt(user?.id.toString()),
           requestType: "lost_pet",
-          description: `${description}\n\nتاريخ الفقدان: ${date}\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
-            }`,
+          description: `${description}\n\nتاريخ الفقدان: ${date}\nاسم المبلغ: ${contactName}\nرقم الهاتف: ${contactPhone}${
+            contactEmail ? `\nالبريد الإلكتروني: ${contactEmail}` : ""
+          }`,
           images: images,
+          location,
           contactInfo: `${contactName} - ${contactPhone}${contactEmail ? ` - ${contactEmail}` : ""}`,
           lastSeenLocation: location.trim(),
           lastSeenDate: new Date(date),

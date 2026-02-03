@@ -24,32 +24,6 @@ export default function NewInquiryScreen() {
 
   const createInquiryMutation = useMutation(trpc.inquiries.create.mutationOptions());
 
-  const pickFile = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الملفات");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      const asset = result.assets[0];
-      setPrescriptionFile(asset.uri);
-      setFileType(asset.type === "video" ? "video" : "image");
-    }
-  };
-
-  const removeFile = () => {
-    setPrescriptionFile(null);
-    setFileType(null);
-  };
-
   const handleSubmitInquiry = () => {
     if (!newInquiry.trim()) {
       Alert.alert("خطأ", "يرجى كتابة نص الاستفسار");
@@ -139,27 +113,11 @@ export default function NewInquiryScreen() {
 
             {/* Prescription File Upload */}
             <View style={styles.imageSection}>
-              {/* <Text style={styles.imageLabel}>رفع صورة او فيديو (اختياري)</Text> */}
-
               <ImageUploader
                 imageUri={prescriptionFile!}
                 onUploadComplete={setPrescriptionFile}
                 label="رفع صورة او فيديو (اختياري)"
               />
-
-              {/* {prescriptionFile ? (
-                <View style={styles.imageContainer}>
-                  <Image source={{ uri: prescriptionFile }} style={styles.prescriptionImage} />
-                  <TouchableOpacity style={styles.removeImageButton} onPress={removeFile}>
-                    <X size={16} color={COLORS.white} />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.uploadButton} onPress={pickFile}>
-                  <Camera size={24} color={COLORS.primary} />
-                  <Text style={styles.uploadButtonText}>اختر الملف</Text>
-                </TouchableOpacity>
-              )} */}
             </View>
 
             <TouchableOpacity

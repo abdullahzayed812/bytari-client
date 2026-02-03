@@ -6,12 +6,12 @@ import { useApp } from "../providers/AppProvider";
 
 import { useRouter, useFocusEffect } from "expo-router";
 import { trpc } from "../lib/trpc";
-import { Camera, X, Send } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { Send } from "lucide-react-native";
 import Card from "../components/Card";
 import UserReplyForm from "../components/UserReplyForm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PET_TYPE_LABELS, PET_TYPES } from "./add-adoption-pet";
+import { ImageUploader } from "@/components/ImageUploader";
 
 export default function ConsultationScreen() {
   const queryClient = useQueryClient();
@@ -62,43 +62,13 @@ export default function ConsultationScreen() {
           setFileType(null);
           // Optionally, navigate away or refetch previous consultations
           router.replace("/(tabs)");
-          queryClient.invalidateQueries(trpc.consultations.listForUser.queryKey);
+          queryClient.invalidateQueries(trpc.consultations.listForUser.queryKey as any);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الاستشارة");
         },
       }
     );
-  };
-
-  const pickFile = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All, // Allow both images and videos
-        allowsEditing: true,
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets.length > 0) {
-        const selectedAsset = result.assets[0];
-        setPrescriptionFile(selectedAsset.uri);
-
-        // Set fileType based on MIME type or URI
-        if (selectedAsset.type === "video" || selectedAsset.uri.endsWith(".mp4")) {
-          setFileType("video");
-        } else {
-          setFileType("image");
-        }
-      }
-    } catch (error) {
-      console.error("File picking error:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار الملف");
-    }
-  };
-
-  const removeFile = () => {
-    setPrescriptionFile(null);
-    setFileType(null);
   };
 
   return (
@@ -141,21 +111,11 @@ export default function ConsultationScreen() {
 
       <View style={styles.formGroup}>
         <View style={styles.imageSection}>
-          <Text style={styles.imageLabel}>رفع صورة او فيديو (اختياري)</Text>
-
-          {prescriptionFile ? (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: prescriptionFile }} style={styles.prescriptionImage} />
-              <TouchableOpacity style={styles.removeImageButton} onPress={removeFile}>
-                <X size={16} color={COLORS.white} />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.uploadButton} onPress={pickFile}>
-              <Camera size={24} color={COLORS.primary} />
-              <Text style={styles.uploadButtonText}>اختر الملف</Text>
-            </TouchableOpacity>
-          )}
+          <ImageUploader
+            label="أرفع صورة (إختياري)"
+            imageUri={prescriptionFile!}
+            onUploadComplete={setPrescriptionFile}
+          />
         </View>
       </View>
 

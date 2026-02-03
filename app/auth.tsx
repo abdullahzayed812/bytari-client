@@ -36,6 +36,7 @@ export default function AuthScreen() {
   const { t, isRTL } = useI18n();
   const { login } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  // zuhairalrawi0@gmail.com, zuh000123000321zuh
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -177,7 +178,6 @@ export default function AuthScreen() {
   //     {
   //       onSuccess: async (data) => {
   //         await login(data?.user, data?.tokens?.accessToken);
-
 
   //         router.replace("/(tabs)");
   //       },
@@ -767,16 +767,6 @@ export default function AuthScreen() {
                 </View>
               </>
             )}
-
-            {/* {activeTab === "login" && (
-              <TouchableOpacity
-                style={[styles.forgotPasswordContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                onPress={handleForgotPassword}
-                disabled={isLoading}
-              >
-                <Text style={styles.forgotPasswordText}>{t("auth.forgotPassword")}</Text>
-              </TouchableOpacity>
-            )} */}
 
             <Button
               title={

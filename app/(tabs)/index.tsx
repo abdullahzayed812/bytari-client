@@ -572,16 +572,16 @@ export default function HomeScreen() {
                             inquiry.status === "pending"
                               ? styles.statusPending
                               : inquiry.status === "answered"
-                                ? styles.statusAnswered
-                                : styles.statusClosed,
+                              ? styles.statusAnswered
+                              : styles.statusClosed,
                           ]}
                         />
                         <Text style={styles.statusText}>
                           {inquiry.status === "pending"
                             ? "قيد المراجعة"
                             : inquiry.status === "answered"
-                              ? "تم الرد"
-                              : "مغلق"}
+                            ? "تم الرد"
+                            : "مغلق"}
                         </Text>
                       </View>
 
@@ -638,8 +638,8 @@ export default function HomeScreen() {
                           con.status === "pending"
                             ? styles.statusPending
                             : con.status === "answered"
-                              ? styles.statusAnswered
-                              : styles.statusClosed,
+                            ? styles.statusAnswered
+                            : styles.statusClosed,
                         ]}
                       />
                       <Text style={styles.statusText}>
@@ -676,8 +676,8 @@ export default function HomeScreen() {
                               con.urgencyLevel === "emergency"
                                 ? COLORS.error
                                 : con.urgencyLevel === "high"
-                                  ? COLORS.warning
-                                  : COLORS.darkGray,
+                                ? COLORS.warning
+                                : COLORS.darkGray,
                             textAlign: isRTL ? "left" : "right",
                           },
                         ]}
@@ -686,10 +686,10 @@ export default function HomeScreen() {
                         {con.urgencyLevel === "emergency"
                           ? "طارئ"
                           : con.urgencyLevel === "high"
-                            ? "عالي"
-                            : con.urgencyLevel === "medium"
-                              ? "متوسط"
-                              : "منخفض"}
+                          ? "عالي"
+                          : con.urgencyLevel === "medium"
+                          ? "متوسط"
+                          : "منخفض"}
                       </Text>
 
                       <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
@@ -727,82 +727,82 @@ export default function HomeScreen() {
           >
             {userMode === "veterinarian"
               ? vetStores?.map((store) => (
-                <TouchableOpacity
-                  key={store.id}
-                  style={[
-                    styles.clinicCardNew,
-                    {
-                      marginHorizontal: 8,
-                    },
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/store-details",
-                      params: { id: store.id },
-                    })
-                  }
-                >
-                  <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    {/* Store Info */}
-                    <View
-                      style={[
-                        styles.clinicDetails,
-                        {
-                          flex: 1,
-                          marginRight: isRTL ? 0 : 12,
-                          marginLeft: isRTL ? 12 : 0,
-                        },
-                      ]}
-                    >
-                      {/* Active Badge */}
-                      {store.isActive && (
-                        <View
-                          style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                        >
-                          <View style={styles.premiumBadge}>
-                            <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                            <Text style={styles.premiumBadgeText}>نشط</Text>
+                  <TouchableOpacity
+                    key={store.id}
+                    style={[
+                      styles.clinicCardNew,
+                      {
+                        marginHorizontal: 8,
+                      },
+                    ]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/store-details",
+                        params: { id: store.id },
+                      })
+                    }
+                  >
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      {/* Store Info */}
+                      <View
+                        style={[
+                          styles.clinicDetails,
+                          {
+                            flex: 1,
+                            marginRight: isRTL ? 0 : 12,
+                            marginLeft: isRTL ? 12 : 0,
+                          },
+                        ]}
+                      >
+                        {/* Active Badge */}
+                        {store.isActive && (
+                          <View
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
+                          >
+                            <View style={styles.premiumBadge}>
+                              <Star size={12} color={COLORS.white} fill={COLORS.white} />
+                              <Text style={styles.premiumBadgeText}>نشط</Text>
+                            </View>
                           </View>
+                        )}
+
+                        {/* Store Name */}
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{store.name}</Text>
+
+                        {/* Location */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                          <MapPin size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {store.address}
+                          </Text>
                         </View>
-                      )}
 
-                      {/* Store Name */}
-                      <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{store.name}</Text>
+                        {/* Phone */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                          <Phone size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {store.phone}
+                          </Text>
+                        </View>
 
-                      {/* Location */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                        <MapPin size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {store.address}
-                        </Text>
-                      </View>
-
-                      {/* Phone */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                        <Phone size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {store.phone}
-                        </Text>
-                      </View>
-
-                      {/* Rating */}
-                      {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        {/* Rating */}
+                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -816,117 +816,117 @@ export default function HomeScreen() {
                           </Text>
                           <Star size={16} color="#FFD700" fill="#FFD700" />
                         </View> */}
+                      </View>
+
+                      {/* Store Image */}
+                      {store.images.length > 0 && (
+                        <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />
+                      )}
                     </View>
 
-                    {/* Store Image */}
-                    {store.images.length > 0 && (
-                      <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />
-                    )}
-                  </View>
-
-                  {/* Action Buttons */}
-                  <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                    <TouchableOpacity
-                      style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
-                      onPress={() => {
-                        // TODO: Implement phone call functionality
-                      }}
-                    >
-                      <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.clinicActionButton}
-                      onPress={() => {
-                        router.push({
-                          pathname: "/store-products",
-                          params: { id: store.id },
-                        });
-                      }}
-                    >
-                      <Text style={styles.clinicActionButtonText}>المنتجات</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))
+                    {/* Action Buttons */}
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <TouchableOpacity
+                        style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
+                        onPress={() => {
+                          // TODO: Implement phone call functionality
+                        }}
+                      >
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.clinicActionButton}
+                        onPress={() => {
+                          router.push({
+                            pathname: "/store-products",
+                            params: { id: store.id },
+                          });
+                        }}
+                      >
+                        <Text style={styles.clinicActionButtonText}>المنتجات</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ))
               : clinics?.map((clinic) => (
-                <TouchableOpacity
-                  key={clinic.id}
-                  style={[
-                    styles.clinicCardNew,
-                    {
-                      marginRight: isRTL ? 0 : 16,
-                      marginLeft: isRTL ? 16 : 0,
-                    },
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/clinic-profile",
-                      params: { id: clinic.id },
-                    })
-                  }
-                >
-                  <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                    {/* Clinic Info */}
-                    <View
-                      style={[
-                        styles.clinicDetails,
-                        {
-                          flex: 1,
-                          // marginRight: isRTL ? 0 : 12,
-                          // marginLeft: isRTL ? 12 : 0,
-                          marginHorizontal: 8,
-                        },
-                      ]}
-                    >
-                      {/* Premium Badge */}
-                      {clinic.isPremium && (
-                        <View
-                          style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                        >
-                          <View style={styles.premiumBadge}>
-                            <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                            <Text style={styles.premiumBadgeText}>مميز</Text>
+                  <TouchableOpacity
+                    key={clinic.id}
+                    style={[
+                      styles.clinicCardNew,
+                      {
+                        marginRight: isRTL ? 0 : 16,
+                        marginLeft: isRTL ? 16 : 0,
+                      },
+                    ]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/clinic-profile",
+                        params: { id: clinic.id },
+                      })
+                    }
+                  >
+                    <View style={[styles.clinicCardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      {/* Clinic Info */}
+                      <View
+                        style={[
+                          styles.clinicDetails,
+                          {
+                            flex: 1,
+                            // marginRight: isRTL ? 0 : 12,
+                            // marginLeft: isRTL ? 12 : 0,
+                            marginHorizontal: 8,
+                          },
+                        ]}
+                      >
+                        {/* Premium Badge */}
+                        {clinic.isPremium && (
+                          <View
+                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
+                          >
+                            <View style={styles.premiumBadge}>
+                              <Star size={12} color={COLORS.white} fill={COLORS.white} />
+                              <Text style={styles.premiumBadgeText}>مميز</Text>
+                            </View>
                           </View>
+                        )}
+
+                        {/* Clinic Name */}
+                        <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{clinic.name}</Text>
+
+                        {/* Location */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                          <MapPin size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {clinic.address}
+                          </Text>
                         </View>
-                      )}
 
-                      {/* Clinic Name */}
-                      <Text style={[styles.clinicName, { textAlign: isRTL ? "left" : "right" }]}>{clinic.name}</Text>
+                        {/* Phone */}
+                        <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                          <Phone size={16} color="#10B981" />
+                          <Text
+                            style={[
+                              styles.clinicInfoRowText,
+                              {
+                                marginLeft: isRTL ? 0 : 6,
+                                marginRight: isRTL ? 6 : 0,
+                              },
+                            ]}
+                          >
+                            {clinic.phone}
+                          </Text>
+                        </View>
 
-                      {/* Location */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                        <MapPin size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {clinic.address}
-                        </Text>
-                      </View>
-
-                      {/* Phone */}
-                      <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                        <Phone size={16} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.clinicInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {clinic.phone}
-                        </Text>
-                      </View>
-
-                      {/* Rating */}
-                      {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        {/* Rating */}
+                        {/* <View style={[styles.clinicRatingRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Text
                             style={[
                               styles.clinicRatingText,
@@ -940,35 +940,35 @@ export default function HomeScreen() {
                           </Text>
                           <Star size={16} color="#FFD700" fill="#FFD700" />
                         </View> */}
+                      </View>
+
+                      {/* Clinic Image */}
+                      {clinic.images[0] ? (
+                        <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
+                      ) : null}
                     </View>
 
-                    {/* Clinic Image */}
-                    {clinic.images[0] ? (
-                      <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
-                    ) : null}
-                  </View>
-
-                  {/* Action Buttons */}
-                  <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
-                    <TouchableOpacity
-                      style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
-                      onPress={() => {
-                        // TODO: Implement phone call functionality
-                      }}
-                    >
-                      <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.clinicActionButton}
-                      onPress={() => {
-                        // TODO: Implement map functionality
-                      }}
-                    >
-                      <Text style={styles.clinicActionButtonText}>الخريطة</Text>
-                    </TouchableOpacity>
-                  </View>
-                </TouchableOpacity>
-              ))}
+                    {/* Action Buttons */}
+                    <View style={[styles.clinicActions, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
+                      <TouchableOpacity
+                        style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
+                        onPress={() => {
+                          // TODO: Implement phone call functionality
+                        }}
+                      >
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.clinicActionButton}
+                        onPress={() => {
+                          // TODO: Implement map functionality
+                        }}
+                      >
+                        <Text style={styles.clinicActionButtonText}>الخريطة</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </TouchableOpacity>
+                ))}
           </AutoScrollView>
         </View>
 
@@ -1153,8 +1153,8 @@ export default function HomeScreen() {
                                 backgroundColor: pet.isClosedByOwner
                                   ? COLORS.darkGray
                                   : pet.type === "adoption"
-                                    ? "#10B981"
-                                    : "#8B5CF6",
+                                  ? "#10B981"
+                                  : "#8B5CF6",
                               },
                             ]}
                           >
@@ -1205,7 +1205,7 @@ export default function HomeScreen() {
                         </View>
 
                         {/* Phone */}
-                        <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        {/* <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                           <Phone size={14} color="#10B981" />
                           <Text
                             style={[
@@ -1218,7 +1218,7 @@ export default function HomeScreen() {
                           >
                             {pet?.ownerPhone || "-"}
                           </Text>
-                        </View>
+                        </View> */}
                       </View>
                     </View>
 
@@ -1247,8 +1247,8 @@ export default function HomeScreen() {
                         <TouchableOpacity
                           style={[styles.adoptionActionButton, styles.primaryAdoptionActionButton]}
                           onPress={() => {
-                            if (pet.contactInfo.phone) {
-                              Linking.openURL(`tel:${pet.contactInfo.phone}`);
+                            if (pet?.ownerPhone) {
+                              Linking.openURL(`tel:${pet?.ownerPhone}`);
                             }
                           }}
                         >
@@ -1402,7 +1402,7 @@ export default function HomeScreen() {
                             },
                           ]}
                         >
-                          {pet?.lastSeen?.location}
+                          {pet?.location}
                         </Text>
                       </View>
 
@@ -1418,12 +1418,12 @@ export default function HomeScreen() {
                             },
                           ]}
                         >
-                          {new Date(pet?.lastSeen?.date).toLocaleDateString("ar-SA")}
+                          {new Date(pet?.lastSeenDate).toLocaleDateString("ar-SA")}
                         </Text>
                       </View>
 
                       {/* Phone */}
-                      <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                      {/* <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
                         <Phone size={14} color="#10B981" />
                         <Text
                           style={[
@@ -1436,7 +1436,7 @@ export default function HomeScreen() {
                         >
                           {pet?.ownerPhone}
                         </Text>
-                      </View>
+                      </View> */}
                     </View>
                   </View>
 

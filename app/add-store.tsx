@@ -79,10 +79,10 @@ export default function AddStoreScreen() {
       showToast({ type: "error", message: "صورة الترخيص مطلوبة" });
       return;
     }
-    if (!formData.identityImages || formData.identityImages.length === 0) {
-      showToast({ type: "error", message: "صورة الهوية مطلوبة" });
-      return;
-    }
+    // if (!formData.identityImages || formData.identityImages.length === 0) {
+    //   showToast({ type: "error", message: "صورة الهوية مطلوبة" });
+    //   return;
+    // }
 
     try {
       const payload: any = {
@@ -94,7 +94,7 @@ export default function AddStoreScreen() {
         category: formData.category,
         licenseNumber: formData.licenseNumber,
         licenseImage: formData.licenseImages[0],
-        identityImage: formData.identityImages[0],
+        // identityImage: formData.identityImages[0],
         images: formData.images,
         workingHours: formData.workingHours,
         facebook: formData.facebook,
@@ -316,12 +316,12 @@ export default function AddStoreScreen() {
               label="صور الترخيص *"
             />
 
-            <ImageGalleryUploader
+            {/* <ImageGalleryUploader
               images={formData.identityImages}
               onImagesChange={(images) => setFormData({ ...formData, identityImages: images })}
               maxImages={2}
               label="صور الهوية *"
-            />
+            /> */}
           </View>
 
           <View style={styles.section}>

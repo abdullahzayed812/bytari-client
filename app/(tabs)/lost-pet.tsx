@@ -357,7 +357,7 @@ export default function LostPetScreen() {
         onRequestClose={() => setShowSightingReportModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <ScrollView style={styles.modalContent}>
             <Text style={styles.modalTitle}>الإبلاغ عن مشاهدة</Text>
 
             <Text style={styles.inputLabel}>موقع المشاهدة *</Text>
@@ -418,7 +418,7 @@ export default function LostPetScreen() {
                 <Text style={styles.submitButtonText}>إبلاغ</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 20,
     width: "100%",
     maxHeight: "80%",
@@ -714,6 +714,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
     marginTop: 16,
+    marginBottom: 24,
   },
   cancelButton: {
     flex: 1,
