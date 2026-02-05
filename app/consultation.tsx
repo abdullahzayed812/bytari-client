@@ -132,96 +132,96 @@ export default function ConsultationScreen() {
       </TouchableOpacity>
 
       {/* Previous Consultations Section */}
-      <PreviousConsultations />
+      {/* <PreviousConsultations /> */}
     </ScrollView>
   );
 }
 
-function PreviousConsultations() {
-  const { user } = useApp();
-  const { t } = useI18n();
-  // NOTE: This assumes a `listForUser` procedure exists on the `consultations` router
-  const { data, isLoading, error } = useQuery(trpc.consultations.listForUser.queryOptions({ userId: user?.id }));
+// function PreviousConsultations() {
+//   const { user } = useApp();
+//   const { t } = useI18n();
+//   // NOTE: This assumes a `listForUser` procedure exists on the `consultations` router
+//   const { data, isLoading, error } = useQuery(trpc.consultations.listForUser.queryOptions({ userId: user?.id }));
 
-  const consultations = useMemo(() => (data as any)?.consultations, [data]);
+//   const consultations = useMemo(() => (data as any)?.consultations, [data]);
 
-  if (isLoading) {
-    return <Text style={styles.previousConsultationsTitle}>جاري تحميل الاستشارات السابقة...</Text>;
-  }
+//   if (isLoading) {
+//     return <Text style={styles.previousConsultationsTitle}>جاري تحميل الاستشارات السابقة...</Text>;
+//   }
 
-  if (error) {
-    return <Text style={styles.previousConsultationsTitle}>خطأ في تحميل الاستشارات: {error.message}</Text>;
-  }
+//   if (error) {
+//     return <Text style={styles.previousConsultationsTitle}>خطأ في تحميل الاستشارات: {error.message}</Text>;
+//   }
 
-  return (
-    <View style={styles.previousConsultationsSection}>
-      <Text style={styles.previousConsultationsTitle}>استشاراتك السابقة</Text>
-      <Text style={styles.previousConsultationsSubtitle}>جميع استشاراتك السابقة بغض النظر عن حالة المحادثة</Text>
+//   return (
+//     <View style={styles.previousConsultationsSection}>
+//       <Text style={styles.previousConsultationsTitle}>استشاراتك السابقة</Text>
+//       <Text style={styles.previousConsultationsSubtitle}>جميع استشاراتك السابقة بغض النظر عن حالة المحادثة</Text>
 
-      {consultations && consultations.length > 0 ? (
-        consultations.map((consultation) => (
-          <View key={consultation.id} style={styles.consultationContainer}>
-            <Card
-              title={consultation.title}
-              subtitle={new Date(consultation.createdAt).toLocaleDateString()}
-              style={styles.consultationCard}
-            >
-              <View style={styles.statusContainer}>
-                <View
-                  style={[
-                    styles.statusIndicator,
-                    consultation.status === "pending"
-                      ? styles.statusPending
-                      : consultation.status === "answered"
-                      ? styles.statusAnswered
-                      : styles.statusClosed,
-                  ]}
-                />
-                <Text style={styles.statusText}>{t(`consultation.${consultation.status}`)}</Text>
+//       {consultations && consultations.length > 0 ? (
+//         consultations.map((consultation) => (
+//           <View key={consultation.id} style={styles.consultationContainer}>
+//             <Card
+//               title={consultation.title}
+//               subtitle={new Date(consultation.createdAt).toLocaleDateString()}
+//               style={styles.consultationCard}
+//             >
+//               <View style={styles.statusContainer}>
+//                 <View
+//                   style={[
+//                     styles.statusIndicator,
+//                     consultation.status === "pending"
+//                       ? styles.statusPending
+//                       : consultation.status === "answered"
+//                       ? styles.statusAnswered
+//                       : styles.statusClosed,
+//                   ]}
+//                 />
+//                 <Text style={styles.statusText}>{t(`consultation.${consultation.status}`)}</Text>
 
-                {/* Mock conversation status */}
-                <View style={styles.conversationStatus}>
-                  <Text
-                    style={[
-                      styles.conversationStatusText,
-                      consultation.status === "answered" ? styles.openStatus : styles.closedStatus,
-                    ]}
-                  >
-                    {consultation.status === "answered" ? "مفتوحة للرد" : "مغلقة"}
-                  </Text>
-                </View>
-              </View>
+//                 {/* Mock conversation status */}
+//                 <View style={styles.conversationStatus}>
+//                   <Text
+//                     style={[
+//                       styles.conversationStatusText,
+//                       consultation.status === "answered" ? styles.openStatus : styles.closedStatus,
+//                     ]}
+//                   >
+//                     {consultation.status === "answered" ? "مفتوحة للرد" : "مغلقة"}
+//                   </Text>
+//                 </View>
+//               </View>
 
-              <Text style={styles.questionText}>{consultation.question}</Text>
+//               <Text style={styles.questionText}>{consultation.question}</Text>
 
-              {consultation.response && (
-                <View style={styles.responseContainer}>
-                  <Text style={styles.responseLabel}>الإجابة:</Text>
-                  <Text style={styles.answerText}>{consultation.response}</Text>
-                </View>
-              )}
-            </Card>
+//               {consultation.response && (
+//                 <View style={styles.responseContainer}>
+//                   <Text style={styles.responseLabel}>الإجابة:</Text>
+//                   <Text style={styles.answerText}>{consultation.response}</Text>
+//                 </View>
+//               )}
+//             </Card>
 
-            {consultation.status === "answered" && (
-              <UserReplyForm
-                type="consultation"
-                itemId={Number(consultation.id)}
-                userId={Number(user?.id) || 1}
-                isConversationOpen={true} // Mock value
-                onReplySuccess={() => {
-                  console.log("Reply sent successfully");
-                  // Refetch consultations list
-                }}
-              />
-            )}
-          </View>
-        ))
-      ) : (
-        <Text>لا توجد استشارات سابقة.</Text>
-      )}
-    </View>
-  );
-}
+//             {consultation.status === "answered" && (
+//               <UserReplyForm
+//                 type="consultation"
+//                 itemId={Number(consultation.id)}
+//                 userId={Number(user?.id) || 1}
+//                 isConversationOpen={true} // Mock value
+//                 onReplySuccess={() => {
+//                   console.log("Reply sent successfully");
+//                   // Refetch consultations list
+//                 }}
+//               />
+//             )}
+//           </View>
+//         ))
+//       ) : (
+//         <Text>لا توجد استشارات سابقة.</Text>
+//       )}
+//     </View>
+//   );
+// }
 
 const styles = StyleSheet.create({
   container: {

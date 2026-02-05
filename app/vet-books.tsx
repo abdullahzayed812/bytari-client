@@ -218,7 +218,7 @@ export default function VetBooksScreen() {
                     </View>
 
                     <View style={styles.ratingSection}>
-                      <View style={styles.starsContainer}>{renderStars(book.rating)}</View>
+                      <View style={styles.starsContainer}>{renderStars(book.rating || 5)}</View>
                       <Text style={styles.ratingText}>{book.rating.toFixed(1)}</Text>
                     </View>
 

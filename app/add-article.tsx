@@ -5,7 +5,6 @@ import { Stack, useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
-import { useApp } from "../providers/AppProvider";
 import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 import { FileUploader } from "@/components/FileUploader";
 import { ArrowLeft, Plus } from "lucide-react-native";
@@ -14,7 +13,6 @@ import Button from "@/components/Button 2";
 export default function AddArticleScreen() {
   const router = useRouter();
   const quiryClient = useQueryClient();
-  const { user } = useApp();
 
   const [formData, setFormData] = useState({
     title: "",

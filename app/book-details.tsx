@@ -1,14 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Platform,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import React, { useRef } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
@@ -142,7 +132,7 @@ export default function BookDetailsScreen() {
 
             {/* Rating */}
             <View style={styles.ratingSection}>
-              <View style={styles.starsContainer}>{renderStars(book.rating)}</View>
+              <View style={styles.starsContainer}>{renderStars(book.rating || 5)}</View>
               <Text style={styles.ratingText}>{book.rating}</Text>
               <Text style={styles.downloadsText}>({(book?.downloadCount || 0)?.toLocaleString()} تحميل)</Text>
             </View>

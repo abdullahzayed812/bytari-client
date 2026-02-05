@@ -17,22 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
-import {
-  ArrowLeft,
-  Camera,
-  Edit3,
-  Eye,
-  EyeOff,
-  Grid,
-  Import,
-  List,
-  Plus,
-  Save,
-  Search,
-  Trash2,
-  Upload,
-  X,
-} from "lucide-react-native";
+import { ArrowLeft, Edit3, Eye, EyeOff, Grid, List, Plus, Save, Search, Trash2, X } from "lucide-react-native";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
 import { FileUploader } from "@/components/FileUploader";
 
@@ -238,6 +223,17 @@ export default function AdminContentManagerScreen() {
     tags: [],
   });
 
+  const QUERY_KEYS_MAP: Record<string, unknown> = {
+    articles: trpc.content.listMagazineArticles.queryKey,
+    ads: trpc.admin.ads.getAll.queryKey,
+    courses: trpc.admin.courses.getList.queryKey,
+    clinics: trpc.clinics.getActiveList.queryKey,
+    stores: trpc.stores.listActive.queryKey,
+    books: trpc.content.listVetBooks.queryKey,
+    tips: trpc.content.listTips.queryKey,
+    pets: trpc.pets.getAllForAdmin.queryKey,
+  };
+
   const adminId = useMemo(() => user?.id, [user]);
 
   // Optimized queries with proper enabled flags
@@ -414,37 +410,14 @@ export default function AdminContentManagerScreen() {
 
   // Refetch current query
   const refetchCurrentQuery = useCallback(() => {
-    switch (contentType) {
-      case "articles":
-        return magazinesQuery.refetch();
-      case "ads":
-        return adsQuery.refetch();
-      case "courses":
-        return queryClient.invalidateQueries(trpc.courses.getList.queryKey);
-      case "clinics":
-        return clinicsQuery.refetch();
-      case "stores":
-        return storesQuery.refetch();
-      case "books":
-        return booksQuery.refetch();
-      case "tips":
-        return tipsQuery.refetch();
-      case "pets":
-        return petsQuery.refetch();
-      default:
-        return Promise.resolve();
-    }
-  }, [
-    contentType,
-    magazinesQuery,
-    adsQuery,
-    coursesQuery,
-    clinicsQuery,
-    storesQuery,
-    booksQuery,
-    tipsQuery,
-    petsQuery,
-  ]);
+    const queryKey = QUERY_KEYS_MAP[contentType];
+
+    if (!queryKey) return Promise.resolve();
+
+    return queryClient.invalidateQueries({
+      queryKey: queryKey as any,
+    });
+  }, [contentType, queryClient]);
 
   // Effect to handle super admin check
   useEffect(() => {

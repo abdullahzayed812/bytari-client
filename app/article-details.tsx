@@ -233,9 +233,11 @@ export default function ArticleDetailsScreen() {
           </View>
 
           {/* Content */}
-          <View style={styles.contentSection}>
-            <Text style={styles.contentText}>{article.content || "لا يوجد محتوى لعرضه."}</Text>
-          </View>
+          {article?.content ? (
+            <View style={styles.contentSection}>
+              <Text style={styles.contentText}>{article.content}</Text>
+            </View>
+          ) : null}
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>

@@ -60,12 +60,7 @@ export default function VetMagazineScreen() {
     if (!articlesData?.articles) return [];
     return articlesData.articles.map((article: any) => ({
       ...article,
-      // Mock fields not in seed data (adjust when schema is updated)
-      author: "د. غير محدد",
-      authorTitle: "طبيب بيطري",
       excerpt: article.description.slice(0, 100) + "...",
-      likes: 0,
-      comments: 0,
       views: article.downloadCount,
     }));
   }, [articlesData]);
@@ -141,7 +136,7 @@ export default function VetMagazineScreen() {
 
         {/* Articles List */}
         <View style={styles.articlesSection}>
-          {filteredArticles.slice(0, 2).map((article) => (
+          {filteredArticles?.map((article) => (
             <TouchableOpacity
               key={article.id}
               style={styles.articleCard}
@@ -236,11 +231,13 @@ const styles = StyleSheet.create({
   },
   articlesSection: {
     flexDirection: "row-reverse",
+    flexWrap: "wrap",
     paddingHorizontal: 16,
     paddingVertical: 8,
     gap: 12,
   },
   articleCard: {
+    width: "30%",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     shadowColor: "#000",
@@ -249,7 +246,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     overflow: "hidden",
-    flex: 1,
+    // flex: 1,
   },
   articleImage: {
     width: "100%",
