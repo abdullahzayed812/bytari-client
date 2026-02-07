@@ -25,9 +25,9 @@ export default function ContactUsScreen() {
   const { isSuperAdmin } = useApp();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
-    email: "support@petcare.com",
-    phone: "+964 750 123 4567",
-    whatsapp: "+964 750 123 4567",
+    email: "baytariapp@gmail.com",
+    phone: "+964 777 756 4666",
+    whatsapp: "+964 777 756 4666",
     address: "بغداد، العراق",
     workingHours: {
       sunday_thursday: "9:00 ص - 6:00 م",
@@ -43,12 +43,12 @@ export default function ContactUsScreen() {
   const contactQuery = useQuery(trpc.admin.content.getContactInfo.queryOptions());
   const updateContactMutation = useMutation(trpc.admin.content.updateContactInfo.mutationOptions());
 
-  useEffect(() => {
-    if (contactQuery.data?.success) {
-      setContactInfo(contactQuery.data.contactInfo);
-      setEditedInfo(contactQuery.data.contactInfo);
-    }
-  }, [contactQuery.data]);
+  // useEffect(() => {
+  //   if (contactQuery.data?.success) {
+  //     setContactInfo(contactQuery.data.contactInfo);
+  //     setEditedInfo(contactQuery.data.contactInfo);
+  //   }
+  // }, [contactQuery.data]);
 
   const handleEmailPress = (email: string) => {
     Linking.openURL(`mailto:${email}`);

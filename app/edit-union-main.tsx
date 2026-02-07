@@ -338,7 +338,7 @@ export default function EditUnionMainScreen() {
             </TouchableOpacity>
           </View>
 
-          {unionInfo.services.map((service, index) => (
+          {unionInfo?.services?.map((service, index) => (
             <View key={service.id} style={styles.serviceCard}>
               <View style={styles.serviceHeader}>
                 <Text style={styles.serviceNumber}>الخدمة {index + 1}</Text>

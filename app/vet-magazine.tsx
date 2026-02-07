@@ -169,7 +169,11 @@ export default function VetMagazineScreen() {
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.dateText}>{new Date(article.publishedDate).toLocaleDateString("ar-EG")}</Text>
+                  <View>
+                    <Text style={styles.dateText}>
+                      {article.createdAt ? new Date(article.createdAt).toLocaleDateString() : "تاريخ غير متوفر"}
+                    </Text>
+                  </View>
                 </View>
 
                 <View style={styles.articleStats}>
@@ -237,7 +241,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   articleCard: {
-    width: "30%",
+    width: "48%",
     backgroundColor: COLORS.white,
     borderRadius: 12,
     shadowColor: "#000",
@@ -287,7 +291,7 @@ const styles = StyleSheet.create({
     minHeight: 32,
   },
   authorSection: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 6,
@@ -296,7 +300,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
   },
   authorInfo: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 6,
     flex: 1,

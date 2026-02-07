@@ -175,7 +175,7 @@ export default function BookDetailsScreen() {
           </View>
 
           {/* Book Details */}
-          <View style={styles.bookDetailsSection}>
+          {/* <View style={styles.bookDetailsSection}>
             <Text style={styles.sectionTitle}>تفاصيل الكتاب</Text>
             <View style={styles.detailsList}>
               <View style={styles.detailItem}>
@@ -195,7 +195,7 @@ export default function BookDetailsScreen() {
                 <Text style={styles.detailValue}>{(book?.downloadCount || 0)?.toLocaleString()}</Text>
               </View>
             </View>
-          </View>
+          </View> */}
 
           {/* Download Button */}
           <TouchableOpacity style={styles.downloadButton} onPress={handleDownload} disabled={isDownloading}>
