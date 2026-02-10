@@ -78,7 +78,9 @@ export default function TipsListScreen() {
             />
             <View style={styles.tipContent}>
               <Text style={[styles.tipTitle, { textAlign: isRTL ? "left" : "right" }]}>{tip.title}</Text>
-              <Text style={[styles.tipDescription, { textAlign: isRTL ? "left" : "right" }]}>{tip.content}</Text>
+              <Text style={[styles.tipDescription, { textAlign: isRTL ? "left" : "right" }]}>
+                {tip.content.slice(0, 100)}...
+              </Text>
             </View>
           </TouchableOpacity>
         ))}

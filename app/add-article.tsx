@@ -55,7 +55,7 @@ export default function AddArticleScreen() {
         category: formData.category as any,
         coverImage: selectedImages[0],
         filePath: selectedFileUrl,
-        publishedDate: new Date().toISOString(),
+        publishedDate: new Date(),
       } as any,
       {
         onSuccess: () => {

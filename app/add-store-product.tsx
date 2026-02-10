@@ -185,7 +185,7 @@ export default function AddStoreProductScreen() {
               <Text style={styles.label}>السعر (د.ع) *</Text>
               <TextInput
                 style={styles.input}
-                placeholder="0.00"
+                placeholder="0.000"
                 value={formData.price}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
                 keyboardType="decimal-pad"
