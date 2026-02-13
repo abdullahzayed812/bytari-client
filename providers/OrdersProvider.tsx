@@ -1,6 +1,5 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { Order } from "../types";
-import { useToastContext } from "./ToastProvider";
 import { trpc } from "../lib/trpc";
 import { useApp } from "./AppProvider";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +16,11 @@ export const OrdersProvider = ({ children }: { children: ReactNode }) => {
   const { userMode } = useApp();
   const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
 
-  const { data: orders, isLoading, refetch } = useQuery(
+  const {
+    data: orders,
+    isLoading,
+    refetch,
+  } = useQuery(
     trpc.unifiedStore.listMyOrders.queryOptions({
       storeType,
     })

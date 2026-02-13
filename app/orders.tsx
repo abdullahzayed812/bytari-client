@@ -4,10 +4,43 @@ import { Stack, router } from "expo-router";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
-import { Order } from "../types";
 import Button from "../components/Button";
 import { Package, Clock, CheckCircle, Truck, XCircle, ShoppingBag } from "lucide-react-native";
 import { useOrders } from "@/providers/OrdersProvider";
+
+// Updated Order type to match backend structure
+interface OrderItem {
+  id: number;
+  orderId: number;
+  productId: number;
+  quantity: number;
+  price: number;
+  product: {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    images: string | string[];
+    storeId: number;
+    category: string;
+    stock: number;
+  };
+}
+
+interface Order {
+  id: number;
+  userId: number;
+  storeType: "veterinarian" | "pet_owner";
+  status: "pending" | "confirmed" | "preparing" | "shipped" | "delivered" | "cancelled";
+  totalAmount: number;
+  shippingAddress: any;
+  paymentMethod: string | null;
+  paymentStatus: string;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: OrderItem[];
+}
 
 const getStatusIcon = (status: Order["status"]) => {
   switch (status) {
@@ -22,7 +55,7 @@ const getStatusIcon = (status: Order["status"]) => {
     case "delivered":
       return <CheckCircle size={20} color={COLORS.success} />;
     case "cancelled":
-      return <XCircle size={20} color={COLORS.red} />;
+      return <XCircle size={20} color={COLORS.red || COLORS.error} />;
     default:
       return <Clock size={20} color={COLORS.gray} />;
   }
@@ -59,15 +92,37 @@ const getStatusColor = (status: Order["status"]) => {
     case "delivered":
       return COLORS.success;
     case "cancelled":
-      return COLORS.red;
+      return COLORS.red || COLORS.error;
     default:
       return COLORS.gray;
   }
 };
 
+// Helper to get first image from product images
+const getProductImage = (images: string | string[] | null): string => {
+  if (!images) return "https://via.placeholder.com/100";
+
+  if (typeof images === "string") {
+    try {
+      const parsed = JSON.parse(images);
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : images;
+    } catch {
+      return images;
+    }
+  }
+
+  if (Array.isArray(images) && images.length > 0) {
+    return images[0];
+  }
+
+  return "https://via.placeholder.com/100";
+};
+
 export default function OrdersScreen() {
   const { t } = useI18n();
-  const { orders } = useOrders();
+  const { orders, isLoading } = useOrders();
+
+  console.log(orders[0].items);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -80,49 +135,68 @@ export default function OrdersScreen() {
     });
   };
 
-  const renderOrderItem = ({ item }: { item: Order }) => (
-    <TouchableOpacity style={styles.orderCard} onPress={() => router.push(`/order-details?orderId=${item.id}`)}>
-      <View style={styles.orderHeader}>
-        <View style={styles.orderInfo}>
-          <Text style={styles.orderId}>طلب #{item.id.slice(-6)}</Text>
-          <Text style={styles.orderDate}>{formatDate(item.createdAt)}</Text>
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + "20" }]}>
-          {getStatusIcon(item.status)}
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{getStatusText(item.status)}</Text>
-        </View>
-      </View>
+  const renderOrderItem = ({ item }: { item: Order }) => {
+    // Calculate total from items if totalAmount is not set
+    const orderTotal =
+      item.totalAmount || item.items.reduce((sum, orderItem) => sum + orderItem.price * orderItem.quantity, 0);
 
-      <View style={styles.orderItems}>
-        <Text style={styles.itemsTitle}>المنتجات ({item.items.length}):</Text>
-        {item.items.slice(0, 2).map((orderItem, index) => (
-          <View key={index} style={styles.orderItemRow}>
-            <Image source={{ uri: orderItem.product.image }} style={styles.itemImage} />
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{orderItem.product.name}</Text>
-              <Text style={styles.itemQuantity}>الكمية: {orderItem.quantity}</Text>
-            </View>
-            <Text style={styles.itemPrice}>{orderItem.product.price} ريال</Text>
+    return (
+      <TouchableOpacity style={styles.orderCard} onPress={() => router.push(`/order-details?orderId=${item.id}`)}>
+        <View style={styles.orderHeader}>
+          <View style={styles.orderInfo}>
+            <Text style={styles.orderId}>طلب #{item.id}</Text>
+            <Text style={styles.orderDate}>{formatDate(item.createdAt)}</Text>
           </View>
-        ))}
-        {item.items.length > 2 && <Text style={styles.moreItems}>و {item.items.length - 2} منتجات أخرى...</Text>}
-      </View>
-
-      <View style={styles.orderFooter}>
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalLabel}>المجموع:</Text>
-          <Text style={styles.totalAmount}>{item.total.toFixed(2)} ريال</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + "20" }]}>
+            {getStatusIcon(item.status)}
+            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+              {getStatusText(item.status)}
+            </Text>
+          </View>
         </View>
-        <View style={styles.paymentMethod}>
-          <Text style={styles.paymentLabel}>
-            {item.paymentMethod === "cash" ? "الدفع عند الاستلام" : "دفع إلكتروني"}
-          </Text>
+
+        <View style={styles.orderItems}>
+          <Text style={styles.itemsTitle}>المنتجات ({item.items.length}):</Text>
+          {item.items.slice(0, 2).map((orderItem, index) => (
+            <View key={orderItem.id || index} style={styles.orderItemRow}>
+              <Image source={{ uri: getProductImage(orderItem.product.images) }} style={styles.itemImage} />
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemName}>{orderItem.product.name}</Text>
+                <Text style={styles.itemQuantity}>الكمية: {orderItem.quantity}</Text>
+                <Text style={styles.itemQuantity}>السعر: {orderItem?.product?.price?.toFixed(3)}</Text>
+              </View>
+            </View>
+          ))}
+          {item.items.length > 2 && <Text style={styles.moreItems}>و {item.items.length - 2} منتجات أخرى...</Text>}
+        </View>
+
+        <View style={styles.orderFooter}>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalLabel}>المجموع:</Text>
+            <Text style={styles.totalAmount}>{orderTotal.toFixed(3)} ريال</Text>
+          </View>
+          <View style={styles.paymentMethod}>
+            <Text style={styles.paymentLabel}>
+              {item.paymentMethod === "cash" ? "الدفع عند الاستلام" : "دفع إلكتروني"}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ title: "طلباتي", headerShown: true }} />
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptySubtitle}>جاري التحميل...</Text>
         </View>
       </View>
-    </TouchableOpacity>
-  );
+    );
+  }
 
-  if (orders.length === 0) {
+  if (!orders || orders.length === 0) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: "طلباتي", headerShown: true }} />
@@ -148,7 +222,7 @@ export default function OrdersScreen() {
       <FlatList
         data={orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())}
         renderItem={renderOrderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.ordersList}
         showsVerticalScrollIndicator={false}
       />
@@ -198,7 +272,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   orderHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
@@ -217,7 +291,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   statusBadge: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -238,7 +312,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   orderItemRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
   },
@@ -246,6 +320,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 6,
+    backgroundColor: COLORS.lightGray,
   },
   itemInfo: {
     flex: 1,
@@ -279,7 +354,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   totalContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,

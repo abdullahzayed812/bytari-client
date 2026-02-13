@@ -13,11 +13,24 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import { Building2, CheckCircle, XCircle, Eye, Ban, Trash2, Search, Phone, Clock, Star } from "lucide-react-native";
+import {
+  Building2,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Ban,
+  Trash2,
+  Search,
+  Phone,
+  Clock,
+  Star,
+  Image as ImageIcon,
+} from "lucide-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
 import { useQueryClient } from "@tanstack/react-query";
+import ImageViewerModal from "@/components/ImageViewerModal";
 
 interface Clinic {
   id: number;
@@ -36,6 +49,8 @@ interface Clinic {
   lastActivity?: string;
   reportCount?: number;
   isPremium: boolean;
+  identityImages?: string | string[];
+  licenseImages?: string | string[];
 }
 
 const formatWorkingHours = (workingHours: any) => {
@@ -57,6 +72,20 @@ const formatWorkingHours = (workingHours: any) => {
   return "غير متوفر";
 };
 
+const parseImageArray = (images: string | string[] | null | undefined): string[] => {
+  if (!images) return [];
+  if (Array.isArray(images)) return images;
+  if (typeof images === "string") {
+    try {
+      const parsed = JSON.parse(images);
+      return Array.isArray(parsed) ? parsed : [images];
+    } catch {
+      return [images];
+    }
+  }
+  return [];
+};
+
 export default function AdminClinicsManagement() {
   const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "pending" | "banned" | "premium">("all");
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
@@ -65,6 +94,8 @@ export default function AdminClinicsManagement() {
   const [actionType, setActionType] = useState<"activate" | "ban" | "unban" | "delete" | "suspend" | null>(null);
   const [actionReason, setActionReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
@@ -184,6 +215,11 @@ export default function AdminClinicsManagement() {
     setShowActionModal(true);
   }, []);
 
+  const handleViewImage = useCallback((imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setShowImageViewer(true);
+  }, []);
+
   const confirmAction = useCallback(() => {
     if (!selectedClinic || !actionType) return;
 
@@ -224,7 +260,7 @@ export default function AdminClinicsManagement() {
           },
         ]
       );
-      return; // Stop execution here, the mutation handles the rest
+      return;
     }
 
     let message = "";
@@ -238,19 +274,10 @@ export default function AdminClinicsManagement() {
       case "unban":
         message = "تم إلغاء حظر العيادة بنجاح";
         break;
-      // case "delete":
-      //   message = "تم حذف العيادة بنجاح";
-      //   break;
       case "suspend":
         message = "تم إيقاف العيادة مؤقتاً";
         break;
     }
-
-    // console.log(`${actionType} clinic:`, selectedClinic.id, "Reason:", actionReason);
-    // Alert.alert("تم", message);
-    // setShowActionModal(false);
-    // setShowDetailModal(false);
-    // setActionReason("");
   }, [selectedClinic, actionType, actionReason, deleteClinicMutation]);
 
   // Early returns AFTER all hooks
@@ -290,6 +317,9 @@ export default function AdminClinicsManagement() {
 
   const renderDetailModal = () => {
     if (!selectedClinic) return null;
+
+    const identityImages = parseImageArray(selectedClinic.identityImages);
+    const licenseImages = parseImageArray(selectedClinic.licenseImages);
 
     return (
       <Modal visible={showDetailModal} animationType="slide" transparent>
@@ -364,14 +394,52 @@ export default function AdminClinicsManagement() {
                 </View>
               </View>
 
+              {/* Identity Images Section */}
+              {identityImages.length > 0 && (
+                <View style={styles.documentsSection}>
+                  <Text style={styles.sectionTitle}>صور الهوية</Text>
+                  <View style={styles.imagesContainer}>
+                    {identityImages.map((imageUrl, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.imageButton}
+                        onPress={() => handleViewImage(imageUrl)}
+                      >
+                        <ImageIcon size={20} color="#2196F3" />
+                        <Text style={styles.imageButtonText}>صورة الهوية {index + 1}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* License Images Section */}
+              {licenseImages.length > 0 && (
+                <View style={styles.documentsSection}>
+                  <Text style={styles.sectionTitle}>صور الترخيص</Text>
+                  <View style={styles.imagesContainer}>
+                    {licenseImages.map((imageUrl, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.imageButton}
+                        onPress={() => handleViewImage(imageUrl)}
+                      >
+                        <ImageIcon size={20} color="#2196F3" />
+                        <Text style={styles.imageButtonText}>صورة الترخيص {index + 1}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
               <View style={styles.servicesSection}>
                 <Text style={styles.sectionTitle}>الخدمات المتاحة</Text>
                 <View style={styles.servicesContainer}>
-                  {/* {selectedClinic.services.map((service, index) => (
+                  {selectedClinic?.services?.split(",").map((service, index) => (
                     <View key={index} style={styles.serviceTag}>
                       <Text style={styles.serviceText}>{service}</Text>
                     </View>
-                  ))} */}
+                  ))}
                 </View>
               </View>
 
@@ -564,19 +632,6 @@ export default function AdminClinicsManagement() {
           <Text style={styles.detailText}>{formatWorkingHours(item.workingHours)}</Text>
         </View>
       </View>
-
-      <View style={styles.clinicFooter}>
-        {/* <View style={styles.servicesPreview}>
-          <Text style={styles.servicesText}>
-            {item?.services?.slice(0, 2)?.join("، ")}
-            {item?.services?.length > 2 && ` +${item.services.length - 2} أخرى`}
-          </Text>
-        </View> */}
-
-        <TouchableOpacity style={styles.viewButton}>
-          <Eye size={16} color="#666" />
-        </TouchableOpacity>
-      </View>
     </TouchableOpacity>
   );
 
@@ -609,7 +664,7 @@ export default function AdminClinicsManagement() {
       <FlatList
         data={filteredClinics}
         renderItem={renderClinicItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -625,13 +680,22 @@ export default function AdminClinicsManagement() {
 
       {renderDetailModal()}
       {renderActionModal()}
+
+      <ImageViewerModal
+        visible={showImageViewer}
+        imageUrl={selectedImage}
+        onClose={() => {
+          setShowImageViewer(false);
+          setSelectedImage(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
+    flex: 1,
     backgroundColor: "#f8f9fa",
   },
   searchContainer: {
@@ -657,36 +721,9 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   filterTabs: {
-    // alignSelf: "flex-end",
     backgroundColor: "#fff",
-    // paddingVertical: 10,
-    // paddingHorizontal: 15,
-    // borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  // filterTab: {
-  //   flexDirection: "row-reverse",
-  //   alignItems: "center",
-  //   paddingHorizontal: 15,
-  //   paddingVertical: 8,
-  //   marginRight: 10,
-  //   borderRadius: 20,
-  //   backgroundColor: "#f0f0f0",
-  //   gap: 5,
-  // },
-  // activeFilterTab: {
-  //   backgroundColor: "#2196F3",
-  // },
-  // filterTabText: {
-  //   lineHeight: 12,
-  //   fontSize: 14,
-  //   color: "#666",
-  //   fontFamily: "System",
-  // },
-  // activeFilterTabText: {
-  //   color: "#fff",
-  //   fontWeight: "bold",
-  // },
   listContainer: {
     padding: 15,
   },
@@ -702,7 +739,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   clinicHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 10,
@@ -714,20 +751,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-    // textAlign: "left",
     fontFamily: "System",
   },
   clinicAddress: {
     fontSize: 14,
     color: "#666",
-    // textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
   ownerName: {
     fontSize: 12,
     color: "#999",
-    // textAlign: "left",
     marginTop: 2,
     fontFamily: "System",
   },
@@ -778,7 +812,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   detailItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
@@ -788,7 +822,7 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   clinicFooter: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 10,
@@ -838,7 +872,7 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   detailModalHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
@@ -876,6 +910,9 @@ const styles = StyleSheet.create({
   ownerInfoSection: {
     marginBottom: 20,
   },
+  documentsSection: {
+    marginBottom: 20,
+  },
   servicesSection: {
     marginBottom: 20,
   },
@@ -891,9 +928,9 @@ const styles = StyleSheet.create({
     fontFamily: "System",
   },
   infoRow: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
+    flexDirection: "row",
     alignItems: "center",
+    gap: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
@@ -928,8 +965,28 @@ const styles = StyleSheet.create({
     color: "#666",
     fontFamily: "System",
   },
+  imagesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  imageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e3f2fd",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  imageButtonText: {
+    fontSize: 14,
+    color: "#2196F3",
+    fontWeight: "500",
+    fontFamily: "System",
+  },
   servicesContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
@@ -1054,6 +1111,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#666",
     paddingVertical: 12,
     borderRadius: 8,
+  },
+  cancelActionButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    fontFamily: "System",
   },
   errorContainer: {
     flex: 1,

@@ -1,14 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Dimensions, Alert } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { COUNTRIES, CITIES, DEFAULT_COUNTRY } from "../constants/currency";
@@ -18,10 +8,11 @@ import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChevronDown, User, Stethoscope, Globe, MessageCircle } from "lucide-react-native";
-import { API_URL, trpc } from "../lib/trpc";
+import { ChevronDown, User, Stethoscope, Globe, MessageCircle, CheckSquare, Square } from "lucide-react-native";
+// import { API_URL, trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { ImageUploader } from "../components/ImageUploader";
+import TermsAndConditions from "../components/TermsAndConditions";
 
 const { height } = Dimensions.get("window");
 
@@ -58,6 +49,10 @@ export default function AuthScreen() {
   const [profileImageUrl, setProfileImageUrl] = useState<string>("");
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  // Terms and Conditions
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   // Translated genders based on current language
   const genders = [
@@ -144,50 +139,14 @@ export default function AuthScreen() {
       }
     }
 
+    // Validate terms acceptance
+    if (!termsAccepted) {
+      newErrors.terms = "يجب الموافقة على اتفاقية الاستخدام للمتابعة";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  // const handleFakeLogin = async (userType: "pet_owner" | "veterinarian" | "moderator" | "admin") => {
-  //   setErrors({});
-
-  //   // Map user types to test credentials from seed data
-  //   const credentials = {
-  //     pet_owner: {
-  //       email: "user1@example.com",
-  //       password: "user123",
-  //     },
-  //     veterinarian: {
-  //       email: "vet1@example.com",
-  //       password: "vet123",
-  //     },
-  //     moderator: {
-  //       email: "admin@petapp.com",
-  //       password: "admin123",
-  //     },
-  //     admin: {
-  //       email: "zuhairalrawi0@gmail.com",
-  //       password: "zuh000123000321zuh",
-  //     },
-  //   };
-
-  //   const creds = credentials[userType];
-
-  //   loginMutation.mutate(
-  //     { email: creds.email, password: creds.password },
-  //     {
-  //       onSuccess: async (data) => {
-  //         await login(data?.user, data?.tokens?.accessToken);
-
-  //         router.replace("/(tabs)");
-  //       },
-  //       onError: (error) => {
-  //         setErrors({ general: error.message || t("auth.loginError") });
-  //         Alert.alert("Login Error", `${error.message}\n\nURL: ${API_URL}`, [{ text: "OK" }]);
-  //       },
-  //     }
-  //   );
-  // };
 
   const handleLogin = async () => {
     if (!validateLogin()) return;
@@ -248,8 +207,8 @@ export default function AuthScreen() {
                   setSelectedGender("");
                   setIdFrontImageUrl("");
                   setIdBackImageUrl("");
-                  setIdFrontImageUrl("");
-                  setIdBackImageUrl("");
+                  setProfileImageUrl("");
+                  setTermsAccepted(false);
                   setErrors({});
                 },
               },
@@ -293,29 +252,6 @@ export default function AuthScreen() {
     }
   };
 
-  // const handleForgotPassword = async () => {
-  //   if (!usernameOrEmail.trim() || !/\S+@\S+\.\S+/.test(usernameOrEmail)) {
-  //     Alert.alert("تنبيه", "يرجى إدخال بريد إلكتروني صحيح");
-  //     return;
-  //   }
-  //   Alert.alert("Info", "The forgot password functionality is not yet implemented in the backend.");
-  //   // Uncomment the following when the backend procedure is ready
-  //   /*
-  //   forgotPasswordMutation.mutate({ email: usernameOrEmail }, {
-  //     onSuccess: () => {
-  //       Alert.alert(
-  //         "تم إرسال رابط إعادة تعيين كلمة المرور",
-  //         `تم إرسال رابط إعادة تعيين كلمة المرور إلى ${usernameOrEmail}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.`,
-  //         [{ text: "موافق" }]
-  //       );
-  //     },
-  //     onError: (error) => {
-  //       Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور.");
-  //     }
-  //   });
-  //   */
-  // };
-
   const handleLanguageChange = () => {
     if (isLoading) return;
     try {
@@ -358,6 +294,14 @@ export default function AuthScreen() {
     if (isLoading) return;
     setSelectedGender(gender.value);
     setShowGenderPicker(false);
+  };
+
+  const handleAcceptTerms = () => {
+    setTermsAccepted(true);
+    setShowTermsModal(false);
+    if (errors.terms) {
+      setErrors((prev) => ({ ...prev, terms: "" }));
+    }
   };
 
   return (
@@ -768,6 +712,42 @@ export default function AuthScreen() {
               </>
             )}
 
+            {activeTab === "register" && (
+              <View style={styles.inputGroup}>
+                <TouchableOpacity
+                  style={[styles.termsContainer, errors.terms && styles.termsContainerError]}
+                  onPress={() => setShowTermsModal(true)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.termsCheckboxContainer}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (termsAccepted) {
+                          setTermsAccepted(false);
+                        } else {
+                          setShowTermsModal(true);
+                        }
+                      }}
+                      style={styles.checkbox}
+                    >
+                      {termsAccepted ? (
+                        <CheckSquare size={24} color={COLORS.primary} />
+                      ) : (
+                        <Square size={24} color={COLORS.darkGray} />
+                      )}
+                    </TouchableOpacity>
+                    <View style={styles.termsTextContainer}>
+                      <Text style={styles.termsText}>
+                        أوافق على <Text style={styles.termsLink}>اتفاقية الاستخدام وشروط التسجيل</Text>
+                      </Text>
+                      <Text style={styles.termsHint}>(اضغط للقراءة والموافقة)</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+                {errors.terms && <Text style={styles.errorText}>{errors.terms}</Text>}
+              </View>
+            )}
+
             <Button
               title={
                 isLoading ? t("common.loading") : activeTab === "login" ? t("auth.login") : t("auth.createAccount")
@@ -800,6 +780,14 @@ export default function AuthScreen() {
           </ScrollView>
         </View>
       </View>
+
+      {/* Terms and Conditions Modal */}
+      <TermsAndConditions
+        visible={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleAcceptTerms}
+        accountType={accountType}
+      />
     </View>
   );
 }
@@ -1195,90 +1183,43 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  fakeLoginContainer: {
-    marginTop: 24,
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: "#FFF9E6",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#FFD700",
-  },
-  fakeLoginTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#FF8C00",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  fakeLoginButtons: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 8,
-  },
-  fakeLoginButton: {
-    flex: 1,
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    gap: 6,
-  },
-  fakeLoginPetOwner: {
-    backgroundColor: "#4ECDC4",
-  },
-  fakeLoginVet: {
-    backgroundColor: "#45B7D1",
-  },
-  fakeLoginModerator: {
-    backgroundColor: "#96CEB4",
-  },
-  fakeLoginAdmin: {
-    backgroundColor: "#FF6B6B",
-  },
-  fakeLoginButtonText: {
-    color: COLORS.white,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  profileImageUploadButton: {
-    alignSelf: "center",
-    marginBottom: 20,
-  },
-  profileImageContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: COLORS.gray,
-    borderWidth: 2,
+  termsContainer: {
+    borderWidth: 1,
     borderColor: COLORS.lightGray,
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: COLORS.white,
   },
-  profileImagePreview: {
-    width: "100%",
-    height: "100%",
+  termsContainerError: {
+    borderColor: "#f44336",
+    backgroundColor: "#ffebee",
   },
-  profileImagePlaceholder: {
-    alignItems: "center",
+  termsCheckboxContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "flex-start",
   },
-  profileImagePlaceholderText: {
+  checkbox: {
+    marginLeft: 12,
+  },
+  termsTextContainer: {
+    flex: 1,
+  },
+  termsText: {
+    fontSize: 15,
+    color: COLORS.black,
+    textAlign: "right",
+    lineHeight: 22,
+  },
+  termsLink: {
+    color: COLORS.primary,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+  },
+  termsHint: {
     fontSize: 12,
     color: COLORS.darkGray,
-    marginTop: 8,
-    textAlign: "center",
-  },
-  documentUploader: {
-    alignSelf: "stretch",
-  },
-  documentPreview: {
-    width: "100%",
-    height: 150,
-    borderRadius: 8,
+    textAlign: "right",
+    marginTop: 4,
+    fontStyle: "italic",
   },
 });

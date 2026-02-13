@@ -28,6 +28,8 @@ import {
   Save,
   Camera,
   Upload,
+  Eye,
+  Image as ImageIcon,
 } from "lucide-react-native";
 import { router, Stack } from "expo-router";
 import { mockVetStores, VetStore } from "../mocks/data";
@@ -35,6 +37,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
+import ImageViewerModal from "@/components/ImageViewerModal";
 
 interface EditStoreData {
   id: string;
@@ -47,13 +50,40 @@ interface EditStoreData {
   image: string;
 }
 
+interface StoreDetails extends VetStore {
+  ownerName?: string;
+  ownerEmail?: string;
+  identityImages?: string | string[];
+  licenseImages?: string | string[];
+  email?: string;
+  createdAt?: string;
+}
+
+const parseImageArray = (images: string | string[] | null | undefined): string[] => {
+  if (!images) return [];
+  if (Array.isArray(images)) return images;
+  if (typeof images === "string") {
+    try {
+      const parsed = JSON.parse(images);
+      return Array.isArray(parsed) ? parsed : [images];
+    } catch {
+      return [images];
+    }
+  }
+  return [];
+};
+
 export default function StoresAdminManagementScreen() {
   const { isRTL } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [editingStore, setEditingStore] = useState<EditStoreData | null>(null);
+  const [selectedStore, setSelectedStore] = useState<StoreDetails | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "inactive">("all");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [viewerImage, setViewerImage] = useState<string | null>(null);
 
   const { showToast } = useToastContext();
   const queryClient = useQueryClient();
@@ -83,6 +113,18 @@ export default function StoresAdminManagementScreen() {
         return true;
     }
   });
+
+  // ✅ View Store Details
+  const handleViewDetails = (store: any) => {
+    setSelectedStore(store);
+    setDetailsModalVisible(true);
+  };
+
+  // ✅ View Image
+  const handleViewImage = (imageUrl: string) => {
+    setViewerImage(imageUrl);
+    setShowImageViewer(true);
+  };
 
   // ✅ Edit Store
   const handleEditStore = (store: any) => {
@@ -132,7 +174,6 @@ export default function StoresAdminManagementScreen() {
 
   // Delete Store
   const handleDeleteStore = (storeId: number, storeName: string) => {
-    // Keep the confirmation alert
     Alert.alert("حذف المتجر", `هل أنت متأكد من حذف المتجر "${storeName}"؟`, [
       { text: "إلغاء", style: "cancel" },
       {
@@ -187,6 +228,153 @@ export default function StoresAdminManagementScreen() {
     setEditingStore((prev) => (prev ? { ...prev, image: "" } : null));
   };
 
+  const renderDetailsModal = () => {
+    if (!selectedStore) return null;
+
+    const identityImages = parseImageArray(selectedStore.identityImages);
+    const licenseImages = parseImageArray(selectedStore.licenseImages);
+
+    return (
+      <Modal
+        visible={detailsModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setDetailsModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setDetailsModalVisible(false)} style={styles.closeButton}>
+              <X size={24} color={COLORS.darkGray} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>تفاصيل المذخر</Text>
+            <View style={{ width: 40 }} />
+          </View>
+
+          <ScrollView style={styles.detailsScrollView} showsVerticalScrollIndicator={false}>
+            {/* Store Image */}
+            {selectedStore.image && <Image source={{ uri: selectedStore.image }} style={styles.detailsStoreImage} />}
+
+            {/* Store Info Section */}
+            <View style={styles.detailsSection}>
+              <Text style={styles.sectionTitle}>معلومات المذخر</Text>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>الاسم:</Text>
+                <Text style={styles.detailValue}>{selectedStore.name}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>الوصف:</Text>
+                <Text style={styles.detailValue}>{selectedStore.description}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>العنوان:</Text>
+                <Text style={styles.detailValue}>{selectedStore.address}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>الهاتف:</Text>
+                <Text style={styles.detailValue}>{selectedStore.phone}</Text>
+              </View>
+
+              {selectedStore.email && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>البريد الإلكتروني:</Text>
+                  <Text style={styles.detailValue}>{selectedStore.email}</Text>
+                </View>
+              )}
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>ساعات العمل:</Text>
+                <Text style={styles.detailValue}>{selectedStore.workingHours}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>التقييم:</Text>
+                <View style={styles.ratingContainer}>
+                  <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
+                  <Text style={styles.ratingText}>{selectedStore.rating.toFixed(1)}</Text>
+                  <Text style={styles.reviewCount}>({selectedStore.reviewCount} تقييم)</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Owner Info Section */}
+            {(selectedStore.ownerName || selectedStore.ownerEmail) && (
+              <View style={styles.detailsSection}>
+                <Text style={styles.sectionTitle}>معلومات المالك</Text>
+
+                {selectedStore.ownerName && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>الاسم:</Text>
+                    <Text style={styles.detailValue}>{selectedStore.ownerName}</Text>
+                  </View>
+                )}
+
+                {selectedStore.ownerEmail && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>البريد الإلكتروني:</Text>
+                    <Text style={styles.detailValue}>{selectedStore.ownerEmail}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Identity Images Section */}
+            {identityImages.length > 0 && (
+              <View style={styles.detailsSection}>
+                <Text style={styles.sectionTitle}>صور الهوية</Text>
+                <View style={styles.imagesContainer}>
+                  {identityImages.map((imageUrl, index) => (
+                    <TouchableOpacity key={index} style={styles.imageButton} onPress={() => handleViewImage(imageUrl)}>
+                      <ImageIcon size={20} color={COLORS.primary} />
+                      <Text style={styles.imageButtonText}>صورة الهوية {index + 1}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* License Images Section */}
+            {licenseImages.length > 0 && (
+              <View style={styles.detailsSection}>
+                <Text style={styles.sectionTitle}>صور الترخيص</Text>
+                <View style={styles.imagesContainer}>
+                  {licenseImages.map((imageUrl, index) => (
+                    <TouchableOpacity key={index} style={styles.imageButton} onPress={() => handleViewImage(imageUrl)}>
+                      <ImageIcon size={20} color={COLORS.primary} />
+                      <Text style={styles.imageButtonText}>صورة الترخيص {index + 1}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Additional Info Section */}
+            <View style={styles.detailsSection}>
+              <Text style={styles.sectionTitle}>معلومات إضافية</Text>
+
+              {selectedStore.createdAt && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>تاريخ التسجيل:</Text>
+                  <Text style={styles.detailValue}>
+                    {new Date(selectedStore.createdAt).toLocaleDateString("ar-SA")}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>عدد المراجعات:</Text>
+                <Text style={styles.detailValue}>{selectedStore.reviewCount}</Text>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+    );
+  };
+
   const renderStoreCard = ({ item }: { item: VetStore }) => (
     <View style={styles.storeCard}>
       <Image source={{ uri: item.image }} style={styles.storeImage} />
@@ -226,6 +414,13 @@ export default function StoresAdminManagementScreen() {
       </View>
 
       <View style={styles.storeActions}>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: COLORS.info || "#17a2b8" }]}
+          onPress={() => handleViewDetails(item)}
+        >
+          <Eye size={18} color={COLORS.white} />
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: COLORS.primary }]}
           onPress={() => handleEditStore(item)}
@@ -375,10 +570,6 @@ export default function StoresAdminManagementScreen() {
               >
                 <Plus size={20} color={COLORS.white} />
               </TouchableOpacity>
-
-              {/* <TouchableOpacity onPress={handleDeleteAllStores} style={[styles.headerButton, styles.deleteAllButton]}>
-                <Trash2 size={20} color={COLORS.white} />
-              </TouchableOpacity> */}
             </View>
           ),
         }}
@@ -435,7 +626,7 @@ export default function StoresAdminManagementScreen() {
         <FlatList
           data={filteredStores}
           renderItem={renderStoreCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.storesList}
           ListEmptyComponent={() => (
@@ -455,6 +646,16 @@ export default function StoresAdminManagementScreen() {
         />
 
         {renderEditModal()}
+        {renderDetailsModal()}
+
+        <ImageViewerModal
+          visible={showImageViewer}
+          imageUrl={viewerImage}
+          onClose={() => {
+            setShowImageViewer(false);
+            setViewerImage(null);
+          }}
+        />
       </View>
     </>
   );
@@ -567,6 +768,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   rating: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    marginRight: 4,
+    fontWeight: "600",
+  },
+  ratingText: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginRight: 4,
@@ -778,5 +985,65 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 14,
     fontWeight: "600",
+  },
+
+  // Details Modal Styles
+  detailsScrollView: {
+    flex: 1,
+  },
+  detailsStoreImage: {
+    width: "100%",
+    height: 200,
+    backgroundColor: COLORS.lightGray,
+  },
+  detailsSection: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginBottom: 12,
+    textAlign: "left",
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+  },
+  detailValue: {
+    fontSize: 14,
+    color: COLORS.black,
+    flex: 1,
+    textAlign: "left",
+  },
+  imagesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  imageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e3f2fd",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  imageButtonText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: "500",
   },
 });

@@ -23,7 +23,9 @@ import {
   ChevronRight,
   TestTube,
   MessageCircle,
+  CreditCard,
 } from "lucide-react-native";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface UserData {
   id: number;
@@ -34,6 +36,10 @@ interface UserData {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  approval?: {
+    idFrontImage: string | null;
+    idBackImage: string | null;
+  } | null;
 }
 
 interface Permission {
@@ -128,6 +134,9 @@ export default function AdminUsersList() {
   const [messageText, setMessageText] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
   const [permissionCategories, setPermissionCategories] = useState<PermissionCategory[]>([]);
+  const [showIdImageModal, setShowIdImageModal] = useState(false);
+  const [currentIdImageView, setCurrentIdImageView] = useState<"front" | "back" | null>(null);
+  const [selectedIdImageUser, setSelectedIdImageUser] = useState<UserData | null>(null);
 
   // Fetch all users
   const {
@@ -197,16 +206,22 @@ export default function AdminUsersList() {
     if (searchQuery.length > 2 && searchResponse) {
       return searchResponse.map((user) => ({
         ...user,
-        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
-        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
+        createdAt: user?.createdAt instanceof Date ? user?.createdAt.toISOString() : user?.createdAt,
+        updatedAt: user?.updatedAt instanceof Date ? user?.updatedAt.toISOString() : user?.updatedAt,
       })) as UserData[];
     }
 
     if (usersResponse?.users) {
-      return usersResponse.users.map((user) => ({
-        ...user,
-        createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
-        updatedAt: user.updatedAt instanceof Date ? user.updatedAt.toISOString() : user.updatedAt,
+      return usersResponse.users.map((item) => ({
+        ...item.user,
+        createdAt: item.user.createdAt instanceof Date ? item.user.createdAt.toISOString() : item.user.createdAt,
+        updatedAt: item.user.updatedAt instanceof Date ? item.user.updatedAt.toISOString() : item.user.updatedAt,
+        approval: item.approval
+          ? {
+              idFrontImage: item.approval.idFrontImage,
+              idBackImage: item.approval.idBackImage,
+            }
+          : null,
       })) as UserData[];
     }
 
@@ -369,6 +384,24 @@ export default function AdminUsersList() {
     setShowPermissionsModal(true);
   };
 
+  const handleViewIdImage = (user: UserData, side: "front" | "back") => {
+    if (!user.approval) {
+      Alert.alert("تنبيه", "لا توجد صور هوية لهذا المستخدم");
+      return;
+    }
+
+    const imageUrl = side === "front" ? user.approval.idFrontImage : user.approval.idBackImage;
+
+    if (!imageUrl) {
+      Alert.alert("تنبيه", `لا توجد صورة ${side === "front" ? "الوجه الأمامي" : "الوجه الخلفي"} للهوية`);
+      return;
+    }
+
+    setSelectedIdImageUser(user);
+    setCurrentIdImageView(side);
+    setShowIdImageModal(true);
+  };
+
   const handleTogglePermission = (permissionId: number) => {
     setSelectedPermissions((prev) => {
       if (prev.includes(permissionId)) {
@@ -461,6 +494,10 @@ export default function AdminUsersList() {
     }
   };
 
+  const hasIdImages = (user: UserData) => {
+    return user.approval && (user.approval.idFrontImage || user.approval.idBackImage);
+  };
+
   const renderUserCard = ({ item: user }: { item: UserData }) => (
     <View style={styles.userCard}>
       <View style={styles.userHeader}>
@@ -475,6 +512,11 @@ export default function AdminUsersList() {
             {user.userType === "admin" && (
               <View style={styles.shieldBadge}>
                 <Shield size={12} color="#FFD700" />
+              </View>
+            )}
+            {hasIdImages(user) && (
+              <View style={styles.idBadge}>
+                <CreditCard size={12} color="#4CAF50" />
               </View>
             )}
           </View>
@@ -511,6 +553,31 @@ export default function AdminUsersList() {
         <TouchableOpacity style={styles.actionButton} onPress={() => handleViewProfile(user)}>
           <Eye size={18} color="#4ECDC4" />
         </TouchableOpacity>
+
+        {/* ID Images Buttons */}
+        {hasIdImages(user) && (
+          <View style={styles.idImagesContainer}>
+            {user.approval?.idFrontImage && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.idImageButton]}
+                onPress={() => handleViewIdImage(user, "front")}
+              >
+                <CreditCard size={18} color="#4CAF50" />
+                <Text style={styles.idImageLabel}>أمامي</Text>
+              </TouchableOpacity>
+            )}
+            {user.approval?.idBackImage && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.idImageButton]}
+                onPress={() => handleViewIdImage(user, "back")}
+              >
+                <CreditCard size={18} color="#2196F3" />
+                <Text style={styles.idImageLabel}>خلفي</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         <TouchableOpacity style={styles.actionButton} onPress={() => handleOpenPermissions(user)}>
           <Shield size={18} color="#9C27B0" />
         </TouchableOpacity>
@@ -703,6 +770,23 @@ export default function AdminUsersList() {
             showsVerticalScrollIndicator={false}
           />
         )}
+
+        {/* ID Image Viewer Modal */}
+        <ImageViewerModal
+          visible={showIdImageModal}
+          imageUrl={
+            selectedIdImageUser && currentIdImageView
+              ? currentIdImageView === "front"
+                ? selectedIdImageUser.approval?.idFrontImage || null
+                : selectedIdImageUser.approval?.idBackImage || null
+              : null
+          }
+          onClose={() => {
+            setShowIdImageModal(false);
+            setSelectedIdImageUser(null);
+            setCurrentIdImageView(null);
+          }}
+        />
 
         {/* Permissions Modal */}
         <Modal
@@ -1047,6 +1131,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  idBadge: {
+    backgroundColor: "#E8F5E9",
+    borderRadius: 12,
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   userStatusContainer: {
     flexDirection: "row-reverse",
     alignItems: "center",
@@ -1085,6 +1176,7 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     justifyContent: "flex-end",
     gap: 12,
+    flexWrap: "wrap",
   },
   actionButton: {
     padding: 8,
@@ -1092,6 +1184,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
     justifyContent: "center",
     alignItems: "center",
+  },
+  idImagesContainer: {
+    flexDirection: "row-reverse",
+    gap: 8,
+  },
+  idImageButton: {
+    flexDirection: "column",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 2,
+  },
+  idImageLabel: {
+    fontSize: 10,
+    color: "#666",
+    fontWeight: "600",
+    fontFamily: "System",
   },
   modalContainer: {
     flex: 1,

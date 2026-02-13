@@ -98,7 +98,7 @@ export const CITIES = {
 } as const;
 
 export function formatPrice(price: number): string {
-  return `${price?.toFixed(2) || 0} ${CURRENCY.symbol}`;
+  return `${price?.toFixed(3) || 0} ${CURRENCY.symbol}`;
 }
 
 export function formatPriceRange(min: number, max: number): string {
