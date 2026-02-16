@@ -85,8 +85,8 @@ export default function AdoptionBreedingListScreen() {
               isClosed
                 ? { backgroundColor: COLORS.darkGray }
                 : activeTab === "adoption"
-                  ? styles.adoptionBadge
-                  : styles.breedingBadge,
+                ? styles.adoptionBadge
+                : styles.breedingBadge,
             ]}
           >
             <Text style={styles.badgeText}>{isClosed ? "مغلق" : activeTab === "adoption" ? "للتبني" : "للتزاوج"}</Text>
@@ -123,7 +123,7 @@ export default function AdoptionBreedingListScreen() {
           {/* Price for breeding */}
           {activeTab === "breeding" && pet.price && (
             <View style={styles.petInfoRow}>
-              <Text style={styles.priceText}>{pet.price} ريال</Text>
+              <Text style={styles.priceText}>{pet.price} دينار</Text>
             </View>
           )}
         </View>

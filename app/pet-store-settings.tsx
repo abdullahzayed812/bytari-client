@@ -1,13 +1,41 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, TextInput, Alert } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, TextInput, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
-import { router, Stack } from 'expo-router';
-import { Settings, Store, Package, Users, BarChart3, Bell, Shield, Palette, Globe, Save, ArrowLeft, Cat, Dog, Bird, Fish, Egg, Heart, Star, ShoppingCart, Tag, Percent, Clock, MapPin, Phone, Mail, Camera, Edit3 } from 'lucide-react-native';
+import { router, Stack } from "expo-router";
+import {
+  Settings,
+  Store,
+  Package,
+  Users,
+  BarChart3,
+  Bell,
+  Shield,
+  Palette,
+  Globe,
+  Save,
+  ArrowLeft,
+  Cat,
+  Dog,
+  Bird,
+  Fish,
+  Egg,
+  Heart,
+  Star,
+  ShoppingCart,
+  Tag,
+  Percent,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  Camera,
+  Edit3,
+} from "lucide-react-native";
 import Button from "../components/Button";
 
-type StoreCategory = 'cat' | 'dog' | 'bird' | 'fish' | 'poultry';
+type StoreCategory = "cat" | "dog" | "bird" | "fish" | "poultry";
 
 interface CategorySettings {
   enabled: boolean;
@@ -50,9 +78,9 @@ interface StoreSettings {
 
 const defaultCategorySettings: CategorySettings = {
   enabled: true,
-  displayName: '',
-  description: '',
-  color: '#FF6B6B',
+  displayName: "",
+  description: "",
+  color: "#FF6B6B",
   discountPercentage: 0,
   featuredProducts: false,
   showInHomepage: true,
@@ -68,41 +96,49 @@ const categoryIcons = {
 };
 
 const categoryLabels = {
-  cat: 'قطط',
-  dog: 'كلاب',
-  bird: 'طيور',
-  fish: 'أسماك',
-  poultry: 'دواجن',
+  cat: "قطط",
+  dog: "كلاب",
+  bird: "طيور",
+  fish: "أسماك",
+  poultry: "دواجن",
 };
 
 const predefinedColors = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFA726',
-  '#9C27B0', '#FF5722', '#607D8B', '#795548', '#E91E63'
+  "#FF6B6B",
+  "#4ECDC4",
+  "#45B7D1",
+  "#96CEB4",
+  "#FFA726",
+  "#9C27B0",
+  "#FF5722",
+  "#607D8B",
+  "#795548",
+  "#E91E63",
 ];
 
 export default function PetStoreSettingsScreen() {
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
-  
+
   const [settings, setSettings] = useState<StoreSettings>({
-    storeName: 'متجر الحيوانات الأليفة',
-    storeDescription: 'متجر شامل لجميع احتياجات الحيوانات الأليفة من طعام وألعاب وإكسسوارات',
-    contactPhone: '+966501234567',
-    contactEmail: 'info@petstore.com',
-    storeAddress: 'الرياض، المملكة العربية السعودية',
+    storeName: "متجر الحيوانات الأليفة",
+    storeDescription: "متجر شامل لجميع احتياجات الحيوانات الأليفة من طعام وألعاب وإكسسوارات",
+    contactPhone: "+966501234567",
+    contactEmail: "info@petstore.com",
+    storeAddress: "الرياض، المملكة العربية السعودية",
     deliveryEnabled: true,
     deliveryFee: 25,
     freeDeliveryThreshold: 200,
     operatingHours: {
-      open: '08:00',
-      close: '22:00',
+      open: "08:00",
+      close: "22:00",
     },
     categories: {
-      cat: { ...defaultCategorySettings, displayName: 'قطط', color: '#FF6B6B' },
-      dog: { ...defaultCategorySettings, displayName: 'كلاب', color: '#4ECDC4' },
-      bird: { ...defaultCategorySettings, displayName: 'طيور', color: '#45B7D1' },
-      fish: { ...defaultCategorySettings, displayName: 'أسماك', color: '#96CEB4' },
-      poultry: { ...defaultCategorySettings, displayName: 'دواجن', color: '#FFA726' },
+      cat: { ...defaultCategorySettings, displayName: "قطط", color: "#FF6B6B" },
+      dog: { ...defaultCategorySettings, displayName: "كلاب", color: "#4ECDC4" },
+      bird: { ...defaultCategorySettings, displayName: "طيور", color: "#45B7D1" },
+      fish: { ...defaultCategorySettings, displayName: "أسماك", color: "#96CEB4" },
+      poultry: { ...defaultCategorySettings, displayName: "دواجن", color: "#FFA726" },
     },
     notifications: {
       newOrders: true,
@@ -118,7 +154,7 @@ export default function PetStoreSettingsScreen() {
     },
   });
 
-  const [activeTab, setActiveTab] = useState<'general' | 'categories' | 'notifications' | 'appearance'>('general');
+  const [activeTab, setActiveTab] = useState<"general" | "categories" | "notifications" | "appearance">("general");
   const [selectedCategory, setSelectedCategory] = useState<StoreCategory | null>(null);
 
   // Check permissions
@@ -131,7 +167,7 @@ export default function PetStoreSettingsScreen() {
   if (!hasPermission()) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: 'إعدادات المتجر', headerShown: true }} />
+        <Stack.Screen options={{ title: "إعدادات المتجر", headerShown: true }} />
         <View style={styles.noPermissionContainer}>
           <Shield size={64} color={COLORS.gray} />
           <Text style={styles.noPermissionText}>ليس لديك صلاحية للوصول إلى إعدادات المتجر</Text>
@@ -141,41 +177,37 @@ export default function PetStoreSettingsScreen() {
   }
 
   const updateSettings = (updates: Partial<StoreSettings>) => {
-    setSettings(prev => ({ ...prev, ...updates }));
+    setSettings((prev) => ({ ...prev, ...updates }));
   };
 
   const updateCategorySettings = (category: StoreCategory, updates: Partial<CategorySettings>) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       categories: {
         ...prev.categories,
-        [category]: { ...prev.categories[category], ...updates }
-      }
+        [category]: { ...prev.categories[category], ...updates },
+      },
     }));
   };
 
   const handleSaveSettings = () => {
-    Alert.alert(
-      'حفظ الإعدادات',
-      'هل تريد حفظ جميع التغييرات؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حفظ',
-          onPress: () => {
-            // Here you would save to backend
-            Alert.alert('تم الحفظ', 'تم حفظ إعدادات المتجر بنجاح');
-          }
-        }
-      ]
-    );
+    Alert.alert("حفظ الإعدادات", "هل تريد حفظ جميع التغييرات؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حفظ",
+        onPress: () => {
+          // Here you would save to backend
+          Alert.alert("تم الحفظ", "تم حفظ إعدادات المتجر بنجاح");
+        },
+      },
+    ]);
   };
 
   const renderGeneralSettings = () => (
     <View style={styles.tabContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>معلومات المتجر الأساسية</Text>
-        
+
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>اسم المتجر</Text>
           <TextInput
@@ -183,7 +215,7 @@ export default function PetStoreSettingsScreen() {
             value={settings.storeName}
             onChangeText={(text) => updateSettings({ storeName: text })}
             placeholder="اسم المتجر"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -196,7 +228,7 @@ export default function PetStoreSettingsScreen() {
             placeholder="وصف المتجر"
             multiline
             numberOfLines={3}
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -208,7 +240,7 @@ export default function PetStoreSettingsScreen() {
             onChangeText={(text) => updateSettings({ contactPhone: text })}
             placeholder="رقم الهاتف"
             keyboardType="phone-pad"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -220,7 +252,7 @@ export default function PetStoreSettingsScreen() {
             onChangeText={(text) => updateSettings({ contactEmail: text })}
             placeholder="البريد الإلكتروني"
             keyboardType="email-address"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -231,14 +263,14 @@ export default function PetStoreSettingsScreen() {
             value={settings.storeAddress}
             onChangeText={(text) => updateSettings({ storeAddress: text })}
             placeholder="عنوان المتجر"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>إعدادات التوصيل</Text>
-        
+
         <View style={styles.switchRow}>
           <Text style={styles.switchLabel}>تفعيل خدمة التوصيل</Text>
           <Switch
@@ -252,26 +284,26 @@ export default function PetStoreSettingsScreen() {
         {settings.deliveryEnabled && (
           <>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>رسوم التوصيل (ريال)</Text>
+              <Text style={styles.inputLabel}>رسوم التوصيل (دينار)</Text>
               <TextInput
                 style={styles.textInput}
                 value={settings.deliveryFee.toString()}
                 onChangeText={(text) => updateSettings({ deliveryFee: parseFloat(text) || 0 })}
                 placeholder="رسوم التوصيل"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>الحد الأدنى للتوصيل المجاني (ريال)</Text>
+              <Text style={styles.inputLabel}>الحد الأدنى للتوصيل المجاني (دينار)</Text>
               <TextInput
                 style={styles.textInput}
                 value={settings.freeDeliveryThreshold.toString()}
                 onChangeText={(text) => updateSettings({ freeDeliveryThreshold: parseFloat(text) || 0 })}
                 placeholder="الحد الأدنى للتوصيل المجاني"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
           </>
@@ -280,29 +312,33 @@ export default function PetStoreSettingsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ساعات العمل</Text>
-        
+
         <View style={styles.timeRow}>
           <View style={styles.timeInput}>
             <Text style={styles.inputLabel}>وقت الفتح</Text>
             <TextInput
               style={styles.textInput}
               value={settings.operatingHours.open}
-              onChangeText={(text) => updateSettings({ 
-                operatingHours: { ...settings.operatingHours, open: text }
-              })}
+              onChangeText={(text) =>
+                updateSettings({
+                  operatingHours: { ...settings.operatingHours, open: text },
+                })
+              }
               placeholder="08:00"
               textAlign="center"
             />
           </View>
-          
+
           <View style={styles.timeInput}>
             <Text style={styles.inputLabel}>وقت الإغلاق</Text>
             <TextInput
               style={styles.textInput}
               value={settings.operatingHours.close}
-              onChangeText={(text) => updateSettings({ 
-                operatingHours: { ...settings.operatingHours, close: text }
-              })}
+              onChangeText={(text) =>
+                updateSettings({
+                  operatingHours: { ...settings.operatingHours, close: text },
+                })
+              }
               placeholder="22:00"
               textAlign="center"
             />
@@ -315,13 +351,10 @@ export default function PetStoreSettingsScreen() {
   const renderCategoriesSettings = () => {
     if (selectedCategory) {
       const categorySettings = settings.categories[selectedCategory];
-      
+
       return (
         <View style={styles.tabContent}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => setSelectedCategory(null)}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => setSelectedCategory(null)}>
             <ArrowLeft size={20} color={COLORS.primary} />
             <Text style={styles.backButtonText}>العودة للأقسام</Text>
           </TouchableOpacity>
@@ -333,7 +366,7 @@ export default function PetStoreSettingsScreen() {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>إعدادات القسم</Text>
-            
+
             <View style={styles.switchRow}>
               <Text style={styles.switchLabel}>تفعيل القسم</Text>
               <Switch
@@ -351,7 +384,7 @@ export default function PetStoreSettingsScreen() {
                 value={categorySettings.displayName}
                 onChangeText={(text) => updateCategorySettings(selectedCategory, { displayName: text })}
                 placeholder="اسم القسم"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -364,7 +397,7 @@ export default function PetStoreSettingsScreen() {
                 placeholder="وصف القسم"
                 multiline
                 numberOfLines={2}
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -377,7 +410,7 @@ export default function PetStoreSettingsScreen() {
                     style={[
                       styles.colorOption,
                       { backgroundColor: color },
-                      categorySettings.color === color && styles.selectedColor
+                      categorySettings.color === color && styles.selectedColor,
                     ]}
                     onPress={() => updateCategorySettings(selectedCategory, { color })}
                   />
@@ -390,22 +423,26 @@ export default function PetStoreSettingsScreen() {
               <TextInput
                 style={styles.textInput}
                 value={categorySettings.discountPercentage.toString()}
-                onChangeText={(text) => updateCategorySettings(selectedCategory, { discountPercentage: parseFloat(text) || 0 })}
+                onChangeText={(text) =>
+                  updateCategorySettings(selectedCategory, { discountPercentage: parseFloat(text) || 0 })
+                }
                 placeholder="0"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>الحد الأدنى للطلب (ريال)</Text>
+              <Text style={styles.inputLabel}>الحد الأدنى للطلب (دينار)</Text>
               <TextInput
                 style={styles.textInput}
                 value={categorySettings.minimumOrderAmount.toString()}
-                onChangeText={(text) => updateCategorySettings(selectedCategory, { minimumOrderAmount: parseFloat(text) || 0 })}
+                onChangeText={(text) =>
+                  updateCategorySettings(selectedCategory, { minimumOrderAmount: parseFloat(text) || 0 })
+                }
                 placeholder="0"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -437,17 +474,17 @@ export default function PetStoreSettingsScreen() {
       <View style={styles.tabContent}>
         <Text style={styles.sectionTitle}>إدارة أقسام المتجر</Text>
         <Text style={styles.sectionSubtitle}>اضغط على أي قسم لتخصيص إعداداته</Text>
-        
+
         {(Object.keys(settings.categories) as StoreCategory[]).map((category) => {
           const categorySettings = settings.categories[category];
-          
+
           return (
             <TouchableOpacity
               key={category}
               style={[
                 styles.categoryCard,
                 { backgroundColor: categorySettings.color },
-                !categorySettings.enabled && styles.disabledCategory
+                !categorySettings.enabled && styles.disabledCategory,
               ]}
               onPress={() => setSelectedCategory(category)}
             >
@@ -456,12 +493,10 @@ export default function PetStoreSettingsScreen() {
                   {categoryIcons[category]}
                   <View style={styles.categoryCardInfo}>
                     <Text style={styles.categoryCardTitle}>{categorySettings.displayName}</Text>
-                    <Text style={styles.categoryCardStatus}>
-                      {categorySettings.enabled ? 'مفعل' : 'معطل'}
-                    </Text>
+                    <Text style={styles.categoryCardStatus}>{categorySettings.enabled ? "مفعل" : "معطل"}</Text>
                   </View>
                 </View>
-                
+
                 <View style={styles.categoryCardRight}>
                   {categorySettings.discountPercentage > 0 && (
                     <View style={styles.discountBadge}>
@@ -483,7 +518,7 @@ export default function PetStoreSettingsScreen() {
     <View style={styles.tabContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>إعدادات الإشعارات</Text>
-        
+
         <View style={styles.switchRow}>
           <View style={styles.switchLabelContainer}>
             <Text style={styles.switchLabel}>الطلبات الجديدة</Text>
@@ -491,9 +526,11 @@ export default function PetStoreSettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.newOrders}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, newOrders: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, newOrders: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -506,9 +543,11 @@ export default function PetStoreSettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.lowStock}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, lowStock: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, lowStock: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -521,9 +560,11 @@ export default function PetStoreSettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.customerReviews}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, customerReviews: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, customerReviews: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -536,9 +577,11 @@ export default function PetStoreSettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.promotions}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, promotions: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, promotions: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -551,7 +594,7 @@ export default function PetStoreSettingsScreen() {
     <View style={styles.tabContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>مظهر المتجر</Text>
-        
+
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>اللون الأساسي</Text>
           <View style={styles.colorPicker}>
@@ -561,11 +604,13 @@ export default function PetStoreSettingsScreen() {
                 style={[
                   styles.colorOption,
                   { backgroundColor: color },
-                  settings.appearance.primaryColor === color && styles.selectedColor
+                  settings.appearance.primaryColor === color && styles.selectedColor,
                 ]}
-                onPress={() => updateSettings({ 
-                  appearance: { ...settings.appearance, primaryColor: color }
-                })}
+                onPress={() =>
+                  updateSettings({
+                    appearance: { ...settings.appearance, primaryColor: color },
+                  })
+                }
               />
             ))}
           </View>
@@ -575,9 +620,11 @@ export default function PetStoreSettingsScreen() {
           <Text style={styles.switchLabel}>عرض التقييمات</Text>
           <Switch
             value={settings.appearance.showRatings}
-            onValueChange={(value) => updateSettings({ 
-              appearance: { ...settings.appearance, showRatings: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                appearance: { ...settings.appearance, showRatings: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -587,9 +634,11 @@ export default function PetStoreSettingsScreen() {
           <Text style={styles.switchLabel}>عرض الأسعار</Text>
           <Switch
             value={settings.appearance.showPrices}
-            onValueChange={(value) => updateSettings({ 
-              appearance: { ...settings.appearance, showPrices: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                appearance: { ...settings.appearance, showPrices: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -599,9 +648,11 @@ export default function PetStoreSettingsScreen() {
           <Text style={styles.switchLabel}>عرض شبكي للمنتجات</Text>
           <Switch
             value={settings.appearance.gridLayout}
-            onValueChange={(value) => updateSettings({ 
-              appearance: { ...settings.appearance, gridLayout: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                appearance: { ...settings.appearance, gridLayout: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -612,55 +663,57 @@ export default function PetStoreSettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ 
-        title: 'إعدادات متجر الحيوانات',
-        headerShown: true,
-        headerRight: () => (
-          <TouchableOpacity onPress={handleSaveSettings}>
-            <Save size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        )
-      }} />
-      
+      <Stack.Screen
+        options={{
+          title: "إعدادات متجر الحيوانات",
+          headerShown: true,
+          headerRight: () => (
+            <TouchableOpacity onPress={handleSaveSettings}>
+              <Save size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
       <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'general' && styles.activeTab]}
-          onPress={() => setActiveTab('general')}
+          style={[styles.tab, activeTab === "general" && styles.activeTab]}
+          onPress={() => setActiveTab("general")}
         >
-          <Settings size={20} color={activeTab === 'general' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'general' && styles.activeTabText]}>عام</Text>
+          <Settings size={20} color={activeTab === "general" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "general" && styles.activeTabText]}>عام</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'categories' && styles.activeTab]}
-          onPress={() => setActiveTab('categories')}
+          style={[styles.tab, activeTab === "categories" && styles.activeTab]}
+          onPress={() => setActiveTab("categories")}
         >
-          <Package size={20} color={activeTab === 'categories' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'categories' && styles.activeTabText]}>الأقسام</Text>
+          <Package size={20} color={activeTab === "categories" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "categories" && styles.activeTabText]}>الأقسام</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'notifications' && styles.activeTab]}
-          onPress={() => setActiveTab('notifications')}
+          style={[styles.tab, activeTab === "notifications" && styles.activeTab]}
+          onPress={() => setActiveTab("notifications")}
         >
-          <Bell size={20} color={activeTab === 'notifications' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'notifications' && styles.activeTabText]}>الإشعارات</Text>
+          <Bell size={20} color={activeTab === "notifications" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "notifications" && styles.activeTabText]}>الإشعارات</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'appearance' && styles.activeTab]}
-          onPress={() => setActiveTab('appearance')}
+          style={[styles.tab, activeTab === "appearance" && styles.activeTab]}
+          onPress={() => setActiveTab("appearance")}
         >
-          <Palette size={20} color={activeTab === 'appearance' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'appearance' && styles.activeTabText]}>المظهر</Text>
+          <Palette size={20} color={activeTab === "appearance" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "appearance" && styles.activeTabText]}>المظهر</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === 'general' && renderGeneralSettings()}
-        {activeTab === 'categories' && renderCategoriesSettings()}
-        {activeTab === 'notifications' && renderNotificationsSettings()}
-        {activeTab === 'appearance' && renderAppearanceSettings()}
+        {activeTab === "general" && renderGeneralSettings()}
+        {activeTab === "categories" && renderCategoriesSettings()}
+        {activeTab === "notifications" && renderNotificationsSettings()}
+        {activeTab === "appearance" && renderAppearanceSettings()}
       </ScrollView>
     </View>
   );
@@ -673,27 +726,27 @@ const styles = StyleSheet.create({
   },
   noPermissionContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   noPermissionText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 16,
   },
   tabsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.white,
     paddingHorizontal: 4,
     paddingVertical: 8,
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 12,
     paddingHorizontal: 8,
     borderRadius: 8,
@@ -706,11 +759,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.gray,
     marginLeft: 4,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   activeTabText: {
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     flex: 1,
@@ -726,7 +779,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
   },
@@ -734,14 +787,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   inputGroup: {
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -757,12 +810,12 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -770,7 +823,7 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   switchLabelContainer: {
     flex: 1,
@@ -781,8 +834,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   timeInput: {
     flex: 0.45,
@@ -790,20 +843,20 @@ const styles = StyleSheet.create({
   categoryCard: {
     borderRadius: 12,
     marginBottom: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   disabledCategory: {
     opacity: 0.6,
   },
   categoryCardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
   },
   categoryCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   categoryCardInfo: {
@@ -811,7 +864,7 @@ const styles = StyleSheet.create({
   },
   categoryCardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
   },
   categoryCardStatus: {
@@ -820,13 +873,13 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   categoryCardRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   discountBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -835,12 +888,12 @@ const styles = StyleSheet.create({
   discountText: {
     fontSize: 10,
     color: COLORS.white,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginLeft: 2,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
     padding: 8,
   },
@@ -848,25 +901,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.primary,
     marginLeft: 8,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 20,
     borderRadius: 12,
     marginBottom: 16,
   },
   categoryHeaderTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     marginLeft: 12,
   },
   colorPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 8,
   },
   colorOption: {
@@ -876,7 +929,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedColor: {
     borderColor: COLORS.black,

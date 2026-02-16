@@ -1,73 +1,73 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, Alert } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TextInput, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams } from "expo-router";
 import Button from "../components/Button";
-import { Package, Weight, Hash, DollarSign, Calendar } from 'lucide-react-native';
+import { Package, Weight, Hash, DollarSign, Calendar } from "lucide-react-native";
 
 export default function AddPoultryBatchScreen() {
   const { isRTL } = useI18n();
   const router = useRouter();
   const { farmId } = useLocalSearchParams();
-  
+
   const [batchData, setBatchData] = useState({
-    individualWeight: '',
-    quantity: '',
-    price: '',
-    batchDate: new Date().toISOString().split('T')[0],
-    notes: ''
+    individualWeight: "",
+    quantity: "",
+    price: "",
+    batchDate: new Date().toISOString().split("T")[0],
+    notes: "",
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
-    setBatchData(prev => ({
+    setBatchData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const validateForm = () => {
     if (!batchData.individualWeight.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال وزن الفرد');
+      Alert.alert("خطأ", "يرجى إدخال وزن الفرد");
       return false;
     }
     if (!batchData.quantity.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال العدد');
+      Alert.alert("خطأ", "يرجى إدخال العدد");
       return false;
     }
     if (!batchData.price.trim()) {
-      Alert.alert('خطأ', 'يرجى إدخال السعر');
+      Alert.alert("خطأ", "يرجى إدخال السعر");
       return false;
     }
-    
+
     const weight = parseFloat(batchData.individualWeight);
     const quantity = parseInt(batchData.quantity);
     const price = parseFloat(batchData.price);
-    
+
     if (isNaN(weight) || weight <= 0) {
-      Alert.alert('خطأ', 'يرجى إدخال وزن صحيح');
+      Alert.alert("خطأ", "يرجى إدخال وزن صحيح");
       return false;
     }
     if (isNaN(quantity) || quantity <= 0) {
-      Alert.alert('خطأ', 'يرجى إدخال عدد صحيح');
+      Alert.alert("خطأ", "يرجى إدخال عدد صحيح");
       return false;
     }
     if (isNaN(price) || price <= 0) {
-      Alert.alert('خطأ', 'يرجى إدخال سعر صحيح');
+      Alert.alert("خطأ", "يرجى إدخال سعر صحيح");
       return false;
     }
-    
+
     return true;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Calculate totals
       const weight = parseFloat(batchData.individualWeight);
@@ -75,9 +75,9 @@ export default function AddPoultryBatchScreen() {
       const price = parseFloat(batchData.price);
       const totalWeight = weight * quantity;
       const totalValue = price * quantity;
-      
+
       // In a real app, this would be sent to the backend
-      console.log('Adding new poultry batch:', {
+      console.log("Adding new poultry batch:", {
         farmId,
         ...batchData,
         individualWeight: weight,
@@ -85,23 +85,22 @@ export default function AddPoultryBatchScreen() {
         price,
         totalWeight,
         totalValue,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
-      
+
       Alert.alert(
-        'نجح',
-        `تم إضافة الدفعة الجديدة بنجاح\n\nالتفاصيل:\n• العدد: ${quantity} طائر\n• الوزن الفردي: ${weight} كجم\n• الوزن الإجمالي: ${totalWeight} كجم\n• السعر الإجمالي: ${totalValue} ريال`,
+        "نجح",
+        `تم إضافة الدفعة الجديدة بنجاح\n\nالتفاصيل:\n• العدد: ${quantity} طائر\n• الوزن الفردي: ${weight} كجم\n• الوزن الإجمالي: ${totalWeight} كجم\n• السعر الإجمالي: ${totalValue} دينار`,
         [
           {
-            text: 'موافق',
-            onPress: () => router.back()
-          }
+            text: "موافق",
+            onPress: () => router.back(),
+          },
         ]
       );
-      
     } catch (error) {
-      console.error('Error adding batch:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء إضافة الدفعة');
+      console.error("Error adding batch:", error);
+      Alert.alert("خطأ", "حدث خطأ أثناء إضافة الدفعة");
     } finally {
       setIsSubmitting(false);
     }
@@ -111,10 +110,10 @@ export default function AddPoultryBatchScreen() {
     const weight = parseFloat(batchData.individualWeight) || 0;
     const quantity = parseInt(batchData.quantity) || 0;
     const price = parseFloat(batchData.price) || 0;
-    
+
     return {
       totalWeight: weight * quantity,
-      totalValue: price * quantity
+      totalValue: price * quantity,
     };
   };
 
@@ -125,10 +124,8 @@ export default function AddPoultryBatchScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { textAlign: isRTL ? 'right' : 'left' }]}>
-            إضافة دفعة جديدة
-          </Text>
-          <Text style={[styles.subtitle, { textAlign: isRTL ? 'right' : 'left' }]}>
+          <Text style={[styles.title, { textAlign: isRTL ? "right" : "left" }]}>إضافة دفعة جديدة</Text>
+          <Text style={[styles.subtitle, { textAlign: isRTL ? "right" : "left" }]}>
             أدخل معلومات الدفعة الجديدة للمزرعة
           </Text>
         </View>
@@ -137,16 +134,14 @@ export default function AddPoultryBatchScreen() {
         <View style={styles.form}>
           {/* Individual Weight */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
-              وزن الفرد (كجم) *
-            </Text>
-            <View style={[styles.inputContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={[styles.label, { textAlign: isRTL ? "right" : "left" }]}>وزن الفرد (كجم) *</Text>
+            <View style={[styles.inputContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <Weight size={20} color={COLORS.primary} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
+                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
                 placeholder="مثال: 2.5"
                 value={batchData.individualWeight}
-                onChangeText={(value) => handleInputChange('individualWeight', value)}
+                onChangeText={(value) => handleInputChange("individualWeight", value)}
                 keyboardType="decimal-pad"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -155,16 +150,14 @@ export default function AddPoultryBatchScreen() {
 
           {/* Quantity */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
-              العدد *
-            </Text>
-            <View style={[styles.inputContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={[styles.label, { textAlign: isRTL ? "right" : "left" }]}>العدد *</Text>
+            <View style={[styles.inputContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <Hash size={20} color={COLORS.primary} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
+                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
                 placeholder="مثال: 1000"
                 value={batchData.quantity}
-                onChangeText={(value) => handleInputChange('quantity', value)}
+                onChangeText={(value) => handleInputChange("quantity", value)}
                 keyboardType="number-pad"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -173,16 +166,14 @@ export default function AddPoultryBatchScreen() {
 
           {/* Price per unit */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
-              السعر للفرد الواحد (ريال) *
-            </Text>
-            <View style={[styles.inputContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={[styles.label, { textAlign: isRTL ? "right" : "left" }]}>السعر للفرد الواحد (دينار) *</Text>
+            <View style={[styles.inputContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <DollarSign size={20} color={COLORS.primary} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
+                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
                 placeholder="مثال: 25.50"
                 value={batchData.price}
-                onChangeText={(value) => handleInputChange('price', value)}
+                onChangeText={(value) => handleInputChange("price", value)}
                 keyboardType="decimal-pad"
                 placeholderTextColor={COLORS.darkGray}
               />
@@ -191,16 +182,14 @@ export default function AddPoultryBatchScreen() {
 
           {/* Batch Date */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
-              تاريخ الدفعة
-            </Text>
-            <View style={[styles.inputContainer, { flexDirection: isRTL ? 'row-reverse' : 'row' }]}>
+            <Text style={[styles.label, { textAlign: isRTL ? "right" : "left" }]}>تاريخ الدفعة</Text>
+            <View style={[styles.inputContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <Calendar size={20} color={COLORS.primary} />
               <TextInput
-                style={[styles.input, { textAlign: isRTL ? 'right' : 'left' }]}
+                style={[styles.input, { textAlign: isRTL ? "right" : "left" }]}
                 placeholder="YYYY-MM-DD"
                 value={batchData.batchDate}
-                onChangeText={(value) => handleInputChange('batchDate', value)}
+                onChangeText={(value) => handleInputChange("batchDate", value)}
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
@@ -208,14 +197,12 @@ export default function AddPoultryBatchScreen() {
 
           {/* Notes */}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { textAlign: isRTL ? 'right' : 'left' }]}>
-              ملاحظات
-            </Text>
+            <Text style={[styles.label, { textAlign: isRTL ? "right" : "left" }]}>ملاحظات</Text>
             <TextInput
-              style={[styles.textArea, { textAlign: isRTL ? 'right' : 'left' }]}
+              style={[styles.textArea, { textAlign: isRTL ? "right" : "left" }]}
               placeholder="أدخل أي ملاحظات إضافية..."
               value={batchData.notes}
-              onChangeText={(value) => handleInputChange('notes', value)}
+              onChangeText={(value) => handleInputChange("notes", value)}
               multiline
               numberOfLines={4}
               placeholderTextColor={COLORS.darkGray}
@@ -224,28 +211,18 @@ export default function AddPoultryBatchScreen() {
         </View>
 
         {/* Summary */}
-        {(batchData.individualWeight && batchData.quantity && batchData.price) && (
+        {batchData.individualWeight && batchData.quantity && batchData.price && (
           <View style={styles.summaryCard}>
-            <Text style={[styles.summaryTitle, { textAlign: isRTL ? 'right' : 'left' }]}>
-              ملخص الدفعة
-            </Text>
-            
+            <Text style={[styles.summaryTitle, { textAlign: isRTL ? "right" : "left" }]}>ملخص الدفعة</Text>
+
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { textAlign: isRTL ? 'right' : 'left' }]}>
-                الوزن الإجمالي:
-              </Text>
-              <Text style={[styles.summaryValue, { color: COLORS.primary }]}>
-                {totalWeight.toFixed(2)} كجم
-              </Text>
+              <Text style={[styles.summaryLabel, { textAlign: isRTL ? "right" : "left" }]}>الوزن الإجمالي:</Text>
+              <Text style={[styles.summaryValue, { color: COLORS.primary }]}>{totalWeight.toFixed(2)} كجم</Text>
             </View>
-            
+
             <View style={styles.summaryRow}>
-              <Text style={[styles.summaryLabel, { textAlign: isRTL ? 'right' : 'left' }]}>
-                القيمة الإجمالية:
-              </Text>
-              <Text style={[styles.summaryValue, { color: COLORS.success }]}>
-                {totalValue.toFixed(2)} ريال
-              </Text>
+              <Text style={[styles.summaryLabel, { textAlign: isRTL ? "right" : "left" }]}>القيمة الإجمالية:</Text>
+              <Text style={[styles.summaryValue, { color: COLORS.success }]}>{totalValue.toFixed(2)} دينار</Text>
             </View>
           </View>
         )}
@@ -278,7 +255,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -294,7 +271,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -303,7 +280,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 12,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
@@ -346,27 +323,27 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 16,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   summaryLabel: {
     fontSize: 16,
     color: COLORS.darkGray,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   summaryValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   submitButton: {
-    width: '100%',
+    width: "100%",
     marginBottom: 32,
   },
 });

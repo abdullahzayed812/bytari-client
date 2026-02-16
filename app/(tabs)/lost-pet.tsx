@@ -281,7 +281,7 @@ export default function LostPetScreen() {
                 <Text style={styles.sectionTitle}>مكافأة</Text>
               </View>
 
-              <Text style={styles.rewardText}>مكافأة: {pet.reward} ريال</Text>
+              <Text style={styles.rewardText}>مكافأة: {pet.reward} دينار</Text>
             </View>
           )}
 

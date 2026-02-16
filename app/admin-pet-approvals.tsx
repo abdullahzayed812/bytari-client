@@ -355,7 +355,7 @@ export default function AdminPetApprovals() {
                   {selectedRequest.price && (
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>السعر:</Text>
-                      <Text style={styles.infoValue}>{selectedRequest.price} ريال</Text>
+                      <Text style={styles.infoValue}>{selectedRequest.price} دينار</Text>
                     </View>
                   )}
 

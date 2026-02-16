@@ -158,7 +158,7 @@ export default function CheckoutScreen() {
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>المجموع الفرعي:</Text>
-              <Text style={styles.summaryValue}>{getTotalPrice().toFixed(2)} ريال</Text>
+              <Text style={styles.summaryValue}>{getTotalPrice().toFixed(2)} دينار</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>رسوم التوصيل:</Text>
@@ -166,7 +166,7 @@ export default function CheckoutScreen() {
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>المجموع الكلي:</Text>
-              <Text style={styles.totalValue}>{getTotalPrice().toFixed(2)} ريال</Text>
+              <Text style={styles.totalValue}>{getTotalPrice().toFixed(2)} دينار</Text>
             </View>
           </View>
         </View>
@@ -245,7 +245,7 @@ export default function CheckoutScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={`تأكيد الطلب - ${getTotalPrice().toFixed(2)} ريال`}
+          title={`تأكيد الطلب - ${getTotalPrice().toFixed(2)} دينار`}
           onPress={handlePlaceOrder}
           type="primary"
           style={styles.placeOrderButton}

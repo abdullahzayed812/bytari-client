@@ -239,7 +239,7 @@ export default function StoreOrdersScreen() {
 
       <View style={styles.orderSummary}>
         <Text style={styles.itemsCount}>المنتجات: {item.items.length}</Text>
-        <Text style={styles.totalAmount}>{item.totalAmount.toFixed(2)} ريال</Text>
+        <Text style={styles.totalAmount}>{item.totalAmount.toFixed(2)} دينار</Text>
         <Text style={styles.paymentMethod}>
           {item.paymentMethod === "cash" ? "الدفع عند الاستلام" : "دفع إلكتروني"}
         </Text>
@@ -402,7 +402,7 @@ export default function StoreOrdersScreen() {
                       <Text style={styles.itemName}>{item.productName}</Text>
                       <Text style={styles.itemQuantity}>الكمية: {item.quantity}</Text>
                     </View>
-                    <Text style={styles.itemPrice}>{(item.unitPrice * item.quantity).toFixed(2)} ريال</Text>
+                    <Text style={styles.itemPrice}>{(item.unitPrice * item.quantity).toFixed(2)} دينار</Text>
                   </View>
                 ))}
               </View>
@@ -412,7 +412,7 @@ export default function StoreOrdersScreen() {
                 <Text style={styles.sectionTitle}>ملخص الطلب</Text>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>المجموع الفرعي:</Text>
-                  <Text style={styles.summaryValue}>{selectedOrder.totalAmount.toFixed(2)} ريال</Text>
+                  <Text style={styles.summaryValue}>{selectedOrder.totalAmount.toFixed(2)} دينار</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>رسوم التوصيل:</Text>
@@ -420,7 +420,7 @@ export default function StoreOrdersScreen() {
                 </View>
                 <View style={[styles.summaryRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>المجموع الكلي:</Text>
-                  <Text style={styles.totalValue}>{selectedOrder.totalAmount.toFixed(2)} ريال</Text>
+                  <Text style={styles.totalValue}>{selectedOrder.totalAmount.toFixed(2)} دينار</Text>
                 </View>
               </View>
 

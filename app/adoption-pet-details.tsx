@@ -179,7 +179,7 @@ export default function AdoptionPetDetailsScreen() {
             <View style={styles.priceBadgeContainer}>
               <View style={styles.priceBadge}>
                 <Award size={14} color={COLORS.white} />
-                <Text style={styles.priceBadgeText}>{pet.price} ريال</Text>
+                <Text style={styles.priceBadgeText}>{pet.price} دينار</Text>
               </View>
             </View>
           )}

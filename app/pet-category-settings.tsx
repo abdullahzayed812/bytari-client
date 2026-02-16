@@ -1,13 +1,43 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, TextInput, Alert, Image } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, TextInput, Alert, Image } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
-import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { Settings, Package, Users, BarChart3, Bell, Shield, Palette, Save, ArrowLeft, Cat, Dog, Bird, Fish, Egg, Heart, Star, ShoppingCart, Tag, Percent, Clock, MapPin, Phone, Mail, Camera, Edit3, Plus, Trash2, Eye, EyeOff } from 'lucide-react-native';
+import { router, Stack, useLocalSearchParams } from "expo-router";
+import {
+  Settings,
+  Package,
+  Users,
+  BarChart3,
+  Bell,
+  Shield,
+  Palette,
+  Save,
+  ArrowLeft,
+  Cat,
+  Dog,
+  Bird,
+  Fish,
+  Egg,
+  Heart,
+  Star,
+  ShoppingCart,
+  Tag,
+  Percent,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  Camera,
+  Edit3,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff,
+} from "lucide-react-native";
 import Button from "../components/Button";
 
-type AnimalType = 'cat' | 'dog' | 'bird' | 'fish' | 'poultry';
+type AnimalType = "cat" | "dog" | "bird" | "fish" | "poultry";
 
 interface ProductSettings {
   id: string;
@@ -60,45 +90,53 @@ const categoryIcons = {
 };
 
 const categoryLabels = {
-  cat: 'قطط',
-  dog: 'كلاب',
-  bird: 'طيور',
-  fish: 'أسماك',
-  poultry: 'دواجن',
+  cat: "قطط",
+  dog: "كلاب",
+  bird: "طيور",
+  fish: "أسماك",
+  poultry: "دواجن",
 };
 
 const categoryColors = {
-  cat: '#FF6B6B',
-  dog: '#4ECDC4',
-  bird: '#45B7D1',
-  fish: '#96CEB4',
-  poultry: '#FFA726',
+  cat: "#FF6B6B",
+  dog: "#4ECDC4",
+  bird: "#45B7D1",
+  fish: "#96CEB4",
+  poultry: "#FFA726",
 };
 
 const predefinedColors = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFA726',
-  '#9C27B0', '#FF5722', '#607D8B', '#795548', '#E91E63'
+  "#FF6B6B",
+  "#4ECDC4",
+  "#45B7D1",
+  "#96CEB4",
+  "#FFA726",
+  "#9C27B0",
+  "#FF5722",
+  "#607D8B",
+  "#795548",
+  "#E91E63",
 ];
 
 const mockProducts: ProductSettings[] = [
   {
-    id: '1',
-    name: 'طعام قطط ممتاز',
-    description: 'طعام عالي الجودة للقطط البالغة',
+    id: "1",
+    name: "طعام قطط ممتاز",
+    description: "طعام عالي الجودة للقطط البالغة",
     price: 85,
     discountPrice: 75,
-    image: 'https://images.unsplash.com/photo-1589883661923-6476cb0ae9f2?w=300&h=300&fit=crop',
+    image: "https://images.unsplash.com/photo-1589883661923-6476cb0ae9f2?w=300&h=300&fit=crop",
     featured: true,
     visible: true,
     stock: 50,
     minStock: 10,
   },
   {
-    id: '2',
-    name: 'لعبة تفاعلية للقطط',
-    description: 'لعبة ذكية تحفز نشاط القطط',
+    id: "2",
+    name: "لعبة تفاعلية للقطط",
+    description: "لعبة ذكية تحفز نشاط القطط",
     price: 45,
-    image: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=300&h=300&fit=crop',
+    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=300&h=300&fit=crop",
     featured: false,
     visible: true,
     stock: 25,
@@ -110,24 +148,24 @@ export default function PetCategorySettingsScreen() {
   const { t, isRTL } = useI18n();
   const { userMode, isSuperAdmin, isModerator, moderatorPermissions } = useApp();
   const { category } = useLocalSearchParams<{ category: AnimalType }>();
-  
+
   const [settings, setSettings] = useState<CategorySpecificSettings>({
-    displayName: categoryLabels[category as AnimalType] || 'قسم الحيوانات',
+    displayName: categoryLabels[category as AnimalType] || "قسم الحيوانات",
     description: `قسم متخصص في منتجات ${categoryLabels[category as AnimalType]}`,
-    color: categoryColors[category as AnimalType] || '#FF6B6B',
-    bannerImage: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&h=300&fit=crop',
-    promotionalText: 'أفضل المنتجات لحيوانك الأليف',
+    color: categoryColors[category as AnimalType] || "#FF6B6B",
+    bannerImage: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&h=300&fit=crop",
+    promotionalText: "أفضل المنتجات لحيوانك الأليف",
     specialOffers: {
       enabled: true,
       discountPercentage: 15,
-      validUntil: '2024-12-31',
+      validUntil: "2024-12-31",
     },
     featuredProducts: mockProducts,
     customCategories: [
-      { id: '1', name: 'طعام جاف', enabled: true },
-      { id: '2', name: 'طعام رطب', enabled: true },
-      { id: '3', name: 'ألعاب', enabled: true },
-      { id: '4', name: 'إكسسوارات', enabled: false },
+      { id: "1", name: "طعام جاف", enabled: true },
+      { id: "2", name: "طعام رطب", enabled: true },
+      { id: "3", name: "ألعاب", enabled: true },
+      { id: "4", name: "إكسسوارات", enabled: false },
     ],
     deliveryOptions: {
       freeDeliveryThreshold: 150,
@@ -141,7 +179,9 @@ export default function PetCategorySettingsScreen() {
     },
   });
 
-  const [activeTab, setActiveTab] = useState<'general' | 'products' | 'categories' | 'delivery' | 'notifications'>('general');
+  const [activeTab, setActiveTab] = useState<"general" | "products" | "categories" | "delivery" | "notifications">(
+    "general"
+  );
 
   // Check permissions
   const hasPermission = () => {
@@ -163,50 +203,46 @@ export default function PetCategorySettingsScreen() {
   }
 
   const updateSettings = (updates: Partial<CategorySpecificSettings>) => {
-    setSettings(prev => ({ ...prev, ...updates }));
+    setSettings((prev) => ({ ...prev, ...updates }));
   };
 
   const handleSaveSettings = () => {
-    Alert.alert(
-      'حفظ الإعدادات',
-      'هل تريد حفظ جميع التغييرات؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        {
-          text: 'حفظ',
-          onPress: () => {
-            // Here you would save to backend
-            Alert.alert('تم الحفظ', `تم حفظ إعدادات قسم ${categoryLabels[category as AnimalType]} بنجاح`);
-          }
-        }
-      ]
-    );
+    Alert.alert("حفظ الإعدادات", "هل تريد حفظ جميع التغييرات؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حفظ",
+        onPress: () => {
+          // Here you would save to backend
+          Alert.alert("تم الحفظ", `تم حفظ إعدادات قسم ${categoryLabels[category as AnimalType]} بنجاح`);
+        },
+      },
+    ]);
   };
 
   const toggleProductVisibility = (productId: string) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      featuredProducts: prev.featuredProducts.map(product =>
+      featuredProducts: prev.featuredProducts.map((product) =>
         product.id === productId ? { ...product, visible: !product.visible } : product
-      )
+      ),
     }));
   };
 
   const toggleProductFeatured = (productId: string) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      featuredProducts: prev.featuredProducts.map(product =>
+      featuredProducts: prev.featuredProducts.map((product) =>
         product.id === productId ? { ...product, featured: !product.featured } : product
-      )
+      ),
     }));
   };
 
   const toggleCustomCategory = (categoryId: string) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      customCategories: prev.customCategories.map(cat =>
+      customCategories: prev.customCategories.map((cat) =>
         cat.id === categoryId ? { ...cat, enabled: !cat.enabled } : cat
-      )
+      ),
     }));
   };
 
@@ -214,7 +250,7 @@ export default function PetCategorySettingsScreen() {
     <View style={styles.tabContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>معلومات القسم الأساسية</Text>
-        
+
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>اسم القسم</Text>
           <TextInput
@@ -222,7 +258,7 @@ export default function PetCategorySettingsScreen() {
             value={settings.displayName}
             onChangeText={(text) => updateSettings({ displayName: text })}
             placeholder="اسم القسم"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -235,7 +271,7 @@ export default function PetCategorySettingsScreen() {
             placeholder="وصف القسم"
             multiline
             numberOfLines={3}
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -248,7 +284,7 @@ export default function PetCategorySettingsScreen() {
                 style={[
                   styles.colorOption,
                   { backgroundColor: color },
-                  settings.color === color && styles.selectedColor
+                  settings.color === color && styles.selectedColor,
                 ]}
                 onPress={() => updateSettings({ color })}
               />
@@ -263,21 +299,23 @@ export default function PetCategorySettingsScreen() {
             value={settings.promotionalText}
             onChangeText={(text) => updateSettings({ promotionalText: text })}
             placeholder="النص الترويجي"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>العروض الخاصة</Text>
-        
+
         <View style={styles.switchRow}>
           <Text style={styles.switchLabel}>تفعيل العروض الخاصة</Text>
           <Switch
             value={settings.specialOffers.enabled}
-            onValueChange={(value) => updateSettings({ 
-              specialOffers: { ...settings.specialOffers, enabled: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                specialOffers: { ...settings.specialOffers, enabled: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -290,12 +328,14 @@ export default function PetCategorySettingsScreen() {
               <TextInput
                 style={styles.textInput}
                 value={settings.specialOffers.discountPercentage.toString()}
-                onChangeText={(text) => updateSettings({ 
-                  specialOffers: { ...settings.specialOffers, discountPercentage: parseFloat(text) || 0 }
-                })}
+                onChangeText={(text) =>
+                  updateSettings({
+                    specialOffers: { ...settings.specialOffers, discountPercentage: parseFloat(text) || 0 },
+                  })
+                }
                 placeholder="نسبة الخصم"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
 
@@ -304,11 +344,13 @@ export default function PetCategorySettingsScreen() {
               <TextInput
                 style={styles.textInput}
                 value={settings.specialOffers.validUntil}
-                onChangeText={(text) => updateSettings({ 
-                  specialOffers: { ...settings.specialOffers, validUntil: text }
-                })}
+                onChangeText={(text) =>
+                  updateSettings({
+                    specialOffers: { ...settings.specialOffers, validUntil: text },
+                  })
+                }
                 placeholder="YYYY-MM-DD"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
           </>
@@ -322,14 +364,14 @@ export default function PetCategorySettingsScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>المنتجات المميزة</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.addButton}
             onPress={() => router.push(`/add-store-product?category=${category}`)}
           >
             <Plus size={20} color={COLORS.white} />
           </TouchableOpacity>
         </View>
-        
+
         {settings.featuredProducts.map((product) => (
           <View key={product.id} style={styles.productCard}>
             <Image source={{ uri: product.image }} style={styles.productImage} />
@@ -337,16 +379,14 @@ export default function PetCategorySettingsScreen() {
               <Text style={styles.productName}>{product.name}</Text>
               <Text style={styles.productDescription}>{product.description}</Text>
               <View style={styles.productPriceRow}>
-                <Text style={styles.productPrice}>{product.price} ريال</Text>
+                <Text style={styles.productPrice}>{product.price} دينار</Text>
                 {product.discountPrice && (
-                  <Text style={styles.productDiscountPrice}>{product.discountPrice} ريال</Text>
+                  <Text style={styles.productDiscountPrice}>{product.discountPrice} دينار</Text>
                 )}
               </View>
               <View style={styles.productStock}>
                 <Text style={styles.stockText}>المخزون: {product.stock}</Text>
-                {product.stock <= product.minStock && (
-                  <Text style={styles.lowStockWarning}>مخزون منخفض!</Text>
-                )}
+                {product.stock <= product.minStock && <Text style={styles.lowStockWarning}>مخزون منخفض!</Text>}
               </View>
             </View>
             <View style={styles.productActions}>
@@ -360,11 +400,7 @@ export default function PetCategorySettingsScreen() {
                 style={[styles.actionButton, !product.visible && styles.hiddenButton]}
                 onPress={() => toggleProductVisibility(product.id)}
               >
-                {product.visible ? (
-                  <Eye size={16} color={COLORS.primary} />
-                ) : (
-                  <EyeOff size={16} color={COLORS.gray} />
-                )}
+                {product.visible ? <Eye size={16} color={COLORS.primary} /> : <EyeOff size={16} color={COLORS.gray} />}
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
@@ -384,14 +420,12 @@ export default function PetCategorySettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>الفئات المخصصة</Text>
         <Text style={styles.sectionSubtitle}>قم بتفعيل أو إلغاء تفعيل الفئات الفرعية لهذا القسم</Text>
-        
+
         {settings.customCategories.map((cat) => (
           <View key={cat.id} style={styles.categoryRow}>
             <View style={styles.categoryInfo}>
               <Text style={styles.categoryName}>{cat.name}</Text>
-              <Text style={styles.categoryStatus}>
-                {cat.enabled ? 'مفعل' : 'معطل'}
-              </Text>
+              <Text style={styles.categoryStatus}>{cat.enabled ? "مفعل" : "معطل"}</Text>
             </View>
             <Switch
               value={cat.enabled}
@@ -401,7 +435,7 @@ export default function PetCategorySettingsScreen() {
             />
           </View>
         ))}
-        
+
         <TouchableOpacity style={styles.addCategoryButton}>
           <Plus size={20} color={COLORS.primary} />
           <Text style={styles.addCategoryText}>إضافة فئة جديدة</Text>
@@ -414,18 +448,20 @@ export default function PetCategorySettingsScreen() {
     <View style={styles.tabContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>خيارات التوصيل</Text>
-        
+
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>الحد الأدنى للتوصيل المجاني (ريال)</Text>
+          <Text style={styles.inputLabel}>الحد الأدنى للتوصيل المجاني (دينار)</Text>
           <TextInput
             style={styles.textInput}
             value={settings.deliveryOptions.freeDeliveryThreshold.toString()}
-            onChangeText={(text) => updateSettings({ 
-              deliveryOptions: { ...settings.deliveryOptions, freeDeliveryThreshold: parseFloat(text) || 0 }
-            })}
+            onChangeText={(text) =>
+              updateSettings({
+                deliveryOptions: { ...settings.deliveryOptions, freeDeliveryThreshold: parseFloat(text) || 0 },
+              })
+            }
             placeholder="الحد الأدنى للتوصيل المجاني"
             keyboardType="numeric"
-            textAlign={isRTL ? 'right' : 'left'}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
 
@@ -433,9 +469,11 @@ export default function PetCategorySettingsScreen() {
           <Text style={styles.switchLabel}>التوصيل السريع</Text>
           <Switch
             value={settings.deliveryOptions.expressDelivery}
-            onValueChange={(value) => updateSettings({ 
-              deliveryOptions: { ...settings.deliveryOptions, expressDelivery: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                deliveryOptions: { ...settings.deliveryOptions, expressDelivery: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -445,9 +483,11 @@ export default function PetCategorySettingsScreen() {
           <Text style={styles.switchLabel}>التوصيل المجدول</Text>
           <Switch
             value={settings.deliveryOptions.scheduledDelivery}
-            onValueChange={(value) => updateSettings({ 
-              deliveryOptions: { ...settings.deliveryOptions, scheduledDelivery: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                deliveryOptions: { ...settings.deliveryOptions, scheduledDelivery: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -460,7 +500,7 @@ export default function PetCategorySettingsScreen() {
     <View style={styles.tabContent}>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>إعدادات الإشعارات</Text>
-        
+
         <View style={styles.switchRow}>
           <View style={styles.switchLabelContainer}>
             <Text style={styles.switchLabel}>المنتجات الجديدة</Text>
@@ -468,9 +508,11 @@ export default function PetCategorySettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.newProducts}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, newProducts: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, newProducts: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -483,9 +525,11 @@ export default function PetCategorySettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.stockAlerts}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, stockAlerts: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, stockAlerts: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -498,9 +542,11 @@ export default function PetCategorySettingsScreen() {
           </View>
           <Switch
             value={settings.notifications.promotions}
-            onValueChange={(value) => updateSettings({ 
-              notifications: { ...settings.notifications, promotions: value }
-            })}
+            onValueChange={(value) =>
+              updateSettings({
+                notifications: { ...settings.notifications, promotions: value },
+              })
+            }
             trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
             thumbColor={COLORS.white}
           />
@@ -511,70 +557,72 @@ export default function PetCategorySettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ 
-        title: `إعدادات ${categoryLabels[category as AnimalType]}`,
-        headerShown: true,
-        headerRight: () => (
-          <TouchableOpacity onPress={handleSaveSettings}>
-            <Save size={24} color={COLORS.primary} />
-          </TouchableOpacity>
-        )
-      }} />
-      
+      <Stack.Screen
+        options={{
+          title: `إعدادات ${categoryLabels[category as AnimalType]}`,
+          headerShown: true,
+          headerRight: () => (
+            <TouchableOpacity onPress={handleSaveSettings}>
+              <Save size={24} color={COLORS.primary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+
       <View style={[styles.categoryBanner, { backgroundColor: settings.color }]}>
         {categoryIcons[category as AnimalType]}
         <Text style={styles.categoryBannerTitle}>{settings.displayName}</Text>
         <Text style={styles.categoryBannerSubtitle}>{settings.description}</Text>
       </View>
-      
+
       <View style={styles.tabsContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'general' && styles.activeTab]}
-          onPress={() => setActiveTab('general')}
+          style={[styles.tab, activeTab === "general" && styles.activeTab]}
+          onPress={() => setActiveTab("general")}
         >
-          <Settings size={16} color={activeTab === 'general' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'general' && styles.activeTabText]}>عام</Text>
+          <Settings size={16} color={activeTab === "general" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "general" && styles.activeTabText]}>عام</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'products' && styles.activeTab]}
-          onPress={() => setActiveTab('products')}
+          style={[styles.tab, activeTab === "products" && styles.activeTab]}
+          onPress={() => setActiveTab("products")}
         >
-          <Package size={16} color={activeTab === 'products' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'products' && styles.activeTabText]}>المنتجات</Text>
+          <Package size={16} color={activeTab === "products" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "products" && styles.activeTabText]}>المنتجات</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'categories' && styles.activeTab]}
-          onPress={() => setActiveTab('categories')}
+          style={[styles.tab, activeTab === "categories" && styles.activeTab]}
+          onPress={() => setActiveTab("categories")}
         >
-          <Tag size={16} color={activeTab === 'categories' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'categories' && styles.activeTabText]}>الفئات</Text>
+          <Tag size={16} color={activeTab === "categories" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "categories" && styles.activeTabText]}>الفئات</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'delivery' && styles.activeTab]}
-          onPress={() => setActiveTab('delivery')}
+          style={[styles.tab, activeTab === "delivery" && styles.activeTab]}
+          onPress={() => setActiveTab("delivery")}
         >
-          <ShoppingCart size={16} color={activeTab === 'delivery' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'delivery' && styles.activeTabText]}>التوصيل</Text>
+          <ShoppingCart size={16} color={activeTab === "delivery" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "delivery" && styles.activeTabText]}>التوصيل</Text>
         </TouchableOpacity>
-        
+
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'notifications' && styles.activeTab]}
-          onPress={() => setActiveTab('notifications')}
+          style={[styles.tab, activeTab === "notifications" && styles.activeTab]}
+          onPress={() => setActiveTab("notifications")}
         >
-          <Bell size={16} color={activeTab === 'notifications' ? COLORS.white : COLORS.gray} />
-          <Text style={[styles.tabText, activeTab === 'notifications' && styles.activeTabText]}>الإشعارات</Text>
+          <Bell size={16} color={activeTab === "notifications" ? COLORS.white : COLORS.gray} />
+          <Text style={[styles.tabText, activeTab === "notifications" && styles.activeTabText]}>الإشعارات</Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === 'general' && renderGeneralSettings()}
-        {activeTab === 'products' && renderProductsSettings()}
-        {activeTab === 'categories' && renderCategoriesSettings()}
-        {activeTab === 'delivery' && renderDeliverySettings()}
-        {activeTab === 'notifications' && renderNotificationsSettings()}
+        {activeTab === "general" && renderGeneralSettings()}
+        {activeTab === "products" && renderProductsSettings()}
+        {activeTab === "categories" && renderCategoriesSettings()}
+        {activeTab === "delivery" && renderDeliverySettings()}
+        {activeTab === "notifications" && renderNotificationsSettings()}
       </ScrollView>
     </View>
   );
@@ -587,24 +635,24 @@ const styles = StyleSheet.create({
   },
   noPermissionContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   noPermissionText: {
     fontSize: 16,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 16,
   },
   categoryBanner: {
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   categoryBannerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     marginTop: 12,
     marginBottom: 4,
@@ -613,19 +661,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.white,
     opacity: 0.9,
-    textAlign: 'center',
+    textAlign: "center",
   },
   tabsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.white,
     paddingHorizontal: 4,
     paddingVertical: 8,
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 8,
     paddingHorizontal: 4,
     borderRadius: 6,
@@ -638,11 +686,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: COLORS.gray,
     marginLeft: 4,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   activeTabText: {
     color: COLORS.white,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   content: {
     flex: 1,
@@ -657,36 +705,36 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   sectionSubtitle: {
     fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   addButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   inputGroup: {
     marginBottom: 16,
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -702,11 +750,11 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   colorPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 8,
   },
   colorOption: {
@@ -716,16 +764,16 @@ const styles = StyleSheet.create({
     marginRight: 12,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedColor: {
     borderColor: COLORS.black,
     borderWidth: 3,
   },
   switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -733,7 +781,7 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 16,
     color: COLORS.black,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   switchLabelContainer: {
     flex: 1,
@@ -744,12 +792,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   productCard: {
-    flexDirection: 'row',
+    flexDirection: "row",
     backgroundColor: COLORS.lightGray,
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   productImage: {
     width: 60,
@@ -762,7 +810,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
   },
@@ -772,24 +820,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   productPriceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 4,
   },
   productPrice: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.primary,
     marginRight: 8,
   },
   productDiscountPrice: {
     fontSize: 12,
     color: COLORS.red,
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
   },
   productStock: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   stockText: {
     fontSize: 12,
@@ -799,18 +847,18 @@ const styles = StyleSheet.create({
   lowStockWarning: {
     fontSize: 10,
     color: COLORS.red,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   productActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   actionButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
     backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginLeft: 4,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 1 },
@@ -819,15 +867,15 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   featuredButton: {
-    backgroundColor: '#FFF3CD',
+    backgroundColor: "#FFF3CD",
   },
   hiddenButton: {
-    backgroundColor: '#F8D7DA',
+    backgroundColor: "#F8D7DA",
   },
   categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -837,7 +885,7 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: COLORS.black,
   },
   categoryStatus: {
@@ -846,20 +894,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   addCategoryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     borderWidth: 2,
     borderColor: COLORS.primary,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderRadius: 8,
     marginTop: 16,
   },
   addCategoryText: {
     fontSize: 16,
     color: COLORS.primary,
-    fontWeight: '500',
+    fontWeight: "500",
     marginLeft: 8,
   },
 });

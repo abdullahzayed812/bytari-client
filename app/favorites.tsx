@@ -32,7 +32,7 @@ export default function FavoritesScreen() {
       <Image source={{ uri: item.product.image }} style={styles.productImage} />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.product.name}</Text>
-        <Text style={styles.productPrice}>{item.product.price} ريال</Text>
+        <Text style={styles.productPrice}>{item.product.price} دينار</Text>
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingText}>{item.product.rating}</Text>
           <Text style={styles.ratingStars}>★★★★★</Text>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -10,17 +10,9 @@ import {
   TextInput,
   Alert,
   Modal,
-} from 'react-native';
-import {
-  ArrowLeft,
-  Building2,
-  Package,
-  Crown,
-  Edit3,
-  Save,
-  X,
-} from 'lucide-react-native';
-import { useRouter, Stack } from 'expo-router';
+} from "react-native";
+import { ArrowLeft, Building2, Package, Crown, Edit3, Save, X } from "lucide-react-native";
+import { useRouter, Stack } from "expo-router";
 import { COLORS } from "../constants/colors";
 
 interface SubscriptionSettings {
@@ -43,70 +35,64 @@ export default function SubscriptionManagementScreen() {
   // إعدادات الاشتراكات الافتراضية
   const [subscriptions, setSubscriptions] = useState<SubscriptionSettings[]>([
     {
-      id: 'premium-member',
-      title: 'العضوية المميزة',
-      description: 'اشتراك شهري للأعضاء المميزين مع مزايا إضافية',
-      price: '29.99 ريال/شهر',
+      id: "premium-member",
+      title: "العضوية المميزة",
+      description: "اشتراك شهري للأعضاء المميزين مع مزايا إضافية",
+      price: "29.99 دينار/شهر",
       features: [
-        'استشارات بيطرية مجانية',
-        'خصومات على المنتجات',
-        'أولوية في الحجوزات',
-        'محتوى تعليمي حصري',
-        'دعم فني متقدم'
+        "استشارات بيطرية مجانية",
+        "خصومات على المنتجات",
+        "أولوية في الحجوزات",
+        "محتوى تعليمي حصري",
+        "دعم فني متقدم",
       ],
       isEnabled: true,
       icon: <Crown size={24} color={COLORS.white} />,
-      color: '#FFD700',
+      color: "#FFD700",
     },
     {
-      id: 'clinic-subscription',
-      title: 'اشتراك العيادات',
-      description: 'اشتراك شهري للعيادات البيطرية لإدارة العمليات',
-      price: '199.99 ريال/شهر',
+      id: "clinic-subscription",
+      title: "اشتراك العيادات",
+      description: "اشتراك شهري للعيادات البيطرية لإدارة العمليات",
+      price: "199.99 دينار/شهر",
       features: [
-        'إدارة المواعيد والحجوزات',
-        'نظام إدارة المرضى',
-        'تقارير مالية مفصلة',
-        'دعم فني على مدار الساعة',
-        'تكامل مع أنظمة الدفع'
+        "إدارة المواعيد والحجوزات",
+        "نظام إدارة المرضى",
+        "تقارير مالية مفصلة",
+        "دعم فني على مدار الساعة",
+        "تكامل مع أنظمة الدفع",
       ],
       isEnabled: true,
       icon: <Building2 size={24} color={COLORS.white} />,
-      color: '#2196F3',
+      color: "#2196F3",
     },
     {
-      id: 'warehouse-subscription',
-      title: 'اشتراك المخازن',
-      description: 'اشتراك شهري لإدارة المخازن والمستودعات',
-      price: '149.99 ريال/شهر',
+      id: "warehouse-subscription",
+      title: "اشتراك المخازن",
+      description: "اشتراك شهري لإدارة المخازن والمستودعات",
+      price: "149.99 دينار/شهر",
       features: [
-        'إدارة المخزون والمنتجات',
-        'تتبع الطلبات والشحنات',
-        'تقارير المبيعات',
-        'إدارة الموردين',
-        'نظام الإنذار المبكر للمخزون'
+        "إدارة المخزون والمنتجات",
+        "تتبع الطلبات والشحنات",
+        "تقارير المبيعات",
+        "إدارة الموردين",
+        "نظام الإنذار المبكر للمخزون",
       ],
       isEnabled: true,
       icon: <Package size={24} color={COLORS.white} />,
-      color: '#4CAF50',
+      color: "#4CAF50",
     },
   ]);
 
   const handleToggleSubscription = (id: string) => {
-    setSubscriptions(prev => 
-      prev.map(sub => 
-        sub.id === id ? { ...sub, isEnabled: !sub.isEnabled } : sub
-      )
-    );
-    
-    const subscription = subscriptions.find(sub => sub.id === id);
+    setSubscriptions((prev) => prev.map((sub) => (sub.id === id ? { ...sub, isEnabled: !sub.isEnabled } : sub)));
+
+    const subscription = subscriptions.find((sub) => sub.id === id);
     const newStatus = !subscription?.isEnabled;
-    
-    Alert.alert(
-      'تم التحديث',
-      `تم ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} ${subscription?.title} بنجاح`,
-      [{ text: 'موافق', style: 'default' }]
-    );
+
+    Alert.alert("تم التحديث", `تم ${newStatus ? "تفعيل" : "إلغاء تفعيل"} ${subscription?.title} بنجاح`, [
+      { text: "موافق", style: "default" },
+    ]);
   };
 
   const handleEditSubscription = (subscription: SubscriptionSettings) => {
@@ -117,51 +103,43 @@ export default function SubscriptionManagementScreen() {
 
   const handleSaveSubscription = () => {
     if (!tempSubscription) return;
-    
-    setSubscriptions(prev => 
-      prev.map(sub => 
-        sub.id === tempSubscription.id ? tempSubscription : sub
-      )
-    );
-    
+
+    setSubscriptions((prev) => prev.map((sub) => (sub.id === tempSubscription.id ? tempSubscription : sub)));
+
     setShowEditModal(false);
     setEditingSubscription(null);
     setTempSubscription(null);
-    
-    Alert.alert(
-      'تم الحفظ',
-      'تم حفظ التغييرات بنجاح',
-      [{ text: 'موافق', style: 'default' }]
-    );
+
+    Alert.alert("تم الحفظ", "تم حفظ التغييرات بنجاح", [{ text: "موافق", style: "default" }]);
   };
 
   const handleAddFeature = () => {
     if (!tempSubscription) return;
-    
+
     setTempSubscription({
       ...tempSubscription,
-      features: [...tempSubscription.features, 'ميزة جديدة']
+      features: [...tempSubscription.features, "ميزة جديدة"],
     });
   };
 
   const handleRemoveFeature = (index: number) => {
     if (!tempSubscription) return;
-    
+
     setTempSubscription({
       ...tempSubscription,
-      features: tempSubscription.features.filter((_, i) => i !== index)
+      features: tempSubscription.features.filter((_, i) => i !== index),
     });
   };
 
   const handleUpdateFeature = (index: number, value: string) => {
     if (!tempSubscription) return;
-    
+
     const newFeatures = [...tempSubscription.features];
     newFeatures[index] = value;
-    
+
     setTempSubscription({
       ...tempSubscription,
-      features: newFeatures
+      features: newFeatures,
     });
   };
 
@@ -196,7 +174,7 @@ export default function SubscriptionManagementScreen() {
               <TextInput
                 style={styles.textInput}
                 value={tempSubscription.title}
-                onChangeText={(text) => setTempSubscription({...tempSubscription, title: text})}
+                onChangeText={(text) => setTempSubscription({ ...tempSubscription, title: text })}
                 placeholder="أدخل عنوان الاشتراك"
               />
             </View>
@@ -206,7 +184,7 @@ export default function SubscriptionManagementScreen() {
               <TextInput
                 style={[styles.textInput, styles.textArea]}
                 value={tempSubscription.description}
-                onChangeText={(text) => setTempSubscription({...tempSubscription, description: text})}
+                onChangeText={(text) => setTempSubscription({ ...tempSubscription, description: text })}
                 placeholder="أدخل وصف الاشتراك"
                 multiline
                 numberOfLines={3}
@@ -218,7 +196,7 @@ export default function SubscriptionManagementScreen() {
               <TextInput
                 style={styles.textInput}
                 value={tempSubscription.price}
-                onChangeText={(text) => setTempSubscription({...tempSubscription, price: text})}
+                onChangeText={(text) => setTempSubscription({ ...tempSubscription, price: text })}
                 placeholder="أدخل سعر الاشتراك"
               />
             </View>
@@ -230,7 +208,7 @@ export default function SubscriptionManagementScreen() {
                   <Text style={styles.addButtonText}>+ إضافة ميزة</Text>
                 </TouchableOpacity>
               </View>
-              
+
               {tempSubscription.features.map((feature, index) => (
                 <View key={index} style={styles.featureRow}>
                   <TextInput
@@ -239,10 +217,7 @@ export default function SubscriptionManagementScreen() {
                     onChangeText={(text) => handleUpdateFeature(index, text)}
                     placeholder="أدخل الميزة"
                   />
-                  <TouchableOpacity 
-                    onPress={() => handleRemoveFeature(index)}
-                    style={styles.removeButton}
-                  >
+                  <TouchableOpacity onPress={() => handleRemoveFeature(index)} style={styles.removeButton}>
                     <X size={20} color={COLORS.error} />
                   </TouchableOpacity>
                 </View>
@@ -286,46 +261,36 @@ export default function SubscriptionManagementScreen() {
                   </View>
                 </View>
                 <View style={styles.subscriptionActions}>
-                  <TouchableOpacity 
-                    onPress={() => handleEditSubscription(subscription)}
-                    style={styles.editButton}
-                  >
+                  <TouchableOpacity onPress={() => handleEditSubscription(subscription)} style={styles.editButton}>
                     <Edit3 size={20} color={COLORS.primary} />
                   </TouchableOpacity>
                   <Switch
                     value={subscription.isEnabled}
                     onValueChange={() => handleToggleSubscription(subscription.id)}
-                    trackColor={{ false: '#E0E0E0', true: COLORS.primary }}
-                    thumbColor={subscription.isEnabled ? COLORS.white : '#F4F4F4'}
+                    trackColor={{ false: "#E0E0E0", true: COLORS.primary }}
+                    thumbColor={subscription.isEnabled ? COLORS.white : "#F4F4F4"}
                   />
                 </View>
               </View>
 
-              <Text style={styles.subscriptionDescription}>
-                {subscription.description}
-              </Text>
+              <Text style={styles.subscriptionDescription}>{subscription.description}</Text>
 
               <View style={styles.featuresContainer}>
                 <Text style={styles.featuresTitle}>المزايا المتضمنة:</Text>
                 {subscription.features.map((feature, index) => (
-                  <Text key={index} style={styles.featureItem}>• {feature}</Text>
+                  <Text key={index} style={styles.featureItem}>
+                    • {feature}
+                  </Text>
                 ))}
               </View>
 
               <View style={styles.statusContainer}>
-                <View style={[
-                  styles.statusBadge, 
-                  { backgroundColor: subscription.isEnabled ? '#E8F5E8' : '#FFF3E0' }
-                ]}>
-                  <View style={[
-                    styles.statusDot,
-                    { backgroundColor: subscription.isEnabled ? '#4CAF50' : '#FF9800' }
-                  ]} />
-                  <Text style={[
-                    styles.statusText,
-                    { color: subscription.isEnabled ? '#4CAF50' : '#FF9800' }
-                  ]}>
-                    {subscription.isEnabled ? 'مفعل' : 'غير مفعل'}
+                <View style={[styles.statusBadge, { backgroundColor: subscription.isEnabled ? "#E8F5E8" : "#FFF3E0" }]}>
+                  <View
+                    style={[styles.statusDot, { backgroundColor: subscription.isEnabled ? "#4CAF50" : "#FF9800" }]}
+                  />
+                  <Text style={[styles.statusText, { color: subscription.isEnabled ? "#4CAF50" : "#FF9800" }]}>
+                    {subscription.isEnabled ? "مفعل" : "غير مفعل"}
                   </Text>
                 </View>
               </View>
@@ -335,18 +300,10 @@ export default function SubscriptionManagementScreen() {
           {/* معلومات إضافية */}
           <View style={styles.infoSection}>
             <Text style={styles.infoTitle}>معلومات هامة</Text>
-            <Text style={styles.infoText}>
-              • عند إلغاء تفعيل اشتراك، سيصبح مجانياً للمستخدمين
-            </Text>
-            <Text style={styles.infoText}>
-              • يمكنك تعديل الأسعار والمزايا في أي وقت
-            </Text>
-            <Text style={styles.infoText}>
-              • التغييرات تطبق فوراً على جميع المستخدمين الجدد
-            </Text>
-            <Text style={styles.infoText}>
-              • المستخدمون الحاليون سيحتفظون بشروط اشتراكهم الحالي
-            </Text>
+            <Text style={styles.infoText}>• عند إلغاء تفعيل اشتراك، سيصبح مجانياً للمستخدمين</Text>
+            <Text style={styles.infoText}>• يمكنك تعديل الأسعار والمزايا في أي وقت</Text>
+            <Text style={styles.infoText}>• التغييرات تطبق فوراً على جميع المستخدمين الجدد</Text>
+            <Text style={styles.infoText}>• المستخدمون الحاليون سيحتفظون بشروط اشتراكهم الحالي</Text>
           </View>
         </ScrollView>
 
@@ -359,17 +316,17 @@ export default function SubscriptionManagementScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   header: {
     backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -379,9 +336,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
-    textAlign: 'center',
+    textAlign: "center",
   },
   placeholder: {
     width: 40,
@@ -392,15 +349,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   sectionDescription: {
     fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
     lineHeight: 20,
   },
@@ -410,28 +367,28 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
   subscriptionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   subscriptionInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   subscriptionIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   subscriptionDetails: {
@@ -439,18 +396,18 @@ const styles = StyleSheet.create({
   },
   subscriptionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 4,
   },
   subscriptionPrice: {
     fontSize: 14,
     color: COLORS.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   subscriptionActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   editButton: {
@@ -467,7 +424,7 @@ const styles = StyleSheet.create({
   },
   featuresTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
@@ -478,11 +435,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   statusContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -495,7 +452,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   infoSection: {
     backgroundColor: COLORS.white,
@@ -506,7 +463,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginBottom: 12,
   },
@@ -519,21 +476,21 @@ const styles = StyleSheet.create({
   // Modal Styles
   modalContainer: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   modalHeader: {
     backgroundColor: COLORS.white,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
   },
   modalContent: {
@@ -545,14 +502,14 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
   textInput: {
     backgroundColor: COLORS.white,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -561,12 +518,12 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   featuresHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   addButton: {
@@ -578,11 +535,11 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: COLORS.white,
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   featureInput: {

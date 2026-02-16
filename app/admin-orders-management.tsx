@@ -233,7 +233,7 @@ export default function AdminOrdersManagement() {
 
       <View style={styles.orderSummary}>
         <Text style={styles.itemsCount}>المنتجات: {item.items.length}</Text>
-        <Text style={styles.totalAmount}>{item.total.toFixed(2)} ريال</Text>
+        <Text style={styles.totalAmount}>{item.total.toFixed(2)} دينار</Text>
         <Text style={styles.paymentMethod}>
           {item.paymentMethod === "cash" ? "الدفع عند الاستلام" : "دفع إلكتروني"}
         </Text>
@@ -397,7 +397,7 @@ export default function AdminOrdersManagement() {
                       <Text style={styles.itemStore}>من: {item.storeName}</Text>
                       <Text style={styles.itemQuantity}>الكمية: {item.quantity}</Text>
                     </View>
-                    <Text style={styles.itemPrice}>{(item.price * item.quantity).toFixed(2)} ريال</Text>
+                    <Text style={styles.itemPrice}>{(item.price * item.quantity).toFixed(2)} دينار</Text>
                   </View>
                 ))}
               </View>
@@ -407,7 +407,7 @@ export default function AdminOrdersManagement() {
                 <Text style={styles.sectionTitle}>ملخص الطلب</Text>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>المجموع الفرعي:</Text>
-                  <Text style={styles.summaryValue}>{selectedOrder.total.toFixed(2)} ريال</Text>
+                  <Text style={styles.summaryValue}>{selectedOrder.total.toFixed(2)} دينار</Text>
                 </View>
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>رسوم التوصيل:</Text>
@@ -415,7 +415,7 @@ export default function AdminOrdersManagement() {
                 </View>
                 <View style={[styles.summaryRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>المجموع الكلي:</Text>
-                  <Text style={styles.totalValue}>{selectedOrder.total.toFixed(2)} ريال</Text>
+                  <Text style={styles.totalValue}>{selectedOrder.total.toFixed(2)} دينار</Text>
                 </View>
               </View>
 

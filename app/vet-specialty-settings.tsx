@@ -1,93 +1,85 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, TextInput, Alert } from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch, TextInput, Alert } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 
-import { router, useLocalSearchParams, Stack } from 'expo-router';
-import { Save, Settings, Bell, Eye, Percent, DollarSign, Package, BarChart3, Globe } from 'lucide-react-native';
+import { router, useLocalSearchParams, Stack } from "expo-router";
+import { Save, Settings, Bell, Eye, Percent, DollarSign, Package, BarChart3, Globe } from "lucide-react-native";
 import Button from "../components/Button";
 
-type VetSpecialty = 'small_animals' | 'large_animals' | 'birds' | 'fish' | 'poultry' | 'equipment';
+type VetSpecialty = "small_animals" | "large_animals" | "birds" | "fish" | "poultry" | "equipment";
 
 const getSpecialtyInfo = (specialty: VetSpecialty) => {
   const specialties = {
-    small_animals: { name: 'قطط وكلاب', color: '#FF6B6B', icon: '🐱' },
-    large_animals: { name: 'الحيوانات الصغيرة والكبيرة', color: '#4ECDC4', icon: '🐄' },
-    birds: { name: 'الطيور', color: '#45B7D1', icon: '🐦' },
-    fish: { name: 'الأسماك', color: '#96CEB4', icon: '🐟' },
-    poultry: { name: 'الدواجن', color: '#FFA726', icon: '🐔' },
-    equipment: { name: 'أجهزة ومعدات بيطرية', color: '#9C27B0', icon: '🔬' },
+    small_animals: { name: "قطط وكلاب", color: "#FF6B6B", icon: "🐱" },
+    large_animals: { name: "الحيوانات الصغيرة والكبيرة", color: "#4ECDC4", icon: "🐄" },
+    birds: { name: "الطيور", color: "#45B7D1", icon: "🐦" },
+    fish: { name: "الأسماك", color: "#96CEB4", icon: "🐟" },
+    poultry: { name: "الدواجن", color: "#FFA726", icon: "🐔" },
+    equipment: { name: "أجهزة ومعدات بيطرية", color: "#9C27B0", icon: "🔬" },
   };
-  return specialties[specialty] || { name: 'غير محدد', color: COLORS.gray, icon: '❓' };
+  return specialties[specialty] || { name: "غير محدد", color: COLORS.gray, icon: "❓" };
 };
 
 export default function VetSpecialtySettingsScreen() {
   const { isRTL } = useI18n();
   const { specialty } = useLocalSearchParams<{ specialty: VetSpecialty }>();
-  
+
   const specialtyInfo = getSpecialtyInfo(specialty!);
-  
+
   // Settings state
   const [isVisible, setIsVisible] = useState(true);
   const [allowOrders, setAllowOrders] = useState(true);
   const [requireApproval, setRequireApproval] = useState(false);
   const [enableNotifications, setEnableNotifications] = useState(true);
-  const [discountPercentage, setDiscountPercentage] = useState('0');
-  const [minimumOrder, setMinimumOrder] = useState('100');
-  const [maxDailyOrders, setMaxDailyOrders] = useState('50');
+  const [discountPercentage, setDiscountPercentage] = useState("0");
+  const [minimumOrder, setMinimumOrder] = useState("100");
+  const [maxDailyOrders, setMaxDailyOrders] = useState("50");
   const [description, setDescription] = useState(`قسم متخصص في منتجات ${specialtyInfo.name}`);
-  const [keywords, setKeywords] = useState('');
+  const [keywords, setKeywords] = useState("");
   const [displayName, setDisplayName] = useState(specialtyInfo.name);
-  const [promotionalText, setPromotionalText] = useState('أفضل المنتجات لحيوانك الأليف');
+  const [promotionalText, setPromotionalText] = useState("أفضل المنتجات لحيوانك الأليف");
   const [selectedColor, setSelectedColor] = useState(specialtyInfo.color);
-  
+
   const handleSaveSettings = () => {
-    Alert.alert(
-      'حفظ الإعدادات',
-      `تم حفظ إعدادات قسم ${specialtyInfo.name} بنجاح`,
-      [{ text: 'موافق' }]
-    );
+    Alert.alert("حفظ الإعدادات", `تم حفظ إعدادات قسم ${specialtyInfo.name} بنجاح`, [{ text: "موافق" }]);
   };
-  
+
   const handleResetSettings = () => {
-    Alert.alert(
-      'إعادة تعيين الإعدادات',
-      'هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'إعادة تعيين', 
-          style: 'destructive',
-          onPress: () => {
-            setIsVisible(true);
-            setAllowOrders(true);
-            setRequireApproval(false);
-            setEnableNotifications(true);
-            setDiscountPercentage('0');
-            setMinimumOrder('100');
-            setMaxDailyOrders('50');
-            setDescription(`قسم متخصص في منتجات ${specialtyInfo.name}`);
-            setKeywords('');
-            setDisplayName(specialtyInfo.name);
-            setPromotionalText('أفضل المنتجات لحيوانك الأليف');
-            setSelectedColor(specialtyInfo.color);
-          }
-        }
-      ]
-    );
+    Alert.alert("إعادة تعيين الإعدادات", "هل أنت متأكد من إعادة تعيين جميع الإعدادات إلى القيم الافتراضية؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "إعادة تعيين",
+        style: "destructive",
+        onPress: () => {
+          setIsVisible(true);
+          setAllowOrders(true);
+          setRequireApproval(false);
+          setEnableNotifications(true);
+          setDiscountPercentage("0");
+          setMinimumOrder("100");
+          setMaxDailyOrders("50");
+          setDescription(`قسم متخصص في منتجات ${specialtyInfo.name}`);
+          setKeywords("");
+          setDisplayName(specialtyInfo.name);
+          setPromotionalText("أفضل المنتجات لحيوانك الأليف");
+          setSelectedColor(specialtyInfo.color);
+        },
+      },
+    ]);
   };
-  
+
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           title: `إعدادات ${specialtyInfo.name}`,
           headerStyle: { backgroundColor: specialtyInfo.color },
           headerTintColor: COLORS.white,
-          headerTitleStyle: { fontWeight: 'bold' },
-        }} 
+          headerTitleStyle: { fontWeight: "bold" },
+        }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header Card */}
         <View style={[styles.headerCard, { backgroundColor: selectedColor }]}>
@@ -95,14 +87,14 @@ export default function VetSpecialtySettingsScreen() {
           <Text style={styles.headerTitle}>{displayName}</Text>
           <Text style={styles.headerSubtitle}>{description}</Text>
         </View>
-        
+
         {/* Basic Information Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Settings size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>معلومات القسم الأساسية</Text>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>اسم القسم</Text>
             <TextInput
@@ -110,10 +102,10 @@ export default function VetSpecialtySettingsScreen() {
               value={displayName}
               onChangeText={setDisplayName}
               placeholder="اسم القسم"
-              textAlign={isRTL ? 'right' : 'left'}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>وصف القسم</Text>
             <TextInput
@@ -123,11 +115,11 @@ export default function VetSpecialtySettingsScreen() {
               placeholder="وصف القسم"
               multiline
               numberOfLines={3}
-              textAlign={isRTL ? 'right' : 'left'}
+              textAlign={isRTL ? "right" : "left"}
               textAlignVertical="top"
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>النص الترويجي</Text>
             <TextInput
@@ -135,20 +127,31 @@ export default function VetSpecialtySettingsScreen() {
               value={promotionalText}
               onChangeText={setPromotionalText}
               placeholder="النص الترويجي"
-              textAlign={isRTL ? 'right' : 'left'}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>لون القسم</Text>
             <View style={styles.colorPicker}>
-              {['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFA726', '#9C27B0', '#FF5722', '#607D8B', '#795548', '#E91E63'].map((color) => (
+              {[
+                "#FF6B6B",
+                "#4ECDC4",
+                "#45B7D1",
+                "#96CEB4",
+                "#FFA726",
+                "#9C27B0",
+                "#FF5722",
+                "#607D8B",
+                "#795548",
+                "#E91E63",
+              ].map((color) => (
                 <TouchableOpacity
                   key={color}
                   style={[
                     styles.colorOption,
                     { backgroundColor: color },
-                    selectedColor === color && styles.selectedColor
+                    selectedColor === color && styles.selectedColor,
                   ]}
                   onPress={() => setSelectedColor(color)}
                 />
@@ -156,14 +159,14 @@ export default function VetSpecialtySettingsScreen() {
             </View>
           </View>
         </View>
-        
+
         {/* Visibility Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Eye size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>إعدادات الظهور</Text>
           </View>
-          
+
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>إظهار القسم للعملاء</Text>
@@ -176,7 +179,7 @@ export default function VetSpecialtySettingsScreen() {
               thumbColor={isVisible ? COLORS.white : COLORS.gray}
             />
           </View>
-          
+
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>السماح بالطلبات</Text>
@@ -189,7 +192,7 @@ export default function VetSpecialtySettingsScreen() {
               thumbColor={allowOrders ? COLORS.white : COLORS.gray}
             />
           </View>
-          
+
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>يتطلب موافقة الطبيب</Text>
@@ -203,14 +206,14 @@ export default function VetSpecialtySettingsScreen() {
             />
           </View>
         </View>
-        
+
         {/* Notification Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Bell size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>إعدادات الإشعارات</Text>
           </View>
-          
+
           <View style={styles.settingItem}>
             <View style={styles.settingInfo}>
               <Text style={styles.settingLabel}>تفعيل الإشعارات</Text>
@@ -224,14 +227,14 @@ export default function VetSpecialtySettingsScreen() {
             />
           </View>
         </View>
-        
+
         {/* Pricing Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <DollarSign size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>إعدادات التسعير</Text>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>نسبة الخصم (%)</Text>
             <View style={styles.inputContainer}>
@@ -242,13 +245,13 @@ export default function VetSpecialtySettingsScreen() {
                 onChangeText={setDiscountPercentage}
                 placeholder="0"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>الحد الأدنى للطلب (ريال)</Text>
+            <Text style={styles.inputLabel}>الحد الأدنى للطلب (دينار)</Text>
             <View style={styles.inputContainer}>
               <DollarSign size={20} color={COLORS.gray} />
               <TextInput
@@ -257,11 +260,11 @@ export default function VetSpecialtySettingsScreen() {
                 onChangeText={setMinimumOrder}
                 placeholder="100"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>الحد الأقصى للطلبات اليومية</Text>
             <View style={styles.inputContainer}>
@@ -272,19 +275,19 @@ export default function VetSpecialtySettingsScreen() {
                 onChangeText={setMaxDailyOrders}
                 placeholder="50"
                 keyboardType="numeric"
-                textAlign={isRTL ? 'right' : 'left'}
+                textAlign={isRTL ? "right" : "left"}
               />
             </View>
           </View>
         </View>
-        
+
         {/* SEO Settings */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Globe size={20} color={COLORS.primary} />
             <Text style={styles.sectionTitle}>إعدادات تحسين محركات البحث</Text>
           </View>
-          
+
           <View style={styles.inputGroup}>
             <Text style={styles.inputLabel}>الكلمات المفتاحية</Text>
             <TextInput
@@ -292,11 +295,11 @@ export default function VetSpecialtySettingsScreen() {
               value={keywords}
               onChangeText={setKeywords}
               placeholder="أدخل الكلمات المفتاحية مفصولة بفواصل"
-              textAlign={isRTL ? 'right' : 'left'}
+              textAlign={isRTL ? "right" : "left"}
             />
           </View>
         </View>
-        
+
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <Button
@@ -306,26 +309,21 @@ export default function VetSpecialtySettingsScreen() {
             icon={<Save size={20} color={COLORS.white} />}
             style={[styles.actionButton, { backgroundColor: specialtyInfo.color }]}
           />
-          
-          <Button
-            title="إعادة تعيين"
-            onPress={handleResetSettings}
-            type="secondary"
-            style={styles.actionButton}
-          />
+
+          <Button title="إعادة تعيين" onPress={handleResetSettings} type="secondary" style={styles.actionButton} />
         </View>
-        
+
         {/* Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push(`/vet-specialty-products?specialty=${specialty}`)}
           >
             <Package size={24} color={COLORS.primary} />
             <Text style={styles.quickActionText}>إدارة المنتجات</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.quickActionButton}
             onPress={() => router.push(`/vet-specialty-analytics?specialty=${specialty}`)}
           >
@@ -350,7 +348,7 @@ const styles = StyleSheet.create({
     padding: 24,
     margin: 16,
     borderRadius: 16,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -359,16 +357,16 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
     marginTop: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: "rgba(255, 255, 255, 0.9)",
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: "center",
   },
   section: {
     backgroundColor: COLORS.white,
@@ -383,20 +381,20 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.black,
     marginLeft: 8,
   },
   settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
@@ -407,7 +405,7 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 4,
   },
@@ -420,13 +418,13 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.black,
     marginBottom: 8,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: COLORS.lightGray,
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -453,11 +451,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionButton: {
-    width: '100%',
+    width: "100%",
   },
   quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     padding: 16,
     paddingTop: 0,
   },
@@ -465,7 +463,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
     marginHorizontal: 8,
     shadowColor: COLORS.black,
@@ -476,18 +474,18 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: COLORS.primary,
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   headerIcon: {
     fontSize: 32,
     marginBottom: 8,
   },
   colorPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 8,
   },
   colorOption: {
@@ -497,7 +495,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   selectedColor: {
     borderColor: COLORS.black,

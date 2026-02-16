@@ -285,7 +285,7 @@ export default function AddCourseScreen() {
                   style={styles.textInputWithIcon}
                   value={formData.price}
                   onChangeText={(text) => updateFormData("price", text)}
-                  placeholder="مثال: 1500 ريال أو مجاني"
+                  placeholder="مثال: 1500 دينار أو مجاني"
                 />
               </View>
             </View>

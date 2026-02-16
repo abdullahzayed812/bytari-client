@@ -9,7 +9,7 @@ import { useApp } from "../providers/AppProvider";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChevronDown, User, Stethoscope, Globe, MessageCircle, CheckSquare, Square } from "lucide-react-native";
-// import { API_URL, trpc } from "../lib/trpc";
+import { API_URL, trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { ImageUploader } from "../components/ImageUploader";
 import TermsAndConditions from "../components/TermsAndConditions";

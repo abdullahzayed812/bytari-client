@@ -385,7 +385,7 @@ export default function AdminStoresManagement() {
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>إجمالي المبيعات:</Text>
-                  <Text style={styles.infoValue}>{selectedStore.totalSales.toLocaleString()} ريال</Text>
+                  <Text style={styles.infoValue}>{selectedStore.totalSales.toLocaleString()} دينار</Text>
                 </View>
               </View>
 
@@ -585,7 +585,7 @@ export default function AdminStoresManagement() {
 
         <View style={styles.detailItem}>
           <TrendingUp size={14} color="#27AE60" />
-          <Text style={styles.detailText}>{item.totalSales.toLocaleString()} ريال</Text>
+          <Text style={styles.detailText}>{item.totalSales.toLocaleString()} دينار</Text>
         </View>
       </View>
 

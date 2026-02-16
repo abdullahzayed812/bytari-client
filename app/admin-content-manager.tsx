@@ -892,7 +892,7 @@ export default function AdminContentManagerScreen() {
               style={styles.textInput}
               value={formData.price || ""}
               onChangeText={(text) => setFormData((prev) => ({ ...prev, price: text }))}
-              placeholder="مثال: 100 ريال"
+              placeholder="مثال: 100 دينار"
             />
           </View>
 
