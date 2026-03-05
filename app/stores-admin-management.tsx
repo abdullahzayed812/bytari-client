@@ -168,7 +168,7 @@ export default function StoresAdminManagementScreen() {
           console.error("Error updating store:", error);
           showToast({ message: "حدث خطأ أثناء تحديث المتجر", type: "error" });
         },
-      }
+      },
     );
   };
 
@@ -191,7 +191,7 @@ export default function StoresAdminManagementScreen() {
                 console.error("Error deleting store:", error);
                 showToast({ message: "حدث خطأ أثناء حذف المتجر", type: "error" });
               },
-            }
+            },
           );
         },
       },
@@ -518,7 +518,7 @@ export default function StoresAdminManagementScreen() {
                           ...prev,
                           workingHours: text,
                         }
-                      : null
+                      : null,
                   )
                 }
                 placeholder="08:00"
@@ -561,7 +561,7 @@ export default function StoresAdminManagementScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "إدارة المذاخر البيطرية",
+          title: "إدارة المكاتب البيطرية",
           headerRight: () => (
             <View style={styles.headerActions}>
               <TouchableOpacity

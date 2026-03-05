@@ -21,6 +21,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "../../lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
+import ImageViewerModal from "@/components/ImageViewerModal";
 
 interface Medication {
   name: string;
@@ -91,6 +92,9 @@ export default function PetDetailsScreen() {
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [showAccessRequestModal, setShowAccessRequestModal] = useState(false);
 
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
+
   // Form states
   const [editForm, setEditForm] = useState({
     name: "",
@@ -159,14 +163,14 @@ export default function PetDetailsScreen() {
   // Fetch pet details based on user mode
   const petQuery = useQuery({
     ...trpc.pets.getProfile.queryOptions({
-      petId: Number(petId),
+      petId: petId,
     }),
   });
 
   // Fetch my clinic requests (for vets)
   const myRequestsQuery = useQuery({
     ...trpc.pets.getMyAccessRequests.queryOptions({
-      petId: Number(petId),
+      petId: petId,
       clinicId: Number(clinicId),
     }),
     enabled: isClinicAccess,
@@ -174,20 +178,20 @@ export default function PetDetailsScreen() {
 
   // Fetch access requests (for owner)
   const accessRequestsQuery = useQuery({
-    ...trpc.pets.getPendingAccessRequests.queryOptions({ petId: Number(petId) }),
+    ...trpc.pets.getPendingAccessRequests.queryOptions({ petId: petId }),
     enabled: isOwner,
   });
 
   // Fetch pending medical action requests (for owners)
   const pendingMedicalActionsQuery = useQuery({
-    ...trpc.pets.getPendingMedicalActions.queryOptions({ petId: Number(petId) }),
+    ...trpc.pets.getPendingMedicalActions.queryOptions({ petId: petId }),
     enabled: isOwner,
   });
 
   // Fetch clinic follow-ups (approved access)
   const clinicFollowUpsQuery = useQuery({
     ...trpc.pets.getClinicFollowUps.queryOptions({
-      petId: Number(petId),
+      petId: petId,
     }),
     enabled: isOwner && !!petId,
   });
@@ -197,7 +201,7 @@ export default function PetDetailsScreen() {
 
   const checkAccess = useQuery({
     ...trpc.pets.checkClinicAccess.queryOptions({
-      petId: Number(petId),
+      petId: petId,
       clinicId: Number(clinicId),
     }),
     enabled: isClinicAccess,
@@ -736,7 +740,7 @@ export default function PetDetailsScreen() {
               type: "error",
             });
           },
-        }
+        },
       );
     } else {
       // Pet owner update (limited fields)
@@ -767,7 +771,7 @@ export default function PetDetailsScreen() {
               type: "error",
             });
           },
-        }
+        },
       );
     }
   };
@@ -799,7 +803,7 @@ export default function PetDetailsScreen() {
                   type: "error",
                 });
               },
-            }
+            },
           );
         },
       },
@@ -835,7 +839,7 @@ export default function PetDetailsScreen() {
                   type: "error",
                 });
               },
-            }
+            },
           );
         },
       },
@@ -909,7 +913,7 @@ export default function PetDetailsScreen() {
           onPress: async () => {
             try {
               await cancelClinicFollowUpsMutation.mutateAsync({
-                petId: Number(petId),
+                petId: petId,
                 clinicId: Number(clinicId),
               } as any);
 
@@ -932,7 +936,7 @@ export default function PetDetailsScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -1007,11 +1011,11 @@ export default function PetDetailsScreen() {
                     message: error.message || "حدث خطأ أثناء إرسال الطلب",
                   });
                 },
-              }
+              },
             );
           },
         },
-      ]
+      ],
     );
   };
 
@@ -1340,8 +1344,8 @@ export default function PetDetailsScreen() {
                         <Text style={styles.recordLabel}>صورة الوصفة</Text>
                         <TouchableOpacity
                           onPress={() => {
-                            // TODO: Implement image preview
-                            Alert.alert("صورة الوصفة", "عرض صورة الوصفة الطبية");
+                            setSelectedImageUrl(record.prescriptionImage);
+                            setShowImageModal(true);
                           }}
                         >
                           <Image source={{ uri: record.prescriptionImage }} style={styles.prescriptionThumbnail} />
@@ -1354,6 +1358,12 @@ export default function PetDetailsScreen() {
             )}
           </View>
         )}
+
+        <ImageViewerModal
+          visible={showImageModal}
+          imageUrl={selectedImageUrl}
+          onClose={() => setShowImageModal(false)}
+        />
 
         {activeTab === "vaccinations" && (
           <View>

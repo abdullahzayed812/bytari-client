@@ -34,7 +34,7 @@ export default function ProductDetailsScreen() {
     trpc.unifiedStore.getProduct.queryOptions({
       id: Number(productId),
       storeType: effectiveStoreType,
-    })
+    }),
   );
 
   const handleAddToCart = () => {
@@ -151,14 +151,10 @@ export default function ProductDetailsScreen() {
                 <Shield size={16} color={COLORS.primary} />
                 <Text style={styles.featureText}>جودة مضمونة</Text>
               </View>
-              {/* <View style={styles.featureItem}>
-                <Truck size={16} color={COLORS.primary} />
-                <Text style={styles.featureText}>توصيل مجاني</Text>
-              </View> */}
-              {/* <View style={styles.featureItem}>
-                <RotateCcw size={16} color={COLORS.primary} />
-                <Text style={styles.featureText}>إمكانية الإرجاع</Text>
-              </View> */}
+              <View style={styles.featureItem}>
+                <Shield size={16} color={COLORS.primary} />
+                <Text style={styles.featureText}>يضاف سعر التوصيل على المنتج</Text>
+              </View>
             </View>
           </View>
 
@@ -330,7 +326,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   featureItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
   },
@@ -339,6 +335,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   quantityContainer: {
+    alignSelf: "flex-start",
     marginBottom: 24,
   },
   quantitySelector: {

@@ -86,7 +86,7 @@ export default function VetStoresListScreen() {
           onError: (error) => {
             console.error("Error submitting rating:", error);
           },
-        }
+        },
       );
     }
   };
@@ -171,7 +171,7 @@ export default function VetStoresListScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "المذاخر البيطرية",
+          title: "المكاتب البيطرية",
           headerRight: () =>
             isSuperAdmin ? (
               <View style={styles.headerActions}>

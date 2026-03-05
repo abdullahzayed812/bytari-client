@@ -75,20 +75,20 @@ export default function ProfileScreen() {
         { avatar: url },
         {
           onSuccess: async (response) => {
-            Alert.alert("نجح", "تم تحديث صورة الملف الشخصي بنجاح");
+            Alert.alert(t("common.success"), t("profile.photoUpdateSuccess"));
             // Update local user data
             if (response.user) {
               await updateUser({ avatar: response.user.avatar });
             }
           },
           onError: (error) => {
-            Alert.alert("خطأ", error.message || "فشل تحديث الصورة");
+            Alert.alert(t("common.error"), error.message || t("profile.photoUpdateFailed"));
           },
         }
       );
     },
     onUploadError: (error) => {
-      Alert.alert("خطأ", `فشل رفع الصورة: ${error}`);
+      Alert.alert(t("common.error"), `${t("profile.photoUploadFailed").replace("{error}", String(error))}`);
     },
   });
 
@@ -236,14 +236,14 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               {isUploadingImage && (
                 <View style={styles.uploadingOverlay}>
-                  <Text style={styles.uploadingText}>جاري الرفع...</Text>
+                  <Text style={styles.uploadingText}>{t("common.uploading")}</Text>
                 </View>
               )}
             </View>
             <View style={styles.nameContainer}>
               <Text style={styles.name}>{user?.name}</Text>
               <Text style={styles.email}>{user?.email}</Text>
-              <Text style={styles.userId}>ID: {user?.id || "1001"}</Text>
+              <Text style={styles.userId}>{t("profile.userId")}{user?.id || "1001"}</Text>
             </View>
           </View>
 

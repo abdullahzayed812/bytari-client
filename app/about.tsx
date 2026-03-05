@@ -3,8 +3,11 @@ import React from "react";
 import { COLORS } from "../constants/colors";
 import { Stack, router } from "expo-router";
 import { ArrowRight, Info, Heart, Users, Shield, Star, ExternalLink, ArrowLeft } from "lucide-react-native";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function AboutScreen() {
+  const { t } = useI18n();
+
   const handleLinkPress = (url: string) => {
     Linking.openURL(url);
   };
@@ -13,7 +16,7 @@ export default function AboutScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "حول التطبيق",
+          title: t("screens.about"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black, fontWeight: "bold" },
           headerLeft: () => (
@@ -27,56 +30,53 @@ export default function AboutScreen() {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Heart size={40} color={COLORS.white} />
-          <Text style={styles.headerText}>تطبيق رعاية الحيوانات الأليفة</Text>
-          <Text style={styles.versionText}>الإصدار 1.0.0</Text>
+          <Text style={styles.headerText}>{t("about.appName")}</Text>
+          <Text style={styles.versionText}>{t("about.version")}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>عن التطبيق</Text>
+          <Text style={styles.sectionTitle}>{t("about.aboutTitle")}</Text>
           <View style={styles.aboutCard}>
             <Text style={styles.aboutText}>
-              تطبيق رعاية الحيوانات الأليفة هو منصة شاملة مصممة لمساعدة الأطباء البيطريين و أصحاب الحيوانات الأليفة في
-              العناية بحيواناتهم الأليفة بأفضل طريقة ممكنة. نوفر خدمات متنوعة من حجز المواعيد البيطرية إلى متجر لوازم
-              الحيوانات الأليفة.
+              {t("about.aboutText")}
             </Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>مميزاتنا</Text>
+          <Text style={styles.sectionTitle}>{t("about.featuresTitle")}</Text>
           <View style={styles.featuresCard}>
             <View style={styles.featureItem}>
               <Users size={24} color={COLORS.primary} />
               <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>مجتمع محب للحيوانات</Text>
-                <Text style={styles.featureDescription}>انضم إلى مجتمع من محبي الحيوانات الأليفة</Text>
+                <Text style={styles.featureTitle}>{t("about.feature1Title")}</Text>
+                <Text style={styles.featureDescription}>{t("about.feature1Description")}</Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
               <Shield size={24} color={COLORS.primary} />
               <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>رعاية طبية متخصصة</Text>
-                <Text style={styles.featureDescription}>احجز مواعيد مع أفضل الأطباء البيطريين</Text>
+                <Text style={styles.featureTitle}>{t("about.feature2Title")}</Text>
+                <Text style={styles.featureDescription}>{t("about.feature2Description")}</Text>
               </View>
             </View>
 
             <View style={styles.featureItem}>
               <Star size={24} color={COLORS.primary} />
               <View style={styles.featureInfo}>
-                <Text style={styles.featureTitle}>خدمات متميزة</Text>
-                <Text style={styles.featureDescription}>متجر شامل لجميع احتياجات حيوانك الأليف</Text>
+                <Text style={styles.featureTitle}>{t("about.feature3Title")}</Text>
+                <Text style={styles.featureDescription}>{t("about.feature3Description")}</Text>
               </View>
             </View>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>فريق العمل</Text>
+          <Text style={styles.sectionTitle}>{t("about.teamTitle")}</Text>
           <View style={styles.teamCard}>
             <Text style={styles.teamText}>
-              تم تطوير هذا التطبيق بواسطة فريق متخصص من الاطباءالبيطريين ومحبي الحيوانات الأليفة. نحن نعمل بشغف لتوفير
-              أفضل تجربة ممكنة للأطباء البيطريين واصحاب الحيوانات الاليفة
+              {t("about.teamText")}
             </Text>
           </View>
         </View>

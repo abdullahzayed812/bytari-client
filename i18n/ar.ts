@@ -156,18 +156,21 @@ const ar: Record<string, string> = {
   "auth.doctorIdBack": "صورة ظهر هوية الطبيب",
   "auth.uploadIdFront": "رفع صورة وجه الهوية",
   "auth.uploadIdBack": "رفع صورة ظهر الهوية",
-  "auth.registrationPending": "تم إرسال طلب التسجيل للمشرفين للمراجعة والموافقة. سيتم إشعارك عبر البريد الإلكتروني عند الموافقة على حسابك، قم بتسجيل الدخول بعد دقائق سيتم تفعيل حسابك.",
+  "auth.registrationPending":
+    "تم إرسال طلب التسجيل للمشرفين للمراجعة والموافقة. سيتم إشعارك عبر البريد الإلكتروني عند الموافقة على حسابك، قم بتسجيل الدخول بعد دقائق سيتم تفعيل حسابك.",
   "auth.loginError": "حدث خطأ أثناء تسجيل الدخول",
   "auth.requestSent": "تم إرسال الطلب بنجاح",
   "auth.adminName": "زهير الراوي - الإدمن الأساسي",
   "auth.pendingReview": "حسابك قيد المراجعة",
-  "auth.pendingReviewMessage": "حسابك كطبيب بيطري لا يزال قيد المراجعة من قبل الإدارة. سيتم إشعارك عبر البريد الإلكتروني عند الموافقة على حسابك.",
+  "auth.pendingReviewMessage":
+    "حسابك كطبيب بيطري لا يزال قيد المراجعة من قبل الإدارة. سيتم إشعارك عبر البريد الإلكتروني عند الموافقة على حسابك.",
   "auth.registerError": "حدث خطأ أثناء إنشاء الحساب",
   "auth.warning": "تنبيه",
   "auth.enterEmailFirst": "يرجى إدخال البريد الإلكتروني أولاً",
   "auth.enterValidEmail": "يرجى إدخال بريد إلكتروني صحيح",
   "auth.passwordResetSent": "تم إرسال رابط إعادة تعيين كلمة المرور",
-  "auth.passwordResetEmailSent": "تم إرسال رابط إعادة تعيين كلمة المرور إلى {email}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.",
+  "auth.passwordResetEmailSent":
+    "تم إرسال رابط إعادة تعيين كلمة المرور إلى {email}. يرجى فحص بريدك الإلكتروني واتباع التعليمات.",
   "auth.passwordResetError": "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
   "auth.invalidCredentials": "بيانات الدخول غير صحيحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
   "auth.mustAgreeTerms": "يجب الموافقة على اتفاقية الاستخدام للمتابعة",
@@ -187,7 +190,8 @@ const ar: Record<string, string> = {
   // ========================
   "onboarding.getStarted": "ابدأ الآن",
   "onboarding.welcome": "أهلاً وسهلاً بكم",
-  "onboarding.description": "منصة خاصة بالطب البيطري يوفر كل ما يحتاجه الأطباء البيطريين وكل ما يحتاجه أصحاب الحيوانات من استشارات مجانية وعناية بحيواناتهم ومتجر خاص يوفر كل ما يحتاجونه",
+  "onboarding.description":
+    "منصة خاصة بالطب البيطري يوفر كل ما يحتاجه الأطباء البيطريين وكل ما يحتاجه أصحاب الحيوانات من استشارات مجانية وعناية بحيواناتهم ومتجر خاص يوفر كل ما يحتاجونه",
 
   // ========================
   // HOME
@@ -223,8 +227,11 @@ const ar: Record<string, string> = {
   "home.welcomeModal.subtitle": "ماذا يقدم لك تطبيق بيطري؟",
   "home.welcomeModal.feature1": "إدارة شاملة لحيواناتك الأليفة وسجلاتها الطبية.",
   "home.welcomeModal.feature2": "التواصل المباشر مع نخبة من الأطباء البيطريين.",
-  "home.welcomeModal.feature3": "الوصول إلى أفضل العيادات والمذاخر البيطرية.",
+  "home.welcomeModal.feature3": "الوصول إلى أفضل العيادات والمكاتب البيطرية.",
   "home.welcomeModal.getStarted": "ابدأ الآن",
+  "home.products": "المنتجات",
+  "home.noLostPets": "لا يوجد حيوانات مفقودة",
+  "home.ageNotSpecified": "العمر غير محدد",
 
   // ========================
   // TABS
@@ -363,6 +370,15 @@ const ar: Record<string, string> = {
   "store.addProduct": "إضافة منتج جديد",
   "store.addVetOffice": "إضافة مذخر بيطري",
   "store.emptyProducts": "لا توجد منتجات",
+  "store.vetStoreTitle": "المتجر البيطري",
+  "store.vetStoreSubtitle": "منتجات طبية متخصصة للأطباء البيطريين",
+  "store.vetStoreWelcomeTitle": "المتجر البيطري المتخصص",
+  "store.vetStoreWelcomeSubtitle": "اختر التخصص لعرض المنتجات الطبية والأدوات المناسبة",
+  "store.petStoreSubtitle": "متجر الحيوانات الأليفة - منتجات عامة",
+  "store.petStoreWelcomeTitle": "متجر الحيوانات الأليفة",
+  "store.petStoreWelcomeSubtitle": "اختر نوع حيوانك الأليف لعرض المنتجات المناسبة من طعام وألعاب وإكسسوارات",
+  "store.searchVet": "ابحث عن منتجات طبية بيطرية...",
+  "store.searchPet": "ابحث عن منتجات الحيوانات الأليفة...",
 
   // ========================
   // SECTIONS
@@ -375,7 +391,7 @@ const ar: Record<string, string> = {
   "sections.reminders": "التذكيرات",
   "sections.premiumMembership": "العضوية المميزة",
   "sections.clinics": "العيادات",
-  "sections.vetOffices": "المذاخر البيطرية",
+  "sections.vetOffices": "المكاتب البيطرية",
   "sections.category.general": "عام",
   "sections.category.diseases": "أمراض",
   "sections.category.nutrition": "تغذية",
@@ -676,7 +692,7 @@ const ar: Record<string, string> = {
   "screens.vetMagazine": "مجلة الطبيب",
   "screens.vetBooks": "كتب الطب البيطري",
   "screens.vetUnion": "نقابة الأطباء البيطريين",
-  "screens.vetOffices": "المذاخر البيطرية",
+  "screens.vetOffices": "المكاتب البيطرية",
   "screens.privacy": "سياسة الخصوصية",
   "screens.language": "اللغة",
   "screens.accountSettings": "إعدادات الحساب",
@@ -695,7 +711,8 @@ const ar: Record<string, string> = {
   // TERMS & CONDITIONS
   // ========================
   "terms.title": "اتفاقية الاستخدام وشروط التسجيل",
-  "terms.intro": "يرجى قراءة هذه الاتفاقية بعناية قبل التسجيل أو استخدام التطبيق. إن قيامك بإنشاء حساب أو استخدام أي من خدمات التطبيق يُعد موافقة صريحة وملزمة قانونيًا على جميع الشروط والأحكام الواردة أدناه.",
+  "terms.intro":
+    "يرجى قراءة هذه الاتفاقية بعناية قبل التسجيل أو استخدام التطبيق. إن قيامك بإنشاء حساب أو استخدام أي من خدمات التطبيق يُعد موافقة صريحة وملزمة قانونيًا على جميع الشروط والأحكام الواردة أدناه.",
   "terms.definitions.title": "أولًا: التعريفات",
   "terms.definitions.app.label": "التطبيق:",
   "terms.definitions.app.text": "يقصد به منصة البيطري بجميع خدماتها الإلكترونية.",
@@ -708,9 +725,11 @@ const ar: Record<string, string> = {
   "terms.definitions.consultations.label": "الاستشارات:",
   "terms.definitions.consultations.text": "الآراء الطبية المقدمة عبر التطبيق (بشرية أو عبر الذكاء الاصطناعي).",
   "terms.serviceNature.title": "ثانيًا: طبيعة الخدمة",
-  "terms.serviceNature.point1": "التطبيق منصة رقمية وسيطة تربط بين أصحاب الحيوانات والأطباء والعيادات والمتاجر البيطرية.",
+  "terms.serviceNature.point1":
+    "التطبيق منصة رقمية وسيطة تربط بين أصحاب الحيوانات والأطباء والعيادات والمتاجر البيطرية.",
   "terms.serviceNature.point2": "التطبيق لا يُعد منشأة طبية ولا يقدم علاجًا مباشرًا.",
-  "terms.serviceNature.point3": "جميع الخدمات الطبية المقدمة هي مسؤولية مقدّمها (الطبيب/العيادة) وليست مسؤولية التطبيق.",
+  "terms.serviceNature.point3":
+    "جميع الخدمات الطبية المقدمة هي مسؤولية مقدّمها (الطبيب/العيادة) وليست مسؤولية التطبيق.",
   "terms.petOwnerTerms.title": "شروط استخدام صاحب الحيوان",
   "terms.petOwnerTerms.account.title": "1. إنشاء الحساب",
   "terms.petOwnerTerms.account.point1": "يلتزم المستخدم بتقديم معلومات صحيحة ودقيقة عن نفسه وعن الحيوان.",
@@ -721,9 +740,11 @@ const ar: Record<string, string> = {
   "terms.petOwnerTerms.consultations.title": "3. الاستشارات الطبية",
   "terms.petOwnerTerms.consultations.point1": "الاستشارات عبر التطبيق هي لأغراض إرشادية فقط.",
   "terms.petOwnerTerms.consultations.point2": "لا تغني عن الفحص السريري المباشر.",
-  "terms.petOwnerTerms.consultations.point3": "التطبيق غير مسؤول عن أي قرارات علاجية يتخذها المستخدم بناءً على الاستشارة.",
+  "terms.petOwnerTerms.consultations.point3":
+    "التطبيق غير مسؤول عن أي قرارات علاجية يتخذها المستخدم بناءً على الاستشارة.",
   "terms.petOwnerTerms.ai.title": "4. استشارات الذكاء الاصطناعي",
-  "terms.petOwnerTerms.ai.point1": "بعض الردود تتم عبر أنظمة ذكاء اصطناعي (ذكاء اصطناعي مختص بالطب البيطري) في الأوقات التي لا يتوفر أطباء بيطريين متاحين.",
+  "terms.petOwnerTerms.ai.point1":
+    "بعض الردود تتم عبر أنظمة ذكاء اصطناعي (ذكاء اصطناعي مختص بالطب البيطري) في الأوقات التي لا يتوفر أطباء بيطريين متاحين.",
   "terms.petOwnerTerms.ai.point2": "قد تحتوي على أخطاء أو معلومات غير مكتملة.",
   "terms.petOwnerTerms.ai.warning": "لا يُعتمد عليها كتشخيص نهائي.",
   "terms.petOwnerTerms.store.title": "5. المتجر الإلكتروني",

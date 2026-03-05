@@ -26,6 +26,7 @@ import {
   Earth,
   Facebook,
   Instagram,
+  Trash2,
 } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
@@ -56,7 +57,7 @@ interface Store {
 
 export default function StoreDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const { user } = useApp();
+  const { user, isSuperAdmin } = useApp();
   const queryClient = useQueryClient();
   const { showToast } = useToastContext();
 
@@ -71,11 +72,11 @@ export default function StoreDetailsScreen() {
   const { data: rawStoreProducts, isLoading: isStoreProductsLoading } = useQuery(
     trpc.stores.products.list.queryOptions({
       storeId: Number(id),
-    })
+    }),
   );
 
   const { data: isFollowingData } = useQuery(
-    trpc.stores.isFollowing.queryOptions({ storeId: Number(id), userId: Number(user?.id) }, { enabled: !!user })
+    trpc.stores.isFollowing.queryOptions({ storeId: Number(id), userId: Number(user?.id) }, { enabled: !!user }),
   );
   const isFollowing = isFollowingData?.isFollowing;
 
@@ -86,7 +87,7 @@ export default function StoreDetailsScreen() {
   const { data: reviewsData, isLoading: areReviewsLoading } = useQuery(
     trpc.reviews.getStoreReviews.queryOptions({
       storeId: Number(id),
-    })
+    }),
   );
   const reviews = (reviewsData as any)?.reviews;
 
@@ -96,7 +97,7 @@ export default function StoreDetailsScreen() {
 
   const storeProducts = useMemo(
     () => (rawStoreProducts as any)?.products as VetStoreProduct[] | undefined,
-    [rawStoreProducts]
+    [rawStoreProducts],
   );
   const featuredProducts = storeProducts?.slice(0, 3);
 
@@ -167,7 +168,7 @@ export default function StoreDetailsScreen() {
                     message: error.message,
                   });
                 },
-              }
+              },
             );
           },
         },
@@ -190,7 +191,7 @@ export default function StoreDetailsScreen() {
               message: error.message,
             });
           },
-        }
+        },
       );
     }
   };
@@ -225,6 +226,34 @@ export default function StoreDetailsScreen() {
   };
 
   const addReviewMutation = useMutation(trpc.reviews.addStoreReview.mutationOptions());
+  const deleteReviewMutation = useMutation(trpc.reviews.deleteReview.mutationOptions());
+
+  const handleDeleteReview = (reviewId: number) => {
+    Alert.alert("حذف التقييم", "هل أنت متأكد من حذف هذا التقييم؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deleteReviewMutation.mutate(
+            { reviewId },
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries(trpc.reviews.getStoreReviews.queryKey as any);
+                queryClient.invalidateQueries(trpc.stores.getById.queryKey as any);
+              },
+              onError: () => {
+                showToast({
+                  type: "error",
+                  message: "حدث خطأ أثناء حذف التقييم",
+                });
+              },
+            },
+          );
+        },
+      },
+    ]);
+  };
 
   const handleRatingSubmit = async (rating: number, comment: string) => {
     if (storeData) {
@@ -250,7 +279,7 @@ export default function StoreDetailsScreen() {
               message: error.message,
             });
           },
-        }
+        },
       );
     }
   };
@@ -457,11 +486,13 @@ export default function StoreDetailsScreen() {
               {reviews.map((review: any) => (
                 <View key={review.id} style={styles.reviewItem}>
                   <View style={styles.reviewHeader}>
-                    <Image
-                      source={{ uri: review.user.avatar || "https://via.placeholder.com/40" }}
-                      style={styles.reviewerAvatar}
-                    />
-                    <View>
+                    {isSuperAdmin && (
+                      <TouchableOpacity style={styles.deleteReviewButton} onPress={() => handleDeleteReview(review.id)}>
+                        <Trash2 size={16} color={COLORS.error} />
+                      </TouchableOpacity>
+                    )}
+
+                    <View style={{}}>
                       <Text style={styles.reviewerName}>{review.user.name}</Text>
                       <View style={styles.starsContainer}>{renderStars(review.rating)}</View>
                     </View>
@@ -742,6 +773,7 @@ const styles = StyleSheet.create({
   },
   reviewHeader: {
     flexDirection: "row-reverse",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },
@@ -758,7 +790,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   starsContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     gap: 4,
   },
   reviewComment: {
@@ -772,5 +804,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     textAlign: "left",
+  },
+  deleteReviewButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#FEE2E2",
   },
 });

@@ -60,7 +60,6 @@ export default function AddPoultryFarmScreen() {
     licenseImage: "",
     images: [] as string[],
   });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Create farm mutation

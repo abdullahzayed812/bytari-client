@@ -13,13 +13,14 @@ import {
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { Plus, Search, Edit, Trash2, Package, AlertCircle, Eye, EyeOff, Settings, Users } from "lucide-react-native";
+import { Plus, Search, Edit, Trash2, Package, AlertCircle, Eye, EyeOff, Settings, Users, Send } from "lucide-react-native";
 import { formatPrice } from "../constants/currency";
 import Button from "../components/Button 2";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import { trpc } from "@/lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
+import { ImageUploader } from "@/components/ImageUploader";
 
 type FilterType = "all" | "medicine" | "equipment" | "supplements" | "tools";
 
@@ -57,6 +58,34 @@ export default function WarehouseManagementScreen() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [selectedWarehouse, setSelectedWarehouse] = useState<any | null>(null);
   const [showWarehouseModal, setShowWarehouseModal] = useState<boolean>(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageTitle, setMessageTitle] = useState("");
+  const [messageBody, setMessageBody] = useState("");
+  const [messageImage, setMessageImage] = useState("");
+
+  const sendMessageMutation = useMutation(trpc.stores.sendMessageToFollowers.mutationOptions());
+
+  const handleSendMessage = async () => {
+    if (!messageTitle.trim() || !messageBody.trim()) {
+      showToast({ type: "error", message: "يرجى إدخال العنوان والرسالة" });
+      return;
+    }
+    try {
+      const result = await sendMessageMutation.mutateAsync({
+        storeId: warehouses?.[0]?.id,
+        title: messageTitle.trim(),
+        message: messageBody.trim(),
+        ...(messageImage ? { imageUrl: messageImage } : {}),
+      });
+      showToast({ type: "success", message: `تم إرسال الرسالة إلى ${result.count} متابع` });
+      setShowMessageModal(false);
+      setMessageTitle("");
+      setMessageBody("");
+      setMessageImage("");
+    } catch {
+      showToast({ type: "error", message: "حدث خطأ أثناء إرسال الرسالة" });
+    }
+  };
 
   const products = useMemo(() => {
     if (!warehouses) return [];
@@ -516,10 +545,16 @@ export default function WarehouseManagementScreen() {
         </View>
 
         {isOwner === "true" ? (
-          <TouchableOpacity style={styles.settingsButton} onPress={handleWarehouseSettings}>
-            <Settings size={20} color={COLORS.white} />
-            <Text style={styles.settingsButtonText}>إعدادات</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity style={styles.settingsButton} onPress={handleWarehouseSettings}>
+              <Settings size={20} color={COLORS.white} />
+              <Text style={styles.settingsButtonText}>إعدادات</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsButton} onPress={() => setShowMessageModal(true)}>
+              <Send size={20} color={COLORS.white} />
+              <Text style={styles.settingsButtonText}>رسالة للمتابعين</Text>
+            </TouchableOpacity>
+          </>
         ) : null}
 
         {canEdit === "true" ? (
@@ -569,6 +604,54 @@ export default function WarehouseManagementScreen() {
       {renderProductModal()}
       {renderDeleteModal()}
       {renderWarehouseModal()}
+
+      <Modal visible={showMessageModal} transparent animationType="slide">
+        <View style={styles.messageModalOverlay}>
+          <View style={styles.messageModalContent}>
+            <Text style={styles.messageModalTitle}>إرسال رسالة للمتابعين</Text>
+            <TextInput
+              style={styles.messageModalInput}
+              placeholder="عنوان الرسالة"
+              value={messageTitle}
+              onChangeText={setMessageTitle}
+              textAlign="right"
+            />
+            <TextInput
+              style={[styles.messageModalInput, { height: 100, textAlignVertical: "top" }]}
+              placeholder="نص الرسالة"
+              value={messageBody}
+              onChangeText={setMessageBody}
+              multiline
+              textAlign="right"
+            />
+            <ImageUploader
+              imageUri={messageImage}
+              onUploadComplete={setMessageImage}
+              label="صورة (اختياري)"
+              aspect={[16, 9]}
+            />
+            <View style={styles.messageModalButtons}>
+              <TouchableOpacity
+                style={[styles.messageModalButton, { backgroundColor: COLORS.primary }]}
+                onPress={handleSendMessage}
+                disabled={sendMessageMutation.isPending}
+              >
+                {sendMessageMutation.isPending ? (
+                  <ActivityIndicator color={COLORS.white} />
+                ) : (
+                  <Text style={styles.messageModalButtonText}>إرسال</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.messageModalButton, { backgroundColor: COLORS.darkGray }]}
+                onPress={() => setShowMessageModal(false)}
+              >
+                <Text style={styles.messageModalButtonText}>إلغاء</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1007,5 +1090,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: COLORS.white,
+  },
+  messageModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 20,
+  },
+  messageModalContent: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 20,
+  },
+  messageModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  messageModalInput: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 12,
+    textAlign: "right",
+  },
+  messageModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  messageModalButton: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  messageModalButtonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

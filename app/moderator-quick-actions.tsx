@@ -57,17 +57,17 @@ export default function ModeratorQuickActionsScreen() {
 
   // Fetch data using tRPC
   const { data: rawSystemStats, isLoading: statsLoading } = useQuery(
-    trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
+    trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
   );
   const systemStats: any = useMemo(() => rawSystemStats, [rawSystemStats]);
 
   const { data: rawUserPermissions, isLoading: permissionsLoading } = useQuery(
-    trpc.admin.permissions.getUserPermissions.queryOptions({ userId: Number(user?.id) })
+    trpc.admin.permissions.getUserPermissions.queryOptions({ userId: Number(user?.id) }),
   );
   const userPermissions: any = useMemo(() => rawUserPermissions, [rawUserPermissions]);
 
   const { data: rawApprovalCounts, isLoading: approvalCountsLoading } = useQuery(
-    trpc.admin.stats.getPendingApprovalCounts.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
+    trpc.admin.stats.getPendingApprovalCounts.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
   );
   const approvalCounts: any = useMemo(() => rawApprovalCounts, [rawApprovalCounts]);
 
@@ -75,8 +75,6 @@ export default function ModeratorQuickActionsScreen() {
     if (isSuperAdmin) return true;
     return userPermissions?.permissions?.some((p: any) => p.permissionName === permission) ?? false;
   };
-
-  console.log(userPermissions);
 
   const handleBack = () => {
     router.back();
@@ -132,31 +130,181 @@ export default function ModeratorQuickActionsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Statistics Section - Only if has view_analytics permission */}
-        {hasPermission("view_analytics") && (
+        {/* Main Statistics Section */}
+        {(hasPermission("view_analytics") || hasPermission("assign_roles") || hasPermission("manage_pets") || hasPermission("manage_inquiries") || hasPermission("manage_consultations")) && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>إحصائيات النظام</Text>
             <View style={styles.statsGrid}>
-              <StatCard
-                icon={<Users size={24} color="#4ECDC4" />}
-                value={systemStats?.totalStats?.users}
-                label="المستخدمين"
-              />
-              <StatCard
-                icon={<Heart size={24} color="#FF6B6B" />}
-                value={systemStats?.totalStats?.pets}
-                label="الحيوانات"
-              />
-              <StatCard
-                icon={<HelpCircle size={24} color="#45B7D1" />}
-                value={systemStats?.totalStats?.inquiries}
-                label="الاستفسارات"
-              />
-              <StatCard
-                icon={<Stethoscope size={24} color="#F39C12" />}
-                value={systemStats?.totalStats?.consultations}
-                label="الاستشارات"
-              />
+              {(hasPermission("view_analytics") || hasPermission("assign_roles")) && (
+                <StatCard
+                  icon={<Users size={24} color="#4ECDC4" />}
+                  value={systemStats?.totalStats?.users}
+                  label="المستخدمين"
+                />
+              )}
+              {(hasPermission("view_analytics") || hasPermission("manage_pets")) && (
+                <StatCard
+                  icon={<Heart size={24} color="#FF6B6B" />}
+                  value={systemStats?.totalStats?.pets}
+                  label="الحيوانات"
+                />
+              )}
+              {(hasPermission("view_analytics") || hasPermission("manage_inquiries")) && (
+                <StatCard
+                  icon={<HelpCircle size={24} color="#45B7D1" />}
+                  value={systemStats?.totalStats?.inquiries}
+                  label="الاستفسارات"
+                />
+              )}
+              {(hasPermission("view_analytics") || hasPermission("manage_consultations")) && (
+                <StatCard
+                  icon={<Stethoscope size={24} color="#F39C12" />}
+                  value={systemStats?.totalStats?.consultations}
+                  label="الاستشارات"
+                />
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Secondary Statistics */}
+        {(hasPermission("manage_stores") || hasPermission("manage_orders") || hasPermission("manage_clinics") || hasPermission("manage_content")) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>إحصائيات إضافية</Text>
+            <View style={styles.statsGrid}>
+              {hasPermission("manage_stores") && (
+                <StatCard
+                  icon={<Store size={24} color="#FF6B6B" />}
+                  value={systemStats?.totalStats?.stores}
+                  label="المتاجر"
+                />
+              )}
+              {(hasPermission("manage_stores") || hasPermission("manage_orders")) && (
+                <StatCard
+                  icon={<Database size={24} color="#A8E6CF" />}
+                  value={systemStats?.totalStats?.products}
+                  label="المنتجات"
+                />
+              )}
+              {hasPermission("manage_clinics") && (
+                <StatCard
+                  icon={<Activity size={24} color="#FFD93D" />}
+                  value={systemStats?.totalStats?.clinics}
+                  label="العيادات"
+                />
+              )}
+              {hasPermission("manage_content") && (
+                <StatCard
+                  icon={<BookOpen size={24} color="#6BCF7F" />}
+                  value={systemStats?.totalStats?.books}
+                  label="الكتب"
+                />
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Pending Approvals Section */}
+        {(hasPermission("manage_approvals") || hasPermission("manage_pets") || hasPermission("manage_clinics") || hasPermission("manage_stores")) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>الموافقات المعلقة</Text>
+            <View style={styles.statsGrid}>
+              {(hasPermission("manage_approvals") || hasPermission("manage_clinics")) && (
+                <TouchableOpacity
+                  style={[styles.statCard, styles.pendingCard]}
+                  onPress={() => router.push("/admin-approvals?type=clinics")}
+                >
+                  <Building2 size={24} color="#FF6B6B" />
+                  <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingClinics || 0}</Text>
+                  <Text style={styles.statLabel}>عيادات معلقة</Text>
+                </TouchableOpacity>
+              )}
+              {(hasPermission("manage_approvals") || hasPermission("manage_stores")) && (
+                <TouchableOpacity
+                  style={[styles.statCard, styles.pendingCard]}
+                  onPress={() => router.push("/admin-approvals?type=stores")}
+                >
+                  <Store size={24} color="#FFA500" />
+                  <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingStores || 0}</Text>
+                  <Text style={styles.statLabel}>متاجر معلقة</Text>
+                </TouchableOpacity>
+              )}
+              {hasPermission("manage_pets") && (
+                <TouchableOpacity
+                  style={[styles.statCard, styles.pendingCard]}
+                  onPress={() => router.push("/admin-approvals?type=lost-pets")}
+                >
+                  <AlertTriangle size={24} color="#E74C3C" />
+                  <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingLostPets || 0}</Text>
+                  <Text style={styles.statLabel}>حيوانات مفقودة</Text>
+                </TouchableOpacity>
+              )}
+              {hasPermission("manage_pets") && (
+                <TouchableOpacity
+                  style={[styles.statCard, styles.pendingCard]}
+                  onPress={() => router.push("/admin-approvals?type=breeding-pets")}
+                >
+                  <Heart size={24} color="#9B59B6" />
+                  <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingBreedingPets || 0}</Text>
+                  <Text style={styles.statLabel}>حيوانات تزاوج</Text>
+                </TouchableOpacity>
+              )}
+              {hasPermission("manage_approvals") && (
+                <TouchableOpacity
+                  style={[styles.statCard, styles.pendingCard]}
+                  onPress={() => router.push("/admin-approvals?type=vet-registrations")}
+                >
+                  <UserCheck size={24} color="#3498DB" />
+                  <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingVetRegistrations || 0}</Text>
+                  <Text style={styles.statLabel}>أطباء معلقين</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* User Breakdown - for those with assign_roles or view_analytics */}
+        {(hasPermission("assign_roles") || hasPermission("view_analytics")) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>تصنيف المستخدمين</Text>
+            <View style={styles.statsGrid}>
+              <View style={styles.breakdownCard}>
+                <Text style={styles.breakdownNumber}>{systemStats?.userBreakdown?.petOwners || 0}</Text>
+                <Text style={styles.breakdownLabel}>أصحاب الحيوانات</Text>
+              </View>
+              <View style={styles.breakdownCard}>
+                <Text style={styles.breakdownNumber}>{systemStats?.userBreakdown?.vets || 0}</Text>
+                <Text style={styles.breakdownLabel}>الأطباء البيطريين</Text>
+              </View>
+              <View style={styles.breakdownCard}>
+                <Text style={styles.breakdownNumber}>{systemStats?.userBreakdown?.admins || 0}</Text>
+                <Text style={styles.breakdownLabel}>المشرفين</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Recent Activity - for those with view_analytics */}
+        {hasPermission("view_analytics") && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>النشاط الأخير (30 يوم)</Text>
+            <View style={styles.activityContainer}>
+              <View style={styles.activityItem}>
+                <TrendingUp size={16} color="#4ECDC4" />
+                <Text style={styles.activityText}>مستخدمين جدد: {systemStats?.recentActivity?.users || 0}</Text>
+              </View>
+              <View style={styles.activityItem}>
+                <TrendingUp size={16} color="#45B7D1" />
+                <Text style={styles.activityText}>حيوانات جديدة: {systemStats?.recentActivity?.pets || 0}</Text>
+              </View>
+              <View style={styles.activityItem}>
+                <TrendingUp size={16} color="#96CEB4" />
+                <Text style={styles.activityText}>استفسارات جديدة: {systemStats?.recentActivity?.inquiries || 0}</Text>
+              </View>
+              <View style={styles.activityItem}>
+                <TrendingUp size={16} color="#FFEAA7" />
+                <Text style={styles.activityText}>استشارات جديدة: {systemStats?.recentActivity?.consultations || 0}</Text>
+              </View>
             </View>
           </View>
         )}
@@ -537,6 +685,53 @@ const styles = StyleSheet.create({
   roleName: {
     fontSize: 14,
     fontWeight: "600",
+    color: COLORS.black,
+  },
+  pendingCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF6B6B",
+  },
+  breakdownCard: {
+    width: (width - 44) / 3 - 4,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  breakdownNumber: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.black,
+  },
+  breakdownLabel: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    marginTop: 4,
+  },
+  activityContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  activityItem: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+  },
+  activityText: {
+    fontSize: 14,
     color: COLORS.black,
   },
   footerSpace: {

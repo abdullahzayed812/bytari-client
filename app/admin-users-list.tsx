@@ -24,6 +24,7 @@ import {
   TestTube,
   MessageCircle,
   CreditCard,
+  KeyRound,
 } from "lucide-react-native";
 import ImageViewerModal from "../components/ImageViewerModal";
 
@@ -137,6 +138,9 @@ export default function AdminUsersList() {
   const [showIdImageModal, setShowIdImageModal] = useState(false);
   const [currentIdImageView, setCurrentIdImageView] = useState<"front" | "back" | null>(null);
   const [selectedIdImageUser, setSelectedIdImageUser] = useState<UserData | null>(null);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserData | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   // Fetch all users
   const {
@@ -149,7 +153,7 @@ export default function AdminUsersList() {
       limit: 100,
       userType: selectedUserType === "all" ? undefined : selectedUserType,
       search: searchQuery.length > 2 ? searchQuery : undefined,
-    })
+    }),
   );
 
   // Search users
@@ -171,12 +175,12 @@ export default function AdminUsersList() {
     trpc.admin.users.getSupervisors.queryOptions({
       limit: 20,
       offset: 0,
-    })
+    }),
   );
 
   // Get all permissions grouped
   const { data: permissionsResponse, isLoading: permissionsLoading } = useQuery(
-    trpc.admin.permissions.getAllPermissionsGrouped.queryOptions()
+    trpc.admin.permissions.getAllPermissionsGrouped.queryOptions(),
   );
 
   // Get user permissions when modal opens
@@ -198,6 +202,9 @@ export default function AdminUsersList() {
 
   // Send message mutation
   const sendMessageMutation = useMutation(trpc.admin.permissions.sendMessageToUser.mutationOptions());
+
+  // Reset password mutation
+  const resetPasswordMutation = useMutation(trpc.admin.users.resetPassword.mutationOptions());
 
   const supervisors = useMemo(() => supervisorsResponse?.supervisors || [], [supervisorsResponse]);
 
@@ -258,7 +265,7 @@ export default function AdminUsersList() {
             ...p,
             enabled: enabledPermissionNames.includes(p.name),
           })),
-        }))
+        })),
       );
 
       // Set selected permission IDs
@@ -294,7 +301,7 @@ export default function AdminUsersList() {
               onError: (error) => {
                 Alert.alert("خطأ", error.message || "فشل في تحديث حالة المستخدم");
               },
-            }
+            },
           );
         },
       },
@@ -322,7 +329,7 @@ export default function AdminUsersList() {
               onError: (error) => {
                 Alert.alert("خطأ", error.message || "فشل في حذف المستخدم");
               },
-            }
+            },
           );
         },
       },
@@ -359,7 +366,7 @@ export default function AdminUsersList() {
         onError: (error) => {
           Alert.alert("خطأ", error.message || "فشل في إرسال الرسالة");
         },
-      }
+      },
     );
   };
 
@@ -402,6 +409,50 @@ export default function AdminUsersList() {
     setShowIdImageModal(true);
   };
 
+  const handleResetPassword = (user: UserData) => {
+    setResetPasswordUser(user);
+    setNewPassword("");
+    setShowResetPasswordModal(true);
+  };
+
+  const handleResetPasswordSubmit = () => {
+    if (!resetPasswordUser || !newPassword.trim()) {
+      Alert.alert("خطأ", "يرجى إدخال كلمة المرور الجديدة");
+      return;
+    }
+    if (newPassword.trim().length < 6) {
+      Alert.alert("خطأ", "كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+      return;
+    }
+
+    Alert.alert("تأكيد إعادة تعيين كلمة المرور", `هل أنت متأكد من إعادة تعيين كلمة مرور ${resetPasswordUser.name}؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "تأكيد",
+        style: "destructive",
+        onPress: () => {
+          resetPasswordMutation.mutate(
+            {
+              userId: resetPasswordUser.id,
+              newPassword: newPassword.trim(),
+            },
+            {
+              onSuccess: (data) => {
+                Alert.alert("نجح", data.message);
+                setShowResetPasswordModal(false);
+                setResetPasswordUser(null);
+                setNewPassword("");
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", error.message || "فشل في إعادة تعيين كلمة المرور");
+              },
+            },
+          );
+        },
+      },
+    ]);
+  };
+
   const handleTogglePermission = (permissionId: number) => {
     setSelectedPermissions((prev) => {
       if (prev.includes(permissionId)) {
@@ -416,13 +467,13 @@ export default function AdminUsersList() {
       prev.map((category) => ({
         ...category,
         permissions: category.permissions.map((p) => (p.id === permissionId ? { ...p, enabled: !p.enabled } : p)),
-      }))
+      })),
     );
   };
 
   const handleToggleCategory = (categoryName: string) => {
     setPermissionCategories((prev) =>
-      prev.map((cat) => (cat.name === categoryName ? { ...cat, expanded: !cat.expanded } : cat))
+      prev.map((cat) => (cat.name === categoryName ? { ...cat, expanded: !cat.expanded } : cat)),
     );
   };
 
@@ -460,11 +511,11 @@ export default function AdminUsersList() {
                 onError: (error) => {
                   Alert.alert("خطأ", error.message || "فشل في حفظ الصلاحيات");
                 },
-              }
+              },
             );
           },
         },
-      ]
+      ],
     );
   };
 
@@ -580,6 +631,9 @@ export default function AdminUsersList() {
 
         <TouchableOpacity style={styles.actionButton} onPress={() => handleOpenPermissions(user)}>
           <Shield size={18} color="#9C27B0" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={() => handleResetPassword(user)}>
+          <KeyRound size={18} color="#FF6B6B" />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.actionButton}
@@ -913,6 +967,56 @@ export default function AdminUsersList() {
                 numberOfLines={6}
                 textAlignVertical="top"
               />
+            </View>
+          </SafeAreaView>
+        </Modal>
+
+        {/* Reset Password Modal */}
+        <Modal
+          visible={showResetPasswordModal}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowResetPasswordModal(false)}
+        >
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setShowResetPasswordModal(false)}>
+                <X size={24} color="#666" />
+              </TouchableOpacity>
+              <Text style={styles.modalTitle}>إعادة تعيين كلمة المرور</Text>
+              <TouchableOpacity
+                style={styles.modalSaveButton}
+                onPress={handleResetPasswordSubmit}
+                disabled={resetPasswordMutation.isPending}
+              >
+                <Text style={styles.modalSaveButtonText}>{resetPasswordMutation.isPending ? "جاري..." : "تأكيد"}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {resetPasswordUser && (
+              <View style={styles.selectedUserInfo}>
+                <Text style={styles.selectedUserName}>{resetPasswordUser.name}</Text>
+                <Text style={styles.selectedUserEmail}>{resetPasswordUser.email}</Text>
+                {/* <Text style={styles.selectedUserId}>ID: {resetPasswordUser.id}</Text> */}
+              </View>
+            )}
+
+            <View style={styles.messageContainer}>
+              <Text style={styles.messageLabel}>كلمة المرور الجديدة:</Text>
+              <TextInput
+                style={styles.resetPasswordInput}
+                placeholder="أدخل كلمة المرور الجديدة (6 أحرف على الأقل)"
+                placeholderTextColor="#999"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={false}
+                autoCapitalize="none"
+              />
+              <View style={styles.resetPasswordWarning}>
+                <Text style={styles.resetPasswordWarningText}>
+                  ⚠️ هذا الإجراء متاح فقط للمدير العام (Super Admin). سيتم تغيير كلمة مرور المستخدم فوراً.
+                </Text>
+              </View>
             </View>
           </SafeAreaView>
         </Modal>
@@ -1578,5 +1682,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderTopWidth: 1,
     borderTopColor: "#eee",
+  },
+  resetPasswordInput: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: "#333",
+    textAlign: "right",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    fontFamily: "System",
+  },
+  resetPasswordWarning: {
+    backgroundColor: "#fff3cd",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#ffeaa7",
+  },
+  resetPasswordWarningText: {
+    color: "#856404",
+    fontSize: 14,
+    textAlign: "left",
+    lineHeight: 20,
+    fontFamily: "System",
   },
 });

@@ -225,6 +225,9 @@ const ku: Record<string, string> = {
   "home.welcomeModal.feature2": "پەیوەندی ڕاستەوخۆ لەگەڵ باشترین پزیشکەکانی ئاژەڵان.",
   "home.welcomeModal.feature3": "دەستگەیشتن بە باشترین نەخۆشخانە و کۆگاکانی پزیشکی ئاژەڵان.",
   "home.welcomeModal.getStarted": "دەستپێکردن",
+  "home.products": "بەرهەمەکان",
+  "home.noLostPets": "هیچ ئاژەڵی ون نەدۆزرایەوە",
+  "home.ageNotSpecified": "تەمەن دیاری نەکراوە",
 
   // ========================
   // TABS
@@ -363,6 +366,15 @@ const ku: Record<string, string> = {
   "store.addProduct": "زیادکردنی بەرهەمی نوێ",
   "store.addVetOffice": "زیادکردنی کۆگای پزیشکی ئاژەڵان",
   "store.emptyProducts": "هیچ بەرهەمێک نەدۆزرایەوە",
+  "store.vetStoreTitle": "فرۆشگای پزیشکی ئاژەڵان",
+  "store.vetStoreSubtitle": "بەرهەمە پزیشکییە تایبەتمەندەکان بۆ پزیشکانی ئاژەڵان",
+  "store.vetStoreWelcomeTitle": "فرۆشگای تایبەتی پزیشکی ئاژەڵان",
+  "store.vetStoreWelcomeSubtitle": "پسپۆڕییەکە هەڵبژێرە بۆ بینینی بەرهەمە پزیشکییەکان و ئامرازە گونجاوەکان",
+  "store.petStoreSubtitle": "فرۆشگای ئاژەڵەکان - بەرهەمە گشتییەکان",
+  "store.petStoreWelcomeTitle": "فرۆشگای ئاژەڵەکان",
+  "store.petStoreWelcomeSubtitle": "جۆری ئاژەڵەکەت هەڵبژێرە بۆ بینینی بەرهەمە گونجاوەکان لە خواردن و یاری و کەلوپەل",
+  "store.searchVet": "گەڕان بۆ بەرهەمە پزیشکییەکانی ئاژەڵان...",
+  "store.searchPet": "گەڕان بۆ بەرهەمەکانی ئاژەڵەکان...",
 
   // ========================
   // SECTIONS

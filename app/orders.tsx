@@ -141,7 +141,7 @@ export default function OrdersScreen() {
       item.totalAmount || item.items.reduce((sum, orderItem) => sum + orderItem.price * orderItem.quantity, 0);
 
     return (
-      <TouchableOpacity style={styles.orderCard} onPress={() => router.push(`/order-details?orderId=${item.id}`)}>
+      <TouchableOpacity style={styles.orderCard}>
         <View style={styles.orderHeader}>
           <View style={styles.orderInfo}>
             <Text style={styles.orderId}>طلب #{item.id}</Text>

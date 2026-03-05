@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import { Stack, useRouter } from "expo-router";
+import { useToastContext } from "@/providers/ToastProvider";
 import {
   ArrowLeft,
   Shield,
@@ -48,12 +49,13 @@ export default function FieldSupervisionRequestScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useApp();
+  const { showToast } = useToastContext();
 
   // Initial form data with sample values
   const [formData, setFormData] = useState<FieldSupervisionFormData>({
-    fullName: "",
-    email: "",
-    phone: "",
+    fullName: user?.name ?? "",
+    email: user?.email ?? "",
+    phone: user?.phone ?? "",
     location: "",
     education: "",
     experience: "",
@@ -210,9 +212,9 @@ export default function FieldSupervisionRequestScreen() {
         },
         onError: (error: any) => {
           console.error("Error submitting supervision request:", error);
-          Alert.alert("خطأ", error?.message || "حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.");
+          showToast({ message: error?.message || "حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.", type: "error" });
         },
-      }
+      },
     );
   };
 

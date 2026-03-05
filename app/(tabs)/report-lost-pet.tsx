@@ -85,13 +85,13 @@ export default function ReportLostPetScreen() {
                     router.navigate("/(tabs)");
                   },
                 },
-              ]
+              ],
             );
           },
           onError: (error) => {
             Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال البلاغ");
           },
-        }
+        },
       );
     } catch (error) {
       console.error("Error submitting lost pet report:", error);

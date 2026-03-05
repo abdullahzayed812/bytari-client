@@ -54,6 +54,69 @@ export default function EditUnionMainScreen() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleSave = async () => {
+    if (!unionInfo) return;
+    setIsLoading(true);
+    try {
+      await mutation.mutateAsync({
+        ...unionInfo,
+        establishedYear: unionInfo.establishedYear,
+        memberCount: unionInfo.memberCount,
+        services: unionInfo.services,
+      });
+
+      Alert.alert("تم الحفظ", "تم حفظ معلومات النقابة بنجاح", [
+        {
+          text: "موافق",
+          onPress: () => router.back(),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert("خطأ", "حدث خطأ أثناء حفظ البيانات");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleServiceUpdate = (serviceId: string, field: "title" | "description" | "color", value: string) => {
+    setUnionInfo((prev) => ({
+      ...prev,
+      services: prev?.services?.map((service) =>
+        service?.id === serviceId ? { ...service, [field]: value } : service
+      ),
+    }));
+  };
+
+  const addNewService = () => {
+    const newService = {
+      id: Date.now().toString(),
+      title: "خدمة جديدة",
+      description: "وصف الخدمة الجديدة",
+      color: "#6B7280",
+    };
+
+    setUnionInfo((prev) => ({
+      ...prev,
+      services: [...prev.services, newService],
+    }));
+  };
+
+  const removeService = (serviceId: string) => {
+    Alert.alert("حذف الخدمة", "هل أنت متأكد من حذف هذه الخدمة؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          setUnionInfo((prev) => ({
+            ...prev,
+            services: prev.services.filter((service) => service.id !== serviceId),
+          }));
+        },
+      },
+    ]);
+  };
+
   if (!isSuperAdmin) {
     return (
       <View style={styles.container}>
@@ -88,67 +151,6 @@ export default function EditUnionMainScreen() {
       </View>
     );
   }
-
-  const handleSave = async () => {
-    if (!unionInfo) return;
-    setIsLoading(true);
-    try {
-      await mutation.mutateAsync({
-        ...unionInfo,
-        establishedYear: unionInfo.establishedYear,
-        memberCount: unionInfo.memberCount,
-        services: unionInfo.services,
-      });
-
-      Alert.alert("تم الحفظ", "تم حفظ معلومات النقابة بنجاح", [
-        {
-          text: "موافق",
-          onPress: () => router.back(),
-        },
-      ]);
-    } catch (error) {
-      Alert.alert("خطأ", "حدث خطأ أثناء حفظ البيانات");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleServiceUpdate = (serviceId: string, field: "title" | "description" | "color", value: string) => {
-    setUnionInfo((prev) => ({
-      ...prev,
-      services: prev.services.map((service) => (service.id === serviceId ? { ...service, [field]: value } : service)),
-    }));
-  };
-
-  const addNewService = () => {
-    const newService = {
-      id: Date.now().toString(),
-      title: "خدمة جديدة",
-      description: "وصف الخدمة الجديدة",
-      color: "#6B7280",
-    };
-
-    setUnionInfo((prev) => ({
-      ...prev,
-      services: [...prev.services, newService],
-    }));
-  };
-
-  const removeService = (serviceId: string) => {
-    Alert.alert("حذف الخدمة", "هل أنت متأكد من حذف هذه الخدمة؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "حذف",
-        style: "destructive",
-        onPress: () => {
-          setUnionInfo((prev) => ({
-            ...prev,
-            services: prev.services.filter((service) => service.id !== serviceId),
-          }));
-        },
-      },
-    ]);
-  };
 
   if (isFetching || !unionInfo) {
     return (

@@ -17,6 +17,7 @@ import { COLORS } from "../constants/colors";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface UserProfile {
   id: string;
@@ -38,6 +39,7 @@ export default function UserProfileScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ userId?: string }>();
   const { user } = useApp();
+  const { t } = useI18n();
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [messageSubject, setMessageSubject] = useState<string>("");
   const [messageContent, setMessageContent] = useState<string>("");
@@ -65,12 +67,12 @@ export default function UserProfileScreen() {
         name: userData.name || "N/A",
         email: userData.email || "N/A",
         phone: userData.phone || null,
-        location: userData.province || "غير محدد",
+        location: userData.province || t("common.unknown"),
         joinDate: new Date(userData.createdAt).toLocaleDateString("ar-SA"),
-        profession: userData.userType === "vet" ? "طبيب بيطري" : userData.userType === "admin" ? "مشرف" : "مستخدم عادي",
-        experience: userData.experience || "غير محدد",
-        education: userData.education || "غير محدد",
-        bio: userData.bio || "لا توجد معلومات إضافية متاحة",
+        profession: userData.userType === "vet" ? t("auth.vetDoctor") : userData.userType === "admin" ? t("userProfile.supervisor") : t("userProfile.regularUser"),
+        experience: userData.experience || t("common.unknown"),
+        education: userData.education || t("common.unknown"),
+        bio: userData.bio || t("userProfile.noBio"),
         userType: userData.userType,
         isActive: userData.isActive,
         avatar: userData.avatar,
@@ -87,7 +89,7 @@ export default function UserProfileScreen() {
 
   const handleSendMessageSubmit = async () => {
     if (!messageSubject.trim() || !messageContent.trim() || !userProfile) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("userProfile.fillAllFields"));
       return;
     }
 
@@ -102,13 +104,13 @@ export default function UserProfileScreen() {
       } as any,
       {
         onSuccess: () => {
-          Alert.alert("تم الإرسال", "تم إرسال رسالتك بنجاح.");
+          Alert.alert(t("userProfile.messageSent"), t("userProfile.messageSentSuccess"));
           setShowMessageModal(false);
           setMessageSubject("");
           setMessageContent("");
         },
         onError: (err) => {
-          Alert.alert("خطأ", err.message || "حدث خطأ أثناء إرسال الرسالة.");
+          Alert.alert(t("common.error"), err.message || t("messages.sendError"));
         },
       }
     );
@@ -124,7 +126,7 @@ export default function UserProfileScreen() {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.errorText}>جاري تحميل الملف الشخصي...</Text>
+        <Text style={styles.errorText}>{t("userProfile.loadingProfile")}</Text>
       </View>
     );
   }
@@ -134,7 +136,7 @@ export default function UserProfileScreen() {
       <View style={styles.container}>
         <Stack.Screen
           options={{
-            title: "الملف الشخصي",
+            title: t("profile.title"),
             headerStyle: { backgroundColor: COLORS.white },
             headerTintColor: COLORS.black,
             headerTitleStyle: { fontWeight: "bold" },
@@ -146,7 +148,7 @@ export default function UserProfileScreen() {
           }}
         />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error?.message || "لم يتم العثور على الملف الشخصي"}</Text>
+          <Text style={styles.errorText}>{error?.message || t("userProfile.profileNotFound")}</Text>
         </View>
       </View>
     );
@@ -156,7 +158,7 @@ export default function UserProfileScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "الملف الشخصي",
+          title: t("profile.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -196,18 +198,18 @@ export default function UserProfileScreen() {
 
           <TouchableOpacity style={styles.messageButton} onPress={handleSendMessage}>
             <MessageCircle size={20} color={COLORS.white} />
-            <Text style={styles.messageButtonText}>إرسال رسالة</Text>
+            <Text style={styles.messageButtonText}>{t("userProfile.sendMessage")}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Basic Information */}
         <View style={styles.infoSection}>
-          <Text style={styles.sectionTitle}>المعلومات الأساسية</Text>
+          <Text style={styles.sectionTitle}>{t("userProfile.basicInfo")}</Text>
 
           <View style={styles.infoItem}>
             <Mail size={20} color={COLORS.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>البريد الإلكتروني</Text>
+              <Text style={styles.infoLabel}>{t("common.email")}</Text>
               <Text style={styles.infoValue}>{userProfile.email}</Text>
             </View>
           </View>
@@ -216,7 +218,7 @@ export default function UserProfileScreen() {
             <View style={styles.infoItem}>
               <Phone size={20} color={COLORS.primary} />
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>رقم الهاتف</Text>
+                <Text style={styles.infoLabel}>{t("common.phone")}</Text>
                 <Text style={styles.infoValue}>{userProfile.phone}</Text>
               </View>
             </View>
@@ -225,7 +227,7 @@ export default function UserProfileScreen() {
           <View style={styles.infoItem}>
             <MapPin size={20} color={COLORS.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>الموقع</Text>
+              <Text style={styles.infoLabel}>{t("common.location")}</Text>
               <Text style={styles.infoValue}>{userProfile.location}</Text>
             </View>
           </View>
@@ -233,7 +235,7 @@ export default function UserProfileScreen() {
           <View style={styles.infoItem}>
             <Calendar size={20} color={COLORS.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>تاريخ الانضمام</Text>
+              <Text style={styles.infoLabel}>{t("userProfile.joinDate")}</Text>
               <Text style={styles.infoValue}>{userProfile.joinDate}</Text>
             </View>
           </View>
@@ -242,10 +244,10 @@ export default function UserProfileScreen() {
             <View
               style={[styles.statusBadge, { backgroundColor: (userProfile as any).isActive ? "#4CAF50" : "#F44336" }]}
             >
-              <Text style={styles.statusText}>{(userProfile as any).isActive ? "نشط" : "معطل"}</Text>
+              <Text style={styles.statusText}>{(userProfile as any).isActive ? t("common.active") : t("userProfile.disabled")}</Text>
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>حالة الحساب</Text>
+              <Text style={styles.infoLabel}>{t("userProfile.accountStatus")}</Text>
               <Text style={styles.infoValue}>ID: {userProfile.id}</Text>
             </View>
           </View>
@@ -254,13 +256,13 @@ export default function UserProfileScreen() {
         {/* Professional Information */}
         {(userProfile.experience || userProfile.education) && (
           <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>المعلومات المهنية</Text>
+            <Text style={styles.sectionTitle}>{t("userProfile.professionalInfo")}</Text>
 
             {userProfile.experience && (
               <View style={styles.infoItem}>
                 <Briefcase size={20} color={COLORS.primary} />
                 <View style={styles.infoContent}>
-                  <Text style={styles.infoLabel}>سنوات الخبرة</Text>
+                  <Text style={styles.infoLabel}>{t("userProfile.yearsOfExperience")}</Text>
                   <Text style={styles.infoValue}>{userProfile.experience}</Text>
                 </View>
               </View>
@@ -272,7 +274,7 @@ export default function UserProfileScreen() {
                   <Text style={styles.educationIconText}>🎓</Text>
                 </View>
                 <View style={styles.infoContent}>
-                  <Text style={styles.infoLabel}>التعليم</Text>
+                  <Text style={styles.infoLabel}>{t("userProfile.education")}</Text>
                   <Text style={styles.infoValue}>{userProfile.education}</Text>
                 </View>
               </View>
@@ -283,7 +285,7 @@ export default function UserProfileScreen() {
         {/* Bio */}
         {userProfile.bio && (
           <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>نبذة شخصية</Text>
+            <Text style={styles.sectionTitle}>{t("userProfile.bio")}</Text>
             <Text style={styles.bioText}>{userProfile.bio}</Text>
           </View>
         )}
@@ -291,7 +293,7 @@ export default function UserProfileScreen() {
         {/* Pets Section */}
         {!isAdminView && (
           <View style={styles.infoSection}>
-            <Text style={styles.sectionTitle}>الحيوانات الأليفة</Text>
+            <Text style={styles.sectionTitle}>{t("userProfile.pets")}</Text>
             {petsLoading ? (
               <ActivityIndicator color={COLORS.primary} />
             ) : petsData && petsData.length > 0 ? (
@@ -308,7 +310,7 @@ export default function UserProfileScreen() {
                 ))}
               </ScrollView>
             ) : (
-              <Text>لا توجد حيوانات أليفة مسجلة.</Text>
+              <Text>{t("userProfile.noPets")}</Text>
             )}
           </View>
         )}
@@ -317,17 +319,17 @@ export default function UserProfileScreen() {
         <View style={styles.actionButtonsContainer}>
           <TouchableOpacity style={styles.actionButton} onPress={handleSendMessage}>
             <MessageCircle size={20} color={COLORS.primary} />
-            <Text style={styles.actionButtonText}>إرسال رسالة</Text>
+            <Text style={styles.actionButtonText}>{t("userProfile.sendMessage")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.actionButton, styles.callButton]}>
             <Phone size={20} color="#4CAF50" />
-            <Text style={[styles.actionButtonText, { color: "#4CAF50" }]}>اتصال</Text>
+            <Text style={[styles.actionButtonText, { color: "#4CAF50" }]}>{t("common.call")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.actionButton, styles.emailButton]}>
             <Mail size={20} color="#FF9800" />
-            <Text style={[styles.actionButtonText, { color: "#FF9800" }]}>بريد إلكتروني</Text>
+            <Text style={[styles.actionButtonText, { color: "#FF9800" }]}>{t("common.email")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -344,7 +346,7 @@ export default function UserProfileScreen() {
             <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>إرسال رسالة</Text>
+            <Text style={styles.modalTitle}>{t("userProfile.sendMessage")}</Text>
             <TouchableOpacity
               onPress={handleSendMessageSubmit}
               style={[styles.sendButton && styles.sendButtonDisabled]}
@@ -366,30 +368,30 @@ export default function UserProfileScreen() {
                 )}
               </View>
               <View style={styles.recipientDetails}>
-                <Text style={styles.recipientName}>إلى: {userProfile?.name}</Text>
+                <Text style={styles.recipientName}>{t("common.to")}: {userProfile?.name}</Text>
                 <Text style={styles.recipientProfession}>{userProfile?.profession}</Text>
               </View>
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>موضوع الرسالة *</Text>
+              <Text style={styles.inputLabel}>{t("userProfile.messageSubject")} *</Text>
               <TextInput
                 style={styles.subjectInput}
                 value={messageSubject}
                 onChangeText={setMessageSubject}
-                placeholder="أدخل موضوع الرسالة"
+                placeholder={t("userProfile.messageSubjectPlaceholder")}
                 placeholderTextColor={COLORS.lightGray}
                 textAlign="right"
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>محتوى الرسالة *</Text>
+              <Text style={styles.inputLabel}>{t("userProfile.messageContent")} *</Text>
               <TextInput
                 style={styles.messageInput}
                 value={messageContent}
                 onChangeText={setMessageContent}
-                placeholder="اكتب رسالتك هنا..."
+                placeholder={t("userProfile.messageContentPlaceholder")}
                 placeholderTextColor={COLORS.lightGray}
                 multiline
                 numberOfLines={8}
@@ -399,7 +401,7 @@ export default function UserProfileScreen() {
             </View>
 
             <View style={styles.messageInfo}>
-              <Text style={styles.messageInfoText}>💡 نصيحة: كن واضحاً ومحدداً في رسالتك للحصول على أفضل رد</Text>
+              <Text style={styles.messageInfoText}>{t("userProfile.messageTip")}</Text>
             </View>
           </ScrollView>
         </View>

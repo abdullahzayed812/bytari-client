@@ -18,6 +18,7 @@ import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface JobVacancy {
   id: number;
@@ -34,6 +35,7 @@ interface JobVacancy {
 export default function JobVacanciesScreen() {
   const { isSuperAdmin, user } = useApp();
   const router = useRouter();
+  const { t } = useI18n();
 
   // Fetch jobs using tRPC
   const {
@@ -47,16 +49,16 @@ export default function JobVacanciesScreen() {
       limit: 50,
       offset: 0,
       status: "approved",
-    })
+    }),
   );
 
   const deleteJobMutation = useMutation(trpc.admin.jobs.deleteJob.mutationOptions());
 
   const handleDeleteJob = (jobId: number) => {
-    Alert.alert("حذف الوظيفة", "هل أنت متأكد من حذف هذه الوظيفة؟", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("job.deleteJob"), t("job.deleteJobConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "حذف",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           deleteJobMutation.mutate(
@@ -66,9 +68,9 @@ export default function JobVacanciesScreen() {
                 refetch();
               },
               onError: (error) => {
-                Alert.alert("خطأ", error.message);
+                Alert.alert(t("common.error"), error.message);
               },
-            }
+            },
           );
         },
       },
@@ -94,14 +96,14 @@ export default function JobVacanciesScreen() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const postedText =
       diffDays === 0
-        ? "اليوم"
+        ? t("common.today")
         : diffDays === 1
-        ? "منذ يوم"
-        : diffDays < 7
-        ? `منذ ${diffDays} أيام`
-        : diffDays < 30
-        ? `منذ ${Math.floor(diffDays / 7)} أسابيع`
-        : `منذ ${Math.floor(diffDays / 30)} شهور`;
+          ? t("job.oneDayAgo")
+          : diffDays < 7
+            ? `${t("job.daysAgo", { count: diffDays })}`
+            : diffDays < 30
+              ? `${t("job.weeksAgo", { count: Math.floor(diffDays / 7) })}`
+              : `${t("job.monthsAgo", { count: Math.floor(diffDays / 30) })}`;
 
     // Map jobType to Arabic
     const jobTypeMap: Record<string, string> = {

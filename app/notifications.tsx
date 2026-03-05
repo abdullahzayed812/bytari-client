@@ -130,7 +130,7 @@ export default function NotificationsScreen() {
     },
     {
       id: "stores",
-      title: "المذاخر البيطرية",
+      title: "المكاتب البيطرية",
       description: "إشعارات المنتجات الجديدة من المذاخر المتابعة",
       icon: <Store size={24} color={COLORS.primary} />,
       enabled: true,
@@ -211,7 +211,7 @@ export default function NotificationsScreen() {
             Alert.alert("تم الإبلاغ", "تم الإبلاغ عن العيادة وحظرها من الوصول لملفات حيواناتك");
           },
         },
-      ]
+      ],
     );
   };
 
@@ -254,7 +254,7 @@ export default function NotificationsScreen() {
 
   const toggleNotification = (id: string) => {
     setNotificationSettings((prev) =>
-      prev.map((setting) => (setting.id === id ? { ...setting, enabled: !setting.enabled } : setting))
+      prev.map((setting) => (setting.id === id ? { ...setting, enabled: !setting.enabled } : setting)),
     );
   };
 
@@ -293,7 +293,6 @@ export default function NotificationsScreen() {
         </View>
 
         <ScrollView style={styles.content}>
-
           <View>
             <View style={styles.header}>
               <Bell size={40} color={COLORS.white} />
@@ -306,35 +305,35 @@ export default function NotificationsScreen() {
               <View style={styles.settingsCard}>
                 {(userMode === "veterinarian"
                   ? [
-                    {
-                      id: "approvals",
-                      title: "موافقات المرضى",
-                      description: "إشعارات موافقة أو رفض المرضى لطلبات المتابعة",
-                      icon: <Check size={24} color={COLORS.primary} />,
-                      enabled: true,
-                    },
-                    {
-                      id: "appointments",
-                      title: "المواعيد",
-                      description: "تذكيرات بمواعيد المرضى والفحوصات",
-                      icon: <Calendar size={24} color={COLORS.primary} />,
-                      enabled: true,
-                    },
-                    {
-                      id: "system",
-                      title: "النظام",
-                      description: "إشعارات النظام والتحديثات التقنية",
-                      icon: <AlertCircle size={24} color={COLORS.primary} />,
-                      enabled: true,
-                    },
-                    {
-                      id: "advertisements",
-                      title: "الإعلانات",
-                      description: "عروض المنتجات والخدمات البيطرية",
-                      icon: <ShoppingCart size={24} color={COLORS.primary} />,
-                      enabled: false,
-                    },
-                  ]
+                      {
+                        id: "approvals",
+                        title: "موافقات المرضى",
+                        description: "إشعارات موافقة أو رفض المرضى لطلبات المتابعة",
+                        icon: <Check size={24} color={COLORS.primary} />,
+                        enabled: true,
+                      },
+                      {
+                        id: "appointments",
+                        title: "المواعيد",
+                        description: "تذكيرات بمواعيد المرضى والفحوصات",
+                        icon: <Calendar size={24} color={COLORS.primary} />,
+                        enabled: true,
+                      },
+                      {
+                        id: "system",
+                        title: "النظام",
+                        description: "إشعارات النظام والتحديثات التقنية",
+                        icon: <AlertCircle size={24} color={COLORS.primary} />,
+                        enabled: true,
+                      },
+                      {
+                        id: "advertisements",
+                        title: "الإعلانات",
+                        description: "عروض المنتجات والخدمات البيطرية",
+                        icon: <ShoppingCart size={24} color={COLORS.primary} />,
+                        enabled: false,
+                      },
+                    ]
                   : notificationSettings
                 ).map((setting, index, array) => (
                   <View key={setting.id}>
@@ -408,7 +407,6 @@ export default function NotificationsScreen() {
               </View>
             </View>
           </View>
-
         </ScrollView>
       </View>
     </>

@@ -57,7 +57,7 @@ export default function PetDetailsScreen() {
   // Fetch pet details based on user mode
   const petQuery = useQuery({
     ...trpc.admin.pets.getProfile.queryOptions({
-      petId: Number(petId),
+      petId: petId,
     }),
   });
 
@@ -74,7 +74,7 @@ export default function PetDetailsScreen() {
   const isLoading = petQuery.isLoading;
 
   const { data: pendingRequests, isLoading: isLoadingRequests } = trpc.pets.getPendingMedicalActionsCount.useQuery({
-    petId: Number(petId),
+    petId: petId,
   });
   const pendingRequestsCount = pendingRequests?.count || 0;
 

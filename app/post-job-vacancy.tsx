@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Alert } from "react-native";
 import React, { useState } from "react";
 import { Stack, useRouter } from "expo-router";
+import { useToastContext } from "@/providers/ToastProvider";
 import { ArrowLeft, Briefcase, MapPin, DollarSign, Clock, FileText } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ export default function PostJobVacancyScreen() {
   const { user } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { showToast } = useToastContext();
 
   // Initial form data with sample values
   const [formData, setFormData] = useState({
@@ -27,12 +29,10 @@ export default function PostJobVacancyScreen() {
     location: "",
     type: "full-time", // "full-time" | "part-time" | "contract"
     salary: "",
-    description:
-      "",
-    requirements:
-      "",
-    contactEmail: "",
-    contactPhone: "",
+    description: "",
+    requirements: "",
+    contactEmail: user?.email ?? "",
+    contactPhone: user?.phone ?? "",
   });
 
   const [selectedJobType, setSelectedJobType] = useState<string>("full-time");
@@ -84,9 +84,12 @@ export default function PostJobVacancyScreen() {
         },
         onError: (error: any) => {
           console.error("Error requesting job creation:", error);
-          Alert.alert("فشل الإرسال", error?.message || "حدث خطأ أثناء إرسال طلب نشر الوظيفة. يرجى المحاولة مرة أخرى.");
+          showToast({
+            message: error?.message || "حدث خطأ أثناء إرسال طلب نشر الوظيفة. يرجى المحاولة مرة أخرى.",
+            type: "error",
+          });
         },
-      }
+      },
     );
   };
 

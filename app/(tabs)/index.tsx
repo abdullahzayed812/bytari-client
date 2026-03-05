@@ -83,13 +83,13 @@ export default function HomeScreen() {
   const { data: rawVetStores, isLoading: vetStoresLoading } = useQuery(
     trpc.stores.listActive.queryOptions(undefined, {
       enabled: userMode === "veterinarian",
-    })
+    }),
   );
 
   const vetStores = useMemo(() => (rawVetStores as any)?.stores, [rawVetStores]);
 
   const { data: inquiriesData, isLoading: inquiriesLoading } = useQuery(
-    trpc.inquiries.listForUser.queryOptions({ userId: Number(user?.id) })
+    trpc.inquiries.listForUser.queryOptions({ userId: Number(user?.id) }),
   );
   const inquiries = useMemo(() => (inquiriesData as any)?.inquiries, [inquiriesData]);
 
@@ -102,17 +102,17 @@ export default function HomeScreen() {
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
 
   const { data: articlesData, isLoading: articlesLoading } = useQuery(
-    trpc.content.listMagazineArticles.queryOptions({ isPublished: true })
+    trpc.content.listMagazineArticles.queryOptions({ isPublished: true }),
   );
   const articles = useMemo(() => (articlesData as any)?.articles, [articlesData]);
 
   const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(
-    trpc.content.listVetBooks.queryOptions({ isPublished: true })
+    trpc.content.listVetBooks.queryOptions({ isPublished: true }),
   );
   const vetBooks = useMemo(() => (vetBooksData as any)?.books, [vetBooksData]);
 
   const { data: lostPetsData, isLoading: lostPetsLoading } = useQuery(
-    trpc.pets.getApproved.queryOptions({ requestType: "lost_pet" })
+    trpc.pets.getApproved.queryOptions({ requestType: "lost_pet" }),
   );
   const lostPets = useMemo(() => (lostPetsData as any)?.pets, [lostPetsData]);
 
@@ -132,7 +132,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (systemMessagesData?.messages && systemMessagesData.messages.length > 0) {
       const welcomeMsg = systemMessagesData.messages.find(
-        (m: any) => m.title === "مرحباً بك في تطبيق بيطري!" && !m.isRead
+        (m: any) => m.title === "مرحباً بك في تطبيق بيطري!" && !m.isRead,
       );
       if (welcomeMsg) {
         setWelcomeMessage(welcomeMsg);
@@ -180,7 +180,7 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-    }, [])
+    }, []),
   );
 
   const startAutoSlide = () => {
@@ -276,10 +276,10 @@ export default function HomeScreen() {
           await Linking.openURL(targetUrl);
           return;
         } else {
-          Alert.alert("Cannot open link", "This link is not supported on your device.");
+          Alert.alert(t("home.cannotOpenLink"), t("home.linkNotSupported"));
         }
       } catch (err) {
-        Alert.alert("Error", "Something went wrong while trying to open the link.");
+        Alert.alert(t("common.error"), t("home.errorOpeningLink"));
       }
     } else if (clickAction === "open_file") {
       router.push(`/ad-details?id=${id}`);
@@ -341,11 +341,11 @@ export default function HomeScreen() {
   const getPetStatus = (status: string) => {
     switch (status) {
       case "found":
-        return { text: "تم العثور عليه", color: COLORS.success };
+        return { text: t("common.found"), color: COLORS.success };
       case "closed":
-        return { text: "مغلق", color: COLORS.darkGray };
+        return { text: t("common.closed"), color: COLORS.darkGray };
       default:
-        return { text: "مفقود", color: COLORS.error };
+        return { text: t("common.lost"), color: COLORS.error };
     }
   };
 
@@ -364,8 +364,10 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <View style={[styles.userTextContainer, { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 }]}>
-            <Text style={[styles.greetingText]}>{userMode === "veterinarian" ? "مرحباً دكتور" : "مرحباً"}</Text>
-            <Text style={[styles.userNameText]}>{user?.name || "Unkown"}</Text>
+            <Text style={[styles.greetingText]}>
+              {userMode === "veterinarian" ? t("home.greetingDoctor") : t("home.greeting")}
+            </Text>
+            <Text style={[styles.userNameText]}>{user?.name || t("common.unknown")}</Text>
           </View>
         </View>
 
@@ -439,7 +441,7 @@ export default function HomeScreen() {
         <View style={styles.advertisementSection}>
           {isSuperAdmin ? (
             <SectionHeader
-              title="الإعلانات"
+              title={t("home.advertisements")}
               showSeeAll={false}
               isRTL={isRTL}
               showAddButton={isSuperAdmin}
@@ -528,7 +530,7 @@ export default function HomeScreen() {
               {userMode === "veterinarian" ? t("home.consultationVet") : t("home.consultation")}
             </Text>
             <Button
-              title={userMode === "veterinarian" ? "ارسل استفسارك" : t("home.sendConsultation")}
+              title={userMode === "veterinarian" ? t("home.sendInquiry") : t("home.sendConsultation")}
               onPress={handleSendConsultation}
               type="primary"
               size="medium"
@@ -540,7 +542,7 @@ export default function HomeScreen() {
         {/* Previous Consultations/Inquiries Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={isVet ? "استفساراتك السابقة" : "استشاراتك السابقة"}
+            title={isVet ? t("home.previousInquiries") : t("home.previousConsultations")}
             isRTL={isRTL}
             showSeeAll={true}
             onSeeAll={() => (isVet ? router.navigate("/inquiries-list") : router.navigate("/consultations-list"))}
@@ -572,16 +574,16 @@ export default function HomeScreen() {
                             inquiry.status === "pending"
                               ? styles.statusPending
                               : inquiry.status === "answered"
-                              ? styles.statusAnswered
-                              : styles.statusClosed,
+                                ? styles.statusAnswered
+                                : styles.statusClosed,
                           ]}
                         />
                         <Text style={styles.statusText}>
                           {inquiry.status === "pending"
-                            ? "قيد المراجعة"
+                            ? t("common.underReview")
                             : inquiry.status === "answered"
-                            ? "تم الرد"
-                            : "مغلق"}
+                              ? t("common.replied")
+                              : t("common.closed")}
                         </Text>
                       </View>
 
@@ -595,7 +597,7 @@ export default function HomeScreen() {
 
                         {inquiry.petName && (
                           <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
-                            الحيوان: {inquiry.petName}
+                            {t("common.animalLabel")} {inquiry.petName}
                           </Text>
                         )}
 
@@ -614,7 +616,7 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 ))
               ) : (
-                <Text>لا توجد استفسارات</Text>
+                <Text>{t("home.noInquiries")}</Text>
               )
             ) : consultationsLoading ? (
               <ActivityIndicator size="large" color={COLORS.primary} />
@@ -638,12 +640,16 @@ export default function HomeScreen() {
                           con.status === "pending"
                             ? styles.statusPending
                             : con.status === "answered"
-                            ? styles.statusAnswered
-                            : styles.statusClosed,
+                              ? styles.statusAnswered
+                              : styles.statusClosed,
                         ]}
                       />
                       <Text style={styles.statusText}>
-                        {con.status === "pending" ? "قيد المراجعة" : con.status === "answered" ? "تم الرد" : "مغلق"}
+                        {con.status === "pending"
+                          ? t("common.underReview")
+                          : con.status === "answered"
+                            ? t("common.replied")
+                            : t("common.closed")}
                       </Text>
                     </View>
 
@@ -657,7 +663,7 @@ export default function HomeScreen() {
 
                       {con.category && (
                         <Text style={[styles.consultationHistoryPet, { textAlign: isRTL ? "left" : "right" }]}>
-                          النوع: {con.category}
+                          {t("common.typeLabel")} {con.category}
                         </Text>
                       )}
 
@@ -676,20 +682,20 @@ export default function HomeScreen() {
                               con.urgencyLevel === "emergency"
                                 ? COLORS.error
                                 : con.urgencyLevel === "high"
-                                ? COLORS.warning
-                                : COLORS.darkGray,
+                                  ? COLORS.warning
+                                  : COLORS.darkGray,
                             textAlign: isRTL ? "left" : "right",
                           },
                         ]}
                       >
-                        مستوى الأهمية:{" "}
+                        {t("consultation.priorityLevel")}{" "}
                         {con.urgencyLevel === "emergency"
-                          ? "طارئ"
+                          ? t("consultation.priority.emergency")
                           : con.urgencyLevel === "high"
-                          ? "عالي"
-                          : con.urgencyLevel === "medium"
-                          ? "متوسط"
-                          : "منخفض"}
+                            ? t("consultation.priority.high")
+                            : con.urgencyLevel === "medium"
+                              ? t("consultation.priority.medium")
+                              : t("consultation.priority.low")}
                       </Text>
 
                       <Text style={[styles.consultationHistoryDate, { textAlign: isRTL ? "left" : "right" }]}>
@@ -700,7 +706,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               ))
             ) : (
-              <Text>لا توجد استشارات</Text>
+              <Text>{t("home.noConsultations")}</Text>
             )}
           </ScrollView>
         </View>
@@ -708,7 +714,7 @@ export default function HomeScreen() {
         {/* Available Clinics / Veterinary Stores Section */}
         <View style={styles.section}>
           <SectionHeader
-            title={userMode === "veterinarian" ? "المكاتب البيطرية" : t("home.availableClinics")}
+            title={userMode === "veterinarian" ? t("home.vetOffices") : t("home.availableClinics")}
             onSeeAll={handleViewClinics}
             isRTL={isRTL}
             showEditButton={isSuperAdmin}
@@ -761,7 +767,7 @@ export default function HomeScreen() {
                           >
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                              <Text style={styles.premiumBadgeText}>نشط</Text>
+                              <Text style={styles.premiumBadgeText}>{t("common.active")}</Text>
                             </View>
                           </View>
                         )}
@@ -832,7 +838,9 @@ export default function HomeScreen() {
                           // TODO: Implement phone call functionality
                         }}
                       >
-                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>
+                          {t("common.call")}
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.clinicActionButton}
@@ -843,7 +851,7 @@ export default function HomeScreen() {
                           });
                         }}
                       >
-                        <Text style={styles.clinicActionButtonText}>المنتجات</Text>
+                        <Text style={styles.clinicActionButtonText}>{t("home.products")}</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -885,7 +893,7 @@ export default function HomeScreen() {
                           >
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                              <Text style={styles.premiumBadgeText}>مميز</Text>
+                              <Text style={styles.premiumBadgeText}>{t("common.premium")}</Text>
                             </View>
                           </View>
                         )}
@@ -956,7 +964,9 @@ export default function HomeScreen() {
                           // TODO: Implement phone call functionality
                         }}
                       >
-                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>اتصال</Text>
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>
+                          {t("common.call")}
+                        </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.clinicActionButton}
@@ -964,7 +974,7 @@ export default function HomeScreen() {
                           // TODO: Implement map functionality
                         }}
                       >
-                        <Text style={styles.clinicActionButtonText}>الخريطة</Text>
+                        <Text style={styles.clinicActionButtonText}>{t("common.map")}</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -1098,7 +1108,7 @@ export default function HomeScreen() {
         {userMode !== "veterinarian" && (
           <View style={styles.section}>
             <SectionHeader
-              title="حيوانات للتبني أو للتزاوج"
+              title={t("home.petsAdoptionMating")}
               onSeeAll={() => router.push("/adoption-breeding-list")}
               isRTL={isRTL}
             />
@@ -1153,13 +1163,17 @@ export default function HomeScreen() {
                                 backgroundColor: pet.isClosedByOwner
                                   ? COLORS.darkGray
                                   : pet.type === "adoption"
-                                  ? "#10B981"
-                                  : "#8B5CF6",
+                                    ? "#10B981"
+                                    : "#8B5CF6",
                               },
                             ]}
                           >
                             <Text style={styles.adoptionBadgeText}>
-                              {pet.isClosedByOwner ? "مغلق" : pet.requestType === "adoption" ? "للتبني" : "للتزاوج"}
+                              {pet.isClosedByOwner
+                                ? t("common.closed")
+                                : pet.requestType === "adoption"
+                                  ? t("common.forAdoption")
+                                  : t("common.forMating")}
                             </Text>
                           </View>
                         </View>
@@ -1184,7 +1198,7 @@ export default function HomeScreen() {
                               },
                             ]}
                           >
-                            عمر سنتين
+                            {pet?.age || t("home.ageNotSpecified")}
                           </Text>
                         </View>
 
@@ -1242,7 +1256,7 @@ export default function HomeScreen() {
                             });
                           }}
                         >
-                          <Text style={styles.adoptionActionButtonText}>التفاصيل</Text>
+                          <Text style={styles.adoptionActionButtonText}>{t("common.details")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={[styles.adoptionActionButton, styles.primaryAdoptionActionButton]}
@@ -1253,7 +1267,7 @@ export default function HomeScreen() {
                           }}
                         >
                           <Text style={[styles.adoptionActionButtonText, styles.primaryAdoptionActionButtonText]}>
-                            اتصال
+                            {t("common.call")}
                           </Text>
                         </TouchableOpacity>
                       </View>
@@ -1320,7 +1334,9 @@ export default function HomeScreen() {
                             {(book?.downloadCount || 0)?.toLocaleString()}
                           </Text>
                         </View>
-                        <Text style={styles.bookPages}>{book.pageCount} صفحة</Text>
+                        <Text style={styles.bookPages}>
+                          {book.pageCount} {t("common.page")}
+                        </Text>
                       </View>
                       <TouchableOpacity
                         style={styles.downloadButton}
@@ -1340,7 +1356,7 @@ export default function HomeScreen() {
                         ) : (
                           <Download size={16} color={COLORS.white} />
                         )}
-                        <Text style={styles.downloadButtonText}>{isDownloading ? "..." : "تحميل"}</Text>
+                        <Text style={styles.downloadButtonText}>{isDownloading ? "..." : t("common.download")}</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
@@ -1448,36 +1464,38 @@ export default function HomeScreen() {
                   {/* Action Buttons */}
                   {pet.status === "lost" && (
                     <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                      <TouchableOpacity
+                      {/* <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
                           // TODO: Implement map/location functionality
                         }}
                       >
-                        <Text style={styles.actionButtonText}>الموقع</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
+                        <Text style={styles.actionButtonText}>{t("common.location")}</Text>
+                      </TouchableOpacity> */}
+                      {/* <TouchableOpacity
                         style={styles.actionButton}
                         onPress={() => {
                           // TODO: Implement report found functionality
                         }}
                       >
-                        <Text style={styles.actionButtonText}>ابلاغ</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
+                        <Text style={styles.actionButtonText}>{t("common.report")}</Text>
+                      </TouchableOpacity> */}
+                      {/* <TouchableOpacity
                         style={[styles.actionButton, styles.primaryActionButton]}
                         onPress={() => {
                           // TODO: Implement contact owner functionality
                         }}
                       >
-                        <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>اتصال</Text>
-                      </TouchableOpacity>
+                        <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>
+                          {t("common.call")}
+                        </Text>
+                      </TouchableOpacity> */}
                     </View>
                   )}
                 </TouchableOpacity>
               ))
             ) : (
-              <Text>لا يوجد حيوانات مفقوده</Text>
+              <Text>{t("home.noLostPets")}</Text>
             )}
           </AutoScrollView>
           {userMode !== "veterinarian" && (
@@ -1504,28 +1522,33 @@ export default function HomeScreen() {
               <View style={styles.iconCircle}>
                 <CheckCircle2 size={40} color={COLORS.primary} />
               </View>
-              <Text style={styles.welcomeTitle}>مرحباً بك في تطبيق بيطري!</Text>
+              <Text style={styles.welcomeTitle}>{t("home.welcomeModal.title")}</Text>
             </View>
 
             <Text style={styles.welcomeContent}>{welcomeMessage?.content}</Text>
 
             <View style={styles.infoSection}>
-              <Text style={styles.infoTitle}>ماذا يقدم لك تطبيق بيطري؟</Text>
+              <Text style={styles.infoTitle}>{t("home.welcomeModal.subtitle")}</Text>
               <View style={styles.infoItem}>
                 <Info size={18} color={COLORS.primary} />
-                <Text style={styles.infoText}>إدارة شاملة لحيواناتك الأليفة وسجلاتها الطبية.</Text>
+                <Text style={styles.infoText}>{t("home.welcomeModal.feature1")}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Info size={18} color={COLORS.primary} />
-                <Text style={styles.infoText}>التواصل المباشر مع نخبة من الأطباء البيطريين.</Text>
+                <Text style={styles.infoText}>{t("home.welcomeModal.feature2")}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Info size={18} color={COLORS.primary} />
-                <Text style={styles.infoText}>الوصول إلى أفضل العيادات والمذاخر البيطرية.</Text>
+                <Text style={styles.infoText}>{t("home.welcomeModal.feature3")}</Text>
               </View>
             </View>
 
-            <Button title="ابدأ الآن" onPress={handleCloseWelcome} type="primary" style={styles.startBtn} />
+            <Button
+              title={t("home.welcomeModal.getStarted")}
+              onPress={handleCloseWelcome}
+              type="primary"
+              style={styles.startBtn}
+            />
           </View>
         </View>
       </Modal>

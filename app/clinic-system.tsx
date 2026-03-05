@@ -303,7 +303,7 @@ export default function ClinicSystemScreen() {
       const results = mockAnimals.filter(
         (animal) =>
           animal.id.toLowerCase().includes(searchId.toLowerCase()) ||
-          animal.name.toLowerCase().includes(searchId.toLowerCase())
+          animal.name.toLowerCase().includes(searchId.toLowerCase()),
       );
 
       setSearchResults(results);

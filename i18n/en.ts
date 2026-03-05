@@ -225,6 +225,9 @@ const en: Record<string, string> = {
   "home.welcomeModal.feature2": "Direct communication with top veterinarians.",
   "home.welcomeModal.feature3": "Access to the best clinics and veterinary offices.",
   "home.welcomeModal.getStarted": "Get Started",
+  "home.products": "Products",
+  "home.noLostPets": "No lost pets found",
+  "home.ageNotSpecified": "Age not specified",
 
   // ========================
   // TABS
@@ -363,6 +366,15 @@ const en: Record<string, string> = {
   "store.addProduct": "Add New Product",
   "store.addVetOffice": "Add Veterinary Office",
   "store.emptyProducts": "No products found",
+  "store.vetStoreTitle": "Vet Store",
+  "store.vetStoreSubtitle": "Specialized medical products for veterinarians",
+  "store.vetStoreWelcomeTitle": "Specialized Vet Store",
+  "store.vetStoreWelcomeSubtitle": "Choose the specialty to view suitable medical products and tools",
+  "store.petStoreSubtitle": "Pet Store - General Products",
+  "store.petStoreWelcomeTitle": "Pet Store",
+  "store.petStoreWelcomeSubtitle": "Choose your pet type to view suitable products including food, toys and accessories",
+  "store.searchVet": "Search for veterinary medical products...",
+  "store.searchPet": "Search for pet products...",
 
   // ========================
   // SECTIONS

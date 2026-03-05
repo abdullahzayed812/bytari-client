@@ -18,6 +18,13 @@ import { Save, Trash2, Plus, Edit3, X, Upload, Camera } from "lucide-react-nativ
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
+interface UnionService {
+  id: string;
+  title: string;
+  description: string;
+  color: string;
+}
+
 interface UnionBranch {
   id: string;
   name: string;
@@ -32,7 +39,7 @@ interface UnionBranch {
   rating: number;
   description: string;
   establishedYear: number;
-  services: string[];
+  services: UnionService[];
 }
 
 interface Announcement {
@@ -68,11 +75,14 @@ export default function EditUnionBranchScreen() {
   });
 
   const [formData, setFormData] = useState<UnionBranch | null>(null);
-  const [newService, setNewService] = useState<string>("");
 
   useEffect(() => {
     if (originalBranch) {
-      setFormData(originalBranch as UnionBranch);
+      const branch = originalBranch as any;
+      setFormData({
+        ...branch,
+        services: Array.isArray(branch.services) ? branch.services : [],
+      });
     }
   }, [originalBranch]);
 
@@ -102,21 +112,42 @@ export default function EditUnionBranchScreen() {
     ]);
   };
 
-  const handleAddService = () => {
-    if (newService.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        services: [...prev.services, newService.trim()],
-      }));
-      setNewService("");
-    }
-  };
-
-  const handleRemoveService = (index: number) => {
+  const handleServiceUpdate = (serviceId: string, field: "title" | "description" | "color", value: string) => {
     setFormData((prev) => ({
       ...prev,
-      services: prev.services.filter((_, i) => i !== index),
+      services: prev?.services?.map((service) =>
+        service?.id === serviceId ? { ...service, [field]: value } : service
+      ),
     }));
+  };
+
+  const addNewService = () => {
+    const newService: UnionService = {
+      id: Date.now().toString(),
+      title: "خدمة جديدة",
+      description: "وصف الخدمة الجديدة",
+      color: "#6B7280",
+    };
+    setFormData((prev) => ({
+      ...prev,
+      services: [...(prev?.services || []), newService],
+    }));
+  };
+
+  const removeService = (serviceId: string) => {
+    Alert.alert("حذف الخدمة", "هل أنت متأكد من حذف هذه الخدمة؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          setFormData((prev) => ({
+            ...prev,
+            services: prev.services.filter((service) => service.id !== serviceId),
+          }));
+        },
+      },
+    ]);
   };
 
   const deleteAnnouncementMutation = useMutation(trpc.union.announcement.delete.mutationOptions());
@@ -322,32 +353,63 @@ export default function EditUnionBranchScreen() {
 
         {/* Services */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>الخدمات المقدمة</Text>
-
-          <View style={styles.addServiceContainer}>
-            <TouchableOpacity onPress={handleAddService} style={styles.addServiceButton}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>خدمات النقابة</Text>
+            <TouchableOpacity style={styles.addServiceButton} onPress={addNewService}>
               <Plus size={16} color={COLORS.white} />
+              <Text style={styles.addServiceText}>إضافة خدمة</Text>
             </TouchableOpacity>
-            <TextInput
-              style={[styles.textInput, styles.addServiceInput]}
-              value={newService}
-              onChangeText={setNewService}
-              placeholder="إضافة خدمة جديدة"
-              textAlign="right"
-              onSubmitEditing={handleAddService}
-            />
           </View>
 
-          <View style={styles.servicesList}>
-            {formData.services.map((service, index) => (
-              <View key={index} style={styles.serviceItem}>
-                <TouchableOpacity onPress={() => handleRemoveService(index)} style={styles.removeServiceButton}>
+          {formData?.services?.map((service, index) => (
+            <View key={service.id} style={styles.serviceCard}>
+              <View style={styles.serviceCardHeader}>
+                <Text style={styles.serviceNumber}>الخدمة {index + 1}</Text>
+                <TouchableOpacity onPress={() => removeService(service.id)} style={styles.removeServiceButton}>
                   <X size={16} color={COLORS.error} />
                 </TouchableOpacity>
-                <Text style={styles.serviceText}>{service}</Text>
               </View>
-            ))}
-          </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>عنوان الخدمة</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={service.title}
+                  onChangeText={(text) => handleServiceUpdate(service.id, "title", text)}
+                  placeholder="عنوان الخدمة"
+                  textAlign="right"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>وصف الخدمة</Text>
+                <TextInput
+                  style={[styles.textInput, styles.multilineInput]}
+                  value={service.description}
+                  onChangeText={(text) => handleServiceUpdate(service.id, "description", text)}
+                  placeholder="وصف الخدمة"
+                  multiline
+                  numberOfLines={3}
+                  textAlign="right"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>لون الخدمة</Text>
+                <View style={styles.colorPicker}>
+                  <View style={[styles.colorPreview, { backgroundColor: service.color }]} />
+                  <TextInput
+                    style={styles.colorInput}
+                    value={service.color}
+                    onChangeText={(text) => handleServiceUpdate(service.id, "color", text)}
+                    placeholder="#000000"
+                    autoCapitalize="none"
+                    textAlign="left"
+                  />
+                </View>
+              </View>
+            </View>
+          ))}
         </View>
 
         {/* Announcements */}
@@ -492,41 +554,65 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: "top",
   },
-  addServiceContainer: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
-  },
-  addServiceInput: {
-    flex: 1,
-  },
   addServiceButton: {
-    backgroundColor: COLORS.primary,
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  servicesList: {
-    gap: 8,
-  },
-  serviceItem: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    backgroundColor: "#F8F9FA",
-    padding: 12,
+    gap: 4,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
-    gap: 8,
+  },
+  addServiceText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  serviceCard: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  serviceCardHeader: {
+    flexDirection: "row-reverse",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  serviceNumber: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.primary,
   },
   removeServiceButton: {
     padding: 4,
+    borderRadius: 4,
+    backgroundColor: "#FEE2E2",
   },
-  serviceText: {
-    fontSize: 14,
-    color: COLORS.darkGray,
+  colorPicker: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 12,
+  },
+  colorPreview: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  colorInput: {
     flex: 1,
-    textAlign: "left",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: COLORS.black,
+    backgroundColor: COLORS.white,
   },
   addButton: {
     flexDirection: "row-reverse",

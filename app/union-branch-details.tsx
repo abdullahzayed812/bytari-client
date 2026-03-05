@@ -104,7 +104,7 @@ export default function UnionBranchDetailsScreen() {
           onError: (error) => {
             Alert.alert("Error", error.message || "Failed to assign supervisor.");
           },
-        }
+        },
       );
     }
   };
@@ -119,7 +119,7 @@ export default function UnionBranchDetailsScreen() {
             queryClient.invalidateQueries(trpc.union.branch.get.queryKey as any);
             queryClient.invalidateQueries(trpc.union.branch.list.queryKey as any);
           },
-        }
+        },
       );
     }
   };
@@ -306,7 +306,7 @@ export default function UnionBranchDetailsScreen() {
                         style={styles.editAnnouncementButton}
                         onPress={() =>
                           router.push(
-                            `/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`
+                            `/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`,
                           )
                         }
                       >
@@ -361,10 +361,10 @@ export default function UnionBranchDetailsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>نبذة عن النقابة</Text>
           <Text style={styles.description}>{branch.description}</Text>
-          <View style={styles.establishedInfo}>
+          {/* <View style={styles.establishedInfo}>
             <Calendar size={16} color={COLORS.primary} />
             <Text style={styles.establishedText}>تأسست عام {branch.establishedYear}</Text>
-          </View>
+          </View> */}
         </View>
 
         {/* Contact Information */}
@@ -449,7 +449,10 @@ export default function UnionBranchDetailsScreen() {
             {branch?.services?.map((service, index) => (
               <View key={index} style={styles.serviceItem}>
                 <View style={styles.serviceBullet} />
-                <Text style={styles.serviceText}>{service}</Text>
+                <View>
+                  <Text style={styles.serviceText}>{service?.title}</Text>
+                  <Text style={styles.serviceText}>{service?.description}</Text>
+                </View>
               </View>
             ))}
           </View>
@@ -679,6 +682,7 @@ const styles = StyleSheet.create({
   },
   serviceItem: {
     flexDirection: "row-reverse",
+    justifyContent: "space-between",
     alignItems: "center",
     gap: 12,
   },

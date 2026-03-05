@@ -70,8 +70,22 @@ export function AdminTopBar({ onAdminDashboard }: AdminTopBarProps) {
     router.push("/admin-messages");
   };
 
-  if (!hasAdminAccess && !isModerator) {
-    console.log("AdminTopBar: Not showing - no admin access or moderator status");
+  const hasModeratorPermissions =
+    isModerator &&
+    !moderatorPermissions?.superPermissions &&
+    !supervisedBranchIds.length &&
+    !moderatorPermissions?.storeManagement?.vetStores &&
+    !moderatorPermissions?.storeManagement?.petOwnerStores &&
+    moderatorPermissions &&
+    Object.entries(moderatorPermissions).some(([key, value]) => {
+      if (key === "superPermissions" || key === "storeManagement") return false;
+      if (key === "sections") return Array.isArray(value) && value.length > 0;
+      if (key === "approvalsSubPermissions" || key === "storeManagementSubPermissions")
+        return Array.isArray(value) && value.length > 0;
+      return !!value;
+    });
+
+  if (!isSuperAdmin && !hasModeratorPermissions) {
     return null;
   }
 
@@ -129,20 +143,16 @@ export function AdminTopBar({ onAdminDashboard }: AdminTopBarProps) {
       )}
 
       {/* زر دخول الإدارة للمشرفين */}
-      {isModerator &&
-        !moderatorPermissions?.superPermissions &&
-        !supervisedBranchIds.length &&
-        !moderatorPermissions?.storeManagement?.vetStores &&
-        !moderatorPermissions?.storeManagement?.petOwnerStores && (
-          <TouchableOpacity
-            style={styles.moderatorAdminButton}
-            onPress={() => router.push("/moderator-quick-actions")}
-            testID="moderator-admin-button"
-          >
-            <Shield size={16} color={COLORS.white} />
-            <Text style={styles.moderatorText}>دخول الإدارة</Text>
-          </TouchableOpacity>
-        )}
+      {hasModeratorPermissions && (
+        <TouchableOpacity
+          style={styles.moderatorAdminButton}
+          onPress={() => router.push("/moderator-quick-actions")}
+          testID="moderator-admin-button"
+        >
+          <Shield size={16} color={COLORS.white} />
+          <Text style={styles.moderatorText}>دخول الإدارة</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

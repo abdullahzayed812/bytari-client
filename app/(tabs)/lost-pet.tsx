@@ -33,11 +33,12 @@ export default function LostPetScreen() {
     reporterEmail: user?.email || "",
   });
 
-  const { data, isLoading, error, refetch } = useQuery(
-    trpc.pets.getLostPetDetails.queryOptions({
+  const { data, isLoading, error, refetch } = useQuery({
+    ...trpc.pets.getLostPetDetails.queryOptions({
       id: parseInt(id || "0"),
-    })
-  );
+    }),
+    enabled: !!id,
+  });
 
   const pet = data?.pet;
   const isOwner = user && pet && user.id === pet?.contactInfo?.ownerId;
@@ -78,7 +79,7 @@ export default function LostPetScreen() {
               onError: (err) => {
                 Alert.alert("خطأ", "حدث خطأ أثناء إغلاق البلاغ: " + err.message);
               },
-            }
+            },
           );
         },
       },
@@ -105,7 +106,7 @@ export default function LostPetScreen() {
               onError: (err) => {
                 Alert.alert("خطأ", "حدث خطأ أثناء إزالة البلاغ: " + err.message);
               },
-            }
+            },
           );
         },
       },
@@ -163,7 +164,7 @@ export default function LostPetScreen() {
         onError: (err) => {
           Alert.alert("خطأ", "حدث خطأ أثناء الإبلاغ: " + err.message);
         },
-      }
+      },
     );
   };
 

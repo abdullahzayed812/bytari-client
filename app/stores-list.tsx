@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet } from "react-native";
 import { trpc } from "../lib/trpc";
 import { Link } from "expo-router";
+import { useI18n } from "@/providers/I18nProvider";
 
 const StoresListScreen = () => {
   const storesQuery = trpc.stores.listActive.useQuery();

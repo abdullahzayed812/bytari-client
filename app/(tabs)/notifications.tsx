@@ -97,6 +97,11 @@ export default function NotificationsScreen() {
             pathname: "/pet-details",
             params: { petId: notification?.data?.petId },
           });
+        } else if (notification?.type === "info") {
+          router.push({
+            pathname: "/(tabs)/messages",
+            // params: { petId: notification?.data?.petId },
+          });
         }
       },
       onError: () => {},

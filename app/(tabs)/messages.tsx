@@ -26,6 +26,7 @@ interface Message {
   type: string;
   title: string;
   content: string;
+  imageUrl?: string | null;
   createdAt: Date;
   isRead: boolean;
   readAt: Date | null;
@@ -183,24 +184,30 @@ export default function MessagesScreen() {
           >
             <View style={[styles.messageContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <View style={styles.avatarContainer}>
-                <View style={styles.iconContainer}>{getMessageIcon(message.type)}</View>
+                <View style={[styles.iconContainer, !message.isRead && styles.iconContainerUnread]}>{getMessageIcon(message.type)}</View>
               </View>
 
               <View
                 style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
               >
                 <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                  <Text style={[styles.senderName, { textAlign: isRTL ? "left" : "right" }]}>الإدارة</Text>
-                  <Text style={[styles.messageTime, { textAlign: isRTL ? "left" : "right" }]}>
+                  <View style={[styles.senderBadge, !message.isRead && styles.senderBadgeUnread]}>
+                    <Text style={[styles.senderName, !message.isRead && styles.senderNameUnread, { textAlign: isRTL ? "left" : "right" }]}>الإدارة</Text>
+                  </View>
+                  <Text style={[styles.messageTime, !message.isRead && styles.messageTimeUnread, { textAlign: isRTL ? "left" : "right" }]}>
                     {formatTime(message.createdAt)}
                   </Text>
                 </View>
 
-                <Text style={[styles.messageSubject, { textAlign: isRTL ? "left" : "right" }]}>{message.title}</Text>
+                <Text style={[styles.messageSubject, !message.isRead && styles.messageSubjectUnread, { textAlign: isRTL ? "left" : "right" }]}>{message.title}</Text>
 
-                <Text style={[styles.messagePreview, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
+                <Text style={[styles.messagePreview, !message.isRead && styles.messagePreviewUnread, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                   {message.content}
                 </Text>
+
+                {message.imageUrl ? (
+                  <Image source={{ uri: message.imageUrl }} style={styles.messageImage} resizeMode="cover" />
+                ) : null}
               </View>
 
               <View style={styles.messageActions}>
@@ -256,6 +263,9 @@ export default function MessagesScreen() {
               <View style={styles.originalMessage}>
                 <Text style={styles.originalTitle}>{selectedMessage?.title}</Text>
                 <Text style={styles.originalText}>{selectedMessage?.content}</Text>
+                {selectedMessage.imageUrl ? (
+                  <Image source={{ uri: selectedMessage.imageUrl }} style={styles.modalImage} resizeMode="cover" />
+                ) : null}
                 <Text style={styles.originalFrom}>من: الإدارة</Text>
               </View>
             )}
@@ -331,7 +341,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   messageCard: {
-    backgroundColor: COLORS.white,
+    backgroundColor: "#E8F5E9",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -340,10 +350,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderLeftWidth: 4,
+    borderLeftColor: "#2E7D32",
   },
   unreadCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
+    backgroundColor: "#C8E6C9",
+    borderLeftColor: "#1B5E20",
   },
   messageContent: {
     alignItems: "flex-start",
@@ -366,6 +378,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  iconContainerUnread: {
+    backgroundColor: "#C8E6C9",
+  },
   textContainer: {
     justifyContent: "flex-start",
   },
@@ -374,15 +389,34 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
+  senderBadge: {
+    backgroundColor: "transparent",
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    borderRadius: 6,
+  },
+  senderBadgeUnread: {
+    backgroundColor: "#2E7D32",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
   senderName: {
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    flex: 1,
+  },
+  senderNameUnread: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "bold",
   },
   messageTime: {
     fontSize: 12,
     color: COLORS.darkGray,
+  },
+  messageTimeUnread: {
+    color: "#1B5E20",
   },
   messageSubject: {
     fontSize: 15,
@@ -390,10 +424,23 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     marginBottom: 6,
   },
+  messageSubjectUnread: {
+    color: "#1B5E20",
+    fontWeight: "bold",
+  },
   messagePreview: {
     fontSize: 14,
     color: COLORS.darkGray,
     lineHeight: 20,
+  },
+  messagePreviewUnread: {
+    color: "#2E7D32",
+  },
+  messageImage: {
+    width: "100%",
+    height: 120,
+    borderRadius: 8,
+    marginTop: 8,
   },
   unreadIndicator: {
     width: 8,
@@ -492,6 +539,13 @@ const styles = StyleSheet.create({
   originalFrom: {
     fontSize: 10,
     color: COLORS.gray,
+  },
+  modalImage: {
+    width: "100%",
+    height: 160,
+    borderRadius: 8,
+    marginTop: 8,
+    marginBottom: 8,
   },
   replyInput: {
     borderWidth: 1,

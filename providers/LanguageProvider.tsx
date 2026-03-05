@@ -1,16 +1,12 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { useI18n } from "./I18nProvider";
+import { useI18n, Language } from "./I18nProvider";
 
-export type Language = "ar" | "en" | "ku" | "fr" | "tr" | "de" | "fa";
+export type { Language };
 
 export const LANGUAGE_LABELS: Record<Language, { name: string; nativeName: string }> = {
     ar: { name: "Arabic", nativeName: "العربية" },
     en: { name: "English", nativeName: "English" },
     ku: { name: "Kurdish", nativeName: "کوردی" },
-    fr: { name: "French", nativeName: "Français" },
-    tr: { name: "Turkish", nativeName: "Türkçe" },
-    de: { name: "German", nativeName: "Deutsch" },
-    fa: { name: "Persian", nativeName: "فارسی" },
 };
 
 interface LanguageContextType {
@@ -23,19 +19,15 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const { language, changeLanguage } = useI18n();
-    const [selectedLanguage, setSelectedLanguageState] = React.useState<Language>(language as Language);
+    const [selectedLanguage, setSelectedLanguageState] = React.useState<Language>(language);
 
-    // Sync with I18nProvider language
     React.useEffect(() => {
-        setSelectedLanguageState(language as Language);
+        setSelectedLanguageState(language);
     }, [language]);
 
     const setSelectedLanguage = async (lang: Language) => {
         setSelectedLanguageState(lang);
-        // Only change language in I18nProvider if it's ar or en (supported languages)
-        if (lang === "ar" || lang === "en") {
-            await changeLanguage(lang);
-        }
+        await changeLanguage(lang);
     };
 
     const getLanguageLabel = (lang: Language): string => {

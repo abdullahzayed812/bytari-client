@@ -25,16 +25,22 @@ import {
   Earth,
   Facebook,
   Instagram,
+  Trash2,
+  Bell,
+  BellOff,
 } from "lucide-react-native";
 import RatingComponent from "../components/RatingComponent";
+import Button from "../components/Button";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
+import { useToastContext } from "@/providers/ToastProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const { width } = Dimensions.get("window");
 
 export default function ClinicProfileScreen() {
-  const { user } = useApp();
+  const { user, isSuperAdmin } = useApp();
+  const { showToast } = useToastContext();
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const clinicId = parseInt(id as string);
@@ -42,11 +48,23 @@ export default function ClinicProfileScreen() {
 
   const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
 
+  // Follow queries
+  const { data: isFollowingData } = useQuery(
+    trpc.clinics.isFollowing.queryOptions({ clinicId, userId }, { enabled: !!user }),
+  );
+  const isFollowing = isFollowingData?.isFollowing;
+
+  const { data: followerCountData } = useQuery(trpc.clinics.getFollowerCount.queryOptions({ clinicId }));
+  const followerCount = followerCountData?.count;
+
+  const followMutation = useMutation(trpc.clinics.follow.mutationOptions());
+  const unfollowMutation = useMutation(trpc.clinics.unfollow.mutationOptions());
+
   // Fetch clinic details
   const { data: reviewsData, isLoading: areReviewsLoading } = useQuery(
     trpc.reviews.getClinicReviews.queryOptions({
       clinicId,
-    })
+    }),
   );
   const reviews = (reviewsData as any)?.reviews;
 
@@ -54,7 +72,7 @@ export default function ClinicProfileScreen() {
     trpc.clinics.getDetails.queryOptions({
       clinicId,
       userId,
-    })
+    }),
   );
 
   const clinic = (data as any)?.clinic;
@@ -84,6 +102,31 @@ export default function ClinicProfileScreen() {
   };
 
   const addReviewMutation = useMutation(trpc.reviews.addClinicReview.mutationOptions());
+  const deleteReviewMutation = useMutation(trpc.reviews.deleteReview.mutationOptions());
+
+  const handleDeleteReview = (reviewId: number) => {
+    Alert.alert("حذف التقييم", "هل أنت متأكد من حذف هذا التقييم؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: () => {
+          deleteReviewMutation.mutate(
+            { reviewId },
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries(trpc.reviews.getClinicReviews.queryKey as any);
+                queryClient.invalidateQueries(trpc.clinics.getDetails.queryKey as any);
+              },
+              onError: () => {
+                Alert.alert("خطأ", "حدث خطأ أثناء حذف التقييم");
+              },
+            },
+          );
+        },
+      },
+    ]);
+  };
 
   const handleRatingSubmit = async (rating: number, comment: string) => {
     if (!clinic) return;
@@ -102,7 +145,7 @@ export default function ClinicProfileScreen() {
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -130,6 +173,67 @@ export default function ClinicProfileScreen() {
   const handleWhatsApp = (phone: string) => {
     const whatsappUrl = `https://wa.me/${phone}`;
     handleOpenLink(whatsappUrl);
+  };
+
+  const handleFollowClinic = () => {
+    if (!user) {
+      showToast({
+        type: "error",
+        message: "الرجاء تسجيل الدخول لمتابعة العيادة",
+      });
+      return;
+    }
+    if (!clinic) return;
+    if (isFollowing) {
+      Alert.alert("إلغاء المتابعة", "هل تريد إلغاء متابعة هذه العيادة؟", [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "نعم",
+          style: "destructive",
+          onPress: () => {
+            unfollowMutation.mutate(
+              { clinicId },
+              {
+                onSuccess: () => {
+                  showToast({
+                    type: "success",
+                    message: "تم إلغاء المتابعة بنجاح",
+                  });
+                  queryClient.invalidateQueries(trpc.clinics.isFollowing.queryKey as any);
+                  queryClient.invalidateQueries(trpc.clinics.getFollowerCount.queryKey as any);
+                },
+                onError: (error) => {
+                  showToast({
+                    type: "error",
+                    message: error.message,
+                  });
+                },
+              },
+            );
+          },
+        },
+      ]);
+    } else {
+      followMutation.mutate(
+        { clinicId },
+        {
+          onSuccess: () => {
+            showToast({
+              type: "success",
+              message: "تم المتابعة بنجاح",
+            });
+            queryClient.invalidateQueries(trpc.clinics.isFollowing.queryKey as any);
+            queryClient.invalidateQueries(trpc.clinics.getFollowerCount.queryKey as any);
+          },
+          onError: (error) => {
+            showToast({
+              type: "error",
+              message: error.message,
+            });
+          },
+        },
+      );
+    }
   };
 
   // Open in Maps
@@ -199,6 +303,9 @@ export default function ClinicProfileScreen() {
         </View>
 
         <View style={styles.content}>
+          {/* Follower Count */}
+          <Text style={styles.followerCount}>{followerCount ?? 0} متابع</Text>
+
           {/* Premium Badge */}
           {clinic.isPremium && (
             <View style={styles.premiumBadge}>
@@ -311,11 +418,16 @@ export default function ClinicProfileScreen() {
               {reviews.map((review: any) => (
                 <View key={review.id} style={styles.reviewItem}>
                   <View style={styles.reviewHeader}>
-                    <Image
+                    {isSuperAdmin && (
+                      <TouchableOpacity style={styles.deleteReviewButton} onPress={() => handleDeleteReview(review.id)}>
+                        <Trash2 size={16} color={COLORS.error} />
+                      </TouchableOpacity>
+                    )}
+                    {/* <Image
                       source={{ uri: review.user.avatar || "https://via.placeholder.com/40" }}
                       style={styles.reviewerAvatar}
-                    />
-                    <View>
+                    /> */}
+                    <View style={{}}>
                       <Text style={styles.reviewerName}>{review.user.name}</Text>
                       <View style={styles.starsContainer}>{renderStars(review.rating)}</View>
                     </View>
@@ -357,6 +469,23 @@ export default function ClinicProfileScreen() {
                 <Text style={styles.actionButtonText}>الاتجاهات</Text>
               </TouchableOpacity>
             )}
+          </View>
+
+          {/* Follow Button */}
+          <View style={styles.followSection}>
+            <Button
+              title={isFollowing ? "إلغاء المتابعة" : "متابعة العيادة"}
+              onPress={handleFollowClinic}
+              type={isFollowing ? "outline" : "primary"}
+              style={[styles.followButton, isFollowing && styles.unfollowButton]}
+              icon={
+                isFollowing ? (
+                  <BellOff size={20} color={isFollowing ? COLORS.error : COLORS.white} />
+                ) : (
+                  <Bell size={20} color={COLORS.white} />
+                )
+              }
+            />
           </View>
 
           {/* Rating Button */}
@@ -504,7 +633,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   starsContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     gap: 4,
     marginBottom: 8,
   },
@@ -689,6 +818,7 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.lightGray,
   },
   reviewHeader: {
+    justifyContent: "space-between",
     flexDirection: "row-reverse",
     alignItems: "center",
     marginBottom: 8,
@@ -716,5 +846,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.darkGray,
     textAlign: "left",
+  },
+  deleteReviewButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#FEE2E2",
+  },
+  followerCount: {
+    fontSize: 16,
+    color: COLORS.darkGray,
+    textAlign: "left",
+    marginBottom: 8,
+  },
+  followSection: {
+    marginBottom: 20,
+  },
+  followButton: {
+    borderRadius: 12,
+  },
+  unfollowButton: {
+    borderColor: COLORS.error,
   },
 });

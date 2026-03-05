@@ -34,12 +34,12 @@ export default function JobManagementScreen() {
   const router = useRouter();
   const { user } = useApp();
   const [selectedTab, setSelectedTab] = useState<"all" | "job_posting" | "job_application" | "field_supervision">(
-    "all"
+    "all",
   );
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { data, isLoading, error, refetch } = useQuery(
-    trpc.admin.jobs.getAllRequests.queryOptions({ adminId: user?.id ? Number(user.id) : 0 })
+    trpc.admin.jobs.getAllRequests.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
   );
   const requests = useMemo(() => (data as any)?.requests, [data]);
 
@@ -64,17 +64,17 @@ export default function JobManagementScreen() {
           if (request.type === "job_posting") {
             updateJobMutation.mutate(
               { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "approved" },
-              { onSuccess, onError }
+              { onSuccess, onError },
             );
           } else if (request.type === "job_application") {
             manageApplicationMutation.mutate(
               { adminId: user?.id ? Number(user.id) : 0, applicationId: request.id, action: "approve" },
-              { onSuccess, onError }
+              { onSuccess, onError },
             );
           } else if (request.type === "field_supervision") {
             manageSupervisionMutation.mutate(
               { adminId: user?.id ? Number(user.id) : 0, requestId: request.id, action: "approve" },
-              { onSuccess, onError }
+              { onSuccess, onError },
             );
           }
         },
@@ -100,17 +100,17 @@ export default function JobManagementScreen() {
           if (request.type === "job_posting") {
             updateJobMutation.mutate(
               { adminId: user?.id ? Number(user.id) : 0, jobId: request.id, status: "rejected" },
-              { onSuccess, onError }
+              { onSuccess, onError },
             );
           } else if (request.type === "job_application") {
             manageApplicationMutation.mutate(
               { adminId: user?.id ? Number(user.id) : 0, applicationId: request.id, action: "reject" },
-              { onSuccess, onError }
+              { onSuccess, onError },
             );
           } else if (request.type === "field_supervision") {
             manageSupervisionMutation.mutate(
               { adminId: user?.id ? Number(user.id) : 0, requestId: request.id, action: "reject" },
-              { onSuccess, onError }
+              { onSuccess, onError },
             );
           }
         },
@@ -131,7 +131,7 @@ export default function JobManagementScreen() {
           req.location.toLowerCase().includes(query) ||
           (req.details.company && req.details.company.toLowerCase().includes(query)) ||
           (req.details.position && req.details.position.toLowerCase().includes(query)) ||
-          (req.details.farmType && req.details.farmType.toLowerCase().includes(query))
+          (req.details.farmType && req.details.farmType.toLowerCase().includes(query)),
       );
     }
 

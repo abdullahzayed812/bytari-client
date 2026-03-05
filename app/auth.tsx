@@ -67,6 +67,36 @@ export default function AuthScreen() {
 
   const isLoading = loginMutation.isPending || registerMutation.isPending || vetApplicationMutation.isPending;
 
+  // Fake login helpers for seeded admin accounts
+  const SEED_ACCOUNTS = [
+    { label: "مدير عام", email: "zuhairalrawi0@gmail.com", password: "zuh000123000321zuh" },
+    { label: "مدير احتياطي", email: "superadmin@petapp.com", password: "zuh0012300zuh" },
+    { label: "مشرف اختبار", email: "admin@petapp.com", password: "admin123" },
+    { label: "مشرف أطباء", email: "vet.moderator@petapp.com", password: "admin123" },
+    { label: "مشرف مستخدمين", email: "user.moderator@petapp.com", password: "admin123" },
+    { label: "مدير محتوى", email: "content.manager@petapp.com", password: "admin123" },
+  ];
+
+  const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
+    if (isLoading) return;
+    setActiveTab("login");
+    setUsernameOrEmail(account.email);
+    setPassword(account.password);
+    setErrors({});
+    loginMutation.mutate(
+      { email: account.email, password: account.password },
+      {
+        onSuccess: async (data) => {
+          await login(data.user, data.tokens.accessToken);
+          router.replace("/(tabs)");
+        },
+        onError: (error) => {
+          setErrors({ general: error.message || t("auth.loginError") });
+        },
+      },
+    );
+  };
+
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
 
@@ -164,7 +194,7 @@ export default function AuthScreen() {
         onError: (error) => {
           setErrors({ general: error.message || t("auth.loginError") });
         },
-      }
+      },
     );
   };
 
@@ -219,7 +249,7 @@ export default function AuthScreen() {
               general: error.message || "حدث خطأ أثناء إرسال الطلب",
             });
           },
-        }
+        },
       );
     } else {
       // Handle regular pet owner registration
@@ -247,7 +277,7 @@ export default function AuthScreen() {
               general: error.message || "حدث خطأ أثناء إنشاء الحساب",
             });
           },
-        }
+        },
       );
     }
   };
@@ -721,12 +751,14 @@ export default function AuthScreen() {
                 >
                   <View style={styles.termsCheckboxContainer}>
                     <TouchableOpacity
-                      onPress={() => {
-                        if (termsAccepted) {
-                          setTermsAccepted(false);
-                        } else {
-                          setShowTermsModal(true);
-                        }
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        // if (termsAccepted) {
+                        //   setTermsAccepted(false);
+                        // } else {
+                        setTermsAccepted(true);
+                        // setShowTermsModal(true);
+                        // }
                       }}
                       style={styles.checkbox}
                     >
@@ -777,6 +809,26 @@ export default function AuthScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* Fake login buttons for seeded admin accounts */}
+            {activeTab === "login" && (
+              <View style={styles.fakeLoginContainer}>
+                <Text style={styles.fakeLoginTitle}>دخول سريع (حسابات تجريبية)</Text>
+                <View style={styles.fakeLoginButtons}>
+                  {SEED_ACCOUNTS.map((account) => (
+                    <TouchableOpacity
+                      key={account.email}
+                      style={styles.fakeLoginButton}
+                      onPress={() => handleFakeLogin(account)}
+                      disabled={isLoading}
+                    >
+                      <Text style={styles.fakeLoginButtonText}>{account.label}</Text>
+                      <Text style={styles.fakeLoginEmail}>{account.email}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
           </ScrollView>
         </View>
       </View>
@@ -1221,5 +1273,40 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 4,
     fontStyle: "italic",
+  },
+  fakeLoginContainer: {
+    marginTop: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+  },
+  fakeLoginTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.darkGray,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  fakeLoginButtons: {
+    gap: 8,
+  },
+  fakeLoginButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: "rgba(0, 122, 255, 0.05)",
+    alignItems: "center",
+  },
+  fakeLoginButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.primary,
+  },
+  fakeLoginEmail: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    marginTop: 2,
   },
 });

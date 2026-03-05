@@ -9,6 +9,7 @@ import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 import Button from "@/components/Button 2";
+import { useI18n } from "@/providers/I18nProvider";
 
 type Clinic = {
   id: number;
@@ -30,6 +31,7 @@ type Clinic = {
 export default function ClinicsScreen() {
   const router = useRouter();
   const { isSuperAdmin } = useApp();
+  const { t } = useI18n();
 
   // Fetch clinics from database
   const { data, isLoading, error } = useQuery(
@@ -44,10 +46,10 @@ export default function ClinicsScreen() {
   const clinics = useMemo(() => (data as any)?.clinics, [data]);
 
   const handleDeleteClinic = (clinicId: number) => {
-    Alert.alert("حذف العيادة", "هل أنت متأكد من حذف هذه العيادة؟", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("clinics.deleteClinic"), t("clinics.deleteClinicConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "حذف",
+        text: t("common.delete"),
         style: "destructive",
       },
     ]);
@@ -90,7 +92,7 @@ export default function ClinicsScreen() {
               {(clinic.rating || 0) >= 4.5 && (
                 <View style={styles.premiumBadge}>
                   <Star size={12} color={COLORS.white} fill={COLORS.white} />
-                  <Text style={styles.premiumBadgeText}>مميز</Text>
+                  <Text style={styles.premiumBadgeText}>{t("common.premium")}</Text>
                 </View>
               )}
             </View>
@@ -126,7 +128,7 @@ export default function ClinicsScreen() {
               }}
             >
               <Edit3 size={16} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>تعديل</Text>
+              <Text style={styles.actionButtonText}>{t("common.edit")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -137,7 +139,7 @@ export default function ClinicsScreen() {
               }}
             >
               <Trash2 size={16} color={COLORS.white} />
-              <Text style={styles.actionButtonText}>حذف</Text>
+              <Text style={styles.actionButtonText}>{t("common.delete")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -149,7 +151,7 @@ export default function ClinicsScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: "العيادات",
+          title: t("clinics.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -159,8 +161,8 @@ export default function ClinicsScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>جميع العيادات المسجلة</Text>
-          <Text style={styles.headerSubtitle}>تصفح جميع العيادات البيطرية المسجلة في النظام</Text>
+          <Text style={styles.headerTitle}>{t("clinics.allRegisteredClinics")}</Text>
+          <Text style={styles.headerSubtitle}>{t("clinics.browseAllClinics")}</Text>
         </View>
 
         {/* Add Clinic Button - Only for Super Admin */}
