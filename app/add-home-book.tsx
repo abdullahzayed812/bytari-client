@@ -6,6 +6,7 @@ import { COLORS } from "../constants/colors";
 import { ArrowLeft, Plus, Search, Check } from 'lucide-react-native';
 import Button from "../components/Button";
 import { mockVetBooks } from "../mocks/data";
+import { useI18n } from "@/providers/I18nProvider";
 
 type Book = {
   id: string;
@@ -19,6 +20,7 @@ type Book = {
 };
 
 export default function AddHomeBookScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
@@ -39,21 +41,21 @@ export default function AddHomeBookScreen() {
 
   const handleImportSelected = () => {
     if (selectedBooks.length === 0) {
-      Alert.alert('تنبيه', 'يرجى اختيار كتاب واحد على الأقل');
+      Alert.alert(t("common.error"), t("addHomeBook.selectAtLeastOne"));
       return;
     }
 
     Alert.alert(
-      'استيراد الكتب',
-      `هل تريد استيراد ${selectedBooks.length} كتاب إلى الصفحة الرئيسية؟`,
+      t("addHomeBook.importTitle"),
+      t("addHomeBook.importConfirm").replace("{n}", String(selectedBooks.length)),
       [
-        { text: 'إلغاء', style: 'cancel' },
+        { text: t("common.cancel"), style: 'cancel' },
         {
-          text: 'استيراد',
+          text: t("addHomeBook.import"),
           onPress: () => {
             // Here you would save the selected books to home section
             console.log('Importing books:', selectedBooks);
-            Alert.alert('نجح', `تم استيراد ${selectedBooks.length} كتاب بنجاح`);
+            Alert.alert(t("common.success"), t("addHomeBook.importSuccess").replace("{n}", String(selectedBooks.length)));
             router.back();
           }
         }
@@ -74,8 +76,8 @@ export default function AddHomeBookScreen() {
           <Text style={styles.bookAuthor} numberOfLines={1}>{item.author}</Text>
           <Text style={styles.bookDescription} numberOfLines={2}>{item.description}</Text>
           <View style={styles.bookStats}>
-            <Text style={styles.statText}>{item.pages} صفحة</Text>
-            <Text style={styles.statText}>{item.downloads} تحميل</Text>
+            <Text style={styles.statText}>{item.pages} {t("misc.pages")}</Text>
+            <Text style={styles.statText}>{item.downloads} {t("addHomeBook.downloads")}</Text>
           </View>
         </View>
         
@@ -88,9 +90,9 @@ export default function AddHomeBookScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'استيراد كتب للصفحة الرئيسية',
+          title: t("addHomeBook.screenTitle"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: 'bold' },
@@ -111,7 +113,7 @@ export default function AddHomeBookScreen() {
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="البحث في الكتب..."
+              placeholder={t("addHomeBook.searchPlaceholder")}
               textAlign="right"
             />
           </View>
@@ -119,13 +121,13 @@ export default function AddHomeBookScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>اختر الكتب للاستيراد</Text>
+          <Text style={styles.headerTitle}>{t("addHomeBook.selectBooksTitle")}</Text>
           <Text style={styles.headerSubtitle}>
-            اختر الكتب من القسم الأساسي لإضافتها للصفحة الرئيسية
+            {t("addHomeBook.selectBooksSubtitle")}
           </Text>
           {selectedBooks.length > 0 && (
             <Text style={styles.selectedCount}>
-              تم اختيار {selectedBooks.length} كتاب
+              {t("addHomeBook.selectedCount").replace("{n}", String(selectedBooks.length))}
             </Text>
           )}
         </View>
@@ -140,7 +142,7 @@ export default function AddHomeBookScreen() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>
-                {searchQuery ? 'لا توجد نتائج للبحث' : 'لا توجد كتب متاحة'}
+                {searchQuery ? t("addHomeBook.noSearchResults") : t("addHomeBook.noBooksAvailable")}
               </Text>
             </View>
           }
@@ -151,7 +153,7 @@ export default function AddHomeBookScreen() {
       {selectedBooks.length > 0 && (
         <View style={styles.footer}>
           <Button
-            title={`استيراد ${selectedBooks.length} كتاب`}
+            title={t("addHomeBook.importBtn").replace("{n}", String(selectedBooks.length))}
             onPress={handleImportSelected}
             type="primary"
             size="large"

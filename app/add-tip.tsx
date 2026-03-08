@@ -9,8 +9,10 @@ import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import Button from "../components/Button";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function AddTipScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useApp();
@@ -27,7 +29,7 @@ export default function AddTipScreen() {
 
   const handleSave = () => {
     if (!formData.title || !formData.content) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("validation.required"));
       return;
     }
 
@@ -41,12 +43,12 @@ export default function AddTipScreen() {
       } as any,
       {
         onSuccess: () => {
-          Alert.alert("نجح", "تم إضافة النصيحة بنجاح");
+          Alert.alert(t("common.success"), t("addTip.addSuccess"));
           queryClient.invalidateQueries(trpc.content.listTips.queryKey());
           router.back();
         },
         onError: (error: any) => {
-          Alert.alert("خطأ", error.message || "فشل في إضافة النصيحة");
+          Alert.alert(t("common.error"), error.message || t("addTip.addFailed"));
         },
       }
     );
@@ -56,7 +58,7 @@ export default function AddTipScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إضافة نصيحة جديدة",
+          title: t("addTip.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -74,38 +76,38 @@ export default function AddTipScreen() {
             images={formData.images}
             onImagesChange={(images) => setFormData({ ...formData, images })}
             maxImages={5}
-            label="صور النصيحة"
+            label={t("addTip.tipImages")}
           />
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>عنوان النصيحة *</Text>
+            <Text style={styles.label}>{t("addTip.tipTitle")}</Text>
             <TextInput
               style={styles.input}
               value={formData.title}
               onChangeText={(text) => setFormData({ ...formData, title: text })}
-              placeholder="أدخل عنوان النصيحة"
+              placeholder={t("addTip.enterTitle")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>التصنيف</Text>
+            <Text style={styles.label}>{t("addTip.category")}</Text>
             <TextInput
               style={styles.input}
               value={formData.category}
               onChangeText={(text) => setFormData({ ...formData, category: text })}
-              placeholder="أدخل تصنيف النصيحة"
+              placeholder={t("addTip.enterCategory")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>محتوى النصيحة *</Text>
+            <Text style={styles.label}>{t("addTip.content")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
               onChangeText={(text) => setFormData({ ...formData, content: text })}
-              placeholder="أدخل محتوى النصيحة"
+              placeholder={t("addTip.enterContent")}
               textAlign="right"
               multiline
               numberOfLines={6}
@@ -116,7 +118,7 @@ export default function AddTipScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={createTipMutation.isPending ? "جاري الإضافة..." : "إضافة النصيحة"}
+          title={createTipMutation.isPending ? t("common.loading") : t("addTip.addTip")}
           onPress={handleSave}
           type="primary"
           size="large"

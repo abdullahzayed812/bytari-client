@@ -4,8 +4,10 @@ import { Stack, useRouter } from "expo-router";
 import { ArrowLeft, Plus, Store } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { trpc } from "@/lib/trpc";
+import { useI18n } from "../providers/I18nProvider";
 
 export default function AddUserStoreScreen() {
+  const { t } = useI18n();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -20,15 +22,15 @@ export default function AddUserStoreScreen() {
 
   const createStoreMutation = trpc.stores.create.useMutation({
     onSuccess: (data) => {
-      Alert.alert("نجح", data.message, [
+      Alert.alert(t("common.success"), data.message, [
         {
-          text: "موافق",
+          text: t("common.ok"),
           onPress: () => router.back(),
         },
       ]);
     },
     onError: (error) => {
-      Alert.alert("خطأ", error.message);
+      Alert.alert(t("common.error"), error.message);
     },
   });
 
@@ -38,7 +40,7 @@ export default function AddUserStoreScreen() {
 
   const handleCreate = async () => {
     if (!formData.name || !formData.ownerName || !formData.ownerEmail) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("validation.required"));
       return;
     }
 
@@ -66,7 +68,7 @@ export default function AddUserStoreScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "إضافة متجر جديد",
+          title: t("addUserStore.title"),
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" as const },
@@ -78,7 +80,7 @@ export default function AddUserStoreScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={24} color={COLORS.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>إضافة متجر جديد</Text>
+          <Text style={styles.headerTitle}>{t("addUserStore.title")}</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -86,84 +88,84 @@ export default function AddUserStoreScreen() {
           <View style={styles.formSection}>
             <View style={styles.sectionHeader}>
               <Store size={20} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>معلومات المتجر</Text>
+              <Text style={styles.sectionTitle}>{t("addUserStore.storeInfo")}</Text>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>اسم المتجر *</Text>
+              <Text style={styles.label}>{t("addVetStore.storeName")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.name}
                 onChangeText={(value) => updateField("name", value)}
-                placeholder="أدخل اسم المتجر"
+                placeholder={t("addUserStore.enterStoreName")}
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>اسم المالك *</Text>
+              <Text style={styles.label}>{t("addUserStore.ownerName")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.ownerName}
                 onChangeText={(value) => updateField("ownerName", value)}
-                placeholder="أدخل اسم المالك"
+                placeholder={t("addUserStore.enterOwnerName")}
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>البريد الإلكتروني *</Text>
+              <Text style={styles.label}>{t("addVetStore.emailRequired")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.ownerEmail}
                 onChangeText={(value) => updateField("ownerEmail", value)}
-                placeholder="أدخل البريد الإلكتروني"
+                placeholder={t("auth.emailLabel")}
                 placeholderTextColor={COLORS.darkGray}
                 keyboardType="email-address"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>رقم الهاتف</Text>
+              <Text style={styles.label}>{t("common.phone")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.phone}
                 onChangeText={(value) => updateField("phone", value)}
-                placeholder="أدخل رقم الهاتف"
+                placeholder={t("addClinic.enterPhone")}
                 placeholderTextColor={COLORS.darkGray}
                 keyboardType="phone-pad"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>العنوان</Text>
+              <Text style={styles.label}>{t("common.address")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.address}
                 onChangeText={(value) => updateField("address", value)}
-                placeholder="أدخل العنوان"
+                placeholder={t("addClinic.enterAddress")}
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>المدينة</Text>
+              <Text style={styles.label}>{t("addVetStore.city")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.city}
                 onChangeText={(value) => updateField("city", value)}
-                placeholder="أدخل المدينة"
+                placeholder={t("addVetStore.enterCity")}
                 placeholderTextColor={COLORS.darkGray}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>وصف المتجر</Text>
+              <Text style={styles.label}>{t("addVetStore.storeDesc")}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
                 onChangeText={(value) => updateField("description", value)}
-                placeholder="أدخل وصف المتجر"
+                placeholder={t("addUserStore.enterStoreDesc")}
                 placeholderTextColor={COLORS.darkGray}
                 multiline
                 numberOfLines={4}
@@ -171,7 +173,7 @@ export default function AddUserStoreScreen() {
               />
             </View>
 
-            <Text style={styles.requiredNote}>* الحقول المطلوبة</Text>
+            <Text style={styles.requiredNote}>{t("addVetStore.requiredFields")}</Text>
           </View>
         </ScrollView>
 
@@ -179,7 +181,7 @@ export default function AddUserStoreScreen() {
         <View style={styles.bottomActions}>
           <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
             <Plus size={20} color={COLORS.white} />
-            <Text style={styles.createButtonText}>إنشاء المتجر</Text>
+            <Text style={styles.createButtonText}>{t("addUserStore.createStore")}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

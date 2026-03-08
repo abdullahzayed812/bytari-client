@@ -8,10 +8,12 @@ import AdminReplyForm from "@/components/AdminReplyForm";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import ImageAttachmentViewer from "@/components/ImageAttachmentViewer";
+import { useI18n } from "@/providers/I18nProvider";
 
 type StatusFilter = "pending" | "assigned" | "answered" | "closed";
 
 export default function AdminConsultationDetailsScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useApp();
@@ -32,10 +34,10 @@ export default function AdminConsultationDetailsScreen() {
   };
 
   const statusLabels: Record<StatusFilter, string> = {
-    pending: "قيد الانتظار",
-    assigned: "تم التعيين",
-    answered: "تم الرد",
-    closed: "مغلق",
+    pending: t("status.pending"),
+    assigned: t("status.assigned"),
+    answered: t("status.answered"),
+    closed: t("status.closed"),
   };
 
   const priorityColors: Record<string, string> = {
@@ -46,18 +48,18 @@ export default function AdminConsultationDetailsScreen() {
   };
 
   const priorityLabels: Record<string, string> = {
-    low: "منخفضة",
-    normal: "عادية",
-    high: "عالية",
-    urgent: "عاجلة",
+    low: t("priority.low"),
+    normal: t("priority.normal"),
+    high: t("priority.high"),
+    urgent: t("priority.urgent"),
   };
 
   const petTypeLabels: Record<string, string> = {
-    dog: "كلب",
-    cat: "قطة",
-    rabbit: "أرنب",
-    bird: "طائر",
-    other: "آخر",
+    dog: t("petType.dog"),
+    cat: t("petType.cat"),
+    rabbit: t("petType.rabbit"),
+    bird: t("petType.bird"),
+    other: t("petType.other"),
   };
 
   const handleBack = () => {
@@ -73,12 +75,12 @@ export default function AdminConsultationDetailsScreen() {
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.white} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>تفاصيل الاستشارة</Text>
+            <Text style={styles.headerTitle}>{t("adminConsultation.title")}</Text>
             <View style={styles.placeholder} />
           </View>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>جاري تحميل التفاصيل...</Text>
+            <Text style={styles.loadingText}>{t("common.loadingDetails")}</Text>
           </View>
         </SafeAreaView>
       </>
@@ -94,12 +96,12 @@ export default function AdminConsultationDetailsScreen() {
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
               <ArrowLeft size={24} color={COLORS.white} />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>تفاصيل الاستشارة</Text>
+            <Text style={styles.headerTitle}>{t("adminConsultation.title")}</Text>
             <View style={styles.placeholder} />
           </View>
           <View style={styles.emptyContainer}>
             <MessageCircle size={64} color={COLORS.lightGray} />
-            <Text style={styles.emptyTitle}>لم يتم العثور على الاستشارة</Text>
+            <Text style={styles.emptyTitle}>{t("adminConsultation.notFound")}</Text>
           </View>
         </SafeAreaView>
       </>
@@ -128,9 +130,9 @@ export default function AdminConsultationDetailsScreen() {
                   <User size={24} color={COLORS.white} />
                 </View>
                 <View>
-                  <Text style={styles.userName}>{consultation.user?.name || "مستخدم"}</Text>
+                  <Text style={styles.userName}>{consultation.user?.name || t("common.user")}</Text>
                   <Text style={styles.userEmail}>{consultation.user?.email || ""}</Text>
-                  <Text style={styles.userType}>{consultation.user?.userType === "vet" ? "طبيب بيطري" : "مستخدم"}</Text>
+                  <Text style={styles.userType}>{consultation.user?.userType === "vet" ? t("userType.vet") : t("userType.user")}</Text>
                 </View>
               </View>
               <View style={styles.badges}>
@@ -170,7 +172,7 @@ export default function AdminConsultationDetailsScreen() {
 
             <View style={styles.divider} />
 
-            <Text style={styles.sectionTitle}>السؤال:</Text>
+            <Text style={styles.sectionTitle}>{t("adminConsultation.question")}</Text>
             <Text style={styles.consultationContent}>{consultation.description}</Text>
             {/* 
             {consultation.category && (
@@ -182,7 +184,7 @@ export default function AdminConsultationDetailsScreen() {
 
             {consultation.symptoms && (
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>الأعراض:</Text>
+                <Text style={styles.infoLabel}>{t("adminConsultation.symptoms")}</Text>
                 <Text style={styles.infoValue}>{consultation.symptoms}</Text>
               </View>
             )}
@@ -194,7 +196,7 @@ export default function AdminConsultationDetailsScreen() {
             <View style={styles.responsesSection}>
               <View style={styles.responsesSectionHeader}>
                 <MessageCircle size={20} color={COLORS.primary} />
-                <Text style={styles.responsesSectionTitle}>الردود ({responses.length})</Text>
+                <Text style={styles.responsesSectionTitle}>{t("adminInquiry.responses")} ({responses.length})</Text>
               </View>
 
               {responses.map((response) => (
@@ -207,8 +209,8 @@ export default function AdminConsultationDetailsScreen() {
                       <View>
                         <Text style={styles.responderName}>
                           {response.isAiGenerated && !response.responder?.name
-                            ? "الذكاء الاصطناعي"
-                            : response.responder?.name || "مشرف"}
+                            ? t("userType.ai")
+                            : response.responder?.name || t("userType.supervisor")}
                         </Text>
                         <Text style={styles.responseDate}>
                           {new Date(response.createdAt || "").toLocaleDateString("ar-SA", {
@@ -223,7 +225,7 @@ export default function AdminConsultationDetailsScreen() {
                     {response.isOfficial && (
                       <View style={styles.officialBadge}>
                         <CheckCircle size={14} color={COLORS.white} />
-                        <Text style={styles.officialBadgeText}>رد رسمي</Text>
+                        <Text style={styles.officialBadgeText}>{t("common.officialReply")}</Text>
                       </View>
                     )}
                     {response.isAiGenerated && (
@@ -240,7 +242,7 @@ export default function AdminConsultationDetailsScreen() {
 
                   {response.keepConversationOpen && (
                     <View style={styles.conversationOpenBadge}>
-                      <Text style={styles.conversationOpenText}>المحادثة مفتوحة للرد</Text>
+                      <Text style={styles.conversationOpenText}>{t("common.conversationOpen")}</Text>
                     </View>
                   )}
                 </View>
@@ -262,7 +264,7 @@ export default function AdminConsultationDetailsScreen() {
 
           {consultation.status === "closed" && (
             <View style={styles.closedCard}>
-              <Text style={styles.closedText}>تم إغلاق المحادثة</Text>
+              <Text style={styles.closedText}>{t("common.conversationClosed")}</Text>
             </View>
           )}
         </ScrollView>

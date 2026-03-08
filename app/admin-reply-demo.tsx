@@ -2,29 +2,31 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Stack } from 'expo-router';
 import { COLORS } from "../constants/colors";
+import { useI18n } from "@/providers/I18nProvider";
 import AdminReplyForm from "../components/AdminReplyForm";
 import UserReplyForm from "../components/UserReplyForm";
 
 export default function AdminReplyDemoScreen() {
+  const { t } = useI18n();
   const handleReplySuccess = () => {
     console.log('Reply sent successfully!');
   };
 
   return (
     <View style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'نظام الردود - عرض توضيحي',
+          title: t("replyDemo.title"),
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: 'bold' }
-        }} 
+        }}
       />
-      
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>للمشرفين المختصين</Text>
+        <Text style={styles.sectionTitle}>{t("replyDemo.forModerators")}</Text>
         <Text style={styles.description}>
-          يمكن للمشرفين الرد على الاستفسارات والاستشارات مع تحديد ما إذا كانت المحادثة ستبقى مفتوحة للرد أم لا
+          {t("replyDemo.forModeratorDesc")}
         </Text>
         
         <AdminReplyForm
@@ -34,9 +36,9 @@ export default function AdminReplyDemoScreen() {
           onReplySuccess={handleReplySuccess}
         />
 
-        <Text style={styles.sectionTitle}>للمستخدمين</Text>
+        <Text style={styles.sectionTitle}>{t("replyDemo.forUsers")}</Text>
         <Text style={styles.description}>
-          يمكن للمستخدمين الرد على استفساراتهم أو استشاراتهم فقط إذا كانت المحادثة مفتوحة
+          {t("replyDemo.forUserDesc")}
         </Text>
         
         <UserReplyForm
@@ -47,9 +49,9 @@ export default function AdminReplyDemoScreen() {
           onReplySuccess={handleReplySuccess}
         />
 
-        <Text style={styles.sectionTitle}>محادثة مغلقة</Text>
+        <Text style={styles.sectionTitle}>{t("replyDemo.closedConversation")}</Text>
         <Text style={styles.description}>
-          عندما يختار المشرف إغلاق المحادثة، لن يتمكن المستخدم من الرد
+          {t("replyDemo.closedDesc")}
         </Text>
         
         <UserReplyForm
@@ -61,12 +63,12 @@ export default function AdminReplyDemoScreen() {
         />
 
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>كيف يعمل النظام:</Text>
+          <Text style={styles.infoTitle}>{t("replyDemo.howItWorks")}</Text>
           <Text style={styles.infoText}>
-            1. عندما يرد المشرف، يحدد ما إذا كانت المحادثة ستبقى مفتوحة{'\n'}
-            2. إذا اختار إبقاء المحادثة مفتوحة، يمكن للمستخدم الرد مرة أخرى{'\n'}
-            3. إذا اختار إغلاق المحادثة، لن يتمكن المستخدم من الرد{'\n'}
-            4. عندما يرد المستخدم، تعود حالة الاستفسار/الاستشارة إلى &quot;في الانتظار&quot;
+            {t("replyDemo.step1")}{'\n'}
+            {t("replyDemo.step2")}{'\n'}
+            {t("replyDemo.step3")}{'\n'}
+            {t("replyDemo.step4")}
           </Text>
         </View>
       </ScrollView>

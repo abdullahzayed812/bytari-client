@@ -10,8 +10,10 @@ import Button from "@/components/Button 2";
 import { useToastContext } from "@/providers/ToastProvider";
 import { useApp } from "@/providers/AppProvider";
 import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function AddClinicScreen() {
+  const { t } = useI18n();
   const { user, isSuperAdmin } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -34,21 +36,21 @@ export default function AddClinicScreen() {
 
   const handleSave = () => {
     if (!formData.name || !formData.address || !formData.phone) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("validation.required"));
       return;
     }
 
     if (formData.licenseImages.length === 0) {
       showToast({
         type: "error",
-        message: "صور الترخيص مطلوبة.",
+        message: t("addClinic.licenseRequired"),
       });
       return;
     }
     if (formData.identityImages.length === 0) {
       showToast({
         type: "error",
-        message: "صورة الهويه مطلوبة.",
+        message: t("addClinic.identityRequired"),
       });
       return;
     }
@@ -78,12 +80,12 @@ export default function AddClinicScreen() {
     // Mock values for now to match the mutation input requirements
     mutation.mutate(payload, {
       onSuccess: (data) => {
-        Alert.alert("نجاح", data.message || "تم إرسال الطلب بنجاح");
+        Alert.alert(t("common.success"), data.message || t("addClinic.requestSent"));
         router.back();
         if (isSuperAdmin) queryClient.invalidateQueries(trpc.clinics.list.queryKey);
       },
       onError: (error) => {
-        Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال الطلب");
+        Alert.alert(t("common.error"), error.message || t("addClinic.requestError"));
       },
     });
   };
@@ -92,7 +94,7 @@ export default function AddClinicScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إضافة عيادة جديدة",
+          title: t("addClinic.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -111,62 +113,62 @@ export default function AddClinicScreen() {
             images={formData.images}
             onImagesChange={(images) => setFormData({ ...formData, images })}
             maxImages={5}
-            label="صور العيادة"
+            label={t("addClinic.clinicImages")}
           />
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>اسم العيادة *</Text>
+            <Text style={styles.label}>{t("addClinic.clinicName")}</Text>
             <TextInput
               style={styles.input}
               value={formData.name}
               onChangeText={(text) => setFormData({ ...formData, name: text })}
-              placeholder="أدخل اسم العيادة"
+              placeholder={t("addClinic.enterClinicName")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>العنوان *</Text>
+            <Text style={styles.label}>{t("addClinic.addressRequired")}</Text>
             <TextInput
               style={styles.input}
               value={formData.address}
               onChangeText={(text) => setFormData({ ...formData, address: text })}
-              placeholder="أدخل عنوان العيادة"
+              placeholder={t("addClinic.enterAddress")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>رقم الهاتف *</Text>
+            <Text style={styles.label}>{t("addClinic.phoneRequired")}</Text>
             <TextInput
               style={styles.input}
               value={formData.phone}
               onChangeText={(text) => setFormData({ ...formData, phone: text })}
-              placeholder="أدخل رقم الهاتف"
+              placeholder={t("addClinic.enterPhone")}
               textAlign="right"
               keyboardType="phone-pad"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>البريد الإلكتروني</Text>
+            <Text style={styles.label}>{t("common.email")}</Text>
             <TextInput
               style={styles.input}
               value={formData.email}
               onChangeText={(text) => setFormData({ ...formData, email: text })}
-              placeholder="أدخل البريد الإلكتروني"
+              placeholder={t("auth.emailLabel")}
               textAlign="right"
               keyboardType="email-address"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>الوصف</Text>
+            <Text style={styles.label}>{t("common.description")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
               onChangeText={(text) => setFormData({ ...formData, description: text })}
-              placeholder="أدخل وصف العيادة"
+              placeholder={t("addClinic.enterDesc")}
               textAlign="right"
               multiline
               numberOfLines={4}
@@ -178,7 +180,7 @@ export default function AddClinicScreen() {
             images={formData.licenseImages}
             onImagesChange={(images) => setFormData({ ...formData, licenseImages: images })}
             maxImages={3}
-            label="صور الترخيص *"
+            label={t("addClinic.licenseImages")}
           />
 
           {/* Identity Images */}
@@ -186,14 +188,14 @@ export default function AddClinicScreen() {
             images={formData.identityImages}
             onImagesChange={(images) => setFormData({ ...formData, identityImages: images })}
             maxImages={2}
-            label="صور الهوية *"
+            label={t("addClinic.identityImages")}
           />
         </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <Button
-          title="إضافة العيادة"
+          title={t("addClinic.addClinic")}
           onPress={handleSave}
           type="primary"
           size="large"

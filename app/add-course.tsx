@@ -28,6 +28,7 @@ import { COLORS } from "../constants/colors";
 import { useMutation } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
 import { trpc } from "@/lib/trpc";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface CourseFormData {
   title: string;
@@ -46,6 +47,7 @@ interface CourseFormData {
 }
 
 export default function AddCourseScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
@@ -66,10 +68,10 @@ export default function AddCourseScreen() {
   const createCourseMutation = useMutation(
     trpc.courses.create.mutationOptions({
       onSuccess: () => {
-        Alert.alert("تم الحفظ", "تم إضافة الدورة بنجاح", [{ text: "موافق", onPress: () => router.back() }]);
+        Alert.alert(t("common.success"), t("addCourse.addSuccess"), [{ text: t("common.ok"), onPress: () => router.back() }]);
       },
       onError: () => {
-        Alert.alert("خطأ", "حدث خطأ أثناء حفظ الدورة");
+        Alert.alert(t("common.error"), t("addCourse.saveError"));
       },
     })
   );
@@ -81,51 +83,51 @@ export default function AddCourseScreen() {
   const handleSave = async () => {
     // Validation
     if (!formData.title.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال عنوان الدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterTitle"));
       return;
     }
     if (!formData.organizer.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال اسم المنظم");
+      Alert.alert(t("common.error"), t("addCourse.enterOrganizerError"));
       return;
     }
     if (!formData.date.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال تاريخ الدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterDateError"));
       return;
     }
     if (!formData?.thumbnailImage?.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال صورة مصغرة للدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterThumbnailError"));
       return;
     }
     if (!formData.location.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال مكان الدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterLocationError"));
       return;
     }
     if (!formData.duration.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال مدة الدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterDurationError"));
       return;
     }
     if (!formData.capacity.trim() || isNaN(Number(formData.capacity))) {
-      Alert.alert("خطأ", "يرجى إدخال عدد المقاعد المتاحة (رقم صحيح)");
+      Alert.alert(t("common.error"), t("addCourse.enterCapacityError"));
       return;
     }
     if (!formData.price.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال سعر الدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterPriceError"));
       return;
     }
     if (!formData.description.trim()) {
-      Alert.alert("خطأ", "يرجى إدخال وصف الدورة");
+      Alert.alert(t("common.error"), t("addCourse.enterDescError"));
       return;
     }
     if (formData.registrationType === "link") {
       if (!formData.courseUrl.trim()) {
-        Alert.alert("خطأ", "يرجى إدخال رابط التسجيل");
+        Alert.alert(t("common.error"), t("addCourse.enterRegLinkError"));
         return;
       }
 
       // Strict URL validation
       const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
       if (!urlPattern.test(formData.courseUrl.trim())) {
-        Alert.alert("خطأ", "يرجى إدخال رابط صحيح (يبدأ بـ http:// أو https://)");
+        Alert.alert(t("common.error"), t("addCourse.invalidUrlError"));
         return;
       }
     }
@@ -154,7 +156,7 @@ export default function AddCourseScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={24} color={COLORS.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>إضافة دورة جديدة</Text>
+          <Text style={styles.headerTitle}>{t("addCourse.title")}</Text>
           <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={isLoading}>
             <Save size={24} color={COLORS.white} />
           </TouchableOpacity>
@@ -165,7 +167,7 @@ export default function AddCourseScreen() {
           <ImageUploader
             imageUri={formData.thumbnailImage}
             onUploadComplete={(url) => updateFormData("thumbnailImage", url)}
-            label="صورة مصغرة للدورة"
+            label={t("addCourse.thumbnail")}
             containerStyle={{ marginBottom: 16 }}
             aspect={[16, 9]}
             imageStyle={{ width: "100%", height: 180, borderRadius: 12 }}
@@ -173,7 +175,7 @@ export default function AddCourseScreen() {
 
           {/* Course Type Selection */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>نوع الفعالية</Text>
+            <Text style={styles.sectionTitle}>{t("addCourse.eventType")}</Text>
             <View style={styles.typeSelector}>
               <TouchableOpacity
                 style={[styles.typeOption, formData.type === "course" && styles.selectedTypeOption]}
@@ -181,7 +183,7 @@ export default function AddCourseScreen() {
               >
                 <BookOpen size={20} color={formData.type === "course" ? COLORS.white : COLORS.primary} />
                 <Text style={[styles.typeOptionText, formData.type === "course" && styles.selectedTypeOptionText]}>
-                  دورة تدريبية
+                  {t("addCourse.trainingCourse")}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -190,7 +192,7 @@ export default function AddCourseScreen() {
               >
                 <GraduationCap size={20} color={formData.type === "seminar" ? COLORS.white : COLORS.primary} />
                 <Text style={[styles.typeOptionText, formData.type === "seminar" && styles.selectedTypeOptionText]}>
-                  ندوة علمية
+                  {t("addCourse.seminar")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -198,105 +200,105 @@ export default function AddCourseScreen() {
 
           {/* Basic Information */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>المعلومات الأساسية</Text>
+            <Text style={styles.sectionTitle}>{t("addCourse.basicInfo")}</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>عنوان الدورة *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.courseTitle")}</Text>
               <TextInput
                 style={styles.textInput}
                 value={formData.title}
                 onChangeText={(text) => updateFormData("title", text)}
-                placeholder="أدخل عنوان الدورة"
+                placeholder={t("addCourse.enterTitle")}
                 multiline
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>المنظم *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.organizer")}</Text>
               <View style={styles.inputWithIcon}>
                 <Building size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={styles.textInputWithIcon}
                   value={formData.organizer}
                   onChangeText={(text) => updateFormData("organizer", text)}
-                  placeholder="اسم الجهة المنظمة"
+                  placeholder={t("addCourse.enterOrganizer")}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>التاريخ *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.dateRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <Calendar size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={styles.textInputWithIcon}
                   value={formData.date}
                   onChangeText={(text) => updateFormData("date", text)}
-                  placeholder="مثال: 15 أغسطس 2024"
+                  placeholder={t("addCourse.dateExample")}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>المكان *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.locationRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <MapPin size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={styles.textInputWithIcon}
                   value={formData.location}
                   onChangeText={(text) => updateFormData("location", text)}
-                  placeholder="مكان انعقاد الدورة"
+                  placeholder={t("addCourse.enterLocation")}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>المدة *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.durationRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <Clock size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={styles.textInputWithIcon}
                   value={formData.duration}
                   onChangeText={(text) => updateFormData("duration", text)}
-                  placeholder="مثال: 3 أيام أو يوم واحد"
+                  placeholder={t("addCourse.durationExample")}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>عدد المقاعد المتاحة *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.capacityRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <Users size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={styles.textInputWithIcon}
                   value={formData.capacity}
                   onChangeText={(text) => updateFormData("capacity", text)}
-                  placeholder="عدد المشاركين المسموح"
+                  placeholder={t("addCourse.enterCapacity")}
                   keyboardType="numeric"
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>السعر *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.priceRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <DollarSign size={20} color={COLORS.darkGray} />
                 <TextInput
                   style={styles.textInputWithIcon}
                   value={formData.price}
                   onChangeText={(text) => updateFormData("price", text)}
-                  placeholder="مثال: 1500 دينار أو مجاني"
+                  placeholder={t("addCourse.priceExample")}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>الوصف *</Text>
+              <Text style={styles.inputLabel}>{t("addCourse.descRequired")}</Text>
               <TextInput
                 style={[styles.textInput, styles.textArea]}
                 value={formData.description}
                 onChangeText={(text) => updateFormData("description", text)}
-                placeholder="وصف مفصل عن محتوى الدورة وأهدافها"
+                placeholder={t("addCourse.enterDesc")}
                 multiline
                 numberOfLines={4}
               />
@@ -305,32 +307,32 @@ export default function AddCourseScreen() {
 
           {/* Registration Settings */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>إعدادات التسجيل</Text>
+            <Text style={styles.sectionTitle}>{t("addCourse.registrationSettings")}</Text>
 
             <View style={styles.switchContainer}>
               <View style={styles.switchInfo}>
-                <Text style={styles.switchLabel}>نوع التسجيل</Text>
+                <Text style={styles.switchLabel}>{t("addCourse.regType")}</Text>
                 <Text style={styles.switchDescription}>
                   {formData.registrationType === "internal"
-                    ? "التسجيل داخل التطبيق - سيتم إرسال طلبات التسجيل إلى الإدارة"
-                    : "التسجيل عبر رابط خارجي - سيتم توجيه المستخدمين إلى رابط التسجيل"}
+                    ? t("addCourse.internalRegDesc")
+                    : t("addCourse.linkRegDesc")}
                 </Text>
               </View>
               <View style={styles.switchRow}>
-                <Text style={styles.switchOptionText}>داخلي</Text>
+                <Text style={styles.switchOptionText}>{t("addCourse.internal")}</Text>
                 <Switch
                   value={formData.registrationType === "link"}
                   onValueChange={(value) => updateFormData("registrationType", value ? "link" : "internal")}
                   trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
                   thumbColor={COLORS.white}
                 />
-                <Text style={styles.switchOptionText}>رابط خارجي</Text>
+                <Text style={styles.switchOptionText}>{t("addCourse.externalLink")}</Text>
               </View>
             </View>
 
             {formData.registrationType === "link" && (
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>رابط التسجيل *</Text>
+                <Text style={styles.inputLabel}>{t("addCourse.regLink")}</Text>
                 <View style={styles.inputWithIcon}>
                   <ExternalLink size={20} color={COLORS.darkGray} />
                   <TextInput
@@ -346,9 +348,9 @@ export default function AddCourseScreen() {
 
             <View style={styles.switchContainer}>
               <View style={styles.switchInfo}>
-                <Text style={styles.switchLabel}>حالة الدورة</Text>
+                <Text style={styles.switchLabel}>{t("addCourse.courseStatus")}</Text>
                 <Text style={styles.switchDescription}>
-                  {formData.status === "active" ? "الدورة نشطة ومتاحة للتسجيل" : "الدورة غير نشطة ولا تظهر للمستخدمين"}
+                  {formData.status === "active" ? t("addCourse.activeDesc") : t("addCourse.inactiveDesc")}
                 </Text>
               </View>
               <Switch
@@ -367,7 +369,7 @@ export default function AddCourseScreen() {
             disabled={createCourseMutation.isPending}
           >
             <Save size={20} color={COLORS.white} />
-            <Text style={styles.saveButtonText}>{createCourseMutation.isPending ? "جاري الحفظ..." : "حفظ الدورة"}</Text>
+            <Text style={styles.saveButtonText}>{createCourseMutation.isPending ? t("common.loading") : t("addCourse.saveCourse")}</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

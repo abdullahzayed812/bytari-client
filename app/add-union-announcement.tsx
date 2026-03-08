@@ -7,6 +7,7 @@ import { Save, X, Camera, Link, Calendar, MessageSquare } from "lucide-react-nat
 import { trpc } from "../lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface Announcement {
   id: string;
@@ -24,6 +25,7 @@ interface Announcement {
 }
 
 export default function AddUnionAnnouncementScreen() {
+  const { t } = useI18n();
   const { isSuperAdmin, isModerator, supervisedBranchIds, user } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -52,11 +54,11 @@ export default function AddUnionAnnouncementScreen() {
   if (!isSuperAdmin && !isModerator && !supervisedBranchIds.length) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: "غير مصرح" }} />
+        <Stack.Screen options={{ title: t("common.unauthorized") }} />
         <View style={styles.noPermissionContainer}>
-          <Text style={styles.noPermissionText}>ليس لديك صلاحية لإضافة إعلانات النقابة</Text>
+          <Text style={styles.noPermissionText}>{t("addAnnouncement.noPermission")}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>العودة</Text>
+            <Text style={styles.backButtonText}>{t("common.back")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -85,7 +87,7 @@ export default function AddUnionAnnouncementScreen() {
 
   const handleSave = async () => {
     if (!formData.title || !formData.content) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("addAnnouncement.fillRequired"));
       return;
     }
 
@@ -107,19 +109,18 @@ export default function AddUnionAnnouncementScreen() {
           onSuccess: (data) => {
             queryClient.invalidateQueries(trpc.union.announcement.list.queryKey as any);
             Alert.alert(
-              "تم الحفظ",
-              branchId === "main" ? "تم إضافة الإعلان بنجاح وإرسال إشعارات لمتابعي النقابة" : "تم إضافة الإعلان بنجاح",
-
+              t("common.success"),
+              branchId === "main" ? t("addAnnouncement.savedWithNotif") : t("addAnnouncement.saved"),
               [
                 {
-                  text: "موافق",
+                  text: t("common.ok"),
                   onPress: () => router.back(),
                 },
               ]
             );
           },
           onError: (error) => {
-            Alert.alert("خطأ", "حدث خطأ أثناء حفظ الإعلان");
+            Alert.alert(t("common.error"), t("addAnnouncement.saveError"));
           },
         }
       );
@@ -130,18 +131,18 @@ export default function AddUnionAnnouncementScreen() {
           onSuccess: (data) => {
             queryClient.invalidateQueries(trpc.union.announcement.list.queryKey as any);
             Alert.alert(
-              "تم الحفظ",
-              branchId === "main" ? "تم إضافة الإعلان بنجاح وإرسال إشعارات لمتابعي النقابة" : "تم إضافة الإعلان بنجاح",
+              t("common.success"),
+              branchId === "main" ? t("addAnnouncement.savedWithNotif") : t("addAnnouncement.saved"),
               [
                 {
-                  text: "موافق",
+                  text: t("common.ok"),
                   onPress: () => router.back(),
                 },
               ]
             );
           },
           onError: (error) => {
-            Alert.alert("خطأ", "حدث خطأ أثناء حفظ الإعلان");
+            Alert.alert(t("common.error"), t("addAnnouncement.saveError"));
           },
         }
       );
@@ -161,13 +162,13 @@ export default function AddUnionAnnouncementScreen() {
   const getAnnouncementTypeLabel = (type: string) => {
     switch (type) {
       case "urgent":
-        return "عاجل";
+        return t("addAnnouncement.typeUrgent");
       case "meeting":
-        return "اجتماع";
+        return t("addAnnouncement.typeMeeting");
       case "event":
-        return "فعالية";
+        return t("addAnnouncement.typeEvent");
       default:
-        return "عام";
+        return t("addAnnouncement.typeGeneral");
     }
   };
 
@@ -175,7 +176,7 @@ export default function AddUnionAnnouncementScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إضافة إعلان جديد",
+          title: t("addAnnouncement.screenTitle"),
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold", fontSize: 16 },
@@ -198,34 +199,34 @@ export default function AddUnionAnnouncementScreen() {
             <MessageSquare size={24} color={COLORS.primary} />
           </View>
           <View style={styles.branchInfo}>
-            <Text style={styles.branchTitle}>إضافة إعلان إلى:</Text>
+            <Text style={styles.branchTitle}>{t("addAnnouncement.addTo")}</Text>
             <Text style={styles.branchName}>{branchName}</Text>
           </View>
         </View>
 
         {/* Announcement Form */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>معلومات الإعلان</Text>
+          <Text style={styles.sectionTitle}>{t("addAnnouncement.announcementInfo")}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>عنوان الإعلان *</Text>
+            <Text style={styles.inputLabel}>{t("addAnnouncement.titleLabel")}</Text>
             <TextInput
               style={styles.textInput}
               value={formData.title}
               onChangeText={(text) => setFormData((prev) => ({ ...prev, title: text }))}
-              placeholder="اكتب عنوان الإعلان هنا"
+              placeholder={t("addAnnouncement.enterTitle")}
               textAlign="right"
               maxLength={100}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>محتوى الإعلان *</Text>
+            <Text style={styles.inputLabel}>{t("addAnnouncement.contentLabel")}</Text>
             <TextInput
               style={[styles.textInput, styles.multilineInput]}
               value={formData.content}
               onChangeText={(text) => setFormData((prev) => ({ ...prev, content: text }))}
-              placeholder="اكتب محتوى الإعلان بالتفصيل"
+              placeholder={t("addAnnouncement.enterContent")}
               multiline
               numberOfLines={6}
               textAlign="right"
@@ -234,12 +235,12 @@ export default function AddUnionAnnouncementScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>المؤلف/المسؤول</Text>
+            <Text style={styles.inputLabel}>{t("addAnnouncement.authorLabel")}</Text>
             <TextInput
               style={styles.textInput}
               value={formData.author}
               onChangeText={(text) => setFormData((prev) => ({ ...prev, author: text }))}
-              placeholder="اسم المؤلف أو المسؤول عن الإعلان"
+              placeholder={t("addAnnouncement.enterAuthor")}
               textAlign="right"
             />
           </View>
@@ -247,10 +248,10 @@ export default function AddUnionAnnouncementScreen() {
 
         {/* Announcement Type and Priority */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>نوع الإعلان والأولوية</Text>
+          <Text style={styles.sectionTitle}>{t("addAnnouncement.typeSection")}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>نوع الإعلان</Text>
+            <Text style={styles.inputLabel}>{t("addAnnouncement.typeLabel")}</Text>
             <View style={styles.typeSelector}>
               {["general", "urgent", "event", "meeting"].map((type) => (
                 <TouchableOpacity
@@ -273,16 +274,16 @@ export default function AddUnionAnnouncementScreen() {
               trackColor={{ false: COLORS.lightGray, true: COLORS.primary }}
               thumbColor={formData.isImportant ? COLORS.white : COLORS.gray}
             />
-            <Text style={styles.switchLabel}>إعلان مهم (سيظهر في المقدمة)</Text>
+            <Text style={styles.switchLabel}>{t("addAnnouncement.important")}</Text>
           </View>
         </View>
 
         {/* Additional Information */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>معلومات إضافية</Text>
+          <Text style={styles.sectionTitle}>{t("addAnnouncement.additionalInfo")}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>تاريخ الإعلان</Text>
+            <Text style={styles.inputLabel}>{t("addAnnouncement.dateLabel")}</Text>
             <View style={styles.dateInputContainer}>
               <Calendar size={20} color={COLORS.primary} />
               <TextInput
@@ -296,7 +297,7 @@ export default function AddUnionAnnouncementScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>رابط ذات صلة</Text>
+            <Text style={styles.inputLabel}>{t("addAnnouncement.relatedLink")}</Text>
             <View style={styles.linkInputContainer}>
               <Link size={20} color={COLORS.primary} />
               <TextInput
@@ -312,12 +313,12 @@ export default function AddUnionAnnouncementScreen() {
 
           {formData.link && (
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>نص الرابط</Text>
+              <Text style={styles.inputLabel}>{t("addAnnouncement.linkText")}</Text>
               <TextInput
                 style={styles.textInput}
                 value={formData.linkText}
                 onChangeText={(text) => setFormData((prev) => ({ ...prev, linkText: text }))}
-                placeholder="مثال: رابط التسجيل، المزيد من التفاصيل"
+                placeholder={t("addAnnouncement.enterLinkText")}
                 textAlign="right"
               />
             </View>
@@ -326,7 +327,7 @@ export default function AddUnionAnnouncementScreen() {
 
         {/* Image Upload */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>صورة الإعلان</Text>
+          <Text style={styles.sectionTitle}>{t("addAnnouncement.imageSection")}</Text>
 
           <ImageUploader
             onUploadComplete={(url) => setFormData((prev) => ({ ...prev, image: url }))}
@@ -337,7 +338,7 @@ export default function AddUnionAnnouncementScreen() {
         {/* Preview Section */}
         {formData.title && formData.content && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>معاينة الإعلان</Text>
+            <Text style={styles.sectionTitle}>{t("addAnnouncement.preview")}</Text>
             <View style={styles.previewCard}>
               <View style={styles.previewHeader}>
                 <View style={styles.previewMeta}>
@@ -360,7 +361,7 @@ export default function AddUnionAnnouncementScreen() {
                   </View>
                   {formData.isImportant && (
                     <View style={styles.previewImportantBadge}>
-                      <Text style={styles.previewImportantText}>مهم</Text>
+                      <Text style={styles.previewImportantText}>{t("addAnnouncement.importantBadge")}</Text>
                     </View>
                   )}
                   <Text style={styles.previewDate}>{formData.date}</Text>
@@ -371,12 +372,12 @@ export default function AddUnionAnnouncementScreen() {
               <Text style={styles.previewContent}>{formData.content}</Text>
               <Text style={styles.previewContent}>{formData.link}</Text>
 
-              {formData.author && <Text style={styles.previewAuthor}>بواسطة: {formData.author}</Text>}
+              {formData.author && <Text style={styles.previewAuthor}>{t("addAnnouncement.by")}{formData.author}</Text>}
 
               {formData.link && (
                 <View style={styles.previewLink}>
                   <Link size={14} color={COLORS.primary} />
-                  <Text style={styles.previewLinkText}>{formData.linkText || "رابط ذات صلة"}</Text>
+                  <Text style={styles.previewLinkText}>{formData.linkText || t("addAnnouncement.relatedLink")}</Text>
                 </View>
               )}
             </View>
@@ -386,7 +387,7 @@ export default function AddUnionAnnouncementScreen() {
         {/* Action Buttons */}
         <View style={styles.actionSection}>
           <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-            <Text style={styles.cancelButtonText}>إلغاء</Text>
+            <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -395,7 +396,7 @@ export default function AddUnionAnnouncementScreen() {
             disabled={createAnnouncementMutation.isPending || !formData.title || !formData.content}
           >
             <Text style={styles.saveActionButtonText}>
-              {createAnnouncementMutation.isPending ? "جاري الحفظ..." : "نشر الإعلان"}
+              {createAnnouncementMutation.isPending ? t("common.sending") : t("addAnnouncement.publish")}
             </Text>
           </TouchableOpacity>
         </View>

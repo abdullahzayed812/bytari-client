@@ -22,6 +22,7 @@ import { AdminTopBar } from "../components/AdminTopBar";
 
 import Button from "../components/Button";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useI18n } from "@/providers/I18nProvider";
 
 type SearchCategory = "users" | "pets" | "clinics" | "stores" | "inquiries" | "consultations" | "all";
 
@@ -42,6 +43,7 @@ interface SearchResult {
 }
 
 export default function AdminSearchScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const { hasAdminAccess, isSuperAdmin } = useApp();
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -70,19 +72,19 @@ export default function AdminSearchScreen() {
   const updateUserMutation = useMutation(trpc.admin.users.updateProfile.mutationOptions());
 
   if (!hasAdminAccess) {
-    Alert.alert("خطأ", "ليس لديك صلاحية للوصول إلى هذه الصفحة");
+    Alert.alert(t("common.error"), t("adminSearch.noAccess"));
     router.back();
     return null;
   }
 
   const categories = [
-    { key: "all" as SearchCategory, label: "الكل", icon: Search, color: COLORS.primary },
-    { key: "users" as SearchCategory, label: "المستخدمين", icon: User, color: COLORS.info },
-    { key: "pets" as SearchCategory, label: "الحيوانات", icon: Heart, color: COLORS.success },
-    { key: "clinics" as SearchCategory, label: "العيادات", icon: Building2, color: COLORS.warning },
-    { key: "stores" as SearchCategory, label: "المتاجر", icon: ShoppingBag, color: "#9C27B0" },
-    { key: "inquiries" as SearchCategory, label: "الاستفسارات", icon: FileText, color: "#FF5722" },
-    { key: "consultations" as SearchCategory, label: "الاستشارات", icon: MessageCircle, color: "#795548" },
+    { key: "all" as SearchCategory, label: t("adminSearch.catAll"), icon: Search, color: COLORS.primary },
+    { key: "users" as SearchCategory, label: t("adminSearch.catUsers"), icon: User, color: COLORS.info },
+    { key: "pets" as SearchCategory, label: t("adminSearch.catPets"), icon: Heart, color: COLORS.success },
+    { key: "clinics" as SearchCategory, label: t("adminSearch.catClinics"), icon: Building2, color: COLORS.warning },
+    { key: "stores" as SearchCategory, label: t("adminSearch.catStores"), icon: ShoppingBag, color: "#9C27B0" },
+    { key: "inquiries" as SearchCategory, label: t("adminSearch.catInquiries"), icon: FileText, color: "#FF5722" },
+    { key: "consultations" as SearchCategory, label: t("adminSearch.catConsultations"), icon: MessageCircle, color: "#795548" },
   ];
 
   const getResultIcon = (type: SearchCategory) => {
@@ -131,8 +133,8 @@ export default function AdminSearchScreen() {
         .map((user: any) => ({
           id: user.id.toString(),
           type: "users" as SearchCategory,
-          title: user.name || "مستخدم بدون اسم",
-          subtitle: user.userType === "vet" ? "طبيب بيطري" : user.userType === "admin" ? "مشرف" : "مستخدم",
+          title: user.name || t("adminSearch.unnamedUser"),
+          subtitle: user.userType === "vet" ? t("userType.vet") : user.userType === "admin" ? t("userType.supervisor") : t("userType.user"),
           status: user.isActive ? "نشط" : "محظور",
           details: `ID: ${user.id} • ${user.email || "بدون بريد"} • انضم: ${new Date(user.createdAt).toLocaleDateString(
             "ar-SA"
@@ -157,8 +159,8 @@ export default function AdminSearchScreen() {
         .map((store: any) => ({
           id: store.id.toString(),
           type: "stores" as SearchCategory,
-          title: store.name || "متجر بدون اسم",
-          subtitle: "متجر مستلزمات",
+          title: store.name || t("adminSearch.unnamedStore"),
+          subtitle: t("adminSearch.suppliesStore"),
           status: store.isActive ? "نشط" : "معطل",
           details: `${store.description || "بدون وصف"} • ${store.location || "موقع غير محدد"}`,
           timestamp: new Date(store.createdAt),
@@ -220,9 +222,9 @@ export default function AdminSearchScreen() {
   const handleBanItem = (result: SearchResult) => {
     if (result.type !== "users") return;
 
-    const action = result.isActive ? "حظر" : "إلغاء حظر";
-    Alert.alert(`${action} المستخدم`, `هل أنت متأكد من ${action} هذا المستخدم؟`, [
-      { text: "إلغاء", style: "cancel" },
+    const action = result.isActive ? t("adminSearch.ban") : t("adminSearch.unban");
+    Alert.alert(t("adminSearch.banUserTitle").replace("{action}", action), t("adminSearch.banUserConfirm").replace("{action}", action), [
+      { text: t("common.cancel"), style: "cancel" },
       {
         text: action,
         style: result.isActive ? "destructive" : "default",
@@ -239,7 +241,7 @@ export default function AdminSearchScreen() {
                 handleSearch(); // Refresh search results
               },
               onError: (error: any) => {
-                Alert.alert("خطأ", error.message || "حدث خطأ أثناء تحديث المستخدم");
+                Alert.alert(t("common.error"), error.message || t("adminSearch.updateUserError"));
               },
             }
           );
@@ -249,11 +251,11 @@ export default function AdminSearchScreen() {
   };
 
   const handleDeleteItem = (result: SearchResult) => {
-    const itemType = result.type === "users" ? "المستخدم" : result.type === "stores" ? "المتجر" : "العنصر";
-    Alert.alert(`حذف ${itemType}`, `هل أنت متأكد من حذف ${itemType}؟ هذا الإجراء لا يمكن التراجع عنه.`, [
-      { text: "إلغاء", style: "cancel" },
+    const itemType = result.type === "users" ? t("adminSearch.theUser") : result.type === "stores" ? t("adminSearch.theStore") : t("adminSearch.theItem");
+    Alert.alert(t("adminSearch.deleteTitle").replace("{item}", itemType), t("adminSearch.deleteConfirm").replace("{item}", itemType), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "حذف",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           if (result.type === "users") {
@@ -268,12 +270,12 @@ export default function AdminSearchScreen() {
                   handleSearch(); // Refresh search results
                 },
                 onError: (error: any) => {
-                  Alert.alert("خطأ", error.message || "حدث خطأ أثناء حذف المستخدم");
+                  Alert.alert(t("common.error"), error.message || t("adminSearch.deleteUserError"));
                 },
               }
             );
           } else {
-            Alert.alert("تنبيه", "حذف هذا النوع من العناصر غير متاح حالياً");
+            Alert.alert(t("common.error"), t("adminSearch.deleteNotAvailable"));
           }
         },
       },
@@ -298,17 +300,17 @@ export default function AdminSearchScreen() {
           onSuccess: () => {
             usersQuery.refetch();
             handleSearch(); // Refresh search results
-            Alert.alert("تم", "تم حفظ التغييرات بنجاح");
+            Alert.alert(t("common.success"), t("adminSearch.saveSuccess"));
             setShowEditModal(false);
             setSelectedItem(null);
           },
           onError: (error: any) => {
-            Alert.alert("خطأ", error.message || "حدث خطأ أثناء حفظ التغييرات");
+            Alert.alert(t("common.error"), error.message || t("adminSearch.saveError"));
           },
         }
       );
     } else {
-      Alert.alert("تنبيه", "تعديل هذا النوع من العناصر غير متاح حالياً");
+      Alert.alert(t("common.error"), t("adminSearch.editNotAvailable"));
     }
   };
 
@@ -324,7 +326,7 @@ export default function AdminSearchScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "البحث الإداري",
+          title: t("adminSearch.title"),
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" },
@@ -339,14 +341,14 @@ export default function AdminSearchScreen() {
           <Search size={20} color={COLORS.gray} />
           <TextInput
             style={styles.searchInput}
-            placeholder="ابحث بالاسم، الإيميل، أو رقم ID..."
+            placeholder={t("adminSearch.placeholder")}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Text style={styles.searchButtonText}>بحث</Text>
+            <Text style={styles.searchButtonText}>{t("common.search")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -450,27 +452,27 @@ export default function AdminSearchScreen() {
           </ScrollView>
         ) : isSearching ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>جاري البحث...</Text>
+            <Text style={styles.loadingText}>{t("adminSearch.searching")}</Text>
           </View>
         ) : usersQuery.isLoading || storesQuery.isLoading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>جاري تحميل البيانات...</Text>
+            <Text style={styles.loadingText}>{t("common.loadingDetails")}</Text>
           </View>
         ) : usersQuery.error || storesQuery.error ? (
           <View style={styles.emptyState}>
             <Search size={48} color={COLORS.error} />
-            <Text style={styles.emptyText}>خطأ في تحميل البيانات</Text>
+            <Text style={styles.emptyText}>{t("adminSearch.loadError")}</Text>
           </View>
         ) : searchQuery ? (
           <View style={styles.emptyState}>
             <Search size={48} color={COLORS.gray} />
-            <Text style={styles.emptyText}>لا توجد نتائج للبحث</Text>
+            <Text style={styles.emptyText}>{t("adminSearch.noResults")}</Text>
           </View>
         ) : (
           <View style={styles.emptyState}>
             <Search size={48} color={COLORS.gray} />
-            <Text style={styles.emptyText}>ابدأ البحث للعثور على النتائج</Text>
-            <Text style={styles.emptySubtext}>يمكنك البحث بالاسم، الإيميل، أو رقم ID في المستخدمين والمتاجر</Text>
+            <Text style={styles.emptyText}>{t("adminSearch.startSearching")}</Text>
+            <Text style={styles.emptySubtext}>{t("adminSearch.searchHint")}</Text>
           </View>
         )}
       </View>
@@ -484,7 +486,7 @@ export default function AdminSearchScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>تعديل {selectedItem?.type === "users" ? "المستخدم" : "الحيوان"}</Text>
+            <Text style={styles.modalTitle}>{t("common.edit")} {selectedItem?.type === "users" ? t("adminSearch.theUser") : t("adminSearch.thePet")}</Text>
             <TouchableOpacity onPress={() => setShowEditModal(false)}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
@@ -493,33 +495,33 @@ export default function AdminSearchScreen() {
           <ScrollView style={styles.modalContent}>
             {selectedItem?.type === "users" ? (
               <>
-                <Text style={styles.fieldLabel}>الاسم</Text>
+                <Text style={styles.fieldLabel}>{t("adminSearch.nameLabel")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.name}
                   onChangeText={(value) => setEditForm((prev) => ({ ...prev, name: value }))}
-                  placeholder="أدخل الاسم"
+                  placeholder={t("adminSearch.enterName")}
                 />
 
-                <Text style={styles.fieldLabel}>البريد الإلكتروني</Text>
+                <Text style={styles.fieldLabel}>{t("adminSearch.emailLabel")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.email}
                   onChangeText={(value) => setEditForm((prev) => ({ ...prev, email: value }))}
-                  placeholder="أدخل البريد الإلكتروني"
+                  placeholder={t("adminSearch.enterEmail")}
                   keyboardType="email-address"
                 />
 
-                <Text style={styles.fieldLabel}>رقم الهاتف</Text>
+                <Text style={styles.fieldLabel}>{t("adminSearch.phoneLabel")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.phone}
                   onChangeText={(value) => setEditForm((prev) => ({ ...prev, phone: value }))}
-                  placeholder="أدخل رقم الهاتف"
+                  placeholder={t("adminSearch.enterPhone")}
                   keyboardType="phone-pad"
                 />
 
-                <Text style={styles.fieldLabel}>نوع المستخدم</Text>
+                <Text style={styles.fieldLabel}>{t("adminSearch.userTypeLabel")}</Text>
                 <View style={styles.userTypeContainer}>
                   {["user", "vet", "admin"].map((type) => (
                     <TouchableOpacity
@@ -528,14 +530,14 @@ export default function AdminSearchScreen() {
                       onPress={() => setEditForm((prev) => ({ ...prev, userType: type }))}
                     >
                       <Text style={[styles.userTypeText, editForm.userType === type && styles.userTypeTextSelected]}>
-                        {type === "user" ? "مستخدم" : type === "vet" ? "طبيب" : "مشرف"}
+                        {type === "user" ? t("userType.user") : type === "vet" ? t("userType.vet") : t("userType.supervisor")}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
                 <View style={styles.switchContainer}>
-                  <Text style={styles.fieldLabel}>الحساب نشط</Text>
+                  <Text style={styles.fieldLabel}>{t("adminSearch.accountActive")}</Text>
                   <TouchableOpacity
                     style={[styles.switch, editForm.isActive && styles.switchActive]}
                     onPress={() => setEditForm((prev) => ({ ...prev, isActive: !prev.isActive }))}
@@ -546,32 +548,32 @@ export default function AdminSearchScreen() {
               </>
             ) : (
               <>
-                <Text style={styles.fieldLabel}>اسم الحيوان</Text>
+                <Text style={styles.fieldLabel}>{t("adminSearch.petName")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.name}
                   onChangeText={(value) => setEditForm((prev) => ({ ...prev, name: value }))}
-                  placeholder="أدخل اسم الحيوان"
+                  placeholder={t("adminSearch.enterPetName")}
                 />
 
-                <Text style={styles.fieldLabel}>نوع الحيوان</Text>
+                <Text style={styles.fieldLabel}>{t("adminSearch.petType")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.type}
                   onChangeText={(value) => setEditForm((prev) => ({ ...prev, type: value }))}
-                  placeholder="أدخل نوع الحيوان"
+                  placeholder={t("adminSearch.enterPetType")}
                 />
 
-                <Text style={styles.fieldLabel}>السلالة</Text>
+                <Text style={styles.fieldLabel}>{t("adoptionPet.pedigree")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={editForm.breed}
                   onChangeText={(value) => setEditForm((prev) => ({ ...prev, breed: value }))}
-                  placeholder="أدخل السلالة"
+                  placeholder={t("adminSearch.enterBreed")}
                 />
 
                 <View style={styles.switchContainer}>
-                  <Text style={styles.fieldLabel}>مفقود</Text>
+                  <Text style={styles.fieldLabel}>{t("common.lost")}</Text>
                   <TouchableOpacity
                     style={[styles.switch, editForm.isLost && styles.switchActive]}
                     onPress={() => setEditForm((prev) => ({ ...prev, isLost: !prev.isLost }))}
@@ -585,14 +587,14 @@ export default function AdminSearchScreen() {
 
           <View style={styles.modalFooter}>
             <Button
-              title="إلغاء"
+              title={t("common.cancel")}
               onPress={() => setShowEditModal(false)}
               type="outline"
               size="medium"
               style={styles.modalButton}
             />
             <Button
-              title={updateUserMutation.isPending ? "جاري الحفظ..." : "حفظ"}
+              title={updateUserMutation.isPending ? t("common.loading") : t("common.save")}
               onPress={handleSaveEdit}
               type="primary"
               size="medium"

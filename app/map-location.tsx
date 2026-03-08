@@ -5,6 +5,7 @@ import { COLORS } from "../constants/colors";
 
 import Button from "../components/Button";
 import { MapPin, Navigation, Check } from 'lucide-react-native';
+import { useI18n } from "../providers/I18nProvider";
 
 interface Location {
   latitude: number;
@@ -12,6 +13,7 @@ interface Location {
 }
 
 export default function MapLocationScreen() {
+  const { t } = useI18n();
   const params = useLocalSearchParams();
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
@@ -91,7 +93,7 @@ export default function MapLocationScreen() {
 
   const handleConfirmLocation = () => {
     if (!selectedLocation) {
-      Alert.alert('خطأ', 'يرجى اختيار موقع على الخريطة');
+      Alert.alert(t("common.error"), t("mapLocation.selectLocationMsg"));
       return;
     }
 
@@ -112,11 +114,11 @@ export default function MapLocationScreen() {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${selectedLocation.latitude},${selectedLocation.longitude}`;
     console.log('Opening maps app with URL:', url);
     Alert.alert(
-      'فتح في تطبيق الخرائط',
-      'سيتم فتح تطبيق الخرائط لعرض الاتجاهات',
+      t("mapLocation.openMaps"),
+      t("mapLocation.openMapsDesc"),
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'فتح', onPress: () => console.log('Opening maps app') }
+        { text: t("common.cancel"), style: 'cancel' },
+        { text: t("mapLocation.open"), onPress: () => console.log('Opening maps app') }
       ]
     );
   };
@@ -131,39 +133,33 @@ export default function MapLocationScreen() {
       <View style={styles.mapPlaceholder}>
         <MapPin size={40} color={COLORS.primary} />
         <Text style={styles.mapPlaceholderText}>
-          {isDirectionsMode ? 'خريطة الاتجاهات' : 'خريطة تفاعلية'}
+          {isDirectionsMode ? t("mapLocation.directionsMap") : t("mapLocation.interactiveMap")}
         </Text>
-        
+
         {isDirectionsMode && clinicName ? (
           <View style={styles.clinicInfo}>
             <Text style={styles.clinicNameText}>{clinicName}</Text>
             <Text style={styles.clinicAddressText}>{clinicAddress}</Text>
-            <Text style={styles.mapInstructions}>
-              في التطبيق الحقيقي، ستظهر هنا خريطة تفاعلية مع الاتجاهات
-            </Text>
+            <Text style={styles.mapInstructions}>{t("mapLocation.realMapDirections")}</Text>
           </View>
         ) : (
           <>
-            <Text style={styles.mapInstructions}>
-              في التطبيق الحقيقي، ستظهر هنا خريطة تفاعلية
-            </Text>
-            <Text style={styles.mapInstructions}>
-              يمكنك النقر على أي مكان لتحديد الموقع
-            </Text>
+            <Text style={styles.mapInstructions}>{t("mapLocation.realMap")}</Text>
+            <Text style={styles.mapInstructions}>{t("mapLocation.tapToSelect")}</Text>
           </>
         )}
-        
+
         {selectedLocation && (
           <View style={styles.selectedLocationInfo}>
             <Text style={styles.selectedLocationText}>
-              {isDirectionsMode ? 'موقع العيادة:' : 'الموقع المحدد:'}
+              {isDirectionsMode ? t("mapLocation.clinicLocation") : t("mapLocation.selectedLocation")}
             </Text>
             <Text style={styles.coordinatesText}>
               {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
             </Text>
             {currentLocation && isDirectionsMode && (
               <Text style={styles.distanceText}>
-                المسافة التقريبية: {calculateDistance(currentLocation, selectedLocation)} كم
+                {t("mapLocation.distance").replace("{n}", calculateDistance(currentLocation, selectedLocation))}
               </Text>
             )}
           </View>
@@ -174,10 +170,10 @@ export default function MapLocationScreen() {
             style={styles.mockClickArea}
             onPress={() => handleMapPress(24.7136 + (Math.random() - 0.5) * 0.01, 46.6753 + (Math.random() - 0.5) * 0.01)}
           >
-            <Text style={styles.mockClickText}>انقر هنا لتحديد موقع عشوائي</Text>
+            <Text style={styles.mockClickText}>{t("mapLocation.tapRandom")}</Text>
           </TouchableOpacity>
         )}
-        
+
         {isDirectionsMode && (
           <TouchableOpacity
             style={styles.mockClickArea}
@@ -186,7 +182,7 @@ export default function MapLocationScreen() {
               console.log('Opening external maps app for directions');
             }}
           >
-            <Text style={styles.mockClickText}>فتح في تطبيق الخرائط</Text>
+            <Text style={styles.mockClickText}>{t("mapLocation.openMaps")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -197,7 +193,7 @@ export default function MapLocationScreen() {
     <View style={styles.container}>
       <Stack.Screen 
         options={{ 
-          title: isDirectionsMode ? 'الاتجاهات إلى العيادة' : 'تحديد الموقع',
+          title: isDirectionsMode ? t("mapLocation.directionsTitle") : t("mapLocation.selectLocationTitle"),
           headerShown: true,
         }} 
       />
@@ -210,15 +206,13 @@ export default function MapLocationScreen() {
           onPress={handleUseCurrentLocation}
         >
           <Navigation size={20} color={COLORS.white} />
-          <Text style={styles.currentLocationText}>
-            استخدام موقعي الحالي
-          </Text>
+          <Text style={styles.currentLocationText}>{t("mapLocation.useCurrentLocation")}</Text>
         </TouchableOpacity>
 
         <View style={styles.footer}>
           {isDirectionsMode ? (
             <Button
-              title="فتح في تطبيق الخرائط"
+              title={t("mapLocation.openMaps")}
               onPress={openInMapsApp}
               type="primary"
               style={styles.confirmButton}
@@ -227,7 +221,7 @@ export default function MapLocationScreen() {
             />
           ) : (
             <Button
-              title="تأكيد الموقع"
+              title={t("mapLocation.confirmLocation")}
               onPress={handleConfirmLocation}
               type="primary"
               style={styles.confirmButton}

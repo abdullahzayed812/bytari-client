@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { COLORS } from "../constants/colors";
 import { Stack, router } from 'expo-router';
 import { ArrowRight, HelpCircle, ChevronDown, ChevronUp, MessageCircle, Phone, Mail } from 'lucide-react-native';
+import { useI18n } from "@/providers/I18nProvider";
 
 interface FAQItem {
   id: string;
@@ -11,44 +12,21 @@ interface FAQItem {
 }
 
 export default function HelpScreen() {
+  const { t } = useI18n();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const faqData: FAQItem[] = [
-    {
-      id: '1',
-      question: 'كيف يمكنني إضافة حيوان أليف جديد؟',
-      answer: 'يمكنك إضافة حيوان أليف جديد من خلال الذهاب إلى قسم "حيواناتي الأليفة" والضغط على زر "إضافة حيوان أليف". ستحتاج إلى ملء المعلومات الأساسية مثل الاسم والنوع والعمر.'
-    },
-    {
-      id: '2',
-      question: 'كيف يمكنني حجز موعد مع طبيب بيطري؟',
-      answer: 'يمكنك حجز موعد من خلال قسم "العيادات" واختيار العيادة المناسبة، ثم تحديد التاريخ والوقت المناسب. ستتلقى تأكيد الحجز عبر الإشعارات.'
-    },
-    {
-      id: '3',
-      question: 'كيف يمكنني الإبلاغ عن حيوان مفقود؟',
-      answer: 'اذهب إلى قسم "الحيوانات المفقودة" واضغط على "الإبلاغ عن حيوان مفقود". أدخل تفاصيل الحيوان وصورته وموقع فقدانه لمساعدة الآخرين في العثور عليه.'
-    },
-    {
-      id: '4',
-      question: 'كيف يمكنني تغيير معلومات حسابي؟',
-      answer: 'اذهب إلى "الملف الشخصي" ثم "الإعدادات" واختر "إعدادات الحساب". يمكنك تعديل اسمك وبريدك الإلكتروني ورقم هاتفك من هناك.'
-    },
-    {
-      id: '5',
-      question: 'كيف يمكنني إيقاف الإشعارات؟',
-      answer: 'يمكنك إدارة الإشعارات من خلال "الإعدادات" ثم "إعدادات الإشعارات". يمكنك اختيار نوع الإشعارات التي تريد تلقيها أو إيقافها تماماً.'
-    },
-    {
-      id: '6',
-      question: 'كيف يمكنني الشراء من المتجر؟',
-      answer: 'اذهب إلى قسم "المتجر" واختر المنتجات التي تريدها. أضفها إلى السلة ثم اضغط على "الدفع" لإكمال عملية الشراء.'
-    }
+    { id: '1', question: t("help.faq.q1"), answer: t("help.faq.a1") },
+    { id: '2', question: t("help.faq.q2"), answer: t("help.faq.a2") },
+    { id: '3', question: t("help.faq.q3"), answer: t("help.faq.a3") },
+    { id: '4', question: t("help.faq.q4"), answer: t("help.faq.a4") },
+    { id: '5', question: t("help.faq.q5"), answer: t("help.faq.a5") },
+    { id: '6', question: t("help.faq.q6"), answer: t("help.faq.a6") },
   ];
 
   const toggleExpanded = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
+    setExpandedItems(prev =>
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
@@ -56,9 +34,9 @@ export default function HelpScreen() {
 
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'المساعدة والدعم',
+          title: t("help.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black, fontWeight: 'bold' },
           headerLeft: () => (
@@ -68,22 +46,20 @@ export default function HelpScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <HelpCircle size={40} color={COLORS.white} />
-          <Text style={styles.headerText}>
-            نحن هنا لمساعدتك! ابحث عن إجابات لأسئلتك الشائعة
-          </Text>
+          <Text style={styles.headerText}>{t("help.headerText")}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>الأسئلة الشائعة</Text>
-          
+          <Text style={styles.sectionTitle}>{t("help.faqTitle")}</Text>
+
           <View style={styles.faqCard}>
             {faqData.map((item, index) => (
               <View key={item.id}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.faqItem}
                   onPress={() => toggleExpanded(item.id)}
                 >
@@ -96,13 +72,13 @@ export default function HelpScreen() {
                     )}
                   </View>
                 </TouchableOpacity>
-                
+
                 {expandedItems.includes(item.id) && (
                   <View style={styles.faqAnswer}>
                     <Text style={styles.faqAnswerText}>{item.answer}</Text>
                   </View>
                 )}
-                
+
                 {index < faqData.length - 1 && <View style={styles.separator} />}
               </View>
             ))}
@@ -110,46 +86,46 @@ export default function HelpScreen() {
         </View>
 
         <View style={styles.contactSection}>
-          <Text style={styles.contactTitle}>لم تجد ما تبحث عنه؟</Text>
-          <Text style={styles.contactSubtitle}>تواصل معنا مباشرة</Text>
-          
+          <Text style={styles.contactTitle}>{t("help.notFound")}</Text>
+          <Text style={styles.contactSubtitle}>{t("help.contactUs")}</Text>
+
           <View style={styles.contactOptions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.contactOption}
               onPress={() => router.push('/contact-us')}
             >
               <MessageCircle size={24} color={COLORS.primary} />
-              <Text style={styles.contactOptionText}>إرسال رسالة</Text>
+              <Text style={styles.contactOptionText}>{t("help.sendMessage")}</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.contactOption}>
               <Phone size={24} color={COLORS.primary} />
-              <Text style={styles.contactOptionText}>اتصال هاتفي</Text>
+              <Text style={styles.contactOptionText}>{t("help.phoneCall")}</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.contactOption}>
               <Mail size={24} color={COLORS.primary} />
-              <Text style={styles.contactOptionText}>بريد إلكتروني</Text>
+              <Text style={styles.contactOptionText}>{t("common.email")}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.tipsSection}>
-          <Text style={styles.tipsTitle}>نصائح للاستخدام الأمثل</Text>
+          <Text style={styles.tipsTitle}>{t("help.tipsTitle")}</Text>
           <View style={styles.tipsCard}>
             <View style={styles.tipItem}>
-              <Text style={styles.tipTitle}>• حدث معلومات حيوانك الأليف</Text>
-              <Text style={styles.tipDescription}>تأكد من تحديث معلومات حيوانك الأليف بانتظام للحصول على أفضل رعاية</Text>
+              <Text style={styles.tipTitle}>{t("help.tip1.title")}</Text>
+              <Text style={styles.tipDescription}>{t("help.tip1.desc")}</Text>
             </View>
-            
+
             <View style={styles.tipItem}>
-              <Text style={styles.tipTitle}>• فعل الإشعارات</Text>
-              <Text style={styles.tipDescription}>فعل الإشعارات لتلقي تذكيرات المواعيد والتطعيمات</Text>
+              <Text style={styles.tipTitle}>{t("help.tip2.title")}</Text>
+              <Text style={styles.tipDescription}>{t("help.tip2.desc")}</Text>
             </View>
-            
+
             <View style={styles.tipItem}>
-              <Text style={styles.tipTitle}>• استخدم البحث</Text>
-              <Text style={styles.tipDescription}>استخدم خاصية البحث للعثور بسرعة على ما تحتاجه</Text>
+              <Text style={styles.tipTitle}>{t("help.tip3.title")}</Text>
+              <Text style={styles.tipDescription}>{t("help.tip3.desc")}</Text>
             </View>
           </View>
         </View>

@@ -256,7 +256,7 @@ export default function ProfileScreen() {
                     router.push("/points-exchange");
                   }}
                 >
-                  <Text style={styles.pointsHistory}>استبدال النقاط</Text>
+                  <Text style={styles.pointsHistory}>{t("profile.redeemPoints")}</Text>
                 </TouchableOpacity>
               </View>
               <Text style={styles.pointsValue}>{user?.points}</Text>
@@ -308,16 +308,16 @@ export default function ProfileScreen() {
             <View style={styles.hiddenSectionIndicator}>
               <View style={styles.hiddenSectionContent}>
                 <EyeOff size={20} color={COLORS.darkGray} />
-                <Text style={styles.hiddenSectionText}>العضوية المميزة (مخفية)</Text>
+                <Text style={styles.hiddenSectionText}>{t("profile.premiumHidden")}</Text>
               </View>
               <View style={styles.adminControls}>
                 <TouchableOpacity style={styles.adminControlButton} onPress={handleEditPremiumSection}>
                   <Edit3 size={16} color={COLORS.primary} />
-                  <Text style={styles.adminControlText}>تعديل</Text>
+                  <Text style={styles.adminControlText}>{t("common.edit")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.adminControlButton} onPress={togglePremiumSectionVisibility}>
                   <Eye size={16} color={COLORS.primary} />
-                  <Text style={styles.adminControlText}>إظهار</Text>
+                  <Text style={styles.adminControlText}>{t("common.show")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -327,7 +327,7 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/favorites")}>
               <View style={styles.menuItemLeft}>
                 <Heart size={20} color={COLORS.darkGray} />
-                <Text style={styles.menuItemText}>المفضلة</Text>
+                <Text style={styles.menuItemText}>{t("profile.favorites")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
                 {isRTL ? (
@@ -341,7 +341,7 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/orders")}>
               <View style={styles.menuItemLeft}>
                 <ShoppingBag size={20} color={COLORS.darkGray} />
-                <Text style={styles.menuItemText}>طلباتي</Text>
+                <Text style={styles.menuItemText}>{t("profile.myOrders")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
                 {isRTL ? (
@@ -357,7 +357,7 @@ export default function ProfileScreen() {
               <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/add-store")}>
                 <View style={styles.menuItemLeft}>
                   <Store size={20} color={COLORS.darkGray} />
-                  <Text style={styles.menuItemText}>إضافة مذخر</Text>
+                  <Text style={styles.menuItemText}>{t("profile.addOffice")}</Text>
                 </View>
                 <View style={{ width: 20, height: 20 }}>
                   {isRTL ? (
@@ -424,7 +424,7 @@ export default function ProfileScreen() {
             <TouchableOpacity style={styles.menuItem} onPress={() => router.push("/contact-us")}>
               <View style={styles.menuItemLeft}>
                 <Phone size={20} color={COLORS.darkGray} />
-                <Text style={styles.menuItemText}>تواصل معنا</Text>
+                <Text style={styles.menuItemText}>{t("profile.contactUs")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
                 {isRTL ? (

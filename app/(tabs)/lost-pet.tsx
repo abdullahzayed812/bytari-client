@@ -17,10 +17,12 @@ import { trpc } from "../../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../providers/AppProvider";
 import { useState } from "react";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function LostPetScreen() {
+  const { t } = useI18n();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useApp(); // Get current user
+  const { user } = useApp();
 
   const queryClient = useQueryClient();
 
@@ -51,7 +53,7 @@ export default function LostPetScreen() {
     ...trpc.pets.sighting.getReports.queryOptions({
       lostPetId: pet?.id ? Number(pet.id) : -1,
     }),
-    enabled: isOwner && !!pet?.id, // Only fetch reports if user is owner and pet data is available
+    enabled: isOwner && !!pet?.id,
   });
   const sightingReports = reportsData?.reports;
 
@@ -62,22 +64,22 @@ export default function LostPetScreen() {
   const handleCloseReport = (reportId: number) => {
     if (!user?.id || !pet?.contactInfo?.ownerId) return;
 
-    Alert.alert("تأكيد الإغلاق", "هل أنت متأكد أنك تريد إغلاق هذا البلاغ؟ سيتم تحديث حالة الحيوان إلى'مغلق'.", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("lostPet.confirmClose"), t("lostPet.confirmCloseMsg"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "نعم، إغلاق",
+        text: t("lostPet.yesClose"),
         onPress: () => {
           closeReportMutation.mutate(
             { reportId, ownerId: user.id },
             {
               onSuccess: () => {
-                Alert.alert("تم الإغلاق", "تم إغلاق البلاغ بنجاح.");
-                refetchReports(); // Refetch reports to update the list
-                refetch(); // Refetch pet details to update status
+                Alert.alert(t("lostPet.closedTitle"), t("lostPet.closedMsg"));
+                refetchReports();
+                refetch();
                 queryClient.invalidateQueries(trpc.pets.getApproved.queryKey as any);
               },
               onError: (err) => {
-                Alert.alert("خطأ", "حدث خطأ أثناء إغلاق البلاغ: " + err.message);
+                Alert.alert(t("common.error"), t("lostPet.closeError") + err.message);
               },
             },
           );
@@ -89,22 +91,22 @@ export default function LostPetScreen() {
   const handleDismissReport = (reportId: number) => {
     if (!user?.id || !pet?.contactInfo?.ownerId) return;
 
-    Alert.alert("تأكيد الإزالة", "هل أنت متأكد أنك تريد إزالة هذا البلاغ؟ لن تتمكن من رؤيته مرة أخرى.", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("lostPet.confirmDismiss"), t("lostPet.confirmDismissMsg"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "نعم، إزالة",
+        text: t("lostPet.yesDismiss"),
         onPress: () => {
           dismissReportMutation.mutate(
             { reportId, ownerId: Number(user.id) },
             {
               onSuccess: () => {
-                Alert.alert("تم الإزالة", "تم إزالة البلاغ بنجاح.");
-                refetchReports(); // Refetch reports to update the list
-                refetch(); // Refetch pet details to update status
+                Alert.alert(t("lostPet.dismissedTitle"), t("lostPet.dismissedMsg"));
+                refetchReports();
+                refetch();
                 queryClient.invalidateQueries(trpc.pets.getApproved.queryKey as any);
               },
               onError: (err) => {
-                Alert.alert("خطأ", "حدث خطأ أثناء إزالة البلاغ: " + err.message);
+                Alert.alert(t("common.error"), t("lostPet.dismissError") + err.message);
               },
             },
           );
@@ -131,7 +133,7 @@ export default function LostPetScreen() {
 
   const handleSubmitSightingReport = () => {
     if (!pet?.id || !sightingInfo.sightingLocation.trim()) {
-      Alert.alert("خطأ", "يجب إدخال موقع المشاهدة.");
+      Alert.alert(t("common.error"), t("lostPet.locationRequired"));
       return;
     }
 
@@ -150,7 +152,7 @@ export default function LostPetScreen() {
       },
       {
         onSuccess: () => {
-          Alert.alert("تم الإبلاغ", "شكرا لك على الإبلاغ، سيتم التواصل مع المالك.");
+          Alert.alert(t("lostPet.reportedTitle"), t("lostPet.reportedMsg"));
           setShowSightingReportModal(false);
           setSightingInfo({
             sightingLocation: "",
@@ -159,10 +161,10 @@ export default function LostPetScreen() {
             reporterPhone: user?.phone || "",
             reporterEmail: user?.email || "",
           });
-          refetchReports(); // Refetch reports after a new one is submitted
+          refetchReports();
         },
         onError: (err) => {
-          Alert.alert("خطأ", "حدث خطأ أثناء الإبلاغ: " + err.message);
+          Alert.alert(t("common.error"), t("lostPet.reportError") + err.message);
         },
       },
     );
@@ -171,18 +173,18 @@ export default function LostPetScreen() {
   const getPetStatus = (status: string) => {
     switch (status) {
       case "found":
-        return { text: "تم العثور عليه", color: COLORS.success };
+        return { text: t("lostPet.statusFound"), color: COLORS.success };
       case "closed":
-        return { text: "مغلق", color: COLORS.darkGray };
+        return { text: t("lostPet.statusClosed"), color: COLORS.darkGray };
       default:
-        return { text: "مفقود", color: COLORS.error };
+        return { text: t("lostPet.statusLost"), color: COLORS.error };
     }
   };
 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>جاري التحميل...</Text>
+        <Text style={styles.loadingText}>{t("common.loading")}</Text>
       </View>
     );
   }
@@ -190,7 +192,7 @@ export default function LostPetScreen() {
   if (error || !pet) {
     return (
       <View style={styles.container}>
-        <Text style={styles.notFoundText}>الحيوان غير موجود</Text>
+        <Text style={styles.notFoundText}>{t("lostPet.notFound")}</Text>
       </View>
     );
   }
@@ -215,49 +217,25 @@ export default function LostPetScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <MapPin size={20} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>آخر مشاهدة</Text>
+              <Text style={styles.sectionTitle}>{t("lostPet.lastSeen")}</Text>
             </View>
 
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>الموقع</Text>
+              <Text style={styles.infoLabel}>{t("common.location")}</Text>
               <Text style={styles.infoValue}>{pet.lastSeen.location}</Text>
             </View>
 
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>التاريخ</Text>
+              <Text style={styles.infoLabel}>{t("common.date")}</Text>
               <Text style={styles.infoValue}>{new Date(pet.lastSeen.date).toLocaleDateString("ar-SA")}</Text>
             </View>
           </View>
-
-          {/* <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Phone size={20} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
-            </View>
-
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>الاسم</Text>
-              <Text style={styles.infoValue}>{pet.contactInfo.name || pet.ownerName}</Text>
-            </View>
-
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>الهاتف</Text>
-              <Text style={styles.infoValue}>{pet.contactInfo.phone}</Text>
-            </View>
-
-            {pet.contactInfo.email && (
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>البريد الإلكتروني</Text>
-                <Text style={styles.infoValue}>{pet.contactInfo.email}</Text>
-              </View>
-            )}
-          </View> */}
 
           {pet.description && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AlertTriangle size={20} color={COLORS.primary} />
-                <Text style={styles.sectionTitle}>وصف</Text>
+                <Text style={styles.sectionTitle}>{t("common.description")}</Text>
               </View>
 
               <Text style={styles.description}>{pet.description}</Text>
@@ -268,7 +246,7 @@ export default function LostPetScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AlertTriangle size={20} color={COLORS.warning} />
-                <Text style={styles.sectionTitle}>ملاحظات خاصة</Text>
+                <Text style={styles.sectionTitle}>{t("lostPet.specialNotes")}</Text>
               </View>
 
               <Text style={styles.description}>{pet.specialRequirements}</Text>
@@ -279,10 +257,10 @@ export default function LostPetScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <AlertTriangle size={20} color={COLORS.success} />
-                <Text style={styles.sectionTitle}>مكافأة</Text>
+                <Text style={styles.sectionTitle}>{t("lostPet.reward")}</Text>
               </View>
 
-              <Text style={styles.rewardText}>مكافأة: {pet.reward} دينار</Text>
+              <Text style={styles.rewardText}>{t("lostPet.rewardAmount").replace("{amount}", pet.reward)}</Text>
             </View>
           )}
 
@@ -290,40 +268,40 @@ export default function LostPetScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Mail size={20} color={COLORS.primary} />
-                <Text style={styles.sectionTitle}>بلاغات المشاهدة</Text>
+                <Text style={styles.sectionTitle}>{t("lostPet.sightingReports")}</Text>
               </View>
               {isLoadingReports ? (
-                <Text style={styles.loadingText}>جاري تحميل البلاغات...</Text>
+                <Text style={styles.loadingText}>{t("lostPet.loadingReports")}</Text>
               ) : sightingReports && sightingReports.length > 0 ? (
                 sightingReports.map((report) => (
                   <View key={report.id} style={styles.reportItem}>
-                    <Text style={styles.reportSender}>من: {report.reporterName || "مستخدم مجهول"}</Text>
+                    <Text style={styles.reportSender}>{t("lostPet.from")}{report.reporterName || t("lostPet.unknownUser")}</Text>
                     {report.contactInfo?.phone && (
-                      <Text style={styles.reportContact}>هاتف: {report.contactInfo.phone}</Text>
+                      <Text style={styles.reportContact}>{t("lostPet.phoneLabel")}{report.contactInfo.phone}</Text>
                     )}
                     {report.contactInfo?.email && (
-                      <Text style={styles.reportContact}>بريد: {report.contactInfo.email}</Text>
+                      <Text style={styles.reportContact}>{t("lostPet.emailLabel")}{report.contactInfo.email}</Text>
                     )}
-                    <Text style={styles.reportLocation}>الموقع: {report.sightingLocation}</Text>
+                    <Text style={styles.reportLocation}>{t("lostPet.sightingLocationLabel")}{report.sightingLocation}</Text>
                     <Text style={styles.reportDate}>
-                      التاريخ: {new Date(report.sightingDate).toLocaleDateString("ar-SA")}
+                      {t("lostPet.sightingDateLabel")}{new Date(report.sightingDate).toLocaleDateString("ar-SA")}
                     </Text>
-                    {report.description && <Text style={styles.reportDescription}>الوصف: {report.description}</Text>}
+                    {report.description && <Text style={styles.reportDescription}>{t("lostPet.sightingDescLabel")}{report.description}</Text>}
                     {!report.isDismissed && (
                       <View style={styles.reportActions}>
                         <TouchableOpacity style={styles.dismissButton} onPress={() => handleDismissReport(report.id)}>
-                          <Text style={styles.dismissButtonText}>إزالة التواصل</Text>
+                          <Text style={styles.dismissButtonText}>{t("lostPet.dismissContact")}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.closeButton} onPress={() => handleCloseReport(report.id)}>
-                          <Text style={styles.closeButtonText}>إغلاق البلاغ</Text>
+                          <Text style={styles.closeButtonText}>{t("lostPet.closeReport")}</Text>
                         </TouchableOpacity>
                       </View>
                     )}
-                    {report.isDismissed && <Text style={styles.dismissedText}>تمت إزالة التواصل</Text>}
+                    {report.isDismissed && <Text style={styles.dismissedText}>{t("lostPet.contactDismissed")}</Text>}
                   </View>
                 ))
               ) : (
-                <Text style={styles.infoValue}>لا توجد بلاغات مشاهدة حتى الآن.</Text>
+                <Text style={styles.infoValue}>{t("lostPet.noReports")}</Text>
               )}
             </View>
           )}
@@ -333,19 +311,19 @@ export default function LostPetScreen() {
           <View style={styles.actionButtons}>
             <TouchableOpacity style={styles.callButton} onPress={handleCall}>
               <Phone size={20} color={COLORS.white} />
-              <Text style={styles.callButtonText}>اتصال بالمالك</Text>
+              <Text style={styles.callButtonText}>{t("lostPet.callOwner")}</Text>
             </TouchableOpacity>
 
             {pet.contactInfo.email && (
               <TouchableOpacity style={styles.emailButton} onPress={handleEmail}>
                 <Mail size={20} color={COLORS.primary} />
-                <Text style={styles.emailButtonText}>إرسال بريد</Text>
+                <Text style={styles.emailButtonText}>{t("lostPet.sendEmail")}</Text>
               </TouchableOpacity>
             )}
           </View>
 
           <TouchableOpacity style={styles.reportButton} onPress={handleReportSighting}>
-            <Text style={styles.reportButtonText}>الإبلاغ عن مشاهدة</Text>
+            <Text style={styles.reportButtonText}>{t("lostPet.reportSighting")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -359,20 +337,20 @@ export default function LostPetScreen() {
       >
         <View style={styles.modalOverlay}>
           <ScrollView style={styles.modalContent}>
-            <Text style={styles.modalTitle}>الإبلاغ عن مشاهدة</Text>
+            <Text style={styles.modalTitle}>{t("lostPet.reportSighting")}</Text>
 
-            <Text style={styles.inputLabel}>موقع المشاهدة *</Text>
+            <Text style={styles.inputLabel}>{t("lostPet.sightingLocationInput")}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="أدخل موقع المشاهدة"
+              placeholder={t("lostPet.enterSightingLocation")}
               value={sightingInfo.sightingLocation}
               onChangeText={(text) => setSightingInfo((prev) => ({ ...prev, sightingLocation: text }))}
             />
 
-            <Text style={styles.inputLabel}>الوصف (اختياري)</Text>
+            <Text style={styles.inputLabel}>{t("lostPet.descriptionOptional")}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="وصف مختصر للمشاهدة"
+              placeholder={t("lostPet.descBrief")}
               value={sightingInfo.description}
               onChangeText={(text) => setSightingInfo((prev) => ({ ...prev, description: text }))}
               multiline
@@ -380,27 +358,27 @@ export default function LostPetScreen() {
               textAlignVertical="top"
             />
 
-            <Text style={styles.inputLabel}>اسمك *</Text>
+            <Text style={styles.inputLabel}>{t("lostPet.yourNameLabel")}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="اسمك"
+              placeholder={t("lostPet.yourName")}
               value={sightingInfo.reporterName}
               onChangeText={(text) => setSightingInfo((prev) => ({ ...prev, reporterName: text }))}
             />
 
-            <Text style={styles.inputLabel}>رقم هاتفك (اختياري)</Text>
+            <Text style={styles.inputLabel}>{t("lostPet.phoneOptional")}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="رقم هاتفك"
+              placeholder={t("lostPet.yourPhone")}
               value={sightingInfo.reporterPhone}
               onChangeText={(text) => setSightingInfo((prev) => ({ ...prev, reporterPhone: text }))}
               keyboardType="phone-pad"
             />
 
-            <Text style={styles.inputLabel}>بريدك الإلكتروني (اختياري)</Text>
+            <Text style={styles.inputLabel}>{t("lostPet.emailOptional")}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="بريدك الإلكتروني"
+              placeholder={t("lostPet.yourEmail")}
               value={sightingInfo.reporterEmail}
               onChangeText={(text) => setSightingInfo((prev) => ({ ...prev, reporterEmail: text }))}
               keyboardType="email-address"
@@ -409,14 +387,14 @@ export default function LostPetScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.cancelButton} onPress={() => setShowSightingReportModal(false)}>
-                <Text style={styles.cancelButtonText}>إلغاء</Text>
+                <Text style={styles.cancelButtonText}>{t("common.cancel")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.submitButton, !sightingInfo.sightingLocation.trim() && styles.disabledButton]}
                 onPress={handleSubmitSightingReport}
                 disabled={!sightingInfo.sightingLocation.trim()}
               >
-                <Text style={styles.submitButtonText}>إبلاغ</Text>
+                <Text style={styles.submitButtonText}>{t("lostPet.submit")}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -463,7 +441,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    // paddingBottom: 200,
   },
   petName: {
     fontSize: 28,
@@ -517,10 +494,6 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   bottomActions: {
-    // position: "absolute",
-    // bottom: 0,
-    // left: 0,
-    // right: 0,
     backgroundColor: COLORS.white,
     paddingHorizontal: 20,
     paddingVertical: 16,

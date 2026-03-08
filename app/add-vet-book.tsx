@@ -9,8 +9,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 import { FileUploader } from "@/components/FileUploader";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function AddVetBookScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -31,24 +33,24 @@ export default function AddVetBookScreen() {
   const createBookMutation = useMutation(
     trpc.admin.content.createBook.mutationOptions({
       onSuccess: () => {
-        Alert.alert("نجح", "تم إضافة الكتاب بنجاح");
+        Alert.alert(t("common.success"), t("addBook.addSuccess"));
         queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
         router.back();
       },
       onError: (error: any) => {
-        Alert.alert("خطأ", error.message || "فشل في إضافة الكتاب");
+        Alert.alert(t("common.error"), error.message || t("addBook.addFailed"));
       },
     })
   );
 
   const handleSave = () => {
     if (!formData.title || !formData.author || !formData.category) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("addVetBook.fillRequired"));
       return;
     }
 
     if (!selectedFileUrl) {
-      Alert.alert("خطأ", "يرجى رفع ملف الكتاب");
+      Alert.alert(t("common.error"), t("addBook.uploadFileRequired"));
       return;
     }
 
@@ -69,7 +71,7 @@ export default function AddVetBookScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إضافة كتاب للقسم الأساسي",
+          title: t("addVetBook.screenTitle"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -88,35 +90,35 @@ export default function AddVetBookScreen() {
               images={selectedImages}
               onImagesChange={setSelectedImages}
               maxImages={1}
-              label="صورة الكتاب"
+              label={t("addBook.bookImage")}
               aspect={[3, 4]}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>عنوان الكتاب *</Text>
+            <Text style={styles.label}>{t("addBook.bookTitle")}</Text>
             <TextInput
               style={styles.input}
               value={formData.title}
               onChangeText={(text) => setFormData({ ...formData, title: text })}
-              placeholder="أدخل عنوان الكتاب"
+              placeholder={t("addBook.enterTitle")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>المؤلف *</Text>
+            <Text style={styles.label}>{t("addBook.author")}</Text>
             <TextInput
               style={styles.input}
               value={formData.author}
               onChangeText={(text) => setFormData({ ...formData, author: text })}
-              placeholder="أدخل اسم المؤلف"
+              placeholder={t("addBook.enterAuthor")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>التصنيف *</Text>
+            <Text style={styles.label}>{t("addBook.categoryRequired")}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
               {categories.map((category) => (
                 <TouchableOpacity
@@ -138,12 +140,12 @@ export default function AddVetBookScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>الوصف</Text>
+            <Text style={styles.label}>{t("common.description")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
               onChangeText={(text) => setFormData({ ...formData, description: text })}
-              placeholder="أدخل وصف الكتاب"
+              placeholder={t("addBook.enterDesc")}
               textAlign="right"
               multiline
               numberOfLines={4}
@@ -151,30 +153,34 @@ export default function AddVetBookScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>عدد الصفحات</Text>
+            <Text style={styles.label}>{t("addBook.pageCount")}</Text>
             <TextInput
               style={styles.input}
               value={formData.pages}
               onChangeText={(text) => setFormData({ ...formData, pages: text })}
-              placeholder="أدخل عدد الصفحات"
+              placeholder={t("addBook.enterPageCount")}
               textAlign="right"
               keyboardType="numeric"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>اللغة</Text>
+            <Text style={styles.label}>{t("addBook.language")}</Text>
             <View style={styles.languageContainer}>
-              {["العربية", "الإنجليزية", "الفرنسية"].map((lang) => (
+              {[
+                { value: "العربية", label: t("addBook.arabic") },
+                { value: "الإنجليزية", label: t("addBook.english") },
+                { value: "الفرنسية", label: t("addBook.french") },
+              ].map(({ value, label }) => (
                 <TouchableOpacity
-                  key={lang}
-                  style={[styles.languageButton, formData.language === lang && styles.selectedLanguageButton]}
-                  onPress={() => setFormData({ ...formData, language: lang })}
+                  key={value}
+                  style={[styles.languageButton, formData.language === value && styles.selectedLanguageButton]}
+                  onPress={() => setFormData({ ...formData, language: value })}
                 >
                   <Text
-                    style={[styles.languageButtonText, formData.language === lang && styles.selectedLanguageButtonText]}
+                    style={[styles.languageButtonText, formData.language === value && styles.selectedLanguageButtonText]}
                   >
-                    {lang}
+                    {label}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -186,8 +192,8 @@ export default function AddVetBookScreen() {
             <FileUploader
               fileUrl={selectedFileUrl}
               onFileChange={setSelectedFileUrl}
-              label="ملف الكتاب *"
-              placeholder="اختر ملف الكتاب (PDF, EPUB)"
+              label={t("addBook.bookFile")}
+              placeholder={t("addBook.selectFile")}
             />
           </View>
         </View>
@@ -195,7 +201,7 @@ export default function AddVetBookScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={createBookMutation.isPending ? "جاري الإضافة..." : "إضافة الكتاب للقسم الأساسي"}
+          title={createBookMutation.isPending ? t("common.loading") : t("addVetBook.addBook")}
           onPress={handleSave}
           type="primary"
           size="large"

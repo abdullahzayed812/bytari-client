@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { COLORS } from "../constants/colors";
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Calendar, Users, Activity, AlertTriangle, TrendingUp, FileText, Camera, MessageCircle, Phone } from 'lucide-react-native';
+import { useI18n } from "@/providers/I18nProvider";
 
 interface DailyReport {
   id: string;
@@ -30,6 +31,7 @@ interface WeeklyData {
 }
 
 export default function FieldDetailsScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const { id } = useLocalSearchParams();
   
@@ -146,32 +148,32 @@ export default function FieldDetailsScreen() {
         <Text style={styles.reportDate}>{item.date}</Text>
         <View style={styles.mortalityBadge}>
           <AlertTriangle size={14} color={COLORS.white} />
-          <Text style={styles.mortalityText}>{item.mortality} نفوق</Text>
+          <Text style={styles.mortalityText}>{t("fieldDetails.mortalityCount").replace("{n}", String(item.mortality))}</Text>
         </View>
       </View>
       
       <View style={styles.reportStats}>
         <View style={styles.reportStat}>
-          <Text style={styles.reportStatLabel}>العلف</Text>
+          <Text style={styles.reportStatLabel}>{t("fieldDetails.feed")}</Text>
           <Text style={styles.reportStatValue}>{item.feedConsumption} كغ</Text>
         </View>
         <View style={styles.reportStat}>
-          <Text style={styles.reportStatLabel}>الماء</Text>
+          <Text style={styles.reportStatLabel}>{t("fieldDetails.water")}</Text>
           <Text style={styles.reportStatValue}>{item.waterConsumption} لتر</Text>
         </View>
         <View style={styles.reportStat}>
-          <Text style={styles.reportStatLabel}>الحرارة</Text>
+          <Text style={styles.reportStatLabel}>{t("fieldDetails.temperature")}</Text>
           <Text style={styles.reportStatValue}>{item.temperature}°C</Text>
         </View>
         <View style={styles.reportStat}>
-          <Text style={styles.reportStatLabel}>الرطوبة</Text>
+          <Text style={styles.reportStatLabel}>{t("fieldDetails.humidity")}</Text>
           <Text style={styles.reportStatValue}>{item.humidity}%</Text>
         </View>
       </View>
 
       {item.notes && (
         <View style={styles.reportNotes}>
-          <Text style={styles.reportNotesTitle}>ملاحظات:</Text>
+          <Text style={styles.reportNotesTitle}>{t("fieldDetails.notes")}</Text>
           <Text style={styles.reportNotesText}>{item.notes}</Text>
         </View>
       )}
@@ -180,7 +182,7 @@ export default function FieldDetailsScreen() {
         <View style={styles.treatmentsSection}>
           {item.treatments.length > 0 && (
             <View style={styles.treatmentsList}>
-              <Text style={styles.treatmentsTitle}>العلاجات:</Text>
+              <Text style={styles.treatmentsTitle}>{t("fieldDetails.treatments")}</Text>
               {item.treatments.map((treatment, index) => (
                 <Text key={index} style={styles.treatmentItem}>• {treatment}</Text>
               ))}
@@ -188,7 +190,7 @@ export default function FieldDetailsScreen() {
           )}
           {item.vaccinations.length > 0 && (
             <View style={styles.treatmentsList}>
-              <Text style={styles.treatmentsTitle}>التطعيمات:</Text>
+              <Text style={styles.treatmentsTitle}>{t("fieldDetails.vaccinations")}</Text>
               {item.vaccinations.map((vaccination, index) => (
                 <Text key={index} style={styles.treatmentItem}>• {vaccination}</Text>
               ))}
@@ -199,7 +201,7 @@ export default function FieldDetailsScreen() {
 
       {item.images.length > 0 && (
         <View style={styles.imagesSection}>
-          <Text style={styles.imagesTitle}>الصور المرفقة:</Text>
+          <Text style={styles.imagesTitle}>{t("fieldDetails.attachedImages")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesContainer}>
             {item.images.map((image, index) => (
               <Image key={index} source={{ uri: image }} style={styles.reportImage} />
@@ -213,7 +215,7 @@ export default function FieldDetailsScreen() {
   const renderWeeklyData = ({ item }: { item: WeeklyData }) => (
     <View style={styles.weeklyCard}>
       <View style={styles.weeklyHeader}>
-        <Text style={styles.weeklyTitle}>الأسبوع {item.weekNumber}</Text>
+        <Text style={styles.weeklyTitle}>{t("fieldDetails.week")} {item.weekNumber}</Text>
         <Text style={styles.weeklyDate}>{item.startDate} - {item.endDate}</Text>
       </View>
       
@@ -221,22 +223,22 @@ export default function FieldDetailsScreen() {
         <View style={styles.weeklyStat}>
           <Activity size={20} color={COLORS.primary} />
           <Text style={styles.weeklyStatValue}>{item.averageWeight}g</Text>
-          <Text style={styles.weeklyStatLabel}>متوسط الوزن</Text>
+          <Text style={styles.weeklyStatLabel}>{t("fieldDetails.avgWeight")}</Text>
         </View>
         <View style={styles.weeklyStat}>
           <AlertTriangle size={20} color={COLORS.error} />
           <Text style={styles.weeklyStatValue}>{item.totalMortality}</Text>
-          <Text style={styles.weeklyStatLabel}>إجمالي النفوق</Text>
+          <Text style={styles.weeklyStatLabel}>{t("fieldDetails.totalMortality")}</Text>
         </View>
         <View style={styles.weeklyStat}>
           <TrendingUp size={20} color={COLORS.success} />
           <Text style={styles.weeklyStatValue}>{item.feedEfficiency}</Text>
-          <Text style={styles.weeklyStatLabel}>كفاءة العلف</Text>
+          <Text style={styles.weeklyStatLabel}>{t("fieldDetails.feedEfficiency")}</Text>
         </View>
         <View style={styles.weeklyStat}>
           <Users size={20} color={COLORS.warning} />
           <Text style={styles.weeklyStatValue}>{item.healthScore}%</Text>
-          <Text style={styles.weeklyStatLabel}>النتيجة الصحية</Text>
+          <Text style={styles.weeklyStatLabel}>{t("fieldDetails.healthScore")}</Text>
         </View>
       </View>
 
@@ -251,28 +253,28 @@ export default function FieldDetailsScreen() {
   const renderAnalysis = () => (
     <View style={styles.analysisContainer}>
       <View style={styles.analysisCard}>
-        <Text style={styles.analysisTitle}>تحليل الأداء العام</Text>
+        <Text style={styles.analysisTitle}>{t("fieldDetails.performanceAnalysis")}</Text>
         
         <View style={styles.performanceMetrics}>
           <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>معدل البقاء</Text>
+            <Text style={styles.metricLabel}>{t("fieldDetails.survivalRate")}</Text>
             <Text style={styles.metricValue}>97%</Text>
-            <Text style={styles.metricStatus}>ممتاز</Text>
+            <Text style={styles.metricStatus}>{t("fieldDetails.excellent")}</Text>
           </View>
           <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>كفاءة العلف</Text>
+            <Text style={styles.metricLabel}>{t("fieldDetails.feedEfficiency")}</Text>
             <Text style={styles.metricValue}>1.6</Text>
-            <Text style={styles.metricStatus}>جيد</Text>
+            <Text style={styles.metricStatus}>{t("fieldDetails.good")}</Text>
           </View>
           <View style={styles.metricItem}>
-            <Text style={styles.metricLabel}>معدل النمو</Text>
+            <Text style={styles.metricLabel}>{t("fieldDetails.growthRate")}</Text>
             <Text style={styles.metricValue}>19g/يوم</Text>
-            <Text style={styles.metricStatus}>ممتاز</Text>
+            <Text style={styles.metricStatus}>{t("fieldDetails.excellent")}</Text>
           </View>
         </View>
 
         <View style={styles.recommendations}>
-          <Text style={styles.recommendationsTitle}>التوصيات:</Text>
+          <Text style={styles.recommendationsTitle}>{t("fieldDetails.recommendations")}</Text>
           <Text style={styles.recommendationItem}>• الحفاظ على درجة الحرارة بين 30-32°C</Text>
           <Text style={styles.recommendationItem}>• زيادة التهوية خلال ساعات النهار الحارة</Text>
           <Text style={styles.recommendationItem}>• مراقبة استهلاك الماء يومياً</Text>
@@ -291,7 +293,7 @@ export default function FieldDetailsScreen() {
         >
           <ArrowLeft size={24} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>تفاصيل الحقل</Text>
+        <Text style={styles.title}>{t("fieldDetails.title")}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity 
             style={styles.headerActionButton}
@@ -313,30 +315,30 @@ export default function FieldDetailsScreen() {
         <View style={styles.fieldInfoCard}>
           <Text style={styles.fieldName}>{fieldData.name}</Text>
           <Text style={styles.fieldLocation}>{fieldData.location}</Text>
-          <Text style={styles.ownerName}>المالك: {fieldData.ownerName}</Text>
+          <Text style={styles.ownerName}>{t("fieldDetails.owner")}: {fieldData.ownerName}</Text>
           
           <View style={styles.batchInfo}>
-            <Text style={styles.batchTitle}>الدفعة الحالية - رقم {fieldData.currentBatch.batchNumber}</Text>
+            <Text style={styles.batchTitle}>{t("fieldDetails.currentBatch")} - {t("fieldDetails.batchNumber")} {fieldData.currentBatch.batchNumber}</Text>
             <View style={styles.batchStats}>
               <View style={styles.batchStat}>
                 <Users size={16} color={COLORS.success} />
                 <Text style={styles.batchStatValue}>{fieldData.currentBatch.currentCount}</Text>
-                <Text style={styles.batchStatLabel}>العدد الحالي</Text>
+                <Text style={styles.batchStatLabel}>{t("fieldDetails.currentCount")}</Text>
               </View>
               <View style={styles.batchStat}>
                 <Calendar size={16} color={COLORS.warning} />
                 <Text style={styles.batchStatValue}>{fieldData.currentBatch.chicksAge}</Text>
-                <Text style={styles.batchStatLabel}>العمر (يوم)</Text>
+                <Text style={styles.batchStatLabel}>{t("fieldDetails.ageInDays")}</Text>
               </View>
               <View style={styles.batchStat}>
                 <Activity size={16} color={COLORS.primary} />
                 <Text style={styles.batchStatValue}>{fieldData.currentBatch.averageWeight}g</Text>
-                <Text style={styles.batchStatLabel}>متوسط الوزن</Text>
+                <Text style={styles.batchStatLabel}>{t("fieldDetails.avgWeight")}</Text>
               </View>
               <View style={styles.batchStat}>
                 <AlertTriangle size={16} color={COLORS.error} />
                 <Text style={styles.batchStatValue}>{fieldData.currentBatch.totalMortality}</Text>
-                <Text style={styles.batchStatLabel}>إجمالي النفوق</Text>
+                <Text style={styles.batchStatLabel}>{t("fieldDetails.totalMortality")}</Text>
               </View>
             </View>
           </View>
@@ -350,7 +352,7 @@ export default function FieldDetailsScreen() {
           >
             <FileText size={16} color={selectedTab === 'daily' ? COLORS.white : COLORS.primary} />
             <Text style={[styles.tabText, selectedTab === 'daily' && styles.activeTabText]}>
-              التقارير اليومية
+              {t("fieldDetails.dailyReports")}
             </Text>
           </TouchableOpacity>
           
@@ -360,7 +362,7 @@ export default function FieldDetailsScreen() {
           >
             <Calendar size={16} color={selectedTab === 'weekly' ? COLORS.white : COLORS.primary} />
             <Text style={[styles.tabText, selectedTab === 'weekly' && styles.activeTabText]}>
-              البيانات الأسبوعية
+              {t("fieldDetails.weeklyData")}
             </Text>
           </TouchableOpacity>
           
@@ -370,7 +372,7 @@ export default function FieldDetailsScreen() {
           >
             <TrendingUp size={16} color={selectedTab === 'analysis' ? COLORS.white : COLORS.primary} />
             <Text style={[styles.tabText, selectedTab === 'analysis' && styles.activeTabText]}>
-              التحليل
+              {t("fieldDetails.analysis")}
             </Text>
           </TouchableOpacity>
         </View>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { COLORS } from "../constants/colors";
+import { useI18n } from "@/providers/I18nProvider";
 import { ArrowLeft, Bell, CheckCircle, XCircle, Clock, AlertTriangle, Mail, User } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
@@ -22,6 +23,7 @@ interface ApprovalNotification {
 }
 
 export default function ApprovalNotificationsScreen() {
+  const { t } = useI18n();
   const router = useRouter();
 
   const { data: notifications, isLoading, error, refetch } = useQuery(trpc.pets.getUserApprovals.queryOptions());
@@ -36,10 +38,10 @@ export default function ApprovalNotificationsScreen() {
   };
 
   const deleteNotification = (notificationId: string) => {
-    Alert.alert("حذف الإشعار", "هل أنت متأكد من حذف هذا الإشعار؟", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("approvalNotif.deleteTitle"), t("approvalNotif.deleteConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "حذف",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           // deleteNotificationMutation.mutate({ id: notificationId }, { onSuccess: () => refetch() });
@@ -78,15 +80,15 @@ export default function ApprovalNotificationsScreen() {
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
     if (diffInHours < 1) {
-      return "منذ قليل";
+      return t("approvalNotif.justNow");
     } else if (diffInHours < 24) {
-      return `منذ ${diffInHours} ساعة`;
+      return t("approvalNotif.hoursAgo").replace("{n}", String(diffInHours));
     } else {
       const diffInDays = Math.floor(diffInHours / 24);
       if (diffInDays === 1) {
-        return "منذ يوم واحد";
+        return t("approvalNotif.oneDayAgo");
       } else if (diffInDays < 7) {
-        return `منذ ${diffInDays} أيام`;
+        return t("approvalNotif.daysAgo").replace("{n}", String(diffInDays));
       } else {
         return date.toLocaleDateString("ar-EG", {
           year: "numeric",
@@ -104,7 +106,7 @@ export default function ApprovalNotificationsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.emptyStateTitle}>جاري تحميل الإشعارات...</Text>
+          <Text style={styles.emptyStateTitle}>{t("approvalNotif.loading")}</Text>
         </View>
       </SafeAreaView>
     );
@@ -115,7 +117,7 @@ export default function ApprovalNotificationsScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <AlertTriangle size={48} color={COLORS.error} />
-          <Text style={styles.emptyStateTitle}>حدث خطأ</Text>
+          <Text style={styles.emptyStateTitle}>{t("common.error")}</Text>
           <Text style={styles.emptyStateMessage}>{error.message}</Text>
         </View>
       </SafeAreaView>
@@ -129,7 +131,7 @@ export default function ApprovalNotificationsScreen() {
           <ArrowLeft size={24} color={COLORS.primary} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>إشعارات الموافقات</Text>
+          <Text style={styles.headerTitle}>{t("approvalNotif.title")}</Text>
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
               <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
@@ -142,8 +144,8 @@ export default function ApprovalNotificationsScreen() {
         {notifications.length === 0 ? (
           <View style={styles.emptyState}>
             <Bell size={48} color={COLORS.lightGray} />
-            <Text style={styles.emptyStateTitle}>لا توجد إشعارات</Text>
-            <Text style={styles.emptyStateMessage}>ستظهر هنا إشعارات حالة طلباتك للموافقة</Text>
+            <Text style={styles.emptyStateTitle}>{t("approvalNotif.noNotifications")}</Text>
+            <Text style={styles.emptyStateMessage}>{t("approvalNotif.noNotificationsDesc")}</Text>
           </View>
         ) : (
           notifications.map((notification) => (
@@ -173,7 +175,7 @@ export default function ApprovalNotificationsScreen() {
               {notification.data?.reason && (
                 <View style={styles.reasonContainer}>
                   <AlertTriangle size={16} color="#FF9800" />
-                  <Text style={styles.reasonText}>السبب: {notification.data.reason}</Text>
+                  <Text style={styles.reasonText}>{t("approvalNotif.reason")}: {notification.data.reason}</Text>
                 </View>
               )}
 
@@ -182,17 +184,17 @@ export default function ApprovalNotificationsScreen() {
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => {
-                      Alert.alert("تسجيل الدخول", "يمكنك الآن تسجيل الدخول بحسابك المُفعل كطبيب بيطري.", [
-                        { text: "إلغاء", style: "cancel" },
+                      Alert.alert(t("approvalNotif.login"), t("approvalNotif.loginMsg"), [
+                        { text: t("common.cancel"), style: "cancel" },
                         {
-                          text: "تسجيل الدخول",
+                          text: t("approvalNotif.login"),
                           onPress: () => router.push("/auth"),
                         },
                       ]);
                     }}
                   >
                     <User size={16} color={COLORS.primary} />
-                    <Text style={styles.actionButtonText}>تسجيل الدخول</Text>
+                    <Text style={styles.actionButtonText}>{t("approvalNotif.login")}</Text>
                   </TouchableOpacity>
                 )}
 
@@ -200,17 +202,17 @@ export default function ApprovalNotificationsScreen() {
                   <TouchableOpacity
                     style={styles.actionButton}
                     onPress={() => {
-                      Alert.alert("إعادة التقديم", "يمكنك إعادة تقديم طلبك بعد تصحيح المعلومات المطلوبة.", [
-                        { text: "إلغاء", style: "cancel" },
+                      Alert.alert(t("approvalNotif.resubmitTitle"), t("approvalNotif.resubmitMsg"), [
+                        { text: t("common.cancel"), style: "cancel" },
                         {
-                          text: "إعادة التقديم",
+                          text: t("approvalNotif.resubmit"),
                           onPress: () => router.push("/auth"),
                         },
                       ]);
                     }}
                   >
                     <Mail size={16} color={COLORS.primary} />
-                    <Text style={styles.actionButtonText}>إعادة التقديم</Text>
+                    <Text style={styles.actionButtonText}>{t("approvalNotif.resubmit")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -228,7 +230,7 @@ export default function ApprovalNotificationsScreen() {
             }}
           >
             <CheckCircle size={20} color={COLORS.white} />
-            <Text style={styles.markAllReadText}>تحديد الكل كمقروء</Text>
+            <Text style={styles.markAllReadText}>{t("approvalNotif.markAllRead")}</Text>
           </TouchableOpacity>
         </View>
       )}

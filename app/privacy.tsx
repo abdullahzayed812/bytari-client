@@ -3,13 +3,16 @@ import React from 'react';
 import { COLORS } from "../constants/colors";
 import { Stack, router } from 'expo-router';
 import { ArrowLeft, Shield, Eye, Lock, Database } from 'lucide-react-native';
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function PrivacyScreen() {
+  const { t } = useI18n();
+
   return (
     <>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          title: 'الخصوصية والأمان',
+          title: t("privacy.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black, fontWeight: 'bold' },
           headerLeft: () => (
@@ -19,74 +22,74 @@ export default function PrivacyScreen() {
           ),
         }}
       />
-      
+
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Shield size={40} color={COLORS.white} />
           <Text style={styles.headerText}>
-            نحن نحترم خصوصيتك ونحمي بياناتك الشخصية
+            {t("privacy.headerText")}
           </Text>
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Database size={24} color={COLORS.primary} />
-            <Text style={styles.sectionTitle}>جمع البيانات</Text>
+            <Text style={styles.sectionTitle}>{t("privacy.dataCollection.title")}</Text>
           </View>
           <Text style={styles.sectionContent}>
-            نقوم بجمع المعلومات التي تقدمها لنا مباشرة مثل الاسم والبريد الإلكتروني ومعلومات الحيوانات الأليفة. كما نجمع معلومات حول استخدامك للتطبيق لتحسين خدماتنا.
+            {t("privacy.dataCollection.content")}
           </Text>
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Eye size={24} color={COLORS.primary} />
-            <Text style={styles.sectionTitle}>استخدام البيانات</Text>
+            <Text style={styles.sectionTitle}>{t("privacy.dataUsage.title")}</Text>
           </View>
           <Text style={styles.sectionContent}>
-            نستخدم بياناتك لتقديم الخدمات المطلوبة، تحسين التطبيق، إرسال الإشعارات المهمة، والتواصل معك بخصوص حسابك أو خدماتنا.
+            {t("privacy.dataUsage.content")}
           </Text>
         </View>
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Lock size={24} color={COLORS.primary} />
-            <Text style={styles.sectionTitle}>حماية البيانات</Text>
+            <Text style={styles.sectionTitle}>{t("privacy.dataProtection.title")}</Text>
           </View>
           <Text style={styles.sectionContent}>
-            نستخدم تقنيات التشفير المتقدمة لحماية بياناتك. جميع المعلومات الحساسة محمية بكلمات مرور قوية وبروتوكولات أمان عالية المستوى.
+            {t("privacy.dataProtection.content")}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>حقوقك</Text>
+          <Text style={styles.sectionTitle}>{t("privacy.yourRights.title")}</Text>
           <View style={styles.rightsList}>
-            <Text style={styles.rightItem}>• الحق في الوصول إلى بياناتك الشخصية</Text>
-            <Text style={styles.rightItem}>• الحق في تصحيح البيانات غير الصحيحة</Text>
-            <Text style={styles.rightItem}>• الحق في حذف بياناتك</Text>
-            <Text style={styles.rightItem}>• الحق في نقل بياناتك</Text>
-            <Text style={styles.rightItem}>• الحق في الاعتراض على معالجة البيانات</Text>
+            <Text style={styles.rightItem}>{t("privacy.yourRights.right1")}</Text>
+            <Text style={styles.rightItem}>{t("privacy.yourRights.right2")}</Text>
+            <Text style={styles.rightItem}>{t("privacy.yourRights.right3")}</Text>
+            <Text style={styles.rightItem}>{t("privacy.yourRights.right4")}</Text>
+            <Text style={styles.rightItem}>{t("privacy.yourRights.right5")}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ملفات تعريف الارتباط</Text>
+          <Text style={styles.sectionTitle}>{t("privacy.cookies.title")}</Text>
           <Text style={styles.sectionContent}>
-            نستخدم ملفات تعريف الارتباط لتحسين تجربتك في استخدام التطبيق وتذكر تفضيلاتك. يمكنك إدارة هذه الملفات من خلال إعدادات المتصفح.
+            {t("privacy.cookies.content")}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>مشاركة البيانات</Text>
+          <Text style={styles.sectionTitle}>{t("privacy.dataSharing.title")}</Text>
           <Text style={styles.sectionContent}>
-            لا نبيع أو نؤجر بياناتك الشخصية لأطراف ثالثة. قد نشارك المعلومات مع مقدمي الخدمات الموثوقين فقط لتقديم خدماتنا بشكل أفضل.
+            {t("privacy.dataSharing.content")}
           </Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>التحديثات</Text>
+          <Text style={styles.sectionTitle}>{t("privacy.updates.title")}</Text>
           <Text style={styles.sectionContent}>
-            قد نقوم بتحديث سياسة الخصوصية من وقت لآخر. سنقوم بإشعارك بأي تغييرات مهمة عبر التطبيق أو البريد الإلكتروني.
+            {t("privacy.updates.content")}
           </Text>
         </View>
 

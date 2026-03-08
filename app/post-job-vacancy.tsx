@@ -7,16 +7,10 @@ import { COLORS } from "../constants/colors";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "../providers/AppProvider";
-
-// Job type options
-const JOB_TYPES = [
-  { value: "full-time", label: "دوام كامل" },
-  { value: "part-time", label: "دوام جزئي" },
-  { value: "contract", label: "عقد" },
-  { value: "internship", label: "تدريب" },
-];
+import { useI18n } from "../providers/I18nProvider";
 
 export default function PostJobVacancyScreen() {
+  const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -34,6 +28,13 @@ export default function PostJobVacancyScreen() {
     contactEmail: user?.email ?? "",
     contactPhone: user?.phone ?? "",
   });
+
+  const JOB_TYPES = [
+    { value: "full-time", label: t("job.fullTime") },
+    { value: "part-time", label: t("job.partTime") },
+    { value: "contract", label: t("job.contract") },
+    { value: "internship", label: t("postJob.internship") },
+  ];
 
   const [selectedJobType, setSelectedJobType] = useState<string>("full-time");
 
@@ -59,9 +60,9 @@ export default function PostJobVacancyScreen() {
           queryClient.invalidateQueries(trpc.admin.jobs.getAllJobs.queryKey as any);
 
           // Show success message
-          Alert.alert("تم إرسال الطلب", "تم إرسال طلب نشر الوظيفة بنجاح. سيتم مراجعته من قبل الإدارة.", [
+          Alert.alert(t("common.success"), t("postJob.requestSent"), [
             {
-              text: "موافق",
+              text: t("common.ok"),
               onPress: () => {
                 // Reset form
                 setFormData({
@@ -85,7 +86,7 @@ export default function PostJobVacancyScreen() {
         onError: (error: any) => {
           console.error("Error requesting job creation:", error);
           showToast({
-            message: error?.message || "حدث خطأ أثناء إرسال طلب نشر الوظيفة. يرجى المحاولة مرة أخرى.",
+            message: error?.message || t("postJob.requestError"),
             type: "error",
           });
         },
@@ -109,7 +110,7 @@ export default function PostJobVacancyScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إعلان وظيفة",
+          title: t("postJob.screenTitle"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -130,49 +131,49 @@ export default function PostJobVacancyScreen() {
           <View style={styles.iconContainer}>
             <Briefcase size={32} color={COLORS.primary} />
           </View>
-          <Text style={styles.headerTitle}>إعلان وظيفة جديدة</Text>
-          <Text style={styles.headerSubtitle}>أضف تفاصيل الوظيفة المطلوبة</Text>
+          <Text style={styles.headerTitle}>{t("postJob.newJobTitle")}</Text>
+          <Text style={styles.headerSubtitle}>{t("postJob.subtitle")}</Text>
         </View>
 
         <View style={styles.form}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>عنوان الوظيفة *</Text>
+            <Text style={styles.label}>{t("postJob.jobTitle")}</Text>
             <TextInput
               style={styles.input}
               value={formData.title}
               onChangeText={(text) => setFormData({ ...formData, title: text })}
-              placeholder="مثال: طبيب بيطري - عيادة الحيوانات الأليفة"
+              placeholder={t("postJob.jobTitleExample")}
               placeholderTextColor={COLORS.lightGray}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>اسم الشركة/العيادة *</Text>
+            <Text style={styles.label}>{t("postJob.companyClinic")}</Text>
             <TextInput
               style={styles.input}
               value={formData.company}
               onChangeText={(text) => setFormData({ ...formData, company: text })}
-              placeholder="مثال: عيادة الرحمة البيطرية"
+              placeholder={t("postJob.companyExample")}
               placeholderTextColor={COLORS.lightGray}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>الموقع *</Text>
+            <Text style={styles.label}>{t("postJob.locationRequired")}</Text>
             <View style={styles.inputWithIcon}>
               <MapPin size={20} color={COLORS.darkGray} />
               <TextInput
                 style={styles.inputText}
                 value={formData.location}
                 onChangeText={(text) => setFormData({ ...formData, location: text })}
-                placeholder="المدينة، البلد"
+                placeholder={t("postJob.cityCountry")}
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>نوع الوظيفة *</Text>
+            <Text style={styles.label}>{t("postJob.jobTypeRequired")}</Text>
             <View style={styles.jobTypeContainer}>
               {JOB_TYPES.map((jobType) => (
                 <TouchableOpacity
@@ -189,26 +190,26 @@ export default function PostJobVacancyScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>الراتب المتوقع</Text>
+            <Text style={styles.label}>{t("postJob.salary")}</Text>
             <View style={styles.inputWithIcon}>
               <DollarSign size={20} color={COLORS.darkGray} />
               <TextInput
                 style={styles.inputText}
                 value={formData.salary}
                 onChangeText={(text) => setFormData({ ...formData, salary: text })}
-                placeholder="مثال: 800000 - 1200000 د.ع"
+                placeholder={t("postJob.salaryExample")}
                 placeholderTextColor={COLORS.lightGray}
               />
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>وصف الوظيفة *</Text>
+            <Text style={styles.label}>{t("postJob.jobDescription")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.description}
               onChangeText={(text) => setFormData({ ...formData, description: text })}
-              placeholder="اكتب وصفاً مفصلاً عن الوظيفة والمهام المطلوبة..."
+              placeholder={t("postJob.jobDescriptionPlaceholder")}
               placeholderTextColor={COLORS.lightGray}
               multiline
               numberOfLines={4}
@@ -217,12 +218,12 @@ export default function PostJobVacancyScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>المتطلبات والمؤهلات</Text>
+            <Text style={styles.label}>{t("postJob.requirements")}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.requirements}
               onChangeText={(text) => setFormData({ ...formData, requirements: text })}
-              placeholder="اذكر المؤهلات والخبرات المطلوبة..."
+              placeholder={t("postJob.requirementsPlaceholder")}
               placeholderTextColor={COLORS.lightGray}
               multiline
               numberOfLines={3}
@@ -231,7 +232,7 @@ export default function PostJobVacancyScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>البريد الإلكتروني للتواصل</Text>
+            <Text style={styles.label}>{t("postJob.contactEmail")}</Text>
             <TextInput
               style={styles.input}
               value={formData.contactEmail}
@@ -244,7 +245,7 @@ export default function PostJobVacancyScreen() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>رقم الهاتف للتواصل</Text>
+            <Text style={styles.label}>{t("postJob.contactPhone")}</Text>
             <TextInput
               style={styles.input}
               value={formData.contactPhone}
@@ -263,11 +264,11 @@ export default function PostJobVacancyScreen() {
         >
           <FileText size={20} color={COLORS.white} />
           <Text style={styles.submitButtonText}>
-            {createJobMutation.isPending ? "جاري الإرسال..." : "إرسال طلب النشر"}
+            {createJobMutation.isPending ? t("postJob.submitting") : t("postJob.submit")}
           </Text>
         </TouchableOpacity>
 
-        <Text style={styles.note}>* سيتم مراجعة طلبك من قبل الإدارة قبل الموافقة على النشر.</Text>
+        <Text style={styles.note}>{t("postJob.reviewNote")}</Text>
       </ScrollView>
     </View>
   );

@@ -20,8 +20,10 @@ import {
 } from "lucide-react-native";
 import { COLORS } from "@/constants/colors";
 import { useApp } from "@/providers/AppProvider";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function JobDetailsScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const { user } = useApp();
   const { requestId, requestType } = useLocalSearchParams();
@@ -37,12 +39,12 @@ export default function JobDetailsScreen() {
 
   const handleApprove = () => {
     // Approve logic here
-    Alert.alert("تمت الموافقة", "تمت الموافقة على الطلب بنجاح.");
+    Alert.alert(t("jobDetails.approvedTitle"), t("jobDetails.approvedMsg"));
   };
 
   const handleReject = () => {
     // Reject logic here
-    Alert.alert("تم الرفض", "تم رفض الطلب.");
+    Alert.alert(t("jobDetails.rejectedTitle"), t("jobDetails.rejectedMsg"));
   };
 
   if (isLoading) {
@@ -57,7 +59,7 @@ export default function JobDetailsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "تفاصيل الطلب",
+          title: t("jobDetails.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -88,22 +90,22 @@ export default function JobDetailsScreen() {
               <View style={styles.infoRow}>
                 <User size={16} color={COLORS.darkGray} />
                 <Text style={styles.infoText}>
-                  {request.type === "job_posting" ? "الناشر" : "المتقدم"}: {request.applicantName}
+                  {request.type === "job_posting" ? t("jobDetails.publisher") : t("jobDetails.applicant")}: {request.applicantName}
                 </Text>
               </View>
               <View style={styles.infoRow}>
                 <Clock size={16} color={COLORS.darkGray} />
-                <Text style={styles.infoText}>تاريخ التقديم: {request.submittedDate}</Text>
+                <Text style={styles.infoText}>{t("jobDetails.submittedDate")}{request.submittedDate}</Text>
               </View>
               <View style={styles.infoRow}>
                 <MapPin size={16} color={COLORS.darkGray} />
-                <Text style={styles.infoText}>الموقع: {request.location}</Text>
+                <Text style={styles.infoText}>{t("jobDetails.locationLabel")}{request.location}</Text>
               </View>
             </View>
 
             {request.details && (
               <View style={styles.detailsSection}>
-                <Text style={styles.sectionTitle}>تفاصيل</Text>
+                <Text style={styles.sectionTitle}>{t("jobDetails.details")}</Text>
                 {Object.entries(request.details).map(([key, value]) => (
                   <View key={key} style={styles.detailItem}>
                     <Text style={styles.detailKey}>{key}:</Text>
@@ -115,7 +117,7 @@ export default function JobDetailsScreen() {
 
             {request.applicantInfo && (
               <View style={styles.applicantSection}>
-                <Text style={styles.sectionTitle}>معلومات المتقدم</Text>
+                <Text style={styles.sectionTitle}>{t("jobDetails.applicantInfo")}</Text>
                 <View style={{ alignItems: "center", marginBottom: 16 }}>
                   <Image source={{ uri: request.applicantInfo.avatar }} style={styles.avatar} />
                   <Text style={styles.applicantName}>{request.applicantInfo.name}</Text>
@@ -131,7 +133,7 @@ export default function JobDetailsScreen() {
                 {request.applicantInfo.cv && (
                   <TouchableOpacity style={styles.cvButton}>
                     <Download size={16} color={COLORS.white} />
-                    <Text style={styles.cvButtonText}>تحميل السيرة الذاتية</Text>
+                    <Text style={styles.cvButtonText}>{t("jobDetails.downloadCV")}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -141,11 +143,11 @@ export default function JobDetailsScreen() {
               <View style={styles.actionButtons}>
                 <TouchableOpacity style={styles.rejectButton} onPress={handleReject}>
                   <X size={20} color={COLORS.white} />
-                  <Text style={styles.actionButtonText}>رفض</Text>
+                  <Text style={styles.actionButtonText}>{t("jobDetails.reject")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.approveButton} onPress={handleApprove}>
                   <Check size={20} color={COLORS.white} />
-                  <Text style={styles.actionButtonText}>موافقة</Text>
+                  <Text style={styles.actionButtonText}>{t("jobDetails.approve")}</Text>
                 </TouchableOpacity>
               </View>
             )}

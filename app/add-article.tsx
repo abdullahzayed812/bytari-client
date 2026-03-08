@@ -9,8 +9,10 @@ import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
 import { FileUploader } from "@/components/FileUploader";
 import { ArrowLeft, Plus } from "lucide-react-native";
 import Button from "@/components/Button 2";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function AddArticleScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const quiryClient = useQueryClient();
 
@@ -32,17 +34,17 @@ export default function AddArticleScreen() {
 
   const handleSave = () => {
     if (selectedImages.length === 0) {
-      Alert.alert("خطأ", "صورة الغلاف مطلوبة");
+      Alert.alert(t("common.error"), t("addArticle.coverRequired"));
       return;
     }
 
     if (!formData.title || !formData.author) {
-      Alert.alert("خطأ", "عنوان الكتاب مطلوب");
+      Alert.alert(t("common.error"), t("addArticle.titleRequired"));
       return;
     }
 
     if (!formData.content && !selectedFileUrl) {
-      Alert.alert("خطأ", "محتوى الكتاب مطلوب");
+      Alert.alert(t("common.error"), t("addArticle.contentRequired"));
       return;
     }
 
@@ -59,12 +61,12 @@ export default function AddArticleScreen() {
       } as any,
       {
         onSuccess: () => {
-          Alert.alert("نجح", "تم إضافة المقال بنجاح");
+          Alert.alert(t("common.success"), t("addArticle.addSuccess"));
           router.back();
           quiryClient.invalidateQueries(trpc.content.listMagazineArticles.queryKey);
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message || "فشل في إضافة المقال");
+          Alert.alert(t("common.error"), error.message || t("addArticle.addFailed"));
         },
       }
     );
@@ -74,7 +76,7 @@ export default function AddArticleScreen() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إضافة مقال جديد",
+          title: t("addArticle.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -94,52 +96,52 @@ export default function AddArticleScreen() {
                 images={selectedImages}
                 onImagesChange={setSelectedImages}
                 maxImages={1}
-                label="صورة غلاف المقال *"
+                label={t("addArticle.coverImage")}
                 aspect={[16, 9]}
               />
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>عنوان المقال *</Text>
+            <Text style={styles.label}>{t("addArticle.articleTitle")}</Text>
             <TextInput
               style={styles.input}
               value={formData.title}
               onChangeText={(text) => setFormData({ ...formData, title: text })}
-              placeholder="أدخل عنوان المقال"
+              placeholder={t("addArticle.enterTitle")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>اسم الكاتب *</Text>
+            <Text style={styles.label}>{t("addArticle.authorName")}</Text>
             <TextInput
               style={styles.input}
               value={formData.author}
               onChangeText={(text) => setFormData({ ...formData, author: text })}
-              placeholder="أدخل اسم الكاتب"
+              placeholder={t("addArticle.enterAuthor")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>مسمى الكاتب</Text>
+            <Text style={styles.label}>{t("addArticle.authorTitleLabel")}</Text>
             <TextInput
               style={styles.input}
               value={formData.authorTitle}
               onChangeText={(text) => setFormData({ ...formData, authorTitle: text })}
-              placeholder="أدخل مسمى الكاتب"
+              placeholder={t("addArticle.enterAuthorTitle")}
               textAlign="right"
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>التصنيف</Text>
+            <Text style={styles.label}>{t("addTip.category")}</Text>
             <TextInput
               style={styles.input}
               value={formData.category}
               onChangeText={(text) => setFormData({ ...formData, category: text })}
-              placeholder="أدخل تصنيف المقال"
+              placeholder={t("addArticle.enterCategory")}
               textAlign="right"
             />
           </View>
@@ -148,18 +150,18 @@ export default function AddArticleScreen() {
             <FileUploader
               fileUrl={selectedFileUrl}
               onFileChange={setSelectedFileUrl}
-              label="ملف المقال (اختياري)"
-              placeholder="اختيار ملف المقال (PDF)"
+              label={t("addArticle.fileOptional")}
+              placeholder={t("addArticle.selectFile")}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>محتوى المقال {!selectedFileUrl && "*"}</Text>
+            <Text style={styles.label}>{t("addArticle.contentLabel")}{!selectedFileUrl && " *"}</Text>
             <TextInput
               style={[styles.input, styles.textArea]}
               value={formData.content}
               onChangeText={(text) => setFormData({ ...formData, content: text })}
-              placeholder={selectedFileUrl ? "محتوى اختياري (تم رفع ملف)" : "أدخل محتوى المقال"}
+              placeholder={selectedFileUrl ? t("addArticle.contentOptional") : t("addArticle.enterContent")}
               textAlign="right"
               multiline
               numberOfLines={8}
@@ -170,7 +172,7 @@ export default function AddArticleScreen() {
 
       <View style={styles.footer}>
         <Button
-          title={createArticleMutation.isPending ? "جاري الإضافة..." : "إضافة المقال"}
+          title={createArticleMutation.isPending ? t("common.loading") : t("addArticle.addArticle")}
           onPress={handleSave}
           type="primary"
           size="large"

@@ -8,6 +8,7 @@ import { useApp } from "../providers/AppProvider";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Button from "@/components/Button";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface ContactInfo {
   email: string;
@@ -22,6 +23,7 @@ interface ContactInfo {
 }
 
 export default function ContactUsScreen() {
+  const { t } = useI18n();
   const { isSuperAdmin } = useApp();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
@@ -74,7 +76,7 @@ export default function ContactUsScreen() {
 
   const handleSave = async () => {
     if (!editedInfo.email || !editedInfo.phone || !editedInfo.whatsapp || !editedInfo.address) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.warning"), t("contactUs.fillRequired"));
       return;
     }
 
@@ -84,12 +86,12 @@ export default function ContactUsScreen() {
       if (result.success) {
         setContactInfo(editedInfo);
         setIsEditing(false);
-        Alert.alert("نجح", "تم تحديث معلومات التواصل بنجاح");
+        Alert.alert(t("common.success"), t("contactUs.updateSuccess"));
         contactQuery.refetch();
       }
     } catch (error) {
       console.error("Error updating contact info:", error);
-      Alert.alert("خطأ", "فشل في تحديث معلومات التواصل");
+      Alert.alert(t("common.error"), t("contactUs.updateFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -99,7 +101,7 @@ export default function ContactUsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "تواصل معنا",
+          title: t("contactUs.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black, fontWeight: "bold" },
           headerLeft: () => (
@@ -139,11 +141,11 @@ export default function ContactUsScreen() {
 
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>إذا كان لديك أي استفسار أو شكوى أو اقتراح فلا تتردد في التواصل معنا</Text>
+          <Text style={styles.headerText}>{t("contactUs.headerText")}</Text>
         </View>
 
         <View style={styles.contactSection}>
-          <Text style={styles.sectionTitle}>معلومات التواصل</Text>
+          <Text style={styles.sectionTitle}>{t("contactUs.contactInfoTitle")}</Text>
 
           <View style={styles.contactCard}>
             {/* البريد الإلكتروني */}
@@ -151,14 +153,14 @@ export default function ContactUsScreen() {
               <View style={styles.contactItemContent}>
                 <Mail size={24} color={COLORS.primary} />
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>البريد الإلكتروني</Text>
+                  <Text style={styles.contactLabel}>{t("common.email")}</Text>
                   {isEditing ? (
                     <TextInput
                       style={styles.editInput}
                       value={editedInfo.email}
                       onChangeText={(text) => setEditedInfo({ ...editedInfo, email: text })}
                       keyboardType="email-address"
-                      placeholder="البريد الإلكتروني"
+                      placeholder={t("common.email")}
                     />
                   ) : (
                     <TouchableOpacity onPress={() => handleEmailPress(contactInfo.email)}>
@@ -174,14 +176,14 @@ export default function ContactUsScreen() {
               <View style={styles.contactItemContent}>
                 <Phone size={24} color={COLORS.primary} />
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>رقم الهاتف</Text>
+                  <Text style={styles.contactLabel}>{t("common.phone")}</Text>
                   {isEditing ? (
                     <TextInput
                       style={styles.editInput}
                       value={editedInfo.phone}
                       onChangeText={(text) => setEditedInfo({ ...editedInfo, phone: text })}
                       keyboardType="phone-pad"
-                      placeholder="رقم الهاتف"
+                      placeholder={t("common.phone")}
                     />
                   ) : (
                     <TouchableOpacity onPress={() => handlePhonePress(contactInfo.phone)}>
@@ -197,14 +199,14 @@ export default function ContactUsScreen() {
               <View style={styles.contactItemContent}>
                 <MessageCircle size={24} color={COLORS.primary} />
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>واتساب</Text>
+                  <Text style={styles.contactLabel}>{t("contactUs.whatsapp")}</Text>
                   {isEditing ? (
                     <TextInput
                       style={styles.editInput}
                       value={editedInfo.whatsapp}
                       onChangeText={(text) => setEditedInfo({ ...editedInfo, whatsapp: text })}
                       keyboardType="phone-pad"
-                      placeholder="رقم الواتساب"
+                      placeholder={t("contactUs.whatsappPlaceholder")}
                     />
                   ) : (
                     <TouchableOpacity onPress={() => handleWhatsAppPress(contactInfo.whatsapp)}>
@@ -220,13 +222,13 @@ export default function ContactUsScreen() {
               <View style={styles.contactItemContent}>
                 <MapPin size={24} color={COLORS.primary} />
                 <View style={styles.contactInfo}>
-                  <Text style={styles.contactLabel}>العنوان</Text>
+                  <Text style={styles.contactLabel}>{t("common.address")}</Text>
                   {isEditing ? (
                     <TextInput
                       style={styles.editInput}
                       value={editedInfo.address}
                       onChangeText={(text) => setEditedInfo({ ...editedInfo, address: text })}
-                      placeholder="العنوان"
+                      placeholder={t("common.address")}
                       multiline
                     />
                   ) : (
@@ -239,10 +241,10 @@ export default function ContactUsScreen() {
         </View>
 
         <View style={styles.workingHours}>
-          <Text style={styles.sectionTitle}>ساعات العمل</Text>
+          <Text style={styles.sectionTitle}>{t("contactUs.workingHoursTitle")}</Text>
           <View style={styles.hoursCard}>
             <View style={styles.hoursItem}>
-              <Text style={styles.dayText}>الأحد - الخميس</Text>
+              <Text style={styles.dayText}>{t("contactUs.sunThursday")}</Text>
               {isEditing ? (
                 <TextInput
                   style={styles.editTimeInput}
@@ -253,14 +255,14 @@ export default function ContactUsScreen() {
                       workingHours: { ...editedInfo.workingHours, sunday_thursday: text },
                     })
                   }
-                  placeholder="ساعات العمل"
+                  placeholder={t("contactUs.workingHoursPlaceholder")}
                 />
               ) : (
                 <Text style={styles.timeText}>{contactInfo.workingHours.sunday_thursday}</Text>
               )}
             </View>
             <View style={styles.hoursItem}>
-              <Text style={styles.dayText}>الجمعة</Text>
+              <Text style={styles.dayText}>{t("contactUs.friday")}</Text>
               {isEditing ? (
                 <TextInput
                   style={styles.editTimeInput}
@@ -271,14 +273,14 @@ export default function ContactUsScreen() {
                       workingHours: { ...editedInfo.workingHours, friday: text },
                     })
                   }
-                  placeholder="ساعات العمل"
+                  placeholder={t("contactUs.workingHoursPlaceholder")}
                 />
               ) : (
                 <Text style={styles.timeText}>{contactInfo.workingHours.friday}</Text>
               )}
             </View>
             <View style={styles.hoursItem}>
-              <Text style={styles.dayText}>السبت</Text>
+              <Text style={styles.dayText}>{t("contactUs.saturday")}</Text>
               {isEditing ? (
                 <TextInput
                   style={styles.editTimeInput}
@@ -289,7 +291,7 @@ export default function ContactUsScreen() {
                       workingHours: { ...editedInfo.workingHours, saturday: text },
                     })
                   }
-                  placeholder="ساعات العمل"
+                  placeholder={t("contactUs.workingHoursPlaceholder")}
                 />
               ) : (
                 <Text style={styles.timeText}>{contactInfo.workingHours.saturday}</Text>
@@ -299,19 +301,19 @@ export default function ContactUsScreen() {
         </View>
 
         <View style={styles.supportTypes}>
-          <Text style={styles.sectionTitle}>أنواع الدعم المتاحة</Text>
+          <Text style={styles.sectionTitle}>{t("contactUs.supportTypesTitle")}</Text>
           <View style={styles.supportCard}>
             <View style={styles.supportItem}>
-              <Text style={styles.supportTitle}>الدعم الفني</Text>
-              <Text style={styles.supportDescription}>مساعدة في استخدام التطبيق والمشاكل التقنية</Text>
+              <Text style={styles.supportTitle}>{t("contactUs.techSupport.title")}</Text>
+              <Text style={styles.supportDescription}>{t("contactUs.techSupport.desc")}</Text>
             </View>
             <View style={styles.supportItem}>
-              <Text style={styles.supportTitle}>استفسارات عامة</Text>
-              <Text style={styles.supportDescription}>أسئلة حول الخدمات والميزات المتاحة</Text>
+              <Text style={styles.supportTitle}>{t("contactUs.generalInquiries.title")}</Text>
+              <Text style={styles.supportDescription}>{t("contactUs.generalInquiries.desc")}</Text>
             </View>
             <View style={styles.supportItem}>
-              <Text style={styles.supportTitle}>الشكاوى والاقتراحات</Text>
-              <Text style={styles.supportDescription}>نرحب بملاحظاتكم لتحسين خدماتنا</Text>
+              <Text style={styles.supportTitle}>{t("contactUs.complaints.title")}</Text>
+              <Text style={styles.supportDescription}>{t("contactUs.complaints.desc")}</Text>
             </View>
           </View>
         </View>
@@ -324,6 +326,7 @@ export default function ContactUsScreen() {
 }
 
 function InquiryForm() {
+  const { t } = useI18n();
   const { user } = useApp();
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -333,7 +336,7 @@ function InquiryForm() {
 
   const handleSendInquiry = () => {
     if (!name.trim() || !email.trim() || !message.trim()) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول");
+      Alert.alert(t("common.error"), t("contactUs.fillAllFields"));
       return;
     }
 
@@ -350,11 +353,11 @@ function InquiryForm() {
       },
       {
         onSuccess: () => {
-          Alert.alert("نجح", "تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.");
+          Alert.alert(t("common.success"), t("contactUs.messageSent"));
           setMessage("");
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message || "فشل إرسال الرسالة");
+          Alert.alert(t("common.error"), error.message || t("contactUs.sendFailed"));
         },
       }
     );
@@ -362,25 +365,25 @@ function InquiryForm() {
 
   return (
     <View style={styles.inquirySection}>
-      <Text style={styles.sectionTitle}>أرسل رسالة</Text>
+      <Text style={styles.sectionTitle}>{t("contactUs.sendMessageTitle")}</Text>
       <View style={styles.inquiryForm}>
-        <TextInput style={styles.inquiryInput} placeholder="الاسم الكامل" value={name} onChangeText={setName} />
+        <TextInput style={styles.inquiryInput} placeholder={t("auth.nameLabel")} value={name} onChangeText={setName} />
         <TextInput
           style={styles.inquiryInput}
-          placeholder="البريد الإلكتروني"
+          placeholder={t("common.email")}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
         />
         <TextInput
           style={[styles.inquiryInput, styles.messageInput]}
-          placeholder="رسالتك..."
+          placeholder={t("contactUs.messagePlaceholder")}
           value={message}
           onChangeText={setMessage}
           multiline
         />
         <Button
-          title={createInquiryMutation.isPending ? "جاري الإرسال..." : "إرسال الرسالة"}
+          title={createInquiryMutation.isPending ? t("common.sending") : t("contactUs.sendBtn")}
           onPress={handleSendInquiry}
           disabled={createInquiryMutation.isPending}
           type="primary"

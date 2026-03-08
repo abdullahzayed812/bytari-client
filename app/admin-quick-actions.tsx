@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter } from 'expo-router';
+import { useI18n } from "@/providers/I18nProvider";
 import { 
   Users, MessageSquare, FileText, 
   Heart, Store, BarChart3,
@@ -23,6 +24,7 @@ interface QuickAction {
 }
 
 export default function AdminQuickActionsScreen() {
+  const { t } = useI18n();
   const { isSuperAdmin, isModerator, moderatorPermissions } = useApp();
   const router = useRouter();
 
@@ -70,7 +72,7 @@ export default function AdminQuickActionsScreen() {
   const quickActions: QuickAction[] = [
     {
       id: 'users',
-      title: 'إدارة الأدوار',
+      title: t("adminQuickActions.manageRoles"),
       icon: Users,
       color: '#3B82F6',
       onPress: () => router.push('/admin-users-list'),
@@ -78,7 +80,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'messages',
-      title: 'إرسال رسالة عامة',
+      title: t("adminQuickActions.sendMessage"),
       icon: MessageSquare,
       color: '#10B981',
       onPress: () => router.push('/admin-messages'),
@@ -86,7 +88,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'ads',
-      title: 'إدارة الإعلانات',
+      title: t("adminQuickActions.manageAds"),
       icon: Megaphone,
       color: '#F59E0B',
       onPress: () => router.push('/admin-ads-management'),
@@ -94,7 +96,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'approvals',
-      title: 'إدارة الموافقات',
+      title: t("adminQuickActions.manageApprovals"),
       icon: CheckCircle,
       color: '#8B5CF6',
       onPress: () => router.push('/admin-approvals'),
@@ -102,7 +104,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'stats',
-      title: 'الإحصائيات',
+      title: t("adminQuickActions.statistics"),
       icon: BarChart3,
       color: '#EF4444',
       onPress: () => router.push('/admin-dashboard'),
@@ -110,7 +112,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'notifications',
-      title: 'إدارة الإشعارات',
+      title: t("adminQuickActions.manageNotifications"),
       icon: Bell,
       color: '#06B6D4',
       onPress: () => router.push('/admin-notifications'),
@@ -118,7 +120,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'stores',
-      title: 'إدارة المتاجر',
+      title: t("adminQuickActions.manageStores"),
       icon: Store,
       color: '#84CC16',
       onPress: () => router.push('/admin-stores-management'),
@@ -126,7 +128,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'clinics',
-      title: 'إدارة العيادات',
+      title: t("adminQuickActions.manageClinics"),
       icon: Stethoscope,
       color: '#F97316',
       onPress: () => router.push('/admin-clinics-management'),
@@ -134,7 +136,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'pets',
-      title: 'إدارة الحيوانات',
+      title: t("adminQuickActions.managePets"),
       icon: Heart,
       color: '#EC4899',
       onPress: () => router.push('/admin-pets-management'),
@@ -142,7 +144,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'tips',
-      title: 'إدارة النصائح',
+      title: t("adminQuickActions.manageTips"),
       icon: FileText,
       color: '#6366F1',
       onPress: () => router.push('/admin-content-manager?type=tips'),
@@ -150,7 +152,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'articles',
-      title: 'إدارة المقالات',
+      title: t("adminQuickActions.manageArticles"),
       icon: BookOpen,
       color: '#14B8A6',
       onPress: () => router.push('/admin-content-manager?type=articles'),
@@ -158,7 +160,7 @@ export default function AdminQuickActionsScreen() {
     },
     {
       id: 'books',
-      title: 'إدارة الكتب',
+      title: t("adminQuickActions.manageBooks"),
       icon: Grid3X3,
       color: '#A855F7',
       onPress: () => router.push('/admin-content-manager?type=books'),
@@ -193,13 +195,13 @@ export default function AdminQuickActionsScreen() {
         >
           <ArrowLeft size={24} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>لوحة تحكم الإدارة</Text>
+        <Text style={styles.headerTitle}>{t("adminQuickActions.title")}</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
+          <Text style={styles.sectionTitle}>{t("adminQuickActions.quickActions")}</Text>
           <View style={styles.actionsGrid}>
             {availableActions.map((action) => {
               const IconComponent = action.icon;
@@ -222,10 +224,9 @@ export default function AdminQuickActionsScreen() {
         {availableActions.length === 0 && (
           <View style={styles.noPermissionsContainer}>
             <Shield size={64} color={COLORS.darkGray} />
-            <Text style={styles.noPermissionsTitle}>لا توجد صلاحيات</Text>
+            <Text style={styles.noPermissionsTitle}>{t("adminQuickActions.noPermissionsTitle")}</Text>
             <Text style={styles.noPermissionsText}>
-              ليس لديك صلاحيات للوصول إلى أي من الأقسام الإدارية.
-              يرجى التواصل مع الإدارة العامة لطلب الصلاحيات المناسبة.
+              {t("adminQuickActions.noPermissionsText")}
             </Text>
           </View>
         )}

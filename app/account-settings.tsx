@@ -19,8 +19,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "../providers/AppProvider";
 import { ImageUploader } from "../components/ImageUploader";
+import { useI18n } from "../providers/I18nProvider";
 
 export default function AccountSettingsScreen() {
+  const { t } = useI18n();
   const { user, logout } = useApp();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
@@ -58,7 +60,7 @@ export default function AccountSettingsScreen() {
 
   const handleSave = () => {
     if (!name.trim() || !email.trim()) {
-      Alert.alert("خطأ", "يرجى ملء حقول الاسم والبريد الإلكتروني");
+      Alert.alert(t("common.error"), t("accountSettings.fillNameEmail"));
       return;
     }
 
@@ -66,11 +68,11 @@ export default function AccountSettingsScreen() {
       { name, phone, avatar },
       {
         onSuccess: () => {
-          Alert.alert("تم الحفظ", "تم تحديث معلوماتك بنجاح");
+          Alert.alert(t("common.success"), t("accountSettings.saveSuccess"));
           setIsEditing(false);
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message || "فشل تحديث المعلومات");
+          Alert.alert(t("common.error"), error.message || t("accountSettings.updateFailed"));
         },
       }
     );
@@ -82,12 +84,12 @@ export default function AccountSettingsScreen() {
 
   const submitChangePassword = () => {
     if (!currentPassword || !newPassword) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول");
+      Alert.alert(t("common.error"), t("common.required"));
       return;
     }
 
     if (newPassword.length < 8) {
-      Alert.alert("خطأ", "كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل");
+      Alert.alert(t("common.error"), t("accountSettings.passwordMinLength"));
       return;
     }
 
@@ -95,33 +97,33 @@ export default function AccountSettingsScreen() {
       { currentPassword, newPassword },
       {
         onSuccess: () => {
-          Alert.alert("تم بنجاح", "تم تغيير كلمة المرور بنجاح");
+          Alert.alert(t("common.success"), t("accountSettings.passwordChanged"));
           setShowPasswordModal(false);
           setCurrentPassword("");
           setNewPassword("");
         },
         onError: (error) => {
-          Alert.alert("خطأ", error.message || "فشل تغيير كلمة المرور");
+          Alert.alert(t("common.error"), error.message || t("accountSettings.passwordChangeFailed"));
         },
       }
     );
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert("حذف الحساب", "هل أنت متأكد من رغبتك في حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("accountSettings.deleteAccount"), t("accountSettings.deleteConfirmMsg"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "حذف",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           deleteAccountMutation.mutate(undefined, {
             onSuccess: () => {
-              Alert.alert("تم الحذف", "تم حذف حسابك بنجاح");
-              logout(); // Assuming signOut handles navigation to auth screen
+              Alert.alert(t("common.success"), t("accountSettings.deletedMsg"));
+              logout();
               router.replace("/(auth)/login");
             },
             onError: (error) => {
-              Alert.alert("خطأ", error.message || "فشل حذف الحساب");
+              Alert.alert(t("common.error"), error.message || t("accountSettings.deleteFailed"));
             },
           });
         },
@@ -133,7 +135,7 @@ export default function AccountSettingsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text>جاري تحميل معلومات الحساب...</Text>
+        <Text>{t("accountSettings.loading")}</Text>
       </View>
     );
   }
@@ -150,7 +152,7 @@ export default function AccountSettingsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "إعدادات الحساب",
+          title: t("screens.accountSettings"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black, fontWeight: "bold" },
           headerLeft: () => (
@@ -192,15 +194,15 @@ export default function AccountSettingsScreen() {
           ) : (
             <User size={40} color={COLORS.white} />
           )}
-          <Text style={styles.headerText}>إدارة معلومات حسابك الشخصي</Text>
+          <Text style={styles.headerText}>{t("accountSettings.manageInfo")}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>المعلومات الشخصية</Text>
+          <Text style={styles.sectionTitle}>{t("accountSettings.personalInfo")}</Text>
 
           <View style={styles.infoCard}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>الاسم الكامل</Text>
+              <Text style={styles.inputLabel}>{t("accountSettings.fullName")}</Text>
               <View style={styles.inputWrapper}>
                 <User size={20} color={COLORS.darkGray} />
                 <TextInput
@@ -208,14 +210,14 @@ export default function AccountSettingsScreen() {
                   value={name}
                   onChangeText={setName}
                   editable={isEditing}
-                  placeholder="أدخل اسمك الكامل"
+                  placeholder={t("accountSettings.enterFullName")}
                   placeholderTextColor={COLORS.darkGray}
                 />
               </View>
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>البريد الإلكتروني</Text>
+              <Text style={styles.inputLabel}>{t("common.email")}</Text>
               <View style={styles.inputWrapper}>
                 <Mail size={20} color={COLORS.darkGray} />
                 <TextInput
@@ -223,7 +225,7 @@ export default function AccountSettingsScreen() {
                   value={email}
                   onChangeText={setEmail}
                   editable={isEditing}
-                  placeholder="أدخل بريدك الإلكتروني"
+                  placeholder={t("auth.emailLabel")}
                   placeholderTextColor={COLORS.darkGray}
                   keyboardType="email-address"
                 />
@@ -231,7 +233,7 @@ export default function AccountSettingsScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>رقم الهاتف</Text>
+              <Text style={styles.inputLabel}>{t("common.phone")}</Text>
               <View style={styles.inputWrapper}>
                 <Phone size={20} color={COLORS.darkGray} />
                 <TextInput
@@ -239,7 +241,7 @@ export default function AccountSettingsScreen() {
                   value={phone}
                   onChangeText={setPhone}
                   editable={isEditing}
-                  placeholder="أدخل رقم هاتفك"
+                  placeholder={t("accountSettings.enterPhone")}
                   placeholderTextColor={COLORS.darkGray}
                   keyboardType="phone-pad"
                 />
@@ -249,13 +251,13 @@ export default function AccountSettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>إعدادات الإشعارات</Text>
+          <Text style={styles.sectionTitle}>{t("accountSettings.notifSettings")}</Text>
 
           <View style={styles.settingsCard}>
             <View style={styles.settingItem}>
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>الإشعارات العامة</Text>
-                <Text style={styles.settingDescription}>تلقي إشعارات حول التحديثات والأخبار</Text>
+                <Text style={styles.settingTitle}>{t("accountSettings.generalNotif")}</Text>
+                <Text style={styles.settingDescription}>{t("accountSettings.generalNotifDesc")}</Text>
               </View>
               <Switch
                 value={notifications}
@@ -267,8 +269,8 @@ export default function AccountSettingsScreen() {
 
             <View style={styles.settingItem}>
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>إشعارات البريد الإلكتروني</Text>
-                <Text style={styles.settingDescription}>تلقي رسائل بريد إلكتروني دورية</Text>
+                <Text style={styles.settingTitle}>{t("accountSettings.emailNotif")}</Text>
+                <Text style={styles.settingDescription}>{t("accountSettings.emailNotifDesc")}</Text>
               </View>
               <Switch
                 value={emailNotifications}
@@ -281,15 +283,15 @@ export default function AccountSettingsScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>الأمان</Text>
+          <Text style={styles.sectionTitle}>{t("accountSettings.security")}</Text>
 
           <View style={styles.actionCard}>
             <TouchableOpacity style={styles.actionItem} onPress={handleChangePassword}>
               <View style={styles.actionContent}>
                 <Lock size={24} color={COLORS.primary} />
                 <View style={styles.actionInfo}>
-                  <Text style={styles.actionTitle}>تغيير كلمة المرور</Text>
-                  <Text style={styles.actionDescription}>تحديث كلمة مرور حسابك</Text>
+                  <Text style={styles.actionTitle}>{t("accountSettings.changePassword")}</Text>
+                  <Text style={styles.actionDescription}>{t("accountSettings.changePasswordDesc")}</Text>
                 </View>
               </View>
               <ArrowLeft size={20} color={COLORS.darkGray} />
@@ -298,15 +300,15 @@ export default function AccountSettingsScreen() {
         </View>
 
         <View style={styles.dangerSection}>
-          <Text style={styles.dangerTitle}>المنطقة الخطرة</Text>
+          <Text style={styles.dangerTitle}>{t("accountSettings.dangerZone")}</Text>
 
           <View style={styles.dangerCard}>
             <TouchableOpacity style={styles.dangerItem} onPress={handleDeleteAccount}>
               <View style={styles.dangerContent}>
                 <Trash2 size={24} color={COLORS.error} />
                 <View style={styles.dangerInfo}>
-                  <Text style={styles.dangerActionTitle}>حذف الحساب</Text>
-                  <Text style={styles.dangerDescription}>حذف حسابك وجميع بياناتك نهائياً</Text>
+                  <Text style={styles.dangerActionTitle}>{t("accountSettings.deleteAccount")}</Text>
+                  <Text style={styles.dangerDescription}>{t("accountSettings.deleteAccountDesc")}</Text>
                 </View>
               </View>
               <ArrowLeft size={20} color={COLORS.error} />
@@ -325,7 +327,7 @@ export default function AccountSettingsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>تغيير كلمة المرور</Text>
+              <Text style={styles.modalTitle}>{t("accountSettings.changePassword")}</Text>
               <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
                 <X size={24} color={COLORS.black} />
               </TouchableOpacity>
@@ -333,7 +335,7 @@ export default function AccountSettingsScreen() {
 
             <View style={styles.modalContent}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>كلمة المرور الحالية</Text>
+                <Text style={styles.inputLabel}>{t("accountSettings.currentPassword")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={currentPassword}
@@ -344,7 +346,7 @@ export default function AccountSettingsScreen() {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>كلمة المرور الجديدة</Text>
+                <Text style={styles.inputLabel}>{t("accountSettings.newPassword")}</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={newPassword}
@@ -362,7 +364,7 @@ export default function AccountSettingsScreen() {
                 {changePasswordMutation.isPending ? (
                   <ActivityIndicator color={COLORS.white} />
                 ) : (
-                  <Text style={styles.saveButtonText}>حفظ التغييرات</Text>
+                  <Text style={styles.saveButtonText}>{t("accountSettings.saveChanges")}</Text>
                 )}
               </TouchableOpacity>
             </View>

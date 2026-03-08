@@ -17,10 +17,12 @@ import { COLORS } from "../constants/colors";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
+import { useI18n } from "@/providers/I18nProvider";
 
 const { width: screenWidth } = Dimensions.get("window");
 
 export default function AdoptionPetDetailsScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { id, type } = useLocalSearchParams<{
@@ -45,12 +47,12 @@ export default function AdoptionPetDetailsScreen() {
 
   const getAdoptionStatus = (pet: any) => {
     if (pet.isClosedByOwner) {
-      return { text: " مغلق", color: COLORS.darkGray };
+      return { text: t("common.closed"), color: COLORS.darkGray };
     }
     if (pet.isAvailable) {
-      return { text: type === "adoption" ? "للتبني" : "للتزاوج", color: type === "adoption" ? "#10B981" : "#8B5CF6" };
+      return { text: type === "adoption" ? t("common.forAdoption") : t("common.forMating"), color: type === "adoption" ? "#10B981" : "#8B5CF6" };
     }
-    return { text: "غير متاح", color: COLORS.darkGray };
+    return { text: t("adoptionPet.unavailable"), color: COLORS.darkGray };
   };
 
   const handleCloseListing = () => {
@@ -59,21 +61,21 @@ export default function AdoptionPetDetailsScreen() {
     const mutation = type === "adoption" ? closeAdoptionMutation : closeBreedingMutation;
     const petId = pet.id;
 
-    Alert.alert("تأكيد الإغلاق", "هل أنت متأكد أنك تريد إغلاق هذا الإعلان؟", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("adoptionPet.confirmClose"), t("adoptionPet.confirmCloseMsg"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "نعم، إغلاق",
+        text: t("adoptionPet.yesClose"),
         onPress: () => {
           mutation.mutate(
             { petId, ownerId: user.id },
             {
               onSuccess: () => {
-                Alert.alert("تم الإغلاق", "تم إغلاق الإعلان بنجاح.");
+                Alert.alert(t("adoptionPet.closedTitle"), t("adoptionPet.closedMsg"));
                 refetch();
                 queryClient.invalidateQueries(trpc.pets.getApproved.queryKey);
               },
               onError: (err) => {
-                Alert.alert("خطأ", "حدث خطأ أثناء إغلاق الإعلان: " + err.message);
+                Alert.alert(t("common.error"), t("adoptionPet.closeError") + err.message);
               },
             }
           );
@@ -85,11 +87,10 @@ export default function AdoptionPetDetailsScreen() {
   const handleContact = () => {
     if (!pet) return;
 
-    const actionType = type === "adoption" ? "التبني" : "التزاوج";
-    Alert.alert("اتصال بالمالك", `هل تريد الاتصال بمالك ${pet.name} لـ${actionType}؟`, [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("adoptionPet.contactTitle"), t(type === "adoption" ? "adoptionPet.contactConfirmAdoption" : "adoptionPet.contactConfirmBreeding").replace("{name}", pet.name), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "اتصال",
+        text: t("common.call"),
         onPress: () => {
           if (pet.contactInfo.phone) {
             Linking.openURL(`tel:${pet.contactInfo.phone}`);
@@ -106,10 +107,10 @@ export default function AdoptionPetDetailsScreen() {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: "جاري التحميل..." }} />
+        <Stack.Screen options={{ title: t("common.loading") }} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>جاري تحميل البيانات...</Text>
+          <Text style={styles.loadingText}>{t("common.loadingDetails")}</Text>
         </View>
       </View>
     );
@@ -118,11 +119,11 @@ export default function AdoptionPetDetailsScreen() {
   if (error || !pet) {
     return (
       <View style={styles.container}>
-        <Stack.Screen options={{ title: "خطأ" }} />
+        <Stack.Screen options={{ title: t("common.error") }} />
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>الحيوان غير موجود</Text>
+          <Text style={styles.errorText}>{t("adoptionPet.notFound")}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>العودة</Text>
+            <Text style={styles.backButtonText}>{t("common.back")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -130,7 +131,7 @@ export default function AdoptionPetDetailsScreen() {
   }
 
   const getGenderText = (gender: string) => {
-    return gender === "male" ? "ذكر" : gender === "female" ? "أنثى" : "غير محدد";
+    return gender === "male" ? t("adoptionPet.male") : gender === "female" ? t("adoptionPet.female") : t("adoptionPet.genderUnknown");
   };
 
   return (
@@ -179,7 +180,7 @@ export default function AdoptionPetDetailsScreen() {
             <View style={styles.priceBadgeContainer}>
               <View style={styles.priceBadge}>
                 <Award size={14} color={COLORS.white} />
-                <Text style={styles.priceBadgeText}>{pet.price} دينار</Text>
+                <Text style={styles.priceBadgeText}>{pet.price} {t("adoptionPet.currency")}</Text>
               </View>
             </View>
           )}
@@ -195,7 +196,7 @@ export default function AdoptionPetDetailsScreen() {
 
         {/* Pet Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>معلومات الحيوان</Text>
+          <Text style={styles.sectionTitle}>{t("adoptionPet.petInfo")}</Text>
 
           {pet.age && (
             <View style={styles.detailRow}>
@@ -203,8 +204,8 @@ export default function AdoptionPetDetailsScreen() {
                 <Calendar size={20} color="#10B981" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>العمر</Text>
-                <Text style={styles.detailValue}>{pet.age} سنة</Text>
+                <Text style={styles.detailLabel}>{t("adoptionPet.age")}</Text>
+                <Text style={styles.detailValue}>{pet.age} {t("adoptionPet.ageUnit")}</Text>
               </View>
             </View>
           )}
@@ -215,7 +216,7 @@ export default function AdoptionPetDetailsScreen() {
                 <User size={20} color="#10B981" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>الجنس</Text>
+                <Text style={styles.detailLabel}>{t("adoptionPet.gender")}</Text>
                 <Text style={styles.detailValue}>{getGenderText(pet.gender)}</Text>
               </View>
             </View>
@@ -227,7 +228,7 @@ export default function AdoptionPetDetailsScreen() {
                 <Palette size={20} color="#10B981" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>اللون</Text>
+                <Text style={styles.detailLabel}>{t("adoptionPet.color")}</Text>
                 <Text style={styles.detailValue}>{pet.color}</Text>
               </View>
             </View>
@@ -239,8 +240,8 @@ export default function AdoptionPetDetailsScreen() {
                 <Weight size={20} color="#10B981" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>الوزن</Text>
-                <Text style={styles.detailValue}>{pet.weight} كيلو</Text>
+                <Text style={styles.detailLabel}>{t("adoptionPet.weight")}</Text>
+                <Text style={styles.detailValue}>{pet.weight} {t("adoptionPet.weightUnit")}</Text>
               </View>
             </View>
           )}
@@ -251,7 +252,7 @@ export default function AdoptionPetDetailsScreen() {
                 <MapPin size={20} color="#10B981" />
               </View>
               <View style={styles.detailContent}>
-                <Text style={styles.detailLabel}>الموقع</Text>
+                <Text style={styles.detailLabel}>{t("common.location")}</Text>
                 <Text style={styles.detailValue}>{pet.location}</Text>
               </View>
             </View>
@@ -261,7 +262,7 @@ export default function AdoptionPetDetailsScreen() {
         {/* Description */}
         {pet.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>الوصف</Text>
+            <Text style={styles.sectionTitle}>{t("common.description")}</Text>
             <Text style={styles.description}>{pet.description}</Text>
           </View>
         )}
@@ -271,14 +272,14 @@ export default function AdoptionPetDetailsScreen() {
           <>
             {pet.pedigree && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>السلالة</Text>
+                <Text style={styles.sectionTitle}>{t("adoptionPet.pedigree")}</Text>
                 <Text style={styles.description}>{pet.pedigree}</Text>
               </View>
             )}
 
             {pet.healthCertificates && pet.healthCertificates.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>الشهادات الصحية</Text>
+                <Text style={styles.sectionTitle}>{t("adoptionPet.healthCerts")}</Text>
                 {pet.healthCertificates.map((cert: string, index: number) => (
                   <Text key={index} style={styles.certificateText}>
                     • {cert}
@@ -292,7 +293,7 @@ export default function AdoptionPetDetailsScreen() {
         {/* Special Requirements */}
         {pet.specialRequirements && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>متطلبات خاصة</Text>
+            <Text style={styles.sectionTitle}>{t("adoptionPet.specialReqs")}</Text>
             <Text style={styles.description}>{pet.specialRequirements}</Text>
           </View>
         )}
@@ -300,7 +301,7 @@ export default function AdoptionPetDetailsScreen() {
         {/* Owner Info */}
         {!pet.isClosedByOwner && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>معلومات المالك</Text>
+            <Text style={styles.sectionTitle}>{t("adoptionPet.ownerInfo")}</Text>
 
             <View style={styles.ownerCard}>
               <View style={styles.ownerAvatar}>
@@ -326,12 +327,12 @@ export default function AdoptionPetDetailsScreen() {
         {!isOwner && !pet.isClosedByOwner && (
           <TouchableOpacity style={styles.contactActionButton} onPress={handleContact}>
             <Phone size={20} color={COLORS.white} />
-            <Text style={styles.contactActionText}>{type === "adoption" ? "اتصال للتبني" : "اتصال للتزاوج"}</Text>
+            <Text style={styles.contactActionText}>{type === "adoption" ? t("adoptionPet.callForAdoption") : t("adoptionPet.callForBreeding")}</Text>
           </TouchableOpacity>
         )}
         {isOwner && !pet.isClosedByOwner && (
           <TouchableOpacity style={styles.closeActionButton} onPress={handleCloseListing}>
-            <Text style={styles.closeActionText}>إغلاق الإعلان</Text>
+            <Text style={styles.closeActionText}>{t("adoptionPet.closeListing")}</Text>
           </TouchableOpacity>
         )}
       </View>

@@ -6,6 +6,7 @@ import { ArrowLeft, Upload, MapPin, Clock, Phone, Mail, FileText, Camera } from 
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { COLORS } from "@/constants/colors";
+import { useI18n } from "@/providers/I18nProvider";
 
 interface WarehouseFormData {
   name: string;
@@ -24,6 +25,7 @@ interface WarehouseFormData {
 }
 
 export default function AddWarehousePage() {
+  const { t } = useI18n();
   const [formData, setFormData] = useState<WarehouseFormData>({
     name: "",
     description: "",
@@ -54,7 +56,7 @@ export default function AddWarehousePage() {
       ...prev,
       [type]: [...prev[type], mockImageUrl],
     }));
-    Alert.alert("تم", "تم رفع الصورة بنجاح");
+    Alert.alert(t("common.success"), t("addWarehouse.uploadSuccess"));
   };
 
   const removeImage = (type: "licenseImages" | "identityImages" | "officialDocuments" | "images", index: number) => {
@@ -67,27 +69,27 @@ export default function AddWarehousePage() {
   const handleSubmit = () => {
     // Validation
     if (!formData.name.trim()) {
-      Alert.alert("خطأ", "اسم المذخر مطلوب");
+      Alert.alert(t("common.error"), t("addWarehouse.nameRequiredError"));
       return;
     }
     if (!formData.address.trim()) {
-      Alert.alert("خطأ", "عنوان المذخر مطلوب");
+      Alert.alert(t("common.error"), t("addWarehouse.addressRequiredError"));
       return;
     }
     if (!formData.phone.trim()) {
-      Alert.alert("خطأ", "رقم الهاتف مطلوب");
+      Alert.alert(t("common.error"), t("addWarehouse.phoneRequiredError"));
       return;
     }
     if (!formData.licenseNumber.trim()) {
-      Alert.alert("خطأ", "رقم الترخيص مطلوب");
+      Alert.alert(t("common.error"), t("addWarehouse.licenseNumRequiredError"));
       return;
     }
     if (formData.licenseImages.length === 0) {
-      Alert.alert("خطأ", "صور الترخيص مطلوبة");
+      Alert.alert(t("common.error"), t("addWarehouse.licenseImagesRequiredError"));
       return;
     }
     if (formData.identityImages.length === 0) {
-      Alert.alert("خطأ", "صور الهوية مطلوبة");
+      Alert.alert(t("common.error"), t("addWarehouse.identityImagesRequiredError"));
       return;
     }
 
@@ -103,7 +105,7 @@ export default function AddWarehousePage() {
       },
       onError: (error) => {
         console.error("Warehouse registration error:", error);
-        Alert.alert("خطأ", error.message || "حدث خطأ أثناء تسجيل المذخر");
+        Alert.alert(t("common.error"), error.message || t("addWarehouse.registerError"));
       },
     });
   };
@@ -120,7 +122,7 @@ export default function AddWarehousePage() {
 
       <TouchableOpacity style={styles.uploadButton} onPress={() => handleImageUpload(type)}>
         <Upload size={20} color={COLORS.primary} />
-        <Text style={styles.uploadButtonText}>رفع صورة</Text>
+        <Text style={styles.uploadButtonText}>{t("addWarehouse.uploadImage")}</Text>
       </TouchableOpacity>
 
       {formData[type].length > 0 && (
@@ -142,7 +144,7 @@ export default function AddWarehousePage() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إضافة مذخر بيطري",
+          title: t("addWarehouse.screenTitle"),
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
               <ArrowLeft size={24} color={COLORS.black} />
@@ -154,33 +156,33 @@ export default function AddWarehousePage() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.description}>
-            املأ النموذج أدناه لتسجيل مذخرك البيطري. سيتم مراجعة طلبك من قبل الإدارة قبل التفعيل.
+            {t("addWarehouse.description")}
           </Text>
 
           {/* Basic Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              المعلومات الأساسية <Text style={styles.required}>*</Text>
+              {t("addWarehouse.basicInfo")} <Text style={styles.required}>*</Text>
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>اسم المذخر *</Text>
+              <Text style={styles.label}>{t("addWarehouse.nameRequired")}</Text>
               <TextInput
                 style={styles.input}
                 value={formData.name}
                 onChangeText={(value) => handleInputChange("name", value)}
-                placeholder="أدخل اسم المذخر"
+                placeholder={t("addWarehouse.enterName")}
                 placeholderTextColor={COLORS.gray}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>الوصف</Text>
+              <Text style={styles.label}>{t("common.description")}</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 value={formData.description}
                 onChangeText={(value) => handleInputChange("description", value)}
-                placeholder="وصف مختصر عن المذخر وخدماته"
+                placeholder={t("addWarehouse.enterDesc")}
                 placeholderTextColor={COLORS.gray}
                 multiline
                 numberOfLines={3}
@@ -191,32 +193,32 @@ export default function AddWarehousePage() {
           {/* Contact Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              معلومات الاتصال <Text style={styles.required}>*</Text>
+              {t("addWarehouse.contactInfo")} <Text style={styles.required}>*</Text>
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>العنوان *</Text>
+              <Text style={styles.label}>{t("addWarehouse.addressRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <MapPin size={20} color={COLORS.gray} />
                 <TextInput
                   style={styles.inputWithIconText}
                   value={formData.address}
                   onChangeText={(value) => handleInputChange("address", value)}
-                  placeholder="العنوان الكامل للمذخر"
+                  placeholder={t("addWarehouse.enterAddress")}
                   placeholderTextColor={COLORS.gray}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>رقم الهاتف *</Text>
+              <Text style={styles.label}>{t("addWarehouse.phoneRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <Phone size={20} color={COLORS.gray} />
                 <TextInput
                   style={styles.inputWithIconText}
                   value={formData.phone}
                   onChangeText={(value) => handleInputChange("phone", value)}
-                  placeholder="رقم الهاتف"
+                  placeholder={t("addWarehouse.phoneLabel")}
                   placeholderTextColor={COLORS.gray}
                   keyboardType="phone-pad"
                 />
@@ -224,14 +226,14 @@ export default function AddWarehousePage() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>البريد الإلكتروني</Text>
+              <Text style={styles.label}>{t("addWarehouse.emailLabel")}</Text>
               <View style={styles.inputWithIcon}>
                 <Mail size={20} color={COLORS.gray} />
                 <TextInput
                   style={styles.inputWithIconText}
                   value={formData.email}
                   onChangeText={(value) => handleInputChange("email", value)}
-                  placeholder="البريد الإلكتروني"
+                  placeholder={t("addWarehouse.emailLabel")}
                   placeholderTextColor={COLORS.gray}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -240,14 +242,14 @@ export default function AddWarehousePage() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>ساعات العمل</Text>
+              <Text style={styles.label}>{t("addWarehouse.workingHours")}</Text>
               <View style={styles.inputWithIcon}>
                 <Clock size={20} color={COLORS.gray} />
                 <TextInput
                   style={styles.inputWithIconText}
                   value={formData.workingHours}
                   onChangeText={(value) => handleInputChange("workingHours", value)}
-                  placeholder="مثال: السبت - الخميس: 8:00 ص - 6:00 م"
+                  placeholder={t("addWarehouse.workingHoursExample")}
                   placeholderTextColor={COLORS.gray}
                 />
               </View>
@@ -257,18 +259,18 @@ export default function AddWarehousePage() {
           {/* License Information */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              معلومات الترخيص <Text style={styles.required}>*</Text>
+              {t("addWarehouse.licenseInfo")} <Text style={styles.required}>*</Text>
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>رقم الترخيص *</Text>
+              <Text style={styles.label}>{t("addWarehouse.licenseNumberRequired")}</Text>
               <View style={styles.inputWithIcon}>
                 <FileText size={20} color={COLORS.gray} />
                 <TextInput
                   style={styles.inputWithIconText}
                   value={formData.licenseNumber}
                   onChangeText={(value) => handleInputChange("licenseNumber", value)}
-                  placeholder="رقم ترخيص المذخر البيطري"
+                  placeholder={t("addWarehouse.licenseNumberPlaceholder")}
                   placeholderTextColor={COLORS.gray}
                 />
               </View>
@@ -276,10 +278,10 @@ export default function AddWarehousePage() {
           </View>
 
           {/* Document Uploads */}
-          {renderImageSection("صور الترخيص", "licenseImages", true)}
-          {renderImageSection("صور الهوية الشخصية", "identityImages", true)}
-          {renderImageSection("المستندات الرسمية", "officialDocuments")}
-          {renderImageSection("صور المذخر", "images")}
+          {renderImageSection(t("addWarehouse.licenseImages"), "licenseImages", true)}
+          {renderImageSection(t("addWarehouse.identityImages"), "identityImages", true)}
+          {renderImageSection(t("addWarehouse.officialDocs"), "officialDocuments")}
+          {renderImageSection(t("addWarehouse.warehouseImages"), "images")}
 
           {/* Submit Button */}
           <TouchableOpacity
@@ -288,12 +290,12 @@ export default function AddWarehousePage() {
             disabled={createWarehouseMutation.isPending}
           >
             <Text style={styles.submitButtonText}>
-              {createWarehouseMutation.isPending ? "جاري الإرسال..." : "إرسال طلب التسجيل"}
+              {createWarehouseMutation.isPending ? t("common.sending") : t("addWarehouse.submit")}
             </Text>
           </TouchableOpacity>
 
           <Text style={styles.note}>
-            ملاحظة: سيتم مراجعة طلبك خلال 2-3 أيام عمل. ستصلك رسالة تأكيد عند الموافقة على الطلب.
+            {t("addWarehouse.note")}
           </Text>
         </View>
       </ScrollView>

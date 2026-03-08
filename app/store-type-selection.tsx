@@ -9,8 +9,10 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { ArrowLeft, Stethoscope, Heart, Store } from 'lucide-react-native';
 import { COLORS } from "../constants/colors";
+import { useI18n } from "../providers/I18nProvider";
 
 export default function StoreTypeSelectionScreen() {
+  const { t } = useI18n();
   const router = useRouter();
 
   const handleBack = () => {
@@ -28,9 +30,9 @@ export default function StoreTypeSelectionScreen() {
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
-          title: 'اختيار نوع المتجر',
+      <Stack.Screen
+        options={{
+          title: t("storeTypeSelection.title"),
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: 'bold' as const }
@@ -42,15 +44,13 @@ export default function StoreTypeSelectionScreen() {
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={24} color={COLORS.white} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>إدارة المتاجر</Text>
+          <Text style={styles.headerTitle}>{t("storeTypeSelection.manageStores")}</Text>
           <View style={styles.placeholder} />
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.title}>اختر نوع المتجر المراد إدارته</Text>
-          <Text style={styles.subtitle}>
-            يمكنك إدارة متاجر الأطباء البيطريين أو متاجر أصحاب الحيوانات
-          </Text>
+          <Text style={styles.title}>{t("storeTypeSelection.selectType")}</Text>
+          <Text style={styles.subtitle}>{t("storeTypeSelection.subtitle")}</Text>
 
           <View style={styles.optionsContainer}>
             {/* Vet Stores Option */}
@@ -62,15 +62,13 @@ export default function StoreTypeSelectionScreen() {
               <View style={styles.optionIcon}>
                 <Stethoscope size={48} color={COLORS.white} />
               </View>
-              <Text style={styles.optionTitle}>متاجر الأطباء البيطريين</Text>
-              <Text style={styles.optionDescription}>
-                إدارة المتاجر الخاصة بالأطباء البيطريين والعيادات
-              </Text>
+              <Text style={styles.optionTitle}>{t("storeTypeSelection.vetStores")}</Text>
+              <Text style={styles.optionDescription}>{t("storeTypeSelection.vetStoresDesc")}</Text>
               <View style={styles.optionFeatures}>
-                <Text style={styles.featureText}>• أدوية بيطرية</Text>
-                <Text style={styles.featureText}>• معدات طبية</Text>
-                <Text style={styles.featureText}>• مستلزمات العيادات</Text>
-                <Text style={styles.featureText}>• منتجات علاجية</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.vetMedicine")}</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.medEquipment")}</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.clinicSupplies")}</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.therapyProducts")}</Text>
               </View>
             </TouchableOpacity>
 
@@ -83,15 +81,13 @@ export default function StoreTypeSelectionScreen() {
               <View style={styles.optionIcon}>
                 <Heart size={48} color={COLORS.white} />
               </View>
-              <Text style={styles.optionTitle}>متاجر أصحاب الحيوانات</Text>
-              <Text style={styles.optionDescription}>
-                إدارة المتاجر الخاصة بأصحاب الحيوانات الأليفة
-              </Text>
+              <Text style={styles.optionTitle}>{t("storeTypeSelection.petOwnerStores")}</Text>
+              <Text style={styles.optionDescription}>{t("storeTypeSelection.petOwnerStoresDesc")}</Text>
               <View style={styles.optionFeatures}>
-                <Text style={styles.featureText}>• طعام الحيوانات</Text>
-                <Text style={styles.featureText}>• ألعاب وإكسسوارات</Text>
-                <Text style={styles.featureText}>• أقفاص ومساكن</Text>
-                <Text style={styles.featureText}>• منتجات العناية</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.petFood")}</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.toysAccessories")}</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.cagesHousing")}</Text>
+                <Text style={styles.featureText}>{t("storeTypeSelection.careProducts")}</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -102,16 +98,10 @@ export default function StoreTypeSelectionScreen() {
               <Store size={24} color={COLORS.primary} />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>معلومات هامة</Text>
-              <Text style={styles.infoText}>
-                • كل نوع متجر له نظام إدارة منفصل ومخصص
-              </Text>
-              <Text style={styles.infoText}>
-                • يمكنك التبديل بين الأنواع في أي وقت
-              </Text>
-              <Text style={styles.infoText}>
-                • جميع العمليات مراقبة ومسجلة للأمان
-              </Text>
+              <Text style={styles.infoTitle}>{t("storeTypeSelection.importantInfo")}</Text>
+              <Text style={styles.infoText}>{t("storeTypeSelection.info1")}</Text>
+              <Text style={styles.infoText}>{t("storeTypeSelection.info2")}</Text>
+              <Text style={styles.infoText}>{t("storeTypeSelection.info3")}</Text>
             </View>
           </View>
         </View>

@@ -5,6 +5,7 @@ import { Bell, AlertTriangle, Info, X, FileText, User, Building, Store } from "l
 import { COLORS } from "../constants/colors";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
+import { useI18n } from "@/providers/I18nProvider";
 // import { trpc } from "../lib/trpc";
 
 interface AdminNotification {
@@ -22,6 +23,7 @@ interface AdminNotification {
 }
 
 export default function AdminNotificationsScreen() {
+  const { t } = useI18n();
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread" | "high">("all");
 
@@ -95,17 +97,17 @@ export default function AdminNotificationsScreen() {
           refetch();
         },
         onError: () => {
-          Alert.alert("خطأ", "تعذر وضع الاشعار كمقروء");
+          Alert.alert(t("common.error"), t("adminNotifications.markReadError"));
         },
       }
     );
   };
 
   const deleteNotification = (id: number) => {
-    Alert.alert("حذف الإشعار", "هل أنت متأكد من حذف هذا الإشعار؟", [
-      { text: "إلغاء", style: "cancel" },
+    Alert.alert(t("adminNotifications.deleteTitle"), t("adminNotifications.deleteConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "حذف",
+        text: t("common.delete"),
         style: "destructive",
         onPress: () => {
           deleteNotificationMutation.mutate(
@@ -115,7 +117,7 @@ export default function AdminNotificationsScreen() {
                 refetch();
               },
               onError: () => {
-                Alert.alert("خطأ", "تعذر حذف الإشعار");
+                Alert.alert(t("common.error"), t("adminNotifications.deleteError"));
               },
             }
           );
@@ -144,11 +146,11 @@ export default function AdminNotificationsScreen() {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
     if (minutes < 60) {
-      return `منذ ${minutes} دقيقة`;
+      return t("common.minutesAgo").replace("{n}", String(minutes));
     } else if (hours < 24) {
-      return `منذ ${hours} ساعة`;
+      return t("common.hoursAgo").replace("{n}", String(hours));
     } else {
-      return `منذ ${days} يوم`;
+      return t("common.daysAgo").replace("{n}", String(days));
     }
   };
 
@@ -157,14 +159,14 @@ export default function AdminNotificationsScreen() {
       <View style={styles.container}>
         <Stack.Screen
           options={{
-            title: "إشعارات الإدارة",
+            title: t("adminNotifications.title"),
             headerStyle: { backgroundColor: COLORS.primary },
             headerTintColor: COLORS.white,
             headerTitleStyle: { fontWeight: "bold" },
           }}
         />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>جاري التحميل...</Text>
+          <Text style={styles.loadingText}>{t("common.loading")}</Text>
         </View>
       </View>
     );
@@ -175,7 +177,7 @@ export default function AdminNotificationsScreen() {
       <View style={styles.container}>
         <Stack.Screen
           options={{
-            title: "إشعارات الإدارة",
+            title: t("adminNotifications.title"),
             headerStyle: { backgroundColor: COLORS.primary },
             headerTintColor: COLORS.white,
             headerTitleStyle: { fontWeight: "bold" },
@@ -183,9 +185,9 @@ export default function AdminNotificationsScreen() {
         />
         <View style={styles.errorContainer}>
           <AlertTriangle size={48} color={COLORS.error} />
-          <Text style={styles.errorText}>حدث خطأ في تحميل الإشعارات</Text>
+          <Text style={styles.errorText}>{t("adminNotifications.loadError")}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Text style={styles.retryButtonText}>إعادة المحاولة</Text>
+            <Text style={styles.retryButtonText}>{t("common.retry")}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -196,7 +198,7 @@ export default function AdminNotificationsScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "إشعارات الإدارة",
+          title: t("adminNotifications.title"),
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" as const },
@@ -209,21 +211,21 @@ export default function AdminNotificationsScreen() {
           style={[styles.filterButton, filter === "all" && styles.activeFilter]}
           onPress={() => setFilter("all")}
         >
-          <Text style={[styles.filterText, filter === "all" && styles.activeFilterText]}>الكل</Text>
+          <Text style={[styles.filterText, filter === "all" && styles.activeFilterText]}>{t("common.all")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.filterButton, filter === "unread" && styles.activeFilter]}
           onPress={() => setFilter("unread")}
         >
-          <Text style={[styles.filterText, filter === "unread" && styles.activeFilterText]}>غير مقروءة</Text>
+          <Text style={[styles.filterText, filter === "unread" && styles.activeFilterText]}>{t("adminNotifications.unread")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.filterButton, filter === "high" && styles.activeFilter]}
           onPress={() => setFilter("high")}
         >
-          <Text style={[styles.filterText, filter === "high" && styles.activeFilterText]}>عالية الأولوية</Text>
+          <Text style={[styles.filterText, filter === "high" && styles.activeFilterText]}>{t("adminNotifications.highPriority")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -244,7 +246,7 @@ export default function AdminNotificationsScreen() {
                   <View style={styles.notificationContent}>
                     <Text style={styles.notificationTitle}>{notification.title}</Text>
                     {notification.type === "approval_request" && (
-                      <Text style={styles.notificationFrom}>طلب موافقة جديد</Text>
+                      <Text style={styles.notificationFrom}>{t("adminNotifications.approvalRequest")}</Text>
                     )}
                   </View>
                 </View>
@@ -279,7 +281,7 @@ export default function AdminNotificationsScreen() {
         ) : (
           <View style={styles.emptyState}>
             <Bell size={48} color={COLORS.gray} />
-            <Text style={styles.emptyText}>لا توجد إشعارات</Text>
+            <Text style={styles.emptyText}>{t("adminNotifications.noNotifications")}</Text>
           </View>
         )}
       </ScrollView>

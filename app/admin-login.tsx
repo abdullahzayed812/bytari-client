@@ -5,8 +5,10 @@ import { router } from "expo-router";
 import { useMutation } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function AdminLoginScreen() {
+  const { t } = useI18n();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -82,55 +84,51 @@ export default function AdminLoginScreen() {
         "veterinarian"
       );
 
-      Alert.alert("تم تسجيل الدخول بنجاح! 👋", `مرحباً بك ${name}`, [
+      Alert.alert(t("adminLogin.moderatorSuccess"), `مرحباً بك ${name}`, [
         {
-          text: "الانتقال للوحة التحكم",
+          text: t("adminLogin.moderatorGoToDashboard"),
           onPress: () => {
             router.replace("/moderator-quick-actions");
           },
         },
       ]);
     } catch (error) {
-      Alert.alert("خطأ", "فشل في تسجيل الدخول");
+      Alert.alert(t("common.error"), t("adminLogin.moderatorError"));
     }
   };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("خطأ", "يرجى إدخال البريد الإلكتروني وكلمة المرور");
+      Alert.alert(t("common.error"), t("adminLogin.fillRequired"));
       return;
     }
-
-    console.log("بدء عملية تسجيل دخول الإدارة...");
 
     loginMutation.mutate(
       { email: email.trim(), password },
       {
         onSuccess: (result) => {
           if (result.success) {
-            console.log("تم تسجيل دخول الإدارة بنجاح");
-
-            Alert.alert("مرحباً بك في الإدارة! 👋", result.message, [
+            Alert.alert(t("adminLogin.welcomeTitle"), result.message, [
               {
-                text: "العودة للصفحة الرئيسية",
+                text: t("adminLogin.goHome"),
                 onPress: () => {
                   router.replace("/(tabs)");
                 },
               },
               {
-                text: "الانتقال للوحة التحكم",
+                text: t("adminLogin.goDashboard"),
                 onPress: () => {
                   router.replace("/admin-dashboard");
                 },
               },
             ]);
           } else {
-            Alert.alert("خطأ في تسجيل الدخول ❌", result.message);
+            Alert.alert(t("adminLogin.loginError"), result.message);
           }
         },
         onError: (error) => {
-          console.error("خطأ في تسجيل دخول الإدارة:", error);
-          Alert.alert("خطأ في تسجيل الدخول ❌", "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.");
+          console.error("Admin login error:", error);
+          Alert.alert(t("adminLogin.loginError"), t("adminLogin.error"));
         },
       }
     );
@@ -142,15 +140,15 @@ export default function AdminLoginScreen() {
         <View style={styles.backButtonContainer}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <ArrowRight size={24} color="#6b7280" />
-            <Text style={styles.backButtonText}>العودة</Text>
+            <Text style={styles.backButtonText}>{t("common.back")}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <Lock size={40} color="#2563eb" />
           </View>
-          <Text style={styles.title}>لوحة تحكم الإدارة</Text>
-          <Text style={styles.subtitle}>تسجيل دخول المشرفين</Text>
+          <Text style={styles.title}>{t("adminLogin.title")}</Text>
+          <Text style={styles.subtitle}>{t("adminLogin.subtitle")}</Text>
         </View>
 
         <View style={styles.form}>
@@ -158,7 +156,7 @@ export default function AdminLoginScreen() {
             <User size={20} color="#6b7280" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
-              placeholder="البريد الإلكتروني"
+              placeholder={t("common.email")}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -173,7 +171,7 @@ export default function AdminLoginScreen() {
             </TouchableOpacity>
             <TextInput
               style={styles.input}
-              placeholder="كلمة المرور"
+              placeholder={t("auth.password")}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
@@ -187,13 +185,13 @@ export default function AdminLoginScreen() {
             disabled={loginMutation.isPending}
           >
             <Text style={styles.loginButtonText}>
-              {loginMutation.isPending ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+              {loginMutation.isPending ? t("adminLogin.loggingIn") : t("auth.login")}
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>🔑 بيانات الدخول</Text>
+          <Text style={styles.infoTitle}>{t("adminLogin.credentials")}</Text>
           <Text style={styles.infoText}>الأدمن الأساسي: zuhairalrawi0@gmail.com</Text>
           <Text style={styles.infoText}>كلمة المرور: zuh000123000321zuh</Text>
           <Text style={styles.infoNote}>⚠️ للمستخدمين المرقيين: استخدم بريدك الإلكتروني وكلمة المرور: admin123</Text>
@@ -201,27 +199,27 @@ export default function AdminLoginScreen() {
 
         {/* Test Moderator Buttons */}
         <View style={styles.testSection}>
-          <Text style={styles.testTitle}>🧪 اختبار المشرفين</Text>
+          <Text style={styles.testTitle}>{t("adminLogin.testModerators")}</Text>
           <TouchableOpacity
             style={styles.testButton}
             onPress={() => testModeratorLogin("courses")}
             disabled={loginMutation.isPending}
           >
-            <Text style={styles.testButtonText}>مشرف الدورات والندوات</Text>
+            <Text style={styles.testButtonText}>{t("adminLogin.coursesModerator")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.testButton}
             onPress={() => testModeratorLogin("union")}
             disabled={loginMutation.isPending}
           >
-            <Text style={styles.testButtonText}>مشرف النقابة</Text>
+            <Text style={styles.testButtonText}>{t("adminLogin.unionModerator")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.testButton}
             onPress={() => testModeratorLogin("hospitals")}
             disabled={loginMutation.isPending}
           >
-            <Text style={styles.testButtonText}>مشرف المستشفيات</Text>
+            <Text style={styles.testButtonText}>{t("adminLogin.hospitalsModerator")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

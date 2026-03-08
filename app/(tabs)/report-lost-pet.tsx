@@ -8,8 +8,10 @@ import { MapPin } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageGalleryUploader } from "../../components/ImageGalleryUploader";
+import { useI18n } from "@/providers/I18nProvider";
 
 export default function ReportLostPetScreen() {
+  const { t } = useI18n();
   const { user } = useApp();
   const router = useRouter();
 
@@ -42,12 +44,12 @@ export default function ReportLostPetScreen() {
 
   const handleSubmit = async () => {
     if (!name || !type || !location || !contactName || !contactPhone) {
-      Alert.alert("خطأ", "يرجى ملء جميع الحقول المطلوبة");
+      Alert.alert(t("common.error"), t("reportLostPet.fillRequired"));
       return;
     }
 
     if (!user) {
-      Alert.alert("خطأ", "يرجى تسجيل الدخول أولاً");
+      Alert.alert(t("common.error"), t("reportLostPet.loginRequired"));
       return;
     }
 
@@ -76,11 +78,11 @@ export default function ReportLostPetScreen() {
         {
           onSuccess: (data) => {
             Alert.alert(
-              "تم إرسال البلاغ",
-              "تم إرسال بلاغ الحيوان المفقود بنجاح وهو الآن في انتظار موافقة الإدارة. سيتم إشعارك عند اتخاذ قرار بشأن البلاغ.",
+              t("reportLostPet.sentTitle"),
+              t("reportLostPet.sentMsg"),
               [
                 {
-                  text: "موافق",
+                  text: t("common.ok"),
                   onPress: () => {
                     router.navigate("/(tabs)");
                   },
@@ -89,7 +91,7 @@ export default function ReportLostPetScreen() {
             );
           },
           onError: (error) => {
-            Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال البلاغ");
+            Alert.alert(t("common.error"), error.message || t("reportLostPet.error"));
           },
         },
       );
@@ -104,7 +106,7 @@ export default function ReportLostPetScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "بلاغ حيوان مفقود",
+          title: t("reportLostPet.title"),
           headerStyle: { backgroundColor: COLORS.white },
           headerTintColor: COLORS.black,
           headerTitleStyle: { fontWeight: "bold" },
@@ -113,72 +115,72 @@ export default function ReportLostPetScreen() {
       />
 
       <ScrollView style={[styles.container, { direction: "rtl" }]} contentContainerStyle={styles.contentContainer}>
-        <Text style={styles.title}>{"تقرير حيوان مفقود"}</Text>
+        <Text style={styles.title}>{t("reportLostPet.pageTitle")}</Text>
 
         <View style={styles.formGroup}>
           <ImageGalleryUploader
             images={images}
             onImagesChange={setImages}
             maxImages={5}
-            label="صور الحيوان المفقود"
+            label={t("reportLostPet.imagesLabel")}
             aspect={[4, 3]}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>اسم الحيوان</Text>
+          <Text style={styles.label}>{t("reportLostPet.petName")}</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
-            placeholder="أدخل اسم الحيوان"
+            placeholder={t("reportLostPet.petNamePlaceholder")}
             placeholderTextColor={COLORS.darkGray}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>نوع الحيوان</Text>
+          <Text style={styles.label}>{t("reportLostPet.petType")}</Text>
           <TextInput
             style={styles.input}
             value={type}
             onChangeText={setType}
-            placeholder="مثال: كلب، قطة، أرنب"
+            placeholder={t("reportLostPet.petTypePlaceholder")}
             placeholderTextColor={COLORS.darkGray}
           />
         </View>
 
         <View style={styles.row}>
           <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>السلالة (اختياري)</Text>
+            <Text style={styles.label}>{t("reportLostPet.breed")}</Text>
             <TextInput
               style={styles.input}
               value={breed}
               onChangeText={setBreed}
-              placeholder="السلالة"
+              placeholder={t("reportLostPet.breedPlaceholder")}
               placeholderTextColor={COLORS.darkGray}
             />
           </View>
 
           <View style={[styles.formGroup, styles.halfWidth]}>
-            <Text style={styles.label}>اللون (اختياري)</Text>
+            <Text style={styles.label}>{t("reportLostPet.color")}</Text>
             <TextInput
               style={styles.input}
               value={color}
               onChangeText={setColor}
-              placeholder="اللون"
+              placeholder={t("reportLostPet.colorPlaceholder")}
               placeholderTextColor={COLORS.darkGray}
             />
           </View>
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>آخر مكان شوهد فيه</Text>
+          <Text style={styles.label}>{t("reportLostPet.lastSeenLocation")}</Text>
           <View style={styles.locationContainer}>
             <TextInput
               style={styles.locationInput}
               value={location}
               onChangeText={setLocation}
-              placeholder="أدخل الموقع"
+              placeholder={t("reportLostPet.enterLocation")}
               placeholderTextColor={COLORS.darkGray}
             />
             <TouchableOpacity style={styles.mapButton} onPress={handleSelectLocation}>
@@ -188,7 +190,7 @@ export default function ReportLostPetScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>تاريخ الفقدان</Text>
+          <Text style={styles.label}>{t("reportLostPet.lostDate")}</Text>
           <TextInput
             style={styles.input}
             value={date}
@@ -199,12 +201,12 @@ export default function ReportLostPetScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>وصف إضافي (اختياري)</Text>
+          <Text style={styles.label}>{t("reportLostPet.additionalDesc")}</Text>
           <TextInput
             style={styles.textArea}
             value={description}
             onChangeText={setDescription}
-            placeholder="أي معلومات إضافية قد تساعد في العثور على الحيوان"
+            placeholder={t("reportLostPet.additionalDescPlaceholder")}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -213,38 +215,38 @@ export default function ReportLostPetScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>معلومات الاتصال</Text>
+          <Text style={styles.sectionTitle}>{t("reportLostPet.contactInfo")}</Text>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>الاسم</Text>
+            <Text style={styles.label}>{t("auth.nameLabel")}</Text>
             <TextInput
               style={styles.input}
               value={contactName}
               onChangeText={setContactName}
-              placeholder="أدخل اسمك"
+              placeholder={t("reportLostPet.enterName")}
               placeholderTextColor={COLORS.darkGray}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>رقم الهاتف</Text>
+            <Text style={styles.label}>{t("common.phone")}</Text>
             <TextInput
               style={styles.input}
               value={contactPhone}
               onChangeText={setContactPhone}
-              placeholder="أدخل رقم هاتفك"
+              placeholder={t("reportLostPet.enterPhone")}
               keyboardType="phone-pad"
               placeholderTextColor={COLORS.darkGray}
             />
           </View>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>البريد الإلكتروني (اختياري)</Text>
+            <Text style={styles.label}>{t("reportLostPet.emailOptional")}</Text>
             <TextInput
               style={styles.input}
               value={contactEmail}
               onChangeText={setContactEmail}
-              placeholder="أدخل بريدك الإلكتروني"
+              placeholder={t("reportLostPet.enterEmail")}
               keyboardType="email-address"
               autoCapitalize="none"
               placeholderTextColor={COLORS.darkGray}
@@ -253,7 +255,7 @@ export default function ReportLostPetScreen() {
         </View>
 
         <Button
-          title="إرسال البلاغ"
+          title={t("reportLostPet.submitReport")}
           onPress={handleSubmit}
           type="primary"
           size="large"
@@ -273,7 +275,7 @@ export default function ReportLostPetScreen() {
         {/* Notice */}
         <View style={styles.noticeContainer}>
           <Text style={styles.noticeText}>
-            📋 ملاحظة: سيتم مراجعة بلاغك من قبل الإدارة قبل النشر. سيتم إشعارك عند الموافقة على البلاغ.
+            {t("reportLostPet.notice")}
           </Text>
         </View>
       </ScrollView>
