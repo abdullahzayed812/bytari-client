@@ -74,7 +74,7 @@ export default function VetUnionScreen() {
       onError: (error) => {
         // Handle error
       },
-    })
+    }),
   );
 
   const handleFollowPress = () => {

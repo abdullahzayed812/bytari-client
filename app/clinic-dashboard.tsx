@@ -1,4 +1,16 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, FlatList, Alert, Modal, ActivityIndicator } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  FlatList,
+  Alert,
+  Modal,
+  ActivityIndicator,
+} from "react-native";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
@@ -158,7 +170,7 @@ export default function ClinicDashboard() {
   const showClinicStats = () => {
     Alert.alert(
       "إحصائيات العيادة",
-      `إجمالي الحيوانات: ${clinicData?.stats?.totalAnimals}\nالمرضى النشطون: ${clinicData?.stats?.activePatients}\nالعلاجات المكتملة: ${clinicData?.stats?.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`
+      `إجمالي الحيوانات: ${clinicData?.stats?.totalAnimals}\nالمرضى النشطون: ${clinicData?.stats?.activePatients}\nالعلاجات المكتملة: ${clinicData?.stats?.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`,
     );
   };
 
@@ -386,10 +398,7 @@ export default function ClinicDashboard() {
                   <Settings size={20} color={COLORS.primary} />
                   <Text style={styles.settingText}>إعدادات عامة</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.settingCard}
-                  onPress={() => setShowMessageModal(true)}
-                >
+                <TouchableOpacity style={styles.settingCard} onPress={() => setShowMessageModal(true)}>
                   <Send size={20} color={COLORS.primary} />
                   <Text style={styles.settingText}>إرسال رسالة للمتابعين</Text>
                 </TouchableOpacity>

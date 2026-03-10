@@ -34,12 +34,12 @@ export default function ReportLostPetScreen() {
   // Image upload is now handled by ImageGalleryUploader component
 
   const handleSelectLocation = () => {
-    router.push({
-      pathname: "/map-location",
-      params: {
-        returnTo: "report-lost-pet",
-      },
-    });
+    // router.push({
+    //   pathname: "/map-location",
+    //   params: {
+    //     returnTo: "report-lost-pet",
+    //   },
+    // });
   };
 
   const handleSubmit = async () => {
@@ -77,18 +77,14 @@ export default function ReportLostPetScreen() {
         } as any,
         {
           onSuccess: (data) => {
-            Alert.alert(
-              t("reportLostPet.sentTitle"),
-              t("reportLostPet.sentMsg"),
-              [
-                {
-                  text: t("common.ok"),
-                  onPress: () => {
-                    router.navigate("/(tabs)");
-                  },
+            Alert.alert(t("reportLostPet.sentTitle"), t("reportLostPet.sentMsg"), [
+              {
+                text: t("common.ok"),
+                onPress: () => {
+                  router.navigate("/(tabs)");
                 },
-              ],
-            );
+              },
+            ]);
           },
           onError: (error) => {
             Alert.alert(t("common.error"), error.message || t("reportLostPet.error"));
@@ -274,9 +270,7 @@ export default function ReportLostPetScreen() {
 
         {/* Notice */}
         <View style={styles.noticeContainer}>
-          <Text style={styles.noticeText}>
-            {t("reportLostPet.notice")}
-          </Text>
+          <Text style={styles.noticeText}>{t("reportLostPet.notice")}</Text>
         </View>
       </ScrollView>
     </>

@@ -2,7 +2,19 @@ import React, { useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useRouter } from "expo-router";
-import { ArrowLeft, MessageCircle, AlertCircle, CheckCircle, Clock, Send, X } from "lucide-react-native";
+import {
+  ArrowLeft,
+  MessageCircle,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Send,
+  X,
+  Megaphone,
+  Wrench,
+  RefreshCw,
+  ShieldAlert,
+} from "lucide-react-native";
 import { Stack } from "expo-router";
 import { useApp } from "../../providers/AppProvider";
 import { handleBackNavigation } from "../../lib/navigation-utils";
@@ -31,6 +43,9 @@ interface Message {
   isRead: boolean;
   readAt: Date | null;
   priority: "low" | "normal" | "high" | "urgent";
+  senderName?: string | null;
+  clinicName?: string | null;
+  storeName?: string | null;
 }
 
 export default function MessagesScreen() {
@@ -52,12 +67,12 @@ export default function MessagesScreen() {
   } = useQuery(
     trpc.admin.messages.getReplies.queryOptions({
       messageId: selectedMessage?.id ? Number(selectedMessage.id) : -1,
-    }) // Use -1 or handle undefined appropriately
+    }), // Use -1 or handle undefined appropriately
   );
   const replies = useMemo(() => repliesData?.replies, [repliesData]);
 
   const { data, isLoading, error } = useQuery(
-    trpc.admin.messages.getUserSystemMessages.queryOptions({ userId: Number(user?.id) })
+    trpc.admin.messages.getUserSystemMessages.queryOptions({ userId: Number(user?.id) }),
   );
 
   const messages = useMemo(() => data?.messages, [data]);
@@ -70,22 +85,22 @@ export default function MessagesScreen() {
         onSuccess: () => {
           queryClient.invalidateQueries(trpc.admin.messages.getUserSystemMessages.queryKey as any);
         },
-      }
+      },
     );
   };
 
-  const getMessageIcon = (type: string) => {
+  const getTypeConfig = (type: string) => {
     switch (type) {
       case "announcement":
-        return <AlertCircle size={20} color={COLORS.primary} />;
+        return { icon: <Megaphone size={20} color="#fff" />, bg: "#27AE60", label: "إعلان" };
       case "maintenance":
-        return <Clock size={20} color={COLORS.warning} />;
+        return { icon: <Wrench size={20} color="#fff" />, bg: "#F39C12", label: "صيانة" };
       case "update":
-        return <CheckCircle size={20} color={COLORS.success} />;
+        return { icon: <RefreshCw size={20} color="#fff" />, bg: "#2196F3", label: "تحديث" };
       case "warning":
-        return <AlertCircle size={20} color={COLORS.error} />;
+        return { icon: <ShieldAlert size={20} color="#fff" />, bg: "#E74C3C", label: "تحذير" };
       default:
-        return <MessageCircle size={20} color={COLORS.darkGray} />;
+        return { icon: <MessageCircle size={20} color="#fff" />, bg: "#8E44AD", label: "رسالة" };
     }
   };
 
@@ -105,18 +120,18 @@ export default function MessagesScreen() {
     }
   };
 
-  const getPriorityColor = (priority: Message["priority"]) => {
+  const getPriorityConfig = (priority: Message["priority"]) => {
     switch (priority) {
-      case "high":
-        return COLORS.error;
-      case "normal":
-        return COLORS.warning;
-      case "low":
-        return COLORS.success;
       case "urgent":
-        return COLORS.red;
+        return { color: "#E74C3C", label: "عاجل", bg: "#FDECEA" };
+      case "high":
+        return { color: "#E67E22", label: "مرتفع", bg: "#FEF3E2" };
+      case "normal":
+        return { color: "#2196F3", label: "عادي", bg: "#E3F2FD" };
+      case "low":
+        return { color: "#27AE60", label: "منخفض", bg: "#E8F5E9" };
       default:
-        return COLORS.gray;
+        return { color: COLORS.darkGray, label: "", bg: COLORS.gray };
     }
   };
 
@@ -149,7 +164,7 @@ export default function MessagesScreen() {
         onError: (error) => {
           Alert.alert("خطأ", `حدث خطأ أثناء إرسال الرد: ${error.message}`);
         },
-      }
+      },
     );
   };
 
@@ -176,61 +191,83 @@ export default function MessagesScreen() {
       /> */}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {messages?.map((message) => (
-          <TouchableOpacity
-            key={message.id}
-            style={[styles.messageCard, !message.isRead && styles.unreadCard]}
-            onPress={() => handleMessagePress(message)}
-          >
-            <View style={[styles.messageContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <View style={styles.avatarContainer}>
-                <View style={[styles.iconContainer, !message.isRead && styles.iconContainerUnread]}>{getMessageIcon(message.type)}</View>
-              </View>
+        {messages?.map((message) => {
+          const typeConfig = getTypeConfig(message.type);
+          const priorityConfig = getPriorityConfig(message.priority);
+          return (
+            <TouchableOpacity
+              key={message.id}
+              style={[styles.messageCard, !message.isRead && styles.unreadCard]}
+              onPress={() => handleMessagePress(message)}
+              activeOpacity={0.85}
+            >
+              {/* Unread accent bar */}
+              {!message.isRead && <View style={styles.unreadAccent} />}
 
-              <View
-                style={[styles.textContainer, { flex: 1, marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}
-              >
-                <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                  <View style={[styles.senderBadge, !message.isRead && styles.senderBadgeUnread]}>
-                    <Text style={[styles.senderName, !message.isRead && styles.senderNameUnread, { textAlign: isRTL ? "left" : "right" }]}>الإدارة</Text>
+              <View style={[styles.messageContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                {/* Icon */}
+                <View style={[styles.iconContainer, { backgroundColor: typeConfig.bg }]}>{typeConfig.icon}</View>
+
+                {/* Body */}
+                <View style={[styles.textContainer, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
+                  {/* Top row: type badge + time */}
+                  <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.typeBadge, { backgroundColor: typeConfig.bg + "18" }]}>
+                      <Text style={[styles.typeBadgeText, { color: typeConfig.bg }]}>{typeConfig.label}</Text>
+                    </View>
+                    <Text style={styles.messageTime}>{formatTime(message.createdAt)}</Text>
                   </View>
-                  <Text style={[styles.messageTime, !message.isRead && styles.messageTimeUnread, { textAlign: isRTL ? "left" : "right" }]}>
-                    {formatTime(message.createdAt)}
+
+                  {/* Sender name */}
+                  <Text style={[styles.senderName, { textAlign: isRTL ? "left" : "right" }]}>
+                    {message.clinicName ?? message.storeName ?? message.senderName ?? "الإدارة"}
                   </Text>
+
+                  {/* Title */}
+                  <Text
+                    style={[
+                      styles.messageSubject,
+                      { textAlign: isRTL ? "left" : "right", color: message.isRead ? "#2C3E50" : "#1A252F" },
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {message.title}
+                  </Text>
+
+                  {/* Preview */}
+                  <Text style={[styles.messagePreview, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
+                    {message.content}
+                  </Text>
+
+                  {message.imageUrl ? (
+                    <Image source={{ uri: message.imageUrl }} style={styles.messageImage} resizeMode="cover" />
+                  ) : null}
+
+                  {/* Footer row: priority + read status */}
+                  <View style={[styles.messageFooter, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                    <View style={[styles.priorityBadge, { backgroundColor: priorityConfig.bg }]}>
+                      <View style={[styles.priorityDot, { backgroundColor: priorityConfig.color }]} />
+                      <Text style={[styles.priorityText, { color: priorityConfig.color }]}>{priorityConfig.label}</Text>
+                    </View>
+                    <View style={styles.readStatus}>
+                      {message.isRead ? (
+                        <>
+                          <CheckCircle size={13} color={COLORS.success} />
+                          <Text style={styles.readStatusText}>مقروءة</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Clock size={13} color={COLORS.warning} />
+                          <Text style={[styles.readStatusText, { color: COLORS.warning }]}>جديدة</Text>
+                        </>
+                      )}
+                    </View>
+                  </View>
                 </View>
-
-                <Text style={[styles.messageSubject, !message.isRead && styles.messageSubjectUnread, { textAlign: isRTL ? "left" : "right" }]}>{message.title}</Text>
-
-                <Text style={[styles.messagePreview, !message.isRead && styles.messagePreviewUnread, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
-                  {message.content}
-                </Text>
-
-                {message.imageUrl ? (
-                  <Image source={{ uri: message.imageUrl }} style={styles.messageImage} resizeMode="cover" />
-                ) : null}
               </View>
-
-              <View style={styles.messageActions}>
-                <View style={[styles.priorityIndicator, { backgroundColor: getPriorityColor(message.priority) }]} />
-                {message.isRead ? (
-                  <CheckCircle size={16} color={COLORS.success} />
-                ) : (
-                  <Clock size={16} color={COLORS.warning} />
-                )}
-                {/* <TouchableOpacity
-                  style={styles.replyButton}
-                  onPress={() => {
-                    setSelectedMessage(message);
-                    setReplyModalVisible(true);
-                  }}
-                >
-                  <Send size={14} color={COLORS.white} />
-                  <Text style={styles.replyButtonText}>رد</Text>
-                </TouchableOpacity> */}
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          );
+        })}
 
         {messages?.length === 0 && (
           <View style={styles.emptyState}>
@@ -266,7 +303,9 @@ export default function MessagesScreen() {
                 {selectedMessage.imageUrl ? (
                   <Image source={{ uri: selectedMessage.imageUrl }} style={styles.modalImage} resizeMode="cover" />
                 ) : null}
-                <Text style={styles.originalFrom}>من: الإدارة</Text>
+                <Text style={styles.originalFrom}>
+                  من: {selectedMessage?.clinicName ?? selectedMessage?.storeName ?? selectedMessage?.senderName ?? "الإدارة"}
+                </Text>
               </View>
             )}
 
@@ -341,113 +380,119 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   messageCard: {
-    backgroundColor: "#E8F5E9",
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 14,
     marginBottom: 12,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: "#2E7D32",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: "hidden",
   },
   unreadCard: {
-    backgroundColor: "#C8E6C9",
-    borderLeftColor: "#1B5E20",
+    backgroundColor: "#F0FBF4",
+    shadowOpacity: 0.12,
+    elevation: 5,
+  },
+  unreadAccent: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 4,
+    backgroundColor: COLORS.primary,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
   },
   messageContent: {
     alignItems: "flex-start",
   },
-  avatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    overflow: "hidden",
-  },
-  avatar: {
-    width: "100%",
-    height: "100%",
-  },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: COLORS.gray,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-  },
-  iconContainerUnread: {
-    backgroundColor: "#C8E6C9",
+    flexShrink: 0,
   },
   textContainer: {
+    flex: 1,
     justifyContent: "flex-start",
   },
   messageHeader: {
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  senderBadge: {
-    backgroundColor: "transparent",
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-    borderRadius: 6,
-  },
-  senderBadgeUnread: {
-    backgroundColor: "#2E7D32",
-    paddingHorizontal: 10,
+  typeBadge: {
+    paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 20,
+  },
+  typeBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
   senderName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: COLORS.black,
-  },
-  senderNameUnread: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.primary,
+    marginBottom: 3,
   },
   messageTime: {
-    fontSize: 12,
+    fontSize: 11,
     color: COLORS.darkGray,
-  },
-  messageTimeUnread: {
-    color: "#1B5E20",
   },
   messageSubject: {
     fontSize: 15,
-    fontWeight: "600",
-    color: COLORS.darkGray,
-    marginBottom: 6,
-  },
-  messageSubjectUnread: {
-    color: "#1B5E20",
-    fontWeight: "bold",
+    fontWeight: "700",
+    marginBottom: 4,
   },
   messagePreview: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.darkGray,
-    lineHeight: 20,
-  },
-  messagePreviewUnread: {
-    color: "#2E7D32",
+    lineHeight: 19,
+    marginBottom: 10,
   },
   messageImage: {
     width: "100%",
     height: 120,
-    borderRadius: 8,
-    marginTop: 8,
+    borderRadius: 10,
+    marginTop: 6,
+    marginBottom: 10,
   },
-  unreadIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.primary,
-    marginTop: 4,
+  messageFooter: {
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  priorityBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    gap: 4,
+  },
+  priorityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  priorityText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  readStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  readStatusText: {
+    fontSize: 11,
+    color: COLORS.success,
+    fontWeight: "500",
   },
   emptyState: {
     flex: 1,
@@ -466,16 +511,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.lightGray,
     textAlign: "center",
-  },
-  messageActions: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 8,
-  },
-  priorityIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
   },
   replyButton: {
     flexDirection: "row-reverse",
@@ -537,8 +572,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   originalFrom: {
-    fontSize: 10,
-    color: COLORS.gray,
+    fontSize: 12,
+    color: COLORS.primary,
   },
   modalImage: {
     width: "100%",

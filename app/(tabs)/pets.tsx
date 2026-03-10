@@ -101,7 +101,7 @@ export default function PetsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-    }, [])
+    }, []),
   );
 
   // Get user pets or admin view
@@ -727,14 +727,11 @@ export default function PetsScreen() {
         renderItem={renderPetItem}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
-
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
               <Text style={styles.title}>
-                {hasAdminAccess || isSuperAdmin || isModerator
-                  ? "إدارة الحيوانات والمزارع"
-                  : "حيواناتي"}
+                {hasAdminAccess || isSuperAdmin || isModerator ? "إدارة الحيوانات والمزارع" : "حيواناتي"}
               </Text>
             </View>
 
@@ -763,14 +760,11 @@ export default function PetsScreen() {
             </View>
           </View>
         }
-
         ListFooterComponent={
           <View>
             {/* Farms Section */}
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                حقول الدواجن ({displayFarms.length})
-              </Text>
+              <Text style={styles.sectionTitle}>حقول الدواجن ({displayFarms.length})</Text>
             </View>
 
             {displayFarms.length > 0 ? (
@@ -852,8 +846,6 @@ export default function PetsScreen() {
             )}
           </View>
         }
-
-
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>لا يوجد حيوانات مسجلة</Text>
@@ -1530,23 +1522,3 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

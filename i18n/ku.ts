@@ -258,6 +258,7 @@ const ku: Record<string, string> = {
   "profile.photoUpdateFailed": "نوێکردنەوەی وێنە شکستی هێنا",
   "profile.photoUploadFailed": "بارکردنی وێنە شکستی هێنا: {error}",
   "profile.redeemPoints": "ئاڵوگۆڕکردنی خاڵەکان",
+  "profile.userId": "ژمارەی بەکارهێنەر: ",
   "profile.premiumHidden": "ئەندامەتی تایبەت (شاردراوە)",
   "profile.favorites": "دڵخوازەکان",
   "profile.myOrders": "داواکارییەکانم",
@@ -1302,6 +1303,34 @@ const ku: Record<string, string> = {
   "replyDemo.step2": "٢. ئەگەر هەڵبژاردی کراوەهێشتنی گفتوگۆ، بەکارهێنەر دیسان دەتوانێت وەڵام بدات",
   "replyDemo.step3": "٣. ئەگەر هەڵبژاردی داخستنی گفتوگۆ، بەکارهێنەر ناتوانێت وەڵام بدات",
   "replyDemo.step4": "٤. کاتێک بەکارهێنەر وەڵام دەدات، دۆخی پرسیار/ڕاوێژ دەگەڕێتەوە بۆ \"چاوەڕوان\"",
+
+  // ========================
+  // USER PROFILE
+  // ========================
+  "userProfile.loadingProfile": "پرۆفایل بارکراوە...",
+  "userProfile.profileNotFound": "پرۆفایل نەدۆزرایەوە",
+  "userProfile.basicInfo": "زانیاری بنەڕەتی",
+  "userProfile.professionalInfo": "زانیاری پیشەیی",
+  "userProfile.accountStatus": "دۆخی ئەکاونت",
+  "userProfile.joinDate": "بەرواری بەشداربوون",
+  "userProfile.bio": "دەربارەی من",
+  "userProfile.noBio": "هیچ زانیارییەک نییە",
+  "userProfile.education": "خوێندن",
+  "userProfile.yearsOfExperience": "ساڵانی ئەزموون",
+  "userProfile.pets": "ئاژەڵە ئینسییەکان",
+  "userProfile.noPets": "هیچ ئاژەڵێک زیاد نەکراوە",
+  "userProfile.regularUser": "بەکارهێنەری ئاسایی",
+  "userProfile.supervisor": "سەرپەرشتیار",
+  "userProfile.disabled": "ناچالاک",
+  "userProfile.sendMessage": "نامە بنێرە",
+  "userProfile.messageSubject": "بابەت",
+  "userProfile.messageSubjectPlaceholder": "بابەتی نامەکە بنووسە",
+  "userProfile.messageContent": "نامە",
+  "userProfile.messageContentPlaceholder": "نامەکەت بنووسە...",
+  "userProfile.messageTip": "نامەکەت دەنێردرێت بۆ سەندووقی نامەی بەکارهێنەر",
+  "userProfile.fillAllFields": "تکایە هەموو خانەکان پڕ بکەرەوە",
+  "userProfile.messageSent": "نامە نێردرا",
+  "userProfile.messageSentSuccess": "نامەکەت بە سەرکەوتوویی نێردرا",
 };
 
 export default ku;

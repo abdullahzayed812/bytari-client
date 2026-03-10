@@ -258,6 +258,7 @@ const en: Record<string, string> = {
   "profile.photoUpdateFailed": "Failed to update photo",
   "profile.photoUploadFailed": "Failed to upload photo: {error}",
   "profile.redeemPoints": "Redeem Points",
+  "profile.userId": "User ID: ",
   "profile.premiumHidden": "Premium Membership (Hidden)",
   "profile.favorites": "Favorites",
   "profile.myOrders": "My Orders",
@@ -1607,6 +1608,34 @@ const en: Record<string, string> = {
   "replyDemo.step2": "2. If they choose to keep the conversation open, the user can reply again",
   "replyDemo.step3": "3. If they choose to close the conversation, the user will not be able to reply",
   "replyDemo.step4": "4. When the user replies, the inquiry/consultation status returns to \"Pending\"",
+
+  // ========================
+  // USER PROFILE
+  // ========================
+  "userProfile.loadingProfile": "Loading profile...",
+  "userProfile.profileNotFound": "Profile not found",
+  "userProfile.basicInfo": "Basic Information",
+  "userProfile.professionalInfo": "Professional Information",
+  "userProfile.accountStatus": "Account Status",
+  "userProfile.joinDate": "Join Date",
+  "userProfile.bio": "Bio",
+  "userProfile.noBio": "No bio available",
+  "userProfile.education": "Education",
+  "userProfile.yearsOfExperience": "Years of Experience",
+  "userProfile.pets": "Pets",
+  "userProfile.noPets": "No pets added",
+  "userProfile.regularUser": "Regular User",
+  "userProfile.supervisor": "Supervisor",
+  "userProfile.disabled": "Disabled",
+  "userProfile.sendMessage": "Send Message",
+  "userProfile.messageSubject": "Subject",
+  "userProfile.messageSubjectPlaceholder": "Enter message subject",
+  "userProfile.messageContent": "Message",
+  "userProfile.messageContentPlaceholder": "Write your message...",
+  "userProfile.messageTip": "Your message will be sent to the user's inbox",
+  "userProfile.fillAllFields": "Please fill in all fields",
+  "userProfile.messageSent": "Message Sent",
+  "userProfile.messageSentSuccess": "Your message has been sent successfully",
 };
 
 export default en;

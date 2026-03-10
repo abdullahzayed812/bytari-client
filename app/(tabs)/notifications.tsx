@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useRouter } from "expo-router";
-import { ArrowLeft, ArrowRight, Bell, Building2, MessageSquare, AlertCircle } from "lucide-react-native";
+import { ArrowLeft, ArrowRight, Bell, Building2, MessageSquare, AlertCircle, Syringe, Clock } from "lucide-react-native";
 import { Stack } from "expo-router";
 import { useApp } from "../../providers/AppProvider";
 import { trpc } from "../../lib/trpc";
@@ -31,10 +31,19 @@ export default function NotificationsScreen() {
         return <Building2 size={20} color={COLORS.primary} />;
       case "inquiry":
         return <AlertCircle size={20} color={COLORS.warning} />;
+      case "medical_action_request":
+        return <Syringe size={20} color={COLORS.primary} />;
       case "system":
       default:
         return <Bell size={20} color={COLORS.darkGray} />;
     }
+  };
+
+  const formatScheduledDate = (dateString: string | null | undefined) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" });
   };
 
   const formatTime = (timeString: string) => {
@@ -102,6 +111,11 @@ export default function NotificationsScreen() {
             pathname: "/(tabs)/messages",
             // params: { petId: notification?.data?.petId },
           });
+        } else if (notification?.type === "medical_action_request") {
+          router.push({
+            pathname: "/pet-details",
+            params: { petId: notification?.data?.petId },
+          });
         }
       },
       onError: () => {},
@@ -168,6 +182,15 @@ export default function NotificationsScreen() {
                   <Text style={[styles.notificationMessage, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                     {notification.message}
                   </Text>
+                  {notification.type === "medical_action_request" &&
+                    formatScheduledDate(notification.data?.scheduledDate) && (
+                      <View style={[styles.scheduledDateRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                        <Clock size={12} color={COLORS.primary} />
+                        <Text style={[styles.scheduledDateText, { marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
+                          {formatScheduledDate(notification.data?.scheduledDate)}
+                        </Text>
+                      </View>
+                    )}
                   <Text style={[styles.notificationTime, { textAlign: isRTL ? "left" : "right" }]}>
                     {formatTime(notification.time)}
                   </Text>
@@ -276,5 +299,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.darkGray,
     textAlign: "center",
+  },
+  scheduledDateRow: {
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  scheduledDateText: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: "500",
   },
 });

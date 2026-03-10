@@ -677,11 +677,6 @@ export default function AdminDashboard() {
           <TouchableOpacity style={styles.actionCard} onPress={() => setShowPoultryFarmsModal(true)}>
             <Egg size={24} color="#F59E0B" />
             <Text style={styles.actionText}>إدارة حقول الدواجن</Text>
-            {(poultryFarmsData?.farms.length || 0) > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{poultryFarmsData?.farms.length}</Text>
-              </View>
-            )}
           </TouchableOpacity>
 
           {hasPermission("manage_pets") && (

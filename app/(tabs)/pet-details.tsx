@@ -9,6 +9,7 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  Clipboard,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../../constants/colors";
@@ -1167,7 +1168,14 @@ export default function PetDetailsScreen() {
 
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>رقم المعرف</Text>
-                <Text style={styles.infoValue}>{pet.id}</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    Clipboard.setString(String(pet.id));
+                    showToast({ message: "تم نسخ رقم المعرف", type: "success" });
+                  }}
+                >
+                  <Text style={[styles.infoValue, { textDecorationLine: "underline" }]}>{pet.id}</Text>
+                </TouchableOpacity>
               </View>
 
               {pet.isLost && (
@@ -1307,19 +1315,21 @@ export default function PetDetailsScreen() {
               <>
                 {pet.medicalRecords.map((record: any) => (
                   <View key={record.id} style={styles.recordCard}>
-                    <View style={styles.recordHeader}>
-                      <View style={styles.recordTitleRow}>
-                        <Text style={styles.recordTitle}>{record.diagnosis}</Text>
-                        {isOwner && (
-                          <TouchableOpacity
-                            onPress={() => handleDeleteMedicalRecord(record.id)}
-                            style={styles.deleteButton}
-                          >
-                            <Trash2 size={16} color={COLORS.error} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                      <Text style={styles.recordDate}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
+                    <View style={styles.recordTitleRow}>
+                      <Text style={styles.recordTitle}>{record.diagnosis}</Text>
+                      {isOwner && (
+                        <TouchableOpacity
+                          onPress={() => handleDeleteMedicalRecord(record.id)}
+                          style={styles.deleteButton}
+                        >
+                          <Trash2 size={16} color={COLORS.error} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>التاريخ</Text>
+                      <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
                     </View>
 
                     <View style={styles.recordItem}>
@@ -1391,19 +1401,21 @@ export default function PetDetailsScreen() {
               <>
                 {pet.vaccinations.map((vaccination: any) => (
                   <View key={vaccination.id} style={styles.recordCard}>
-                    <View style={styles.recordHeader}>
-                      <View style={styles.recordTitleRow}>
-                        <Text style={styles.recordTitle}>{vaccination.name}</Text>
-                        {isOwner && (
-                          <TouchableOpacity
-                            onPress={() => handleDeleteVaccination(vaccination.id)}
-                            style={styles.deleteButton}
-                          >
-                            <Trash2 size={16} color={COLORS.error} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                      <Text style={styles.recordDate}>{new Date(vaccination.date).toLocaleDateString("ar-SA")}</Text>
+                    <View style={styles.recordTitleRow}>
+                      <Text style={styles.recordTitle}>{vaccination.name}</Text>
+                      {isOwner && (
+                        <TouchableOpacity
+                          onPress={() => handleDeleteVaccination(vaccination.id)}
+                          style={styles.deleteButton}
+                        >
+                          <Trash2 size={16} color={COLORS.error} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>التاريخ</Text>
+                      <Text style={styles.recordValue}>{new Date(vaccination.date).toLocaleDateString("ar-SA")}</Text>
                     </View>
 
                     {vaccination.clinicName && (
@@ -1472,16 +1484,18 @@ export default function PetDetailsScreen() {
                   key={reminder.id}
                   style={[styles.recordCard, reminder.isCompleted && styles.completedReminderCard]}
                 >
-                  <View style={styles.recordHeader}>
-                    <View style={styles.recordTitleRow}>
-                      <Text style={styles.recordTitle}>{reminder.title}</Text>
-                      {isOwner && (
-                        <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
-                          <Trash2 size={16} color={COLORS.error} />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                    <Text style={styles.recordDate}>{new Date(reminder.date).toLocaleDateString("ar-SA")}</Text>
+                  <View style={styles.recordTitleRow}>
+                    <Text style={styles.recordTitle}>{reminder.title}</Text>
+                    {isOwner && (
+                      <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
+                        <Trash2 size={16} color={COLORS.error} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  <View style={styles.recordItem}>
+                    <Text style={styles.recordLabel}>التاريخ</Text>
+                    <Text style={styles.recordValue}>{new Date(reminder.date).toLocaleDateString("ar-SA")}</Text>
                   </View>
 
                   {reminder.description && (
@@ -2469,7 +2483,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   infoValue: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: COLORS.black,
   },
@@ -2536,7 +2550,7 @@ const styles = StyleSheet.create({
   recordTitleRow: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    flex: 1,
+    marginBottom: 8,
   },
   deleteButton: {
     padding: 4,
@@ -2552,16 +2566,20 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   recordItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   recordLabel: {
     fontSize: 14,
     color: COLORS.darkGray,
-    marginBottom: 4,
   },
   recordValue: {
     fontSize: 14,
     color: COLORS.black,
+    flex: 1,
+    textAlign: "left",
   },
   completedStatus: {
     color: COLORS.success,

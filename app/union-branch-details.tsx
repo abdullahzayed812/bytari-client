@@ -357,16 +357,6 @@ export default function UnionBranchDetailsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Branch Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>نبذة عن النقابة</Text>
-          <Text style={styles.description}>{branch.description}</Text>
-          {/* <View style={styles.establishedInfo}>
-            <Calendar size={16} color={COLORS.primary} />
-            <Text style={styles.establishedText}>تأسست عام {branch.establishedYear}</Text>
-          </View> */}
-        </View>
-
         {/* Contact Information */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>معلومات الاتصال</Text>

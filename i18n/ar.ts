@@ -262,6 +262,7 @@ const ar: Record<string, string> = {
   "profile.photoUpdateFailed": "فشل تحديث الصورة",
   "profile.photoUploadFailed": "فشل رفع الصورة: {error}",
   "profile.redeemPoints": "استبدال النقاط",
+  "profile.userId": "رقم المستخدم: ",
   "profile.premiumHidden": "العضوية المميزة (مخفية)",
   "profile.favorites": "المفضلة",
   "profile.myOrders": "طلباتي",
@@ -1616,6 +1617,34 @@ const ar: Record<string, string> = {
   "replyDemo.step2": "2. إذا اختار إبقاء المحادثة مفتوحة، يمكن للمستخدم الرد مرة أخرى",
   "replyDemo.step3": "3. إذا اختار إغلاق المحادثة، لن يتمكن المستخدم من الرد",
   "replyDemo.step4": "4. عندما يرد المستخدم، تعود حالة الاستفسار/الاستشارة إلى \"في الانتظار\"",
+
+  // ========================
+  // USER PROFILE
+  // ========================
+  "userProfile.loadingProfile": "جاري تحميل الملف الشخصي...",
+  "userProfile.profileNotFound": "الملف الشخصي غير موجود",
+  "userProfile.basicInfo": "المعلومات الأساسية",
+  "userProfile.professionalInfo": "المعلومات المهنية",
+  "userProfile.accountStatus": "حالة الحساب",
+  "userProfile.joinDate": "تاريخ الانضمام",
+  "userProfile.bio": "نبذة شخصية",
+  "userProfile.noBio": "لا توجد نبذة شخصية",
+  "userProfile.education": "التعليم",
+  "userProfile.yearsOfExperience": "سنوات الخبرة",
+  "userProfile.pets": "الحيوانات الأليفة",
+  "userProfile.noPets": "لا توجد حيوانات أليفة",
+  "userProfile.regularUser": "مستخدم عادي",
+  "userProfile.supervisor": "مشرف",
+  "userProfile.disabled": "معطل",
+  "userProfile.sendMessage": "إرسال رسالة",
+  "userProfile.messageSubject": "الموضوع",
+  "userProfile.messageSubjectPlaceholder": "أدخل موضوع الرسالة",
+  "userProfile.messageContent": "الرسالة",
+  "userProfile.messageContentPlaceholder": "اكتب رسالتك هنا...",
+  "userProfile.messageTip": "سيتم إرسال رسالتك إلى صندوق الوارد للمستخدم",
+  "userProfile.fillAllFields": "يرجى ملء جميع الحقول",
+  "userProfile.messageSent": "تم إرسال الرسالة",
+  "userProfile.messageSentSuccess": "تم إرسال رسالتك بنجاح",
 };
 
 export default ar;

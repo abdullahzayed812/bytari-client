@@ -531,7 +531,7 @@ export default function WarehouseManagementScreen() {
         </View>
       </View>
 
-      {/* Search, Settings and Add Button */}
+      {/* Search bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Search size={20} color={COLORS.darkGray} />
@@ -543,27 +543,31 @@ export default function WarehouseManagementScreen() {
             textAlign="right"
           />
         </View>
-
-        {isOwner === "true" ? (
-          <>
-            <TouchableOpacity style={styles.settingsButton} onPress={handleWarehouseSettings}>
-              <Settings size={20} color={COLORS.white} />
-              <Text style={styles.settingsButtonText}>إعدادات</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsButton} onPress={() => setShowMessageModal(true)}>
-              <Send size={20} color={COLORS.white} />
-              <Text style={styles.settingsButtonText}>رسالة للمتابعين</Text>
-            </TouchableOpacity>
-          </>
-        ) : null}
-
-        {canEdit === "true" ? (
-          <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
-            <Plus size={20} color={COLORS.white} />
-            <Text style={styles.addButtonText}>إضافة</Text>
-          </TouchableOpacity>
-        ) : null}
       </View>
+
+      {/* Action buttons row */}
+      {(isOwner === "true" || canEdit === "true") && (
+        <View style={styles.actionsRow}>
+          {isOwner === "true" && (
+            <TouchableOpacity style={styles.actionRowButton} onPress={handleWarehouseSettings}>
+              <Settings size={18} color={COLORS.white} />
+              <Text style={styles.actionRowButtonText}>إعدادات</Text>
+            </TouchableOpacity>
+          )}
+          {isOwner === "true" && (
+            <TouchableOpacity style={[styles.actionRowButton, styles.messageRowButton]} onPress={() => setShowMessageModal(true)}>
+              <Send size={18} color={COLORS.white} />
+              <Text style={styles.actionRowButtonText}>رسالة للمتابعين</Text>
+            </TouchableOpacity>
+          )}
+          {canEdit === "true" && (
+            <TouchableOpacity style={[styles.actionRowButton, styles.addRowButton]} onPress={handleAddProduct}>
+              <Plus size={18} color={COLORS.white} />
+              <Text style={styles.actionRowButtonText}>إضافة منتج</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       {/* Filters */}
       <ScrollView
@@ -731,13 +735,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   searchContainer: {
-    flexDirection: "row-reverse",
     paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 8,
+    paddingBottom: 10,
   },
   searchBar: {
-    flex: 2,
     flexDirection: "row-reverse",
     alignItems: "center",
     backgroundColor: COLORS.white,
@@ -751,33 +752,32 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginRight: 12,
   },
-  addButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  actionsRow: {
     flexDirection: "row-reverse",
-    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     gap: 8,
   },
-  addButtonText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  settingsButton: {
-    backgroundColor: "#FF9800",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+  actionRowButton: {
+    flex: 1,
     flexDirection: "row-reverse",
     alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF9800",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     gap: 6,
-    flex: 1,
   },
-  settingsButtonText: {
+  messageRowButton: {
+    backgroundColor: "#7C3AED",
+  },
+  addRowButton: {
+    backgroundColor: COLORS.primary,
+  },
+  actionRowButtonText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
   },
   filtersScroll: {

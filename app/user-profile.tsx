@@ -95,13 +95,13 @@ export default function UserProfileScreen() {
 
     sendMessageMutation.mutate(
       {
-        senderId: user?.id,
+        senderId: Number(user?.id),
         title: messageSubject,
         content: messageContent,
-        targetUserId: userProfile.id,
         type: "announcement",
-        targetAudience: "users",
-      } as any,
+        targetAudience: "specific",
+        targetUserIds: [Number(userProfile.id)],
+      },
       {
         onSuccess: () => {
           Alert.alert(t("userProfile.messageSent"), t("userProfile.messageSentSuccess"));

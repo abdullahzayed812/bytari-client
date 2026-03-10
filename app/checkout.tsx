@@ -62,7 +62,7 @@ export default function CheckoutScreen() {
         onError: (error) => {
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء إضافة العنوان");
         },
-      }
+      },
     );
   };
 
@@ -111,7 +111,7 @@ export default function CheckoutScreen() {
         onError: (error) => {
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء إنشاء الطلب");
         },
-      }
+      },
     );
   };
 
@@ -159,10 +159,6 @@ export default function CheckoutScreen() {
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>المجموع الفرعي:</Text>
               <Text style={styles.summaryValue}>{getTotalPrice().toFixed(2)} دينار</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>رسوم التوصيل:</Text>
-              <Text style={styles.summaryValue}>مجاني</Text>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>المجموع الكلي:</Text>
@@ -215,10 +211,6 @@ export default function CheckoutScreen() {
                 multiline
                 numberOfLines={3}
               />
-              <TouchableOpacity style={styles.mapButton} onPress={() => router.push("/map-location?returnTo=checkout")}>
-                <MapPin size={20} color={COLORS.primary} />
-                <Text style={styles.mapButtonText}>تحديد الموقع على الخريطة</Text>
-              </TouchableOpacity>
               <View style={styles.formButtons}>
                 <Button
                   title="إلغاء"

@@ -67,6 +67,8 @@ export default function HomeScreen() {
     enabled: !!user?.id,
   });
 
+  const markAllNotificationsRead = useMutation(trpc.notifications.markAllAsRead.mutationOptions());
+
   // Real backend data queries
   const {
     data: heroImagesData,
@@ -391,13 +393,19 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => {
-              if (userMode === "veterinarian") {
-                // For veterinarians: Clinic requests, appointment notifications, medical alerts
-                router.push("/notifications");
-              } else {
-                // For pet owners: General notifications, appointment reminders
-                router.push("/notifications");
+              if (user?.id) {
+                markAllNotificationsRead.mutate(
+                  { userId: Number(user.id) },
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries(
+                        trpc.admin.stats.getUserMessageNotificationCounts.queryKey as any
+                      );
+                    },
+                  }
+                );
               }
+              router.push("/notifications");
             }}
           >
             <Bell size={22} color={COLORS.black} />

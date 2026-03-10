@@ -6,7 +6,7 @@ import { useApp } from "../providers/AppProvider";
 import { useRouter } from "expo-router";
 import { Stack } from "expo-router";
 import { Save, X, MapPin, Phone, Mail, ExternalLink, ArrowLeft, ArrowRight } from "lucide-react-native";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { ImageUploader } from "@/components/ImageUploader";
 import { isRTL } from "@/lib/rtl-config";
@@ -34,6 +34,7 @@ export default function EditUnionMainScreen() {
   const { t, isRTL } = useI18n();
   const { isSuperAdmin } = useApp();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data: unionData, isLoading: isFetching } = useQuery(trpc.union.main.get.queryOptions());
   const initialData = useMemo(() => unionData?.union, [unionData]);
@@ -47,7 +48,12 @@ export default function EditUnionMainScreen() {
         ...initialData,
         establishedYear: initialData.establishedYear?.toString() || "",
         memberCount: initialData.memberCount?.toString() || "",
-        // services: typeof initialData.services !== "string" ? JSON.parse(initialData.services) : [],
+        services: ((initialData.services as any[]) ?? []).map((service, index) => ({
+          id: service.id ?? `${Date.now()}-${index}`,
+          title: service.title ?? "",
+          description: service.description ?? "",
+          color: service.color ?? "#6B7280",
+        })),
       });
     }
   }, [initialData]);
@@ -68,7 +74,10 @@ export default function EditUnionMainScreen() {
       Alert.alert("تم الحفظ", "تم حفظ معلومات النقابة بنجاح", [
         {
           text: "موافق",
-          onPress: () => router.back(),
+          onPress: () => {
+            queryClient.invalidateQueries(trpc.union.main.get.queryKey as any);
+            router.back();
+          },
         },
       ]);
     } catch (error) {
@@ -82,7 +91,7 @@ export default function EditUnionMainScreen() {
     setUnionInfo((prev) => ({
       ...prev,
       services: prev?.services?.map((service) =>
-        service?.id === serviceId ? { ...service, [field]: value } : service
+        service?.id === serviceId ? { ...service, [field]: value } : service,
       ),
     }));
   };
