@@ -11,6 +11,7 @@ import {
   Modal,
   ActivityIndicator,
 } from "react-native";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
@@ -28,6 +29,8 @@ import {
   Settings,
   Heart,
   Send,
+  X,
+  Camera as CameraIcon,
 } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -44,14 +47,39 @@ export default function ClinicDashboard() {
 
   const { showToast } = useToastContext();
   const [searchQuery, setSearchQuery] = useState("");
+  // camera permissions
+
   const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const [cameraRef, setCameraRef] = useState<React.LegacyRef<any> | null>(null); // reference to camera
+
+  // use expo-camera hook for permissions
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+
+  const handleOpenScanner = async () => {
+    // if permission unknown or not granted, ask
+    let granted = cameraPermission?.granted;
+    if (!granted) {
+      const res = await requestCameraPermission();
+      granted = res.granted;
+    }
+    if (granted) {
+      setScanned(false);
+      setShowScanner(true);
+    } else {
+      Alert.alert("صلاحية الكاميرا", "لم يتم منح صلاحية الكاميرا. لا يمكن مسح الباركود.");
+    }
+  };
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageTitle, setMessageTitle] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [messageImage, setMessageImage] = useState("");
 
   const sendMessageMutation = useMutation(trpc.clinics.sendMessageToFollowers.mutationOptions());
+
+
 
   const handleSendMessage = async () => {
     if (!messageTitle.trim() || !messageBody.trim()) {
@@ -122,22 +150,28 @@ export default function ClinicDashboard() {
     }
   };
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
+const handleSearch = (query?: string, options: { updateInput?: boolean } = { updateInput: true }) => {
+    const q = String(query ?? searchQuery ?? "");
+
+    if (!q.trim()) {
       Alert.alert("تنبيه", "يرجى إدخال نص للبحث");
       return;
+    }
+
+    if (query !== undefined && options.updateInput) {
+      setSearchQuery(q);
     }
 
     setIsSearching(true);
 
     const results = allPets?.pets?.filter((animal: any) => {
-      const q = searchQuery.toLowerCase();
+      const lower = q.toLowerCase();
       return (
-        (animal.id && animal.id.toString().toLowerCase().includes(q)) ||
-        (animal.name && animal.name.toLowerCase().includes(q)) ||
-        (animal.owner && animal.owner.toLowerCase().includes(q)) ||
-        (animal.type && animal.type.toLowerCase().includes(q)) ||
-        (animal.breed && animal.breed.toLowerCase().includes(q))
+        (animal.id && animal.id.toString().toLowerCase().includes(lower)) ||
+        (animal.name && animal.name.toLowerCase().includes(lower)) ||
+        (animal.owner && animal.owner.toLowerCase().includes(lower)) ||
+        (animal.type && animal.type.toLowerCase().includes(lower)) ||
+        (animal.breed && animal.breed.toLowerCase().includes(lower))
       );
     });
 
@@ -145,7 +179,16 @@ export default function ClinicDashboard() {
 
     if (results.length === 0) {
       Alert.alert("نتائج البحث", "لم يتم العثور على نتائج مطابقة للبحث");
+      setSearchQuery("");
+      setFilteredAnimals([]);
+      setIsSearching(false);
     }
+  };
+
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    setScanned(true);
+    setShowScanner(false);
+    handleSearch(data, { updateInput: false });
   };
 
   const clearSearch = () => {
@@ -154,14 +197,14 @@ export default function ClinicDashboard() {
     setIsSearching(false);
   };
 
-  const handleReportsAndStats = () => {
-    Alert.alert("التقارير والإحصائيات", "اختر نوع التقرير المطلوب:", [
-      { text: "إلغاء", style: "cancel" },
-      { text: "تقرير شهري", onPress: () => generateMonthlyReport() },
-      { text: "إحصائيات العيادة", onPress: () => showClinicStats() },
-      { text: "تقرير الحيوانات", onPress: () => generateAnimalsReport() },
-    ]);
-  };
+  // const handleReportsAndStats = () => {
+  //   Alert.alert("التقارير والإحصائيات", "اختر نوع التقرير المطلوب:", [
+  //     { text: "إلغاء", style: "cancel" },
+  //     { text: "تقرير شهري", onPress: () => generateMonthlyReport() },
+  //     { text: "إحصائيات العيادة", onPress: () => showClinicStats() },
+  //     { text: "تقرير الحيوانات", onPress: () => generateAnimalsReport() },
+  //   ]);
+  // };
 
   const generateMonthlyReport = () => {
     Alert.alert("تقرير شهري", "تم إنشاء التقرير الشهري بنجاح");
@@ -291,7 +334,10 @@ export default function ClinicDashboard() {
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
-                <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+                <TouchableOpacity style={[styles.searchButton, { marginRight: 6 }]} onPress={handleOpenScanner}>
+                  <CameraIcon size={20} color={COLORS.white} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.searchButton} onPress={() => handleSearch(searchQuery)}>
                   <Search size={20} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
@@ -332,8 +378,44 @@ export default function ClinicDashboard() {
                 )
               }
             />
-          </View>
 
+          {/* Scanner modal */}
+         <Modal visible={showScanner} transparent={false} animationType="slide">
+  <View style={{ flex: 1 }}>
+    <CameraView
+      style={StyleSheet.absoluteFillObject}
+      onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+      ref={(ref: any) => setCameraRef(ref)}
+      barCodeScannerSettings={{
+        barCodeTypes: [
+          "qr",
+          "ean13",
+          "code128",
+          "ean8",
+          "upc_e",
+          "upc_a",
+          // add any types your barcodes use
+        ],
+      }}
+    />
+
+    {/* Overlay rectangle */}
+    <View style={styles.scanOverlay}>
+      <View style={styles.scanFrame} />
+    </View>
+
+    <TouchableOpacity
+      style={{ position: "absolute", top: 40, right: 20 }}
+      onPress={() => {
+        setShowScanner(false);
+        setScanned(false);
+      }}
+    >
+      <X size={30} color={COLORS.white} />
+    </TouchableOpacity>
+  </View>
+</Modal>
+          </View>
           {/* Quick Actions */}
           <View style={styles.actionsSection}>
             <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
@@ -825,4 +907,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  scanOverlay: {
+  ...StyleSheet.absoluteFillObject,
+  justifyContent: "center",
+  alignItems: "center",
+},
+scanFrame: {
+  width: 250,
+  height: 180,
+  borderWidth: 3,
+  borderColor: COLORS.white,
+  borderRadius: 14,
+  backgroundColor: "rgba(0,0,0,0.2)",
+},
 });

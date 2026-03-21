@@ -597,6 +597,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   ordersList: {
+    flex: 1,
     padding: 16,
   },
   orderCard: {

@@ -47,6 +47,7 @@ export interface Clinic {
   services: string[];
   workingHours: WorkingHours;
   rating?: number;
+  reviewCount?: number;
   imageUrl?: string;
   veterinarians?: User[];
 }
@@ -77,6 +78,7 @@ export interface VetStore {
   products: Product[];
   imageUrl?: string;
   rating?: number;
+  reviewCount?: number;
 }
 
 export interface PoultryFarm {

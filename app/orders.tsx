@@ -258,6 +258,7 @@ const styles = StyleSheet.create({
     width: 200,
   },
   ordersList: {
+    flex: 1,
     padding: 16,
   },
   orderCard: {

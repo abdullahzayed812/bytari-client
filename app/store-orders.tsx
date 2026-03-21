@@ -526,6 +526,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   statsContainer: {
+    flexShrink: 0,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -577,10 +578,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   filterContainer: {
+    flexShrink: 0,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
   filterChip: {
+    
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,

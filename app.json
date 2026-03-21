@@ -7,8 +7,33 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/appicon.png",
         "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "CAMERA"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
       }
+   
     },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.expoapp"
+    },
+    "plugins": [
+      "@react-native-community/datetimepicker",
+      "expo-router",
+       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true,
+          "barcodeScannerEnabled": true
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -18,9 +43,6 @@
       "eas": {
         "projectId": "2e383e4c-de6d-4835-bd6e-9b621555c654"
       }
-    },
-    "ios": {
-      "bundleIdentifier": "com.anonymous.expoapp"
     }
   }
 }

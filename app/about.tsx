@@ -82,7 +82,7 @@ export default function AboutScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>تواصل معنا</Text>
+          <Text style={styles.sectionTitle}>{t("about.contactTitle")}</Text>
           <View style={styles.contactCard}>
             {/* <TouchableOpacity style={styles.contactItem} onPress={() => handleLinkPress("https://petcare.com")}>
               <ExternalLink size={20} color={COLORS.primary} />
@@ -94,39 +94,39 @@ export default function AboutScreen() {
               onPress={() => handleLinkPress("mailto:info@baytariapp@gmail.com")}
             >
               <ExternalLink size={20} color={COLORS.primary} />
-              <Text style={styles.contactText}>البريد الإلكتروني</Text>
+              <Text style={styles.contactText}>{t("about.contactEmail")}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.contactItem} onPress={() => router.push("/contact-us")}>
               <ExternalLink size={20} color={COLORS.primary} />
-              <Text style={styles.contactText}>صفحة التواصل</Text>
+              <Text style={styles.contactText}>{t("about.contactPage")}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>الشروط والأحكام</Text>
+          <Text style={styles.sectionTitle}>{t("about.legalTitle")}</Text>
           <View style={styles.legalCard}>
             <TouchableOpacity style={styles.legalItem} onPress={() => router.push("/privacy")}>
-              <Text style={styles.legalText}>سياسة الخصوصية</Text>
+              <Text style={styles.legalText}>{t("about.privacyPolicy")}</Text>
               <ArrowRight size={16} color={COLORS.darkGray} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.legalItem}>
-              <Text style={styles.legalText}>شروط الاستخدام</Text>
+              <Text style={styles.legalText}>{t("about.termsOfUse")}</Text>
               <ArrowRight size={16} color={COLORS.darkGray} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.legalItem}>
-              <Text style={styles.legalText}>اتفاقية الترخيص</Text>
+              <Text style={styles.legalText}>{t("about.licenseAgreement")}</Text>
               <ArrowRight size={16} color={COLORS.darkGray} />
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>©2026 Bytari App. جميع الحقوق محفوظة</Text>
-          <Text style={styles.footerSubtext}>صنع بـ ❤️ للأطباء البيطريين ولمحبي الحيوانات الأليفة</Text>
+          <Text style={styles.footerText}>{t("about.footerText")}</Text>
+          <Text style={styles.footerSubtext}>{t("about.footerSubtext")}</Text>
         </View>
       </ScrollView>
     </>

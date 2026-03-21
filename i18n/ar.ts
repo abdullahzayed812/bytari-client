@@ -709,6 +709,32 @@ const ar: Record<string, string> = {
   "screens.poultryManagement": "إدارة الدواجن",
 
   // ========================
+  // ABOUT
+  // ========================
+  "about.appName": "تطبيق رعاية الحيوانات الأليفة",
+  "about.version": "الإصدار 1.0.0",
+  "about.aboutTitle": "حول التطبيق",
+  "about.aboutText": "تطبيق رعاية الحيوانات الأليفة هو منصة شاملة مصممة لمساعدة الأطباء البيطريين وأصحاب الحيوانات الأليفة في تقديم أفضل رعاية ممكنة لحيواناتهم. نحن نقدم خدمات متنوعة تتراوح من حجز المواعيد البيطرية إلى متجر لمستلزمات الحيوانات الأليفة.",
+  "about.featuresTitle": "مميزاتنا",
+  "about.feature1Title": "مجتمع محبي الحيوانات الأليفة",
+  "about.feature1Description": "انضم إلى مجتمع من محبي الحيوانات الأليفة.",
+  "about.feature2Title": "رعاية بيطرية احترافية",
+  "about.feature2Description": "احجز مواعيد مع أفضل الأطباء البيطريين.",
+  "about.feature3Title": "خدمات مميزة",
+  "about.feature3Description": "متجر كامل لكل احتياجات حيوانك الأليف.",
+  "about.teamTitle": "فريقنا",
+  "about.teamText": "فريقنا مكرس لتحسين حياة الحيوانات الأليفة وجعل رعاية الحيوانات الأليفة أسهل للجميع.",
+  "about.contactTitle": "اتصل بنا",
+  "about.contactEmail": "راسلنا عبر البريد الإلكتروني",
+  "about.contactPage": "صفحة الاتصال",
+  "about.legalTitle": "قانوني",
+  "about.privacyPolicy": "سياسة الخصوصية",
+  "about.termsOfUse": "شروط الاستخدام",
+  "about.licenseAgreement": "اتفاقية الترخيص",
+  "about.footerText": "صنع بكل حب للحيوانات الأليفة",
+  "about.footerSubtext": "© 2026 تطبيق رعاية الحيوانات الأليفة",
+
+  // ========================
   // TERMS & CONDITIONS
   // ========================
   "terms.title": "اتفاقية الاستخدام وشروط التسجيل",

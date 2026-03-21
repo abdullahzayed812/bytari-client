@@ -71,8 +71,14 @@ export default function WarehouseManagementScreen() {
       return;
     }
     try {
+      const storeId = selectedWarehouse?.id || warehouses?.[0]?.id;
+      if (!storeId) {
+        showToast({ type: "error", message: "لا يوجد مذخر محدد" });
+        return;
+      }
+
       const result = await sendMessageMutation.mutateAsync({
-        storeId: warehouses?.[0]?.id,
+        storeId: Number(storeId),
         title: messageTitle.trim(),
         message: messageBody.trim(),
         ...(messageImage ? { imageUrl: messageImage } : {}),

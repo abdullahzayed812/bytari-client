@@ -470,12 +470,16 @@ export default function StoreDetailsScreen() {
                 {featuredProducts.map(renderProductCard)}
               </ScrollView>
 
-              <Button
-                title="عرض جميع المنتجات"
-                onPress={() => router.push(`/store-products?storeId=${storeData.id}`)}
-                type="outline"
-                style={styles.viewAllButton}
-              />
+            <Button
+  title="عرض جميع المنتجات"
+  onPress={() =>
+    router.push(
+      `/store-products?storeId=${storeData.id}&phone=${storeData.phone}`
+    )
+  }
+  type="outline"
+  style={styles.viewAllButton}
+/>
             </View>
           )}
 

@@ -269,6 +269,70 @@ export default function StoreScreen() {
     router.push(`/pet-category-analytics?category=${category}`);
   };
 
+  const renderStoreHeader = (title: string, subtitle: string, showBack = false) => {
+    return (
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <View style={styles.headerTextSection}>
+            {showBack && (
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={userMode === "veterinarian" ? handleBackToSpecialties : handleBackToAnimals}
+              >
+                <ArrowRight size={22} color={COLORS.primary} style={isRTL ? {} : { transform: [{ rotate: "180deg" }] }} />
+              </TouchableOpacity>
+            )}
+            <View style={styles.titleContainer}>
+              <Text style={styles.headerTitle} numberOfLines={1}>
+                {title}
+              </Text>
+              <Text style={styles.headerSubtitle} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
+            <ShoppingBag size={24} color={COLORS.primary} />
+            {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {hasStorePermission() && (
+          <View style={styles.adminToolbar}>
+            <TouchableOpacity style={styles.adminChip} onPress={handleAddProduct}>
+              <Plus size={16} color={COLORS.white} />
+              <Text style={styles.adminChipText}>إضافة منتج</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.adminChip} onPress={handleManageStore}>
+              <Settings size={16} color={COLORS.white} />
+              <Text style={styles.adminChipText}>الإدارة</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.adminChip}
+              onPress={() => {
+                const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
+                router.push(`/store-orders?storeType=${storeType}`);
+              }}
+            >
+              <ClipboardList size={16} color={COLORS.white} />
+              <Text style={styles.adminChipText}>الطلبات</Text>
+              {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
+                <View style={styles.adminBadgeSmall}>
+                  <Text style={styles.adminBadgeTextSmall}>{pendingOrdersCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderAnimalCategory = ({ item }: { item: (typeof animalCategories)[0] }) => (
     <View style={[styles.animalCard, { backgroundColor: item.color }]}>
       <TouchableOpacity style={styles.animalMainArea} onPress={() => handleAnimalSelect(item.id)}>
@@ -394,46 +458,7 @@ export default function StoreScreen() {
   if (userMode === "veterinarian" && !selectedSpecialty) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>المتجر البيطري</Text>
-            <Text style={styles.storeTypeLabel}>منتجات طبية متخصصة للأطباء البيطريين</Text>
-          </View>
-          <View style={styles.headerRight}>
-            {hasStorePermission() && (
-              <View style={styles.adminButtons}>
-                <TouchableOpacity style={styles.adminButton} onPress={handleAddProduct}>
-                  <Plus size={20} color={COLORS.white} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
-                  <Settings size={20} color={COLORS.white} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.adminButton}
-                  onPress={() => {
-                    const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
-                    router.push(`/store-orders?storeType=${storeType}`);
-                  }}
-                >
-                  <ClipboardList size={20} color={COLORS.white} />
-                  {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
-                    <View style={styles.adminBadge}>
-                      <Text style={styles.adminBadgeText}>{pendingOrdersCount}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
-            <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
-              <ShoppingBag size={24} color={COLORS.primary} />
-              {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
-                <View style={styles.cartBadge}>
-                  <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+        {renderStoreHeader("المتجر البيطري", "منتجات طبية متخصصة للأطباء البيطريين")}
 
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeTitle}>المتجر البيطري المتخصص</Text>
@@ -457,49 +482,7 @@ export default function StoreScreen() {
   if (userMode !== "veterinarian" && !selectedAnimal) {
     return (
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>{t("store.title")}</Text>
-            <Text style={styles.storeTypeLabel}>متجر الحيوانات الأليفة - منتجات عامة</Text>
-          </View>
-          <View style={styles.headerRight}>
-            {hasStorePermission() && (
-              <View style={styles.adminButtons}>
-                <TouchableOpacity style={styles.adminButton} onPress={handleAddProduct}>
-                  <Plus size={20} color={COLORS.white} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
-                  <Settings size={20} color={COLORS.white} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.adminButton}
-                  onPress={() => {
-                    const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
-                    router.push(`/store-orders?storeType=${storeType}`);
-                  }}
-                >
-                  <ClipboardList size={20} color={COLORS.white} />
-                  {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
-                    <View style={styles.adminBadge}>
-                      <Text style={styles.adminBadgeText}>{pendingOrdersCount}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.adminButton} onPress={handlePetStoreSettings}>
-                  <Cog size={20} color={COLORS.white} />
-                </TouchableOpacity>
-              </View>
-            )}
-            <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
-              <ShoppingBag size={24} color={COLORS.primary} />
-              {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
-                <View style={styles.cartBadge}>
-                  <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+        {renderStoreHeader(t("store.title"), "متجر الحيوانات الأليفة - منتجات عامة")}
 
         <View style={styles.welcomeContainer}>
           <Text style={styles.welcomeTitle}>متجر الحيوانات الأليفة</Text>
@@ -524,57 +507,13 @@ export default function StoreScreen() {
   // Products view for both modes
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={userMode === "veterinarian" ? handleBackToSpecialties : handleBackToAnimals}
-        >
-          <ArrowRight size={20} color={COLORS.primary} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.title}>{selectedMainCategory?.label}</Text>
-          <Text style={styles.storeTypeLabel}>
-            {userMode === "veterinarian"
-              ? "منتجات طبية متخصصة للأطباء البيطريين"
-              : "متجر الحيوانات الأليفة - منتجات عامة"}
-          </Text>
-        </View>
-        <View style={styles.headerRight}>
-          {hasStorePermission() && (
-            <View style={styles.adminButtons}>
-              <TouchableOpacity style={styles.adminButton} onPress={handleAddProduct}>
-                <Plus size={20} color={COLORS.white} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.adminButton} onPress={handleManageStore}>
-                <Settings size={20} color={COLORS.white} />
-              </TouchableOpacity>
-              {/* This is the third ClipboardList button */}
-              <TouchableOpacity
-                style={styles.adminButton}
-                onPress={() => {
-                  const storeType = userMode === "veterinarian" ? "veterinarian" : "pet_owner";
-                  router.push(`/store-orders?storeType=${storeType}`);
-                }}
-              >
-                <ClipboardList size={20} color={COLORS.white} />
-                {pendingOrdersCount && pendingOrdersCount > 0 && !isCartAndOrdersLoading && (
-                  <View style={styles.adminBadge}>
-                    <Text style={styles.adminBadgeText}>{pendingOrdersCount}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-          <TouchableOpacity style={styles.cartButton} onPress={() => router.push("/cart")}>
-            <ShoppingBag size={24} color={COLORS.primary} />
-            {getCartItemCount() > 0 && !isCartAndOrdersLoading && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{getCartItemCount()}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+      {renderStoreHeader(
+        selectedMainCategory?.label || "",
+        userMode === "veterinarian"
+          ? "منتجات طبية متخصصة للأطباء البيطريين"
+          : "متجر الحيوانات الأليفة - منتجات عامة",
+        true
+      )}
 
       {/* Search Bar */}
       <View style={styles.searchSection}>
@@ -634,78 +573,89 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.gray,
   },
   header: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
-    // flexWrap: "wrap",
-    alignItems: "center",
-    padding: 8,
-    backgroundColor: COLORS.gray,
-  },
-  headerLeft: {
-    // flex: 1,
-    // alignItems: "center",
-  },
-  headerCenter: {
-    // flex: 1,
-    alignItems: "center",
-  },
-  headerRight: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    // alignSelf: "center",
-  },
-  adminButtons: {
-    flexDirection: "row-reverse",
-    // marginRight: 2,
-  },
-  adminButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F3F4F6",
+    elevation: 4,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
   },
-  adminBadge: {
-    position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: "red",
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: "center",
+  headerTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 4,
   },
-  adminBadgeText: {
+  headerTextSection: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 0,
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: COLORS.black,
+    // textAlign: "right",
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginTop: 2,
+    // textAlign: "right",
+  },
+  adminToolbar: {
+    flexDirection: "row",
+    marginTop: 12,
+    gap: 10,
+    paddingBottom: 4,
+  },
+  adminChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+    elevation: 2,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+  },
+  adminChipText: {
     color: COLORS.white,
     fontSize: 12,
     fontWeight: "bold",
   },
-  storeTypeLabel: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: "600",
-    marginTop: 2,
-    textAlign: "center",
+  adminBadgeSmall: {
+    backgroundColor: COLORS.red,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: -4,
+    marginTop: -8,
   },
-  title: {
-    fontSize: 20,
+  adminBadgeTextSmall: {
+    color: COLORS.white,
+    fontSize: 10,
     fontWeight: "bold",
-    color: COLORS.black,
-    textAlign: "center",
   },
   cartButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.white,
     justifyContent: "center",
     alignItems: "center",
@@ -714,23 +664,32 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    position: "relative",
   },
   cartBadge: {
     position: "absolute",
-    top: -5,
-    right: -5,
+    top: -4,
+    right: -4,
     backgroundColor: COLORS.red,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    borderRadius: 11,
+    minWidth: 22,
+    height: 22,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   cartBadgeText: {
     color: COLORS.white,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.lightGray,
+    justifyContent: "center",
+    alignItems: "center",
   },
   categoriesContainer: {
     backgroundColor: COLORS.white,

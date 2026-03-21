@@ -11,6 +11,9 @@ import {
   ActivityIndicator,
   Clipboard,
 } from "react-native";
+// Using remote service for barcode images instead of react-native-barcode-builder
+// to avoid native ART dependencies incompatible with Expo Go.
+import { Image as RNImage } from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
@@ -95,6 +98,9 @@ export default function PetDetailsScreen() {
 
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
+
+  // barcode modal state
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
 
   // Form states
   const [editForm, setEditForm] = useState({
@@ -510,7 +516,7 @@ export default function PetDetailsScreen() {
 
     try {
       await requestAccessMutation.mutateAsync({
-        petId: Number(pet.id),
+        petId: pet.id,
         clinicId: Number(clinicId!),
         reason: followUpForm.reason,
       } as any);
@@ -537,7 +543,7 @@ export default function PetDetailsScreen() {
 
     try {
       await requestAccessMutation.mutateAsync({
-        petId: Number(pet.id),
+        petId: pet.id,
         clinicId: Number(clinicId!),
         reason: accessRequestForm.reason,
       } as any);
@@ -613,7 +619,7 @@ export default function PetDetailsScreen() {
 
     try {
       await requestMedicalRecordMutation.mutateAsync({
-        petId: Number(pet.id),
+        petId: pet.id,
         clinicId: Number(clinicId!),
         diagnosis: medicalForm.diagnosis,
         treatment: medicalForm.treatment,
@@ -644,7 +650,7 @@ export default function PetDetailsScreen() {
 
     try {
       await requestVaccinationMutation.mutateAsync({
-        petId: Number(pet.id),
+        petId: pet.id,
         clinicId: Number(clinicId!),
         name: vaccinationForm.name,
         nextDate: vaccinationForm.nextDate,
@@ -674,7 +680,7 @@ export default function PetDetailsScreen() {
 
     try {
       await requestReminderMutation.mutateAsync({
-        petId: Number(pet.id),
+        petId: pet.id,
         clinicId: Number(clinicId!),
         title: reminderForm.title,
         description: reminderForm.description,
@@ -1089,6 +1095,25 @@ export default function PetDetailsScreen() {
             )}
           </View>
 
+          {/* barcode display (tap to enlarge) */}
+          {pet.id && (
+            <TouchableOpacity
+              onPress={() => setShowBarcodeModal(true)}
+              style={{ alignItems: "center", marginTop: 12 }}
+            >
+              {/* use external service to render a Code128 barcode as an image */}
+              <RNImage
+                source={{
+                  uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+                    pet.id.toString(),
+                  )}&code=Code128&translate-esc=true`,
+                }}
+                style={{ width: 200, height: 80 }}
+              />
+              <Text style={{ fontSize: 12, marginTop: 4 }}>{pet.id}</Text>
+            </TouchableOpacity>
+          )}
+
           {isClinicAccess && (
             <View style={styles.clinicActions}>
               {hasAccess ? (
@@ -1374,6 +1399,50 @@ export default function PetDetailsScreen() {
           imageUrl={selectedImageUrl}
           onClose={() => setShowImageModal(false)}
         />
+
+      {/* barcode enlarged modal */}
+      <Modal
+        visible={showBarcodeModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowBarcodeModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: COLORS.white,
+              padding: 20,
+              borderRadius: 8,
+              alignItems: "center",
+            }}
+          >
+            {pet.id && (
+              <RNImage
+                source={{
+                  uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+                    pet.id.toString(),
+                  )}&code=Code128&translate-esc=true`,
+                }}
+                style={{ width: 300, height: 120 }}
+              />
+            )}
+            <Text style={{ fontSize: 16, marginTop: 8 }}>{pet.id}</Text>
+            <TouchableOpacity
+              onPress={() => setShowBarcodeModal(false)}
+              style={{ marginTop: 12 }}
+            >
+              <Text style={{ color: COLORS.primary }}>إغلاق</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
         {activeTab === "vaccinations" && (
           <View>

@@ -694,7 +694,7 @@ const en: Record<string, string> = {
   "screens.language": "Language",
   "screens.accountSettings": "Account Settings",
   "screens.help": "Help",
-  "screens.about": "About App",
+  "screens.about": "About",
   "screens.jobVacancies": "Job Vacancies",
   "screens.lessonsLectures": "Lessons & Lectures",
   "screens.coursesSeminars": "Courses & Seminars",
@@ -703,6 +703,32 @@ const en: Record<string, string> = {
   "screens.addPoultryFarm": "Add Poultry Farm",
   "screens.poultryFarmDetails": "Poultry Farm Details",
   "screens.poultryManagement": "Poultry Management",
+
+  // ========================
+  // ABOUT
+  // ========================
+  "about.appName": "Pet Care App",
+  "about.version": "Version 1.0.0",
+  "about.aboutTitle": "About the App",
+  "about.aboutText": "The Pet Care App is a comprehensive platform designed to help veterinarians and pet owners take the best possible care of their pets. We provide various services ranging from booking veterinary appointments to a store for pet supplies.",
+  "about.featuresTitle": "Our Features",
+  "about.feature1Title": "Pet Lovers Community",
+  "about.feature1Description": "Join a community of pet lovers.",
+  "about.feature2Title": "Professional Veterinary Care",
+  "about.feature2Description": "Book appointments with the best veterinarians.",
+  "about.feature3Title": "Premium Services",
+  "about.feature3Description": "A complete store for all your pet needs.",
+  "about.teamTitle": "Our Team",
+  "about.teamText": "Our team is dedicated to improving the lives of pets and making pet care easier for everyone.",
+  "about.contactTitle": "Contact Us",
+  "about.contactEmail": "Email Us",
+  "about.contactPage": "Contact Page",
+  "about.legalTitle": "Legal",
+  "about.privacyPolicy": "Privacy Policy",
+  "about.termsOfUse": "Terms of Use",
+  "about.licenseAgreement": "License Agreement",
+  "about.footerText": "Made with love for pets",
+  "about.footerSubtext": "© 2026 Pet Care App",
 
   // ========================
   // ADD TIP

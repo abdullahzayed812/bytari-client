@@ -44,8 +44,11 @@ interface Message {
   readAt: Date | null;
   priority: "low" | "normal" | "high" | "urgent";
   senderName?: string | null;
-  clinicName?: string | null;
-  storeName?: string | null;
+  senderType?: string | null;
+  metadata?: {
+    clinicName?: string;
+    storeName?: string;
+  } | null;
 }
 
 export default function MessagesScreen() {
@@ -67,7 +70,7 @@ export default function MessagesScreen() {
   } = useQuery(
     trpc.admin.messages.getReplies.queryOptions({
       messageId: selectedMessage?.id ? Number(selectedMessage.id) : -1,
-    }), // Use -1 or handle undefined appropriately
+    }),
   );
   const replies = useMemo(() => repliesData?.replies, [repliesData]);
 
@@ -211,7 +214,7 @@ export default function MessagesScreen() {
                 {/* Body */}
                 <View style={[styles.textContainer, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
                   {/* Top row: type badge + time */}
-                  <View style={[styles.messageHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                  <View style={[styles.messageHeader, { flexDirection: isRTL ? "row" : "row" }]}>
                     <View style={[styles.typeBadge, { backgroundColor: typeConfig.bg + "18" }]}>
                       <Text style={[styles.typeBadgeText, { color: typeConfig.bg }]}>{typeConfig.label}</Text>
                     </View>
@@ -219,9 +222,23 @@ export default function MessagesScreen() {
                   </View>
 
                   {/* Sender name */}
-                  <Text style={[styles.senderName, { textAlign: isRTL ? "left" : "right" }]}>
-                    {message.clinicName ?? message.storeName ?? message.senderName ?? "الإدارة"}
-                  </Text>
+                  <View style={{ flexDirection: isRTL ? "row-reverse" : "row" }}>
+                    {message.metadata?.clinicName ? (
+                      <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>
+                        {message.metadata.clinicName}
+                      </Text>
+                    ) : message.metadata?.storeName ? (
+                      <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>
+                        {message.metadata.storeName}
+                      </Text>
+                    ) : (
+                      <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>
+                        {message.senderType === "admin"
+                          ? "الإدارة"
+                          : message.senderName ?? "الإدارة"}
+                      </Text>
+                    )}
+                  </View>
 
                   {/* Title */}
                   <Text
@@ -304,7 +321,12 @@ export default function MessagesScreen() {
                   <Image source={{ uri: selectedMessage.imageUrl }} style={styles.modalImage} resizeMode="cover" />
                 ) : null}
                 <Text style={styles.originalFrom}>
-                  من: {selectedMessage?.clinicName ?? selectedMessage?.storeName ?? selectedMessage?.senderName ?? "الإدارة"}
+                  من:{" "}
+                  {selectedMessage?.metadata?.clinicName ??
+                    selectedMessage?.metadata?.storeName ??
+                    (selectedMessage?.senderType === "admin"
+                      ? "الإدارة"
+                      : selectedMessage?.senderName ?? "الإدارة")}
                 </Text>
               </View>
             )}

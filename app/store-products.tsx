@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, TextInput, Modal } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, TextInput, Modal, Linking, Alert } from "react-native";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { Search, X, Phone, Star } from "lucide-react-native";
@@ -8,7 +8,7 @@ import { trpc } from "../lib/trpc";
 import { useQuery } from "@tanstack/react-query";
 
 export default function StoreProductsScreen() {
-  const { storeId } = useLocalSearchParams();
+  const { storeId, phone } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedProduct, setSelectedProduct] = useState<VetStoreProduct | null>(null);
@@ -150,7 +150,13 @@ export default function StoreProductsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.contactOwnerButton}>
+            <TouchableOpacity style={styles.contactOwnerButton}   onPress={() => {
+                                      if (phone) {
+                                        Linking.openURL(`tel:${phone}`);
+                                      } else {
+                                        Alert.alert(t("common.error"), t("errors.no_phone_number"));
+                                      }
+                                    }}>
               <Phone size={20} color={COLORS.white} />
               <Text style={styles.contactOwnerText}>اتصال بصاحب المتجر</Text>
             </TouchableOpacity>

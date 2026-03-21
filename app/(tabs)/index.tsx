@@ -843,7 +843,11 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         style={[styles.clinicActionButton, styles.primaryClinicActionButton]}
                         onPress={() => {
-                          // TODO: Implement phone call functionality
+                          if (store.phone) {
+                            Linking.openURL(`tel:${store.phone}`);
+                          } else {
+                            Alert.alert(t("common.error"), t("errors.no_phone_number"));
+                          }
                         }}
                       >
                         <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>
