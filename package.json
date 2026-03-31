@@ -29,7 +29,6 @@
     "drizzle-kit": "^0.18.1",
     "drizzle-orm": "^0.44.4",
     "expo": "~53.0.27",
-    "expo-barcode-scanner": "^12.7.0",
     "expo-blur": "~14.1.4",
     "expo-camera": "^55.0.9",
     "expo-constants": "~17.1.4",
