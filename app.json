@@ -8,6 +8,7 @@
         "foregroundImage": "./assets/appicon.png",
         "backgroundColor": "#ffffff"
       },
+      "usesCleartextTraffic": true,
       "permissions": [
         "CAMERA"
       ],

@@ -26,13 +26,11 @@ import {
   Earth,
   Facebook,
   Instagram,
-  Trash2,
 } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { VetStoreProduct } from "../mocks/data"; // Assuming this is still valid for products
-import RatingComponent from "../components/RatingComponent";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
@@ -62,7 +60,6 @@ export default function StoreDetailsScreen() {
   const { showToast } = useToastContext();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
-  const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
 
   // Fetch store data
   const { data, isLoading, error } = useQuery(trpc.stores.getById.queryOptions({ storeId: Number(id) }));
@@ -82,14 +79,6 @@ export default function StoreDetailsScreen() {
 
   const { data: followerCountData } = useQuery(trpc.stores.getFollowerCount.queryOptions({ storeId: Number(id) }));
   const followerCount = followerCountData?.count;
-
-  // Fetch store reviews
-  const { data: reviewsData, isLoading: areReviewsLoading } = useQuery(
-    trpc.reviews.getStoreReviews.queryOptions({
-      storeId: Number(id),
-    }),
-  );
-  const reviews = (reviewsData as any)?.reviews;
 
   const followMutation = useMutation(trpc.stores.follow.mutationOptions());
 
@@ -202,86 +191,6 @@ export default function StoreDetailsScreen() {
       ? "تم تفعيل الإشعارات للمنتجات الجديدة"
       : "تم إيقاف الإشعارات للمنتجات الجديدة";
     Alert.alert("إعدادات الإشعارات", message);
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
-    }
-
-    if (hasHalfStar) {
-      stars.push(<Star key="half" size={16} color="#FFD700" fill="#FFD700" />);
-    }
-
-    const remainingStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < remainingStars; i++) {
-      stars.push(<Star key={`empty-${i}`} size={16} color="#E5E7EB" />);
-    }
-
-    return stars;
-  };
-
-  const addReviewMutation = useMutation(trpc.reviews.addStoreReview.mutationOptions());
-  const deleteReviewMutation = useMutation(trpc.reviews.deleteReview.mutationOptions());
-
-  const handleDeleteReview = (reviewId: number) => {
-    Alert.alert("حذف التقييم", "هل أنت متأكد من حذف هذا التقييم؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "حذف",
-        style: "destructive",
-        onPress: () => {
-          deleteReviewMutation.mutate(
-            { reviewId },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries(trpc.reviews.getStoreReviews.queryKey as any);
-                queryClient.invalidateQueries(trpc.stores.getById.queryKey as any);
-              },
-              onError: () => {
-                showToast({
-                  type: "error",
-                  message: "حدث خطأ أثناء حذف التقييم",
-                });
-              },
-            },
-          );
-        },
-      },
-    ]);
-  };
-
-  const handleRatingSubmit = async (rating: number, comment: string) => {
-    if (storeData) {
-      addReviewMutation.mutate(
-        {
-          storeId: storeData.id,
-          rating,
-          comment,
-        },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries(trpc.reviews.getStoreReviews.queryKey as any);
-            queryClient.invalidateQueries(trpc.stores.getById.queryKey as any);
-            setShowRatingModal(false);
-            showToast({
-              type: "success",
-              message: "تم إرسال تقييمك بنجاح",
-            });
-          },
-          onError: (error) => {
-            showToast({
-              type: "error",
-              message: error.message,
-            });
-          },
-        },
-      );
-    }
   };
 
   // Open external links
@@ -470,58 +379,26 @@ export default function StoreDetailsScreen() {
                 {featuredProducts.map(renderProductCard)}
               </ScrollView>
 
-            <Button
-  title="عرض جميع المنتجات"
-  onPress={() =>
-    router.push(
-      `/store-products?storeId=${storeData.id}&phone=${storeData.phone}`
-    )
-  }
-  type="outline"
-  style={styles.viewAllButton}
-/>
+              <Button
+                title="عرض جميع المنتجات"
+                onPress={() => router.push(`/store-products?storeId=${storeData.id}&phone=${storeData.phone}`)}
+                type="outline"
+                style={styles.viewAllButton}
+              />
             </View>
           )}
 
-          {/* Reviews */}
-          {reviews && reviews.length > 0 && (
-            <View style={styles.reviewsSection}>
-              <Text style={styles.sectionTitle}>التقييمات</Text>
-              {reviews.map((review: any) => (
-                <View key={review.id} style={styles.reviewItem}>
-                  <View style={styles.reviewHeader}>
-                    {isSuperAdmin && (
-                      <TouchableOpacity style={styles.deleteReviewButton} onPress={() => handleDeleteReview(review.id)}>
-                        <Trash2 size={16} color={COLORS.error} />
-                      </TouchableOpacity>
-                    )}
-
-                    <View style={{}}>
-                      <Text style={styles.reviewerName}>{review.user.name}</Text>
-                      <View style={styles.starsContainer}>{renderStars(review.rating)}</View>
-                    </View>
-                  </View>
-                  <Text style={styles.reviewComment}>{review.comment}</Text>
-                  <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <TouchableOpacity style={styles.ratingButton} onPress={() => setShowRatingModal(true)}>
+          <TouchableOpacity
+            style={styles.ratingButton}
+            onPress={() =>
+              router.push({ pathname: "/store-reviews", params: { id: storeData.id, name: storeData.name } })
+            }
+          >
             <MessageSquare size={20} color={COLORS.primary} />
-            <Text style={styles.ratingButtonText}>قيم الكتب</Text>
+            <Text style={styles.ratingButtonText}>التقييمات</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <RatingComponent
-        visible={showRatingModal}
-        onClose={() => setShowRatingModal(false)}
-        onSubmit={handleRatingSubmit}
-        title="تقييم الكتب"
-        entityName={storeData.name}
-      />
     </>
   );
 }

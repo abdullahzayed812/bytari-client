@@ -31,6 +31,7 @@ import {
   Send,
   X,
   Camera as CameraIcon,
+  MessageCircle,
 } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -79,8 +80,6 @@ export default function ClinicDashboard() {
 
   const sendMessageMutation = useMutation(trpc.clinics.sendMessageToFollowers.mutationOptions());
 
-
-
   const handleSendMessage = async () => {
     if (!messageTitle.trim() || !messageBody.trim()) {
       showToast({ type: "error", message: t("clinic.dashboard.enterTitleAndMessage") });
@@ -111,6 +110,13 @@ export default function ClinicDashboard() {
   const stats = useMemo(() => (clinicData as any)?.stats, [clinicData]);
   const access = useMemo(() => (clinicData as any)?.access, [clinicData]);
   const permissions = useMemo(() => (clinicData as any)?.permissions, [clinicData]);
+
+  const { data: unreadData } = useQuery({
+    ...trpc.clinics.chat.getUnreadCount.queryOptions({ clinicId: Number(clinicId) }),
+    enabled: !!clinicId,
+    refetchInterval: 30000,
+  });
+  const chatUnreadCount = (unreadData as any)?.count ?? 0;
 
   const { data: allPets, isLoading: isAllPetsLoading } = useQuery(trpc.pets.getAllPets.queryOptions({}));
 
@@ -150,7 +156,7 @@ export default function ClinicDashboard() {
     }
   };
 
-const handleSearch = (query?: string, options: { updateInput?: boolean } = { updateInput: true }) => {
+  const handleSearch = (query?: string, options: { updateInput?: boolean } = { updateInput: true }) => {
     const q = String(query ?? searchQuery ?? "");
 
     if (!q.trim()) {
@@ -206,20 +212,20 @@ const handleSearch = (query?: string, options: { updateInput?: boolean } = { upd
   //   ]);
   // };
 
-  const generateMonthlyReport = () => {
-    Alert.alert("تقرير شهري", "تم إنشاء التقرير الشهري بنجاح");
-  };
+  // const generateMonthlyReport = () => {
+  //   Alert.alert("تقرير شهري", "تم إنشاء التقرير الشهري بنجاح");
+  // };
 
-  const showClinicStats = () => {
-    Alert.alert(
-      "إحصائيات العيادة",
-      `إجمالي الحيوانات: ${clinicData?.stats?.totalAnimals}\nالمرضى النشطون: ${clinicData?.stats?.activePatients}\nالعلاجات المكتملة: ${clinicData?.stats?.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`,
-    );
-  };
+  // const showClinicStats = () => {
+  //   Alert.alert(
+  //     "إحصائيات العيادة",
+  //     `إجمالي الحيوانات: ${clinicData?.stats?.totalAnimals}\nالمرضى النشطون: ${clinicData?.stats?.activePatients}\nالعلاجات المكتملة: ${clinicData?.stats?.completedTreatments}\nمعدل النجاح: 95%\nمتوسط الزيارات اليومية: 12`,
+  //   );
+  // };
 
-  const generateAnimalsReport = () => {
-    Alert.alert("تقرير الحيوانات", "تم إنشاء تقرير الحيوانات بنجاح");
-  };
+  // const generateAnimalsReport = () => {
+  //   Alert.alert("تقرير الحيوانات", "تم إنشاء تقرير الحيوانات بنجاح");
+  // };
 
   const handleAllAnimals = () => {
     // Navigate directly to clinic animals page
@@ -379,42 +385,42 @@ const handleSearch = (query?: string, options: { updateInput?: boolean } = { upd
               }
             />
 
-          {/* Scanner modal */}
-         <Modal visible={showScanner} transparent={false} animationType="slide">
-  <View style={{ flex: 1 }}>
-    <CameraView
-      style={StyleSheet.absoluteFillObject}
-      onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-      ref={(ref: any) => setCameraRef(ref)}
-      barCodeScannerSettings={{
-        barCodeTypes: [
-          "qr",
-          "ean13",
-          "code128",
-          "ean8",
-          "upc_e",
-          "upc_a",
-          // add any types your barcodes use
-        ],
-      }}
-    />
+            {/* Scanner modal */}
+            <Modal visible={showScanner} transparent={false} animationType="slide">
+              <View style={{ flex: 1 }}>
+                <CameraView
+                  style={StyleSheet.absoluteFillObject}
+                  onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+                  ref={(ref: any) => setCameraRef(ref)}
+                  barCodeScannerSettings={{
+                    barCodeTypes: [
+                      "qr",
+                      "ean13",
+                      "code128",
+                      "ean8",
+                      "upc_e",
+                      "upc_a",
+                      // add any types your barcodes use
+                    ],
+                  }}
+                />
 
-    {/* Overlay rectangle */}
-    <View style={styles.scanOverlay}>
-      <View style={styles.scanFrame} />
-    </View>
+                {/* Overlay rectangle */}
+                <View style={styles.scanOverlay}>
+                  <View style={styles.scanFrame} />
+                </View>
 
-    <TouchableOpacity
-      style={{ position: "absolute", top: 40, right: 20 }}
-      onPress={() => {
-        setShowScanner(false);
-        setScanned(false);
-      }}
-    >
-      <X size={30} color={COLORS.white} />
-    </TouchableOpacity>
-  </View>
-</Modal>
+                <TouchableOpacity
+                  style={{ position: "absolute", top: 40, right: 20 }}
+                  onPress={() => {
+                    setShowScanner(false);
+                    setScanned(false);
+                  }}
+                >
+                  <X size={30} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            </Modal>
           </View>
           {/* Quick Actions */}
           <View style={styles.actionsSection}>
@@ -464,6 +470,24 @@ const handleSearch = (query?: string, options: { updateInput?: boolean } = { upd
               >
                 <Syringe size={24} color={COLORS.error} />
                 <Text style={styles.actionText}>التطعيمات</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() =>
+                  router.push({ pathname: "/clinic-chats", params: { clinicId: clinic?.id } })
+                }
+              >
+                <View style={{ position: "relative" }}>
+                  <MessageCircle size={24} color={COLORS.primary} />
+                  {chatUnreadCount > 0 && (
+                    <View style={styles.unreadBadge}>
+                      <Text style={styles.unreadBadgeText}>
+                        {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.actionText}>المحادثات</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -848,6 +872,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
   },
+  unreadBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unreadBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: "bold",
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -908,16 +948,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   scanOverlay: {
-  ...StyleSheet.absoluteFillObject,
-  justifyContent: "center",
-  alignItems: "center",
-},
-scanFrame: {
-  width: 250,
-  height: 180,
-  borderWidth: 3,
-  borderColor: COLORS.white,
-  borderRadius: 14,
-  backgroundColor: "rgba(0,0,0,0.2)",
-},
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scanFrame: {
+    width: 250,
+    height: 180,
+    borderWidth: 3,
+    borderColor: COLORS.white,
+    borderRadius: 14,
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
 });

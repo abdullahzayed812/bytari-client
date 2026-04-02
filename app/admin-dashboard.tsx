@@ -51,6 +51,7 @@ import {
   Trash2,
 } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface NewMessage {
   title: string;
@@ -1122,6 +1123,17 @@ export default function AdminDashboard() {
                 </View>
               </View>
             )}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>صورة الرسالة (اختياري)</Text>
+              <ImageUploader
+                imageUri={newMessage.imageUrl}
+                onUploadComplete={(url) => setNewMessage((prev) => ({ ...prev, imageUrl: url }))}
+                aspect={[16, 9]}
+                imageStyle={{ width: 250, height: 140, borderRadius: 12 }}
+                containerStyle={{ marginBottom: 8 }}
+              />
+            </View>
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.cancelButton} onPress={() => setSendMessageModalVisible(false)}>

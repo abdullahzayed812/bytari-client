@@ -20,12 +20,33 @@ import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Button from "../../components/Button 2";
-import { Camera, Edit3, Trash2, X, AlertTriangle, Plus, Check, XIcon } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
+import { Edit3, Trash2, X, AlertTriangle, Plus, Check, XIcon, MessageCircle, PauseCircle, PlayCircle } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { ImageUploader } from "@/components/ImageUploader";
 import { trpc } from "../../lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
 import ImageViewerModal from "@/components/ImageViewerModal";
+
+// Small component so hooks can be called per follow-up card without violating rules of hooks
+function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicId: number; petName: string }) {
+  const router = useRouter();
+  const { data } = useQuery(trpc.clinics.chat.getChat.queryOptions({ petId, clinicId }));
+  const chat = (data as any)?.chat;
+  if (!chat || !chat.isActive) return null;
+  return (
+    <TouchableOpacity
+      style={{ padding: 6, marginLeft: 8 }}
+      onPress={() =>
+        router.push({
+          pathname: "/clinic-chat-thread",
+          params: { chatId: chat.id, petName, senderRole: "owner" },
+        })
+      }
+    >
+      <MessageCircle size={22} color={COLORS.primary} />
+    </TouchableOpacity>
+  );
+}
 
 interface Medication {
   name: string;
@@ -253,6 +274,45 @@ export default function PetDetailsScreen() {
   // Cancel clinic follow-ups mutation (revoke access)
   const cancelClinicFollowUpsMutation = useMutation(trpc.pets.cancelFollowUps.mutationOptions({}));
 
+  // Clinic chat — vet side: get or create when access is confirmed
+  const clinicChatQuery = useQuery({
+    ...trpc.clinics.chat.getOrCreate.queryOptions({
+      petId: petId as string,
+      clinicId: Number(clinicId),
+    }),
+    enabled: isClinicAccess && hasAccess,
+  });
+  const chatData = (clinicChatQuery.data as any)?.chat as
+    | { id: number; isActive: boolean }
+    | undefined;
+
+  const toggleChatMutation = useMutation(trpc.clinics.chat.toggleActive.mutationOptions());
+
+  const handleOpenChat = () => {
+    if (!chatData) return;
+    router.push({
+      pathname: "/clinic-chat-thread",
+      params: {
+        chatId: chatData.id,
+        petName: pet?.name ?? "",
+        senderRole: "clinic",
+        clinicId: String(clinicId),
+        initialIsActive: chatData.isActive ? "true" : "false",
+      },
+    });
+  };
+
+  const handleToggleChat = () => {
+    if (!chatData) return;
+    toggleChatMutation.mutate(
+      { chatId: chatData.id, clinicId: Number(clinicId) },
+      {
+        onSuccess: () => clinicChatQuery.refetch(),
+        onError: (error) => showToast({ type: "error", message: error.message }),
+      },
+    );
+  };
+
   // Initialize edit form when pet data is loaded
   useEffect(() => {
     if (pet) {
@@ -417,54 +477,6 @@ export default function PetDetailsScreen() {
         },
       },
     ]);
-  };
-
-  const handlePrescriptionImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setMedicalForm((prev) => ({ ...prev, prescriptionImage: result.assets[0].uri }));
-      }
-    } catch (error) {
-      console.error("Error picking prescription image:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار صورة الوصفة");
-    }
-  };
-
-  const handlePetImageUpload = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("خطأ", "نحتاج إلى إذن للوصول إلى الصور");
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setEditForm((prev) => ({ ...prev, image: result.assets[0].uri }));
-      }
-    } catch (error) {
-      console.error("Error picking pet image:", error);
-      Alert.alert("خطأ", "حدث خطأ أثناء اختيار صورة الحيوان");
-    }
   };
 
   const submitTreatmentCard = async () => {
@@ -1097,10 +1109,7 @@ export default function PetDetailsScreen() {
 
           {/* barcode display (tap to enlarge) */}
           {pet.id && (
-            <TouchableOpacity
-              onPress={() => setShowBarcodeModal(true)}
-              style={{ alignItems: "center", marginTop: 12 }}
-            >
+            <TouchableOpacity onPress={() => setShowBarcodeModal(true)} style={{ alignItems: "center", marginTop: 12 }}>
               {/* use external service to render a Code128 barcode as an image */}
               <RNImage
                 source={{
@@ -1117,7 +1126,27 @@ export default function PetDetailsScreen() {
           {isClinicAccess && (
             <View style={styles.clinicActions}>
               {hasAccess ? (
-                <Text style={styles.accessGrantedText}>✓ يمكنك إضافة السجلات الطبية والتطعيمات</Text>
+                <>
+                  <Text style={styles.accessGrantedText}>✓ يمكنك إضافة السجلات الطبية والتطعيمات</Text>
+                  <View style={styles.chatActionsRow}>
+                    <TouchableOpacity style={styles.chatActionButton} onPress={handleOpenChat}>
+                      <MessageCircle size={18} color={COLORS.primary} />
+                      <Text style={styles.chatActionText}>محادثة</Text>
+                    </TouchableOpacity>
+                    {chatData && (
+                      <TouchableOpacity style={styles.chatActionButton} onPress={handleToggleChat}>
+                        {chatData.isActive ? (
+                          <PauseCircle size={18} color={COLORS.success} />
+                        ) : (
+                          <PlayCircle size={18} color={COLORS.darkGray} />
+                        )}
+                        <Text style={styles.chatActionText}>
+                          {chatData.isActive ? "إيقاف" : "تفعيل"}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </>
               ) : (
                 <Button
                   title={"طلب متابعة الحيوان"}
@@ -1245,7 +1274,14 @@ export default function PetDetailsScreen() {
                     {clinicFollowUpsQuery.data.followUps.map((clinic) => (
                       <View key={clinic.clinicId} style={styles.clinicFollowUpCard}>
                         <View style={styles.clinicInfo}>
-                          <Text style={styles.clinicName}>{clinic.clinicName}</Text>
+                          <View style={styles.clinicNameRow}>
+                            <Text style={styles.clinicName}>{clinic.clinicName}</Text>
+                            <ClinicChatButton
+                              petId={petId as string}
+                              clinicId={clinic.clinicId}
+                              petName={pet?.name ?? ""}
+                            />
+                          </View>
                           <Text style={styles.followUpDetails}>
                             {clinic.medicalRecordsCount} سجلات طبية • {clinic.vaccinationsCount} تطعيمات •{" "}
                             {clinic.remindersCount} تذكيرات
@@ -1400,49 +1436,46 @@ export default function PetDetailsScreen() {
           onClose={() => setShowImageModal(false)}
         />
 
-      {/* barcode enlarged modal */}
-      <Modal
-        visible={showBarcodeModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowBarcodeModal(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
+        {/* barcode enlarged modal */}
+        <Modal
+          visible={showBarcodeModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowBarcodeModal(false)}
         >
           <View
             style={{
-              backgroundColor: COLORS.white,
-              padding: 20,
-              borderRadius: 8,
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.6)",
+              justifyContent: "center",
               alignItems: "center",
             }}
           >
-            {pet.id && (
-              <RNImage
-                source={{
-                  uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
-                    pet.id.toString(),
-                  )}&code=Code128&translate-esc=true`,
-                }}
-                style={{ width: 300, height: 120 }}
-              />
-            )}
-            <Text style={{ fontSize: 16, marginTop: 8 }}>{pet.id}</Text>
-            <TouchableOpacity
-              onPress={() => setShowBarcodeModal(false)}
-              style={{ marginTop: 12 }}
+            <View
+              style={{
+                backgroundColor: COLORS.white,
+                padding: 20,
+                borderRadius: 8,
+                alignItems: "center",
+              }}
             >
-              <Text style={{ color: COLORS.primary }}>إغلاق</Text>
-            </TouchableOpacity>
+              {pet.id && (
+                <RNImage
+                  source={{
+                    uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
+                      pet.id.toString(),
+                    )}&code=Code128&translate-esc=true`,
+                  }}
+                  style={{ width: 300, height: 120 }}
+                />
+              )}
+              <Text style={{ fontSize: 16, marginTop: 8 }}>{pet.id}</Text>
+              <TouchableOpacity onPress={() => setShowBarcodeModal(false)} style={{ marginTop: 12 }}>
+                <Text style={{ color: COLORS.primary }}>إغلاق</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
         {activeTab === "vaccinations" && (
           <View>
@@ -2011,24 +2044,13 @@ export default function PetDetailsScreen() {
             />
 
             <Text style={styles.modalSectionTitle}>صورة الوصفة (اختياري)</Text>
-            <TouchableOpacity style={styles.prescriptionImageButton} onPress={handlePrescriptionImageUpload}>
-              <Camera size={24} color={COLORS.primary} />
-              <Text style={styles.prescriptionImageText}>
-                {medicalForm.prescriptionImage ? "تم رفع الصورة" : "رفع صورة الوصفة"}
-              </Text>
-            </TouchableOpacity>
-
-            {medicalForm.prescriptionImage && (
-              <View style={styles.uploadedImageContainer}>
-                <Image source={{ uri: medicalForm.prescriptionImage }} style={styles.uploadedImage} />
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={() => setMedicalForm((prev) => ({ ...prev, prescriptionImage: "" }))}
-                >
-                  <X size={16} color={COLORS.white} />
-                </TouchableOpacity>
-              </View>
-            )}
+            <ImageUploader
+              imageUri={medicalForm.prescriptionImage}
+              onUploadComplete={(url) => setMedicalForm((prev) => ({ ...prev, prescriptionImage: url }))}
+              aspect={[4, 3]}
+              imageStyle={{ width: 250, height: 180, borderRadius: 12 }}
+              containerStyle={{ marginBottom: 8 }}
+            />
           </ScrollView>
 
           <View style={styles.modalFooter}>
@@ -2255,26 +2277,12 @@ export default function PetDetailsScreen() {
           <ScrollView style={styles.modalContent}>
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>صورة الحيوان</Text>
-              <View style={styles.imageUploadContainer}>
-                <TouchableOpacity onPress={handlePetImageUpload} style={styles.imageUploadButton}>
-                  {editForm.image ? (
-                    <Image source={{ uri: editForm.image }} style={styles.uploadedImage} />
-                  ) : (
-                    <View style={styles.imagePlaceholder}>
-                      <Camera size={32} color={COLORS.darkGray} />
-                      <Text style={styles.imagePlaceholderText}>اضغط لاختيار صورة</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-                {editForm.image && (
-                  <TouchableOpacity
-                    onPress={() => setEditForm((prev) => ({ ...prev, image: "" }))}
-                    style={styles.removeImageButton}
-                  >
-                    <X size={16} color={COLORS.white} />
-                  </TouchableOpacity>
-                )}
-              </View>
+              <ImageUploader
+                imageUri={editForm.image}
+                onUploadComplete={(url) => setEditForm((prev) => ({ ...prev, image: url }))}
+                aspect={[1, 1]}
+                containerStyle={{ marginBottom: 8 }}
+              />
             </View>
 
             <View style={styles.formGroup}>
@@ -2635,9 +2643,9 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   recordItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    // flexDirection: "row",
+    // justifyContent: "space-between",
+    // alignItems: "center",
     marginBottom: 8,
   },
   recordLabel: {
@@ -2665,6 +2673,27 @@ const styles = StyleSheet.create({
   clinicActions: {
     marginTop: 16,
     alignItems: "center",
+    width: "100%",
+  },
+  chatActionsRow: {
+    flexDirection: "row-reverse",
+    marginTop: 10,
+    gap: 12,
+  },
+  chatActionButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: COLORS.gray,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+  },
+  chatActionText: {
+    fontSize: 13,
+    color: COLORS.black,
   },
   followUpButton: {
     width: "100%",
@@ -3195,11 +3224,16 @@ const styles = StyleSheet.create({
   clinicInfo: {
     flex: 1,
   },
+  clinicNameRow: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    marginBottom: 4,
+  },
   clinicName: {
     fontSize: 16,
     fontWeight: "bold",
     color: COLORS.black,
-    marginBottom: 4,
+    flex: 1,
   },
   followUpDetails: {
     fontSize: 12,

@@ -25,11 +25,9 @@ import {
   Earth,
   Facebook,
   Instagram,
-  Trash2,
   Bell,
   BellOff,
 } from "lucide-react-native";
-import RatingComponent from "../components/RatingComponent";
 import Button from "../components/Button";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -46,8 +44,6 @@ export default function ClinicProfileScreen() {
   const clinicId = parseInt(id as string);
   const userId = Number(user?.id);
 
-  const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
-
   // Follow queries
   const { data: isFollowingData } = useQuery(
     trpc.clinics.isFollowing.queryOptions({ clinicId, userId }, { enabled: !!user }),
@@ -59,14 +55,6 @@ export default function ClinicProfileScreen() {
 
   const followMutation = useMutation(trpc.clinics.follow.mutationOptions());
   const unfollowMutation = useMutation(trpc.clinics.unfollow.mutationOptions());
-
-  // Fetch clinic details
-  const { data: reviewsData, isLoading: areReviewsLoading } = useQuery(
-    trpc.reviews.getClinicReviews.queryOptions({
-      clinicId,
-    }),
-  );
-  const reviews = (reviewsData as any)?.reviews;
 
   const { data, isLoading, error } = useQuery(
     trpc.clinics.getDetails.queryOptions({
@@ -99,54 +87,6 @@ export default function ClinicProfileScreen() {
     }
 
     return stars;
-  };
-
-  const addReviewMutation = useMutation(trpc.reviews.addClinicReview.mutationOptions());
-  const deleteReviewMutation = useMutation(trpc.reviews.deleteReview.mutationOptions());
-
-  const handleDeleteReview = (reviewId: number) => {
-    Alert.alert("حذف التقييم", "هل أنت متأكد من حذف هذا التقييم؟", [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "حذف",
-        style: "destructive",
-        onPress: () => {
-          deleteReviewMutation.mutate(
-            { reviewId },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries(trpc.reviews.getClinicReviews.queryKey as any);
-                queryClient.invalidateQueries(trpc.clinics.getDetails.queryKey as any);
-              },
-              onError: () => {
-                Alert.alert("خطأ", "حدث خطأ أثناء حذف التقييم");
-              },
-            },
-          );
-        },
-      },
-    ]);
-  };
-
-  const handleRatingSubmit = async (rating: number, comment: string) => {
-    if (!clinic) return;
-    addReviewMutation.mutate(
-      {
-        clinicId: Number(clinic.id),
-        rating,
-        comment,
-      } as any,
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries(trpc.reviews.getClinicReviews.queryKey as any);
-          queryClient.invalidateQueries(trpc.clinics.getDetails.queryKey as any);
-          setShowRatingModal(false);
-        },
-        onError: (error) => {
-          Alert.alert("خطأ", error.message);
-        },
-      },
-    );
   };
 
   // Open external links
@@ -411,34 +351,6 @@ export default function ClinicProfileScreen() {
             </View>
           )}
 
-          {/* Reviews */}
-          {reviews && reviews.length > 0 && (
-            <View style={styles.reviewsSection}>
-              <Text style={styles.sectionTitle}>التقييمات</Text>
-              {reviews.map((review: any) => (
-                <View key={review.id} style={styles.reviewItem}>
-                  <View style={styles.reviewHeader}>
-                    {isSuperAdmin && (
-                      <TouchableOpacity style={styles.deleteReviewButton} onPress={() => handleDeleteReview(review.id)}>
-                        <Trash2 size={16} color={COLORS.error} />
-                      </TouchableOpacity>
-                    )}
-                    {/* <Image
-                      source={{ uri: review.user.avatar || "https://via.placeholder.com/40" }}
-                      style={styles.reviewerAvatar}
-                    /> */}
-                    <View style={{}}>
-                      <Text style={styles.reviewerName}>{review.user.name}</Text>
-                      <View style={styles.starsContainer}>{renderStars(review.rating)}</View>
-                    </View>
-                  </View>
-                  <Text style={styles.reviewComment}>{review.comment}</Text>
-                  <Text style={styles.reviewDate}>{new Date(review.createdAt).toLocaleDateString()}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
             {clinic.phone && (
@@ -489,20 +401,17 @@ export default function ClinicProfileScreen() {
           </View>
 
           {/* Rating Button */}
-          <TouchableOpacity style={styles.ratingButton} onPress={() => setShowRatingModal(true)}>
+          <TouchableOpacity
+            style={styles.ratingButton}
+            onPress={() =>
+              router.push({ pathname: "/clinic-reviews", params: { id: clinicId, name: clinic.name } })
+            }
+          >
             <MessageSquare size={20} color={COLORS.primary} />
-            <Text style={styles.ratingButtonText}>قيم العيادة</Text>
+            <Text style={styles.ratingButtonText}>التقييمات</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <RatingComponent
-        visible={showRatingModal}
-        onClose={() => setShowRatingModal(false)}
-        onSubmit={handleRatingSubmit}
-        title="تقييم العيادة"
-        entityName={clinic.name}
-      />
     </>
   );
 }
