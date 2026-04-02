@@ -57,6 +57,10 @@ export default function UnionManagementDashboardScreen() {
   const queryClient = useQueryClient();
 
   const { data: allUnions, isLoading: isAllUnionsLoading, error } = useQuery(trpc.union.branch.list.queryOptions());
+  const { data: mainUnionData } = useQuery(trpc.union.main.get.queryOptions());
+  const mainUnionId = mainUnionData?.union?.id;
+  const mainMembersCount = (mainUnionData?.union as any)?.membersCount ?? 0;
+  const mainFollowersCount = (mainUnionData?.union as any)?.followersCount ?? 0;
 
   const { data: announcements, isLoading: isAnnouncementsLoading } = useQuery(
     trpc.union.announcement.list.queryOptions({})
@@ -214,6 +218,42 @@ export default function UnionManagementDashboardScreen() {
           >
             <BarChart3 size={20} color={COLORS.white} />
             <Text style={styles.quickActionText}>التحليلات</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.quickActionCard, { backgroundColor: COLORS.primary }]}
+            onPress={() =>
+              router.push({
+                pathname: "/union-members-list",
+                params: { type: "followers", mainUnionId: String(mainUnionId), title: "متابعو النقابة" },
+              })
+            }
+          >
+            <Bell size={20} color={COLORS.white} />
+            <Text style={styles.quickActionText}>المتابعون</Text>
+            {mainFollowersCount > 0 && (
+              <View style={styles.quickActionBadge}>
+                <Text style={styles.quickActionBadgeText}>{mainFollowersCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.quickActionCard, { backgroundColor: COLORS.success || "#28a745" }]}
+            onPress={() =>
+              router.push({
+                pathname: "/union-members-list",
+                params: { type: "members", mainUnionId: String(mainUnionId), title: "أعضاء النقابة" },
+              })
+            }
+          >
+            <Users size={20} color={COLORS.white} />
+            <Text style={styles.quickActionText}>الأعضاء المسجلون</Text>
+            {mainMembersCount > 0 && (
+              <View style={styles.quickActionBadge}>
+                <Text style={styles.quickActionBadgeText}>{mainMembersCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -528,11 +568,29 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     gap: 8,
+    position: "relative",
   },
   quickActionText: {
     color: COLORS.white,
     fontSize: 14,
     fontWeight: "600",
+  },
+  quickActionBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  quickActionBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: "bold",
   },
   sectionHeader: {
     flexDirection: "row-reverse",

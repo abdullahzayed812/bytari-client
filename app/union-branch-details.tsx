@@ -29,6 +29,7 @@ import {
   Bell,
   BellOff,
   Link,
+  UserCheck,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -81,14 +82,17 @@ export default function UnionBranchDetailsScreen() {
   });
 
   const [isFollowing, setIsFollowing] = useState<boolean>(branch?.isFollowing || false);
+  const [isRegistered, setIsRegistered] = useState<boolean>(!!(branch as any)?.isRegistered);
 
   useEffect(() => {
     if (branch) {
       setIsFollowing(branch.isFollowing);
+      setIsRegistered(!!(branch as any).isRegistered);
     }
   }, [branch]);
 
   const followMutation = useMutation(trpc.union.follow.toggle.mutationOptions());
+  const registerMutation = useMutation(trpc.union.registration.toggle.mutationOptions());
 
   const assignSupervisorMutation = useMutation(trpc.union.branch.assignSupervisor.mutationOptions());
 
@@ -120,6 +124,42 @@ export default function UnionBranchDetailsScreen() {
             queryClient.invalidateQueries(trpc.union.branch.list.queryKey as any);
           },
         },
+      );
+    }
+  };
+
+  const handleRegisterToggle = () => {
+    if (!branch) return;
+    if (isRegistered) {
+      Alert.alert("إلغاء التسجيل", `هل تريد إلغاء تسجيلك في فرع ${branch.name}؟`, [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "تأكيد الإلغاء",
+          style: "destructive",
+          onPress: () => {
+            registerMutation.mutate(
+              { branchId: branch.id },
+              { onSuccess: (data) => setIsRegistered(data.isRegistered) },
+            );
+          },
+        },
+      ]);
+    } else {
+      Alert.alert(
+        "تسجيل في الفرع",
+        `سيتم تسجيلك ضمن فرع ${branch.name}. سيتمكن مسؤولو الفرع من الوصول إلى معلوماتك الشخصية كالاسم والبريد الإلكتروني ورقم الهاتف. هل تريد المتابعة؟`,
+        [
+          { text: "إلغاء", style: "cancel" },
+          {
+            text: "تأكيد التسجيل",
+            onPress: () => {
+              registerMutation.mutate(
+                { branchId: branch.id },
+                { onSuccess: (data) => setIsRegistered(data.isRegistered) },
+              );
+            },
+          },
+        ],
       );
     }
   };
@@ -334,27 +374,40 @@ export default function UnionBranchDetailsScreen() {
               <Text style={styles.ratingText}>({branch.rating})</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={[
-              styles.followButton,
-              isFollowing || branch.isFollowing ? styles.followingButton : styles.notFollowingButton,
-            ]}
-            onPress={handleFollowToggle}
-          >
-            {isFollowing || branch.isFollowing ? (
-              <BellOff size={16} color={COLORS.white} />
-            ) : (
-              <Bell size={16} color={COLORS.primary} />
-            )}
-            <Text
+          <View style={styles.branchActions}>
+            <TouchableOpacity
               style={[
-                styles.followButtonText,
-                isFollowing || branch.isFollowing ? styles.followingText : styles.notFollowingText,
+                styles.followButton,
+                isFollowing || branch.isFollowing ? styles.followingButton : styles.notFollowingButton,
               ]}
+              onPress={handleFollowToggle}
             >
-              {isFollowing || branch.isFollowing ? "متابعة" : "متابعة"}
-            </Text>
-          </TouchableOpacity>
+              {isFollowing || branch.isFollowing ? (
+                <BellOff size={16} color={COLORS.white} />
+              ) : (
+                <Bell size={16} color={COLORS.primary} />
+              )}
+              <Text
+                style={[
+                  styles.followButtonText,
+                  isFollowing || branch.isFollowing ? styles.followingText : styles.notFollowingText,
+                ]}
+              >
+                {isFollowing || branch.isFollowing ? "متابع" : "متابعة"}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.followButton, isRegistered ? styles.followingButton : styles.notFollowingButton]}
+              onPress={handleRegisterToggle}
+              disabled={registerMutation.isPending}
+            >
+              <UserCheck size={16} color={isRegistered ? COLORS.white : COLORS.primary} />
+              <Text style={[styles.followButtonText, isRegistered ? styles.followingText : styles.notFollowingText]}>
+                {isRegistered ? "مسجل" : "تسجيل"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Contact Information */}
@@ -447,6 +500,45 @@ export default function UnionBranchDetailsScreen() {
             ))}
           </View>
         </View>
+
+        {/* Member Management — canManageBranch only */}
+        {canManageBranch && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>إدارة الأعضاء</Text>
+            <View style={styles.managementCardsRow}>
+              <TouchableOpacity
+                style={styles.managementCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/union-members-list",
+                    params: { type: "followers", branchId: String(branch.id), title: "متابعو الفرع" },
+                  })
+                }
+              >
+                <Bell size={28} color={COLORS.primary} />
+                <Text style={styles.managementCardTitle}>المتابعون</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.managementCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/union-members-list",
+                    params: { type: "members", branchId: String(branch.id), title: "أعضاء الفرع" },
+                  })
+                }
+              >
+                <Users size={28} color={COLORS.success || "#28a745"} />
+                <Text style={styles.managementCardTitle}>الأعضاء المسجلون</Text>
+                {((branch as any)?.membersCount ?? 0) > 0 && (
+                  <View style={[styles.managementBadge, { backgroundColor: COLORS.success || "#28a745" }]}>
+                    <Text style={styles.managementBadgeText}>{(branch as any).membersCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -875,5 +967,51 @@ const styles = StyleSheet.create({
   linkText: {
     color: COLORS.primary,
     textDecorationLine: "underline",
+  },
+  branchActions: {
+    flexDirection: "column",
+    gap: 8,
+  },
+  managementCardsRow: {
+    flexDirection: "row-reverse",
+    gap: 12,
+    justifyContent: "space-between",
+  },
+  managementCard: {
+    width: "48%",
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+    position: "relative",
+  },
+  managementCardTitle: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  managementBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  managementBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: "bold",
   },
 });

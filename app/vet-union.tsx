@@ -28,6 +28,7 @@ import {
   Phone,
   Mail,
   MapPin,
+  UserCheck,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -58,10 +59,12 @@ export default function VetUnionScreen() {
   }, [unionInfo]);
 
   const [isFollowing, setIsFollowing] = useState(unionInfo?.isFollowing || false);
+  const [isRegistered, setIsRegistered] = useState((unionInfo as any)?.isRegistered || false);
 
   useEffect(() => {
     if (unionInfo) {
       setIsFollowing(unionInfo.isFollowing);
+      setIsRegistered(!!(unionInfo as any).isRegistered);
     }
   }, [unionInfo]);
 
@@ -77,6 +80,8 @@ export default function VetUnionScreen() {
     }),
   );
 
+  const registerMutation = useMutation(trpc.union.registration.toggle.mutationOptions());
+
   const handleFollowPress = () => {
     if (!isAuthenticated) {
       router.push("/auth");
@@ -84,6 +89,50 @@ export default function VetUnionScreen() {
     }
     if (unionInfo) {
       followMutation.mutate({ mainUnionId: unionInfo.id });
+    }
+  };
+
+  const handleRegisterPress = () => {
+    if (!isAuthenticated) {
+      router.push("/auth");
+      return;
+    }
+    if (!unionInfo) return;
+    if (isRegistered) {
+      Alert.alert("إلغاء التسجيل", "هل تريد إلغاء تسجيلك في النقابة؟", [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "تأكيد الإلغاء",
+          style: "destructive",
+          onPress: () => {
+            registerMutation.mutate(
+              { mainUnionId: unionInfo.id },
+              {
+                onSuccess: (data) => setIsRegistered(data.isRegistered),
+              },
+            );
+          },
+        },
+      ]);
+    } else {
+      Alert.alert(
+        "تسجيل في النقابة",
+        "سيتم تسجيلك ضمن هذه النقابة. سيتمكن مسؤولو النقابة من الوصول إلى معلوماتك الشخصية كالاسم والبريد الإلكتروني ورقم الهاتف. هل تريد المتابعة؟",
+        [
+          { text: "إلغاء", style: "cancel" },
+          {
+            text: "تأكيد التسجيل",
+            onPress: () => {
+              registerMutation.mutate(
+                { mainUnionId: unionInfo.id },
+                {
+                  onSuccess: (data) => setIsRegistered(data.isRegistered),
+                },
+              );
+            },
+          },
+        ],
+      );
     }
   };
 
@@ -179,26 +228,42 @@ export default function VetUnionScreen() {
           <Text style={styles.unionTitle}>{unionInfo?.name}</Text>
           <Text style={styles.unionDescription}>{unionInfo?.description}</Text>
 
-          {/* Follow Button */}
-          <TouchableOpacity
-            style={[styles.followButton, isFollowing && styles.followingButton]}
-            onPress={handleFollowPress}
-            activeOpacity={0.8}
-          >
-            <View style={styles.followButtonContent}>
-              {isFollowing ? (
-                <>
-                  <Bell size={20} color={COLORS.white} />
-                  <Text style={styles.followButtonText}>متابع</Text>
-                </>
-              ) : (
-                <>
-                  <Heart size={20} color={COLORS.white} />
-                  <Text style={styles.followButtonText}>متابعة</Text>
-                </>
-              )}
-            </View>
-          </TouchableOpacity>
+          {/* Follow + Register Buttons */}
+          <View style={styles.actionButtonsRow}>
+            <TouchableOpacity
+              style={[styles.followButton, isFollowing && styles.followingButton]}
+              onPress={handleFollowPress}
+              activeOpacity={0.8}
+            >
+              <View style={styles.followButtonContent}>
+                {isFollowing ? (
+                  <>
+                    <Bell size={20} color={COLORS.white} />
+                    <Text style={styles.followButtonText}>متابع</Text>
+                  </>
+                ) : (
+                  <>
+                    <Heart size={20} color={COLORS.white} />
+                    <Text style={styles.followButtonText}>متابعة</Text>
+                  </>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.registerButton, isRegistered && styles.registeredButton]}
+              onPress={handleRegisterPress}
+              activeOpacity={0.8}
+              disabled={registerMutation.isPending}
+            >
+              <View style={styles.followButtonContent}>
+                <UserCheck size={20} color={isRegistered ? COLORS.white : COLORS.primary} />
+                <Text style={[styles.registerButtonText, isRegistered && styles.registeredButtonText]}>
+                  {isRegistered ? "مسجل" : "تسجيل"}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Union Announcements */}
@@ -224,9 +289,9 @@ export default function VetUnionScreen() {
         <View style={styles.servicesSection}>
           <Text style={styles.sectionTitle}>الخدمات</Text>
           <View style={styles.servicesGrid}>
-            {services?.map((service) => (
+            {services?.map((service, index) => (
               <TouchableOpacity
-                key={service.id}
+                key={index}
                 style={[styles.serviceCard, { backgroundColor: service.color }]}
                 // onPress={() => handleServicePress(service.id)}
                 activeOpacity={0.8}
@@ -238,6 +303,50 @@ export default function VetUnionScreen() {
             ))}
           </View>
         </View>
+
+        {/* Member Management — admin only */}
+        {canManageUnion && (
+          <View style={styles.managementSection}>
+            <Text style={styles.sectionTitle}>إدارة الأعضاء</Text>
+            <View style={styles.managementCardsRow}>
+              <TouchableOpacity
+                style={styles.managementCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/union-members-list",
+                    params: { type: "followers", mainUnionId: String(unionInfo?.id), title: "متابعو النقابة" },
+                  })
+                }
+              >
+                <Bell size={28} color={COLORS.primary} />
+                <Text style={styles.managementCardTitle}>المتابعون</Text>
+                {((unionInfo as any)?.followersCount ?? 0) > 0 && (
+                  <View style={styles.managementBadge}>
+                    <Text style={styles.managementBadgeText}>{(unionInfo as any).followersCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.managementCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/union-members-list",
+                    params: { type: "members", mainUnionId: String(unionInfo?.id), title: "أعضاء النقابة" },
+                  })
+                }
+              >
+                <Users size={28} color={COLORS.success || "#28a745"} />
+                <Text style={styles.managementCardTitle}>الأعضاء المسجلون</Text>
+                {((unionInfo as any)?.membersCount ?? 0) > 0 && (
+                  <View style={[styles.managementBadge, { backgroundColor: COLORS.success || "#28a745" }]}>
+                    <Text style={styles.managementBadgeText}>{(unionInfo as any).membersCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Union Branches */}
         <View style={styles.branchesSection}>
@@ -676,12 +785,17 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontWeight: "600",
   },
+  actionButtonsRow: {
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "center",
+    marginTop: 16,
+  },
   followButton: {
     backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
-    marginTop: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -690,6 +804,71 @@ const styles = StyleSheet.create({
   },
   followingButton: {
     backgroundColor: COLORS.success || "#28a745",
+  },
+  registerButton: {
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    backgroundColor: "transparent",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  registeredButton: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  registerButtonText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  registeredButtonText: {
+    color: COLORS.white,
+  },
+  managementSection: {
+    padding: 16,
+  },
+  managementCardsRow: {
+    flexDirection: "row-reverse",
+    gap: 12,
+    justifyContent: "space-between",
+  },
+  managementCard: {
+    width: "48%",
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    position: "relative",
+  },
+  managementCardTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginTop: 8,
+    textAlign: "center",
+  },
+  managementBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  managementBadgeText: {
+    color: COLORS.white,
+    fontSize: 10,
+    fontWeight: "bold",
   },
   followButtonContent: {
     flexDirection: "row-reverse",

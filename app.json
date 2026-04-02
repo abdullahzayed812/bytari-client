@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bytari",
+    "name": "بيطري",
     "slug": "bytari",
     "android": {
       "package": "com.anonymous.expoapp",
@@ -9,15 +9,25 @@
         "backgroundColor": "#ffffff"
       },
       "usesCleartextTraffic": true,
+      "allowBackup": true,
+      "supportsRtl": true,
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
-        "CAMERA"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "INTERNET",
+        "READ_EXTERNAL_STORAGE",
+        "RECORD_AUDIO",
+        "SYSTEM_ALERT_WINDOW",
+        "VIBRATE",
+        "WRITE_EXTERNAL_STORAGE"
       ],
       "config": {
         "googleMaps": {
           "apiKey": ""
         }
       }
-   
     },
     "ios": {
       "bundleIdentifier": "com.anonymous.expoapp"
@@ -25,7 +35,7 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-router",
-       [
+      [
         "expo-camera",
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
@@ -42,7 +52,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "2e383e4c-de6d-4835-bd6e-9b621555c654"
+        "projectId": "48d21511-cd8d-4417-94d4-400b74016c1b"
       }
     }
   }
