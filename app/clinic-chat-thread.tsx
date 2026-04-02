@@ -8,11 +8,16 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Linking,
+  Alert,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, Send, PauseCircle, PlayCircle } from "lucide-react-native";
+import { ArrowLeft, Send, PauseCircle, PlayCircle, Paperclip, X, Play } from "lucide-react-native";
+import * as ImagePicker from "expo-image-picker";
+import { API_URL } from "@/lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -25,6 +30,8 @@ interface Message {
   senderRole: string;
   senderName: string | null;
   message: string;
+  mediaUrl: string | null;
+  mediaType: string | null;
   isRead: boolean;
   createdAt: string;
 }
@@ -50,6 +57,8 @@ export default function ClinicChatThreadScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [text, setText] = useState("");
   const [chatIsActive, setChatIsActive] = useState(initialIsActive !== "false");
+  const [pendingMedia, setPendingMedia] = useState<{ uri: string; type: "image" | "video"; url?: string } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const isVet = senderRole === "clinic";
 
@@ -69,12 +78,61 @@ export default function ClinicChatThreadScreen() {
   const sendMutation = useMutation(trpc.clinics.chat.sendMessage.mutationOptions());
   const toggleMutation = useMutation(trpc.clinics.chat.toggleActive.mutationOptions());
 
+  const handlePickMedia = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("خطأ", "يلزم الإذن للوصول إلى المكتبة");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.length) return;
+
+    const asset = result.assets[0];
+    const isVideo = asset.type === "video";
+    setPendingMedia({ uri: asset.uri, type: isVideo ? "video" : "image" });
+
+    // Upload immediately
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      const filename = asset.uri.split("/").pop() || (isVideo ? "video.mp4" : "image.jpg");
+      const ext = /\.(\w+)$/.exec(filename)?.[1] ?? (isVideo ? "mp4" : "jpg");
+      const mimeType = isVideo ? `video/${ext}` : `image/${ext}`;
+      // @ts-ignore
+      formData.append("file", { uri: asset.uri, name: filename, type: mimeType });
+      const response = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
+      const data = await response.json();
+      if (data.success && data.url) {
+        setPendingMedia((prev) => prev ? { ...prev, url: data.url } : null);
+      } else {
+        throw new Error(data.error || "Upload failed");
+      }
+    } catch (err: any) {
+      showToast({ type: "error", message: "فشل رفع الملف" });
+      setPendingMedia(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSend = () => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed && !pendingMedia?.url) return;
     setText("");
+    const mediaUrl = pendingMedia?.url;
+    const mediaType = pendingMedia?.type;
+    setPendingMedia(null);
     sendMutation.mutate(
-      { chatId: Number(chatId), message: trimmed, senderRole: senderRole as "owner" | "clinic" },
+      {
+        chatId: Number(chatId),
+        message: trimmed,
+        senderRole: senderRole as "owner" | "clinic",
+        mediaUrl,
+        mediaType,
+      },
       {
         onSuccess: () => {
           refetch();
@@ -107,9 +165,24 @@ export default function ClinicChatThreadScreen() {
       <View style={[styles.messageBubbleWrapper, isOwn ? styles.ownWrapper : styles.otherWrapper]}>
         <Text style={styles.senderLabel}>{senderLabel}</Text>
         <View style={[styles.bubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
-          <Text style={[styles.messageText, isOwn ? styles.ownText : styles.otherText]}>
-            {item.message}
-          </Text>
+          {item.mediaUrl && item.mediaType === "image" && (
+            <TouchableOpacity onPress={() => Linking.openURL(item.mediaUrl!)}>
+              <Image source={{ uri: item.mediaUrl }} style={styles.mediaImage} resizeMode="cover" />
+            </TouchableOpacity>
+          )}
+          {item.mediaUrl && item.mediaType === "video" && (
+            <TouchableOpacity style={styles.videoThumb} onPress={() => Linking.openURL(item.mediaUrl!)}>
+              <View style={styles.playIcon}>
+                <Play size={28} color={COLORS.white} fill={COLORS.white} />
+              </View>
+              <Text style={styles.videoLabel}>فيديو — اضغط للتشغيل</Text>
+            </TouchableOpacity>
+          )}
+          {item.message.trim().length > 0 && (
+            <Text style={[styles.messageText, isOwn ? styles.ownText : styles.otherText]}>
+              {item.message}
+            </Text>
+          )}
         </View>
         <Text style={styles.timeText}>{formatMessageTime(item.createdAt)}</Text>
       </View>
@@ -169,29 +242,60 @@ export default function ClinicChatThreadScreen() {
 
         {/* Input bar — hide for owner when paused */}
         {(!isPaused || isVet) && (
-          <View style={styles.inputBar}>
-            <TouchableOpacity
-              style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={!text.trim() || sendMutation.isPending}
-            >
-              {sendMutation.isPending ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <Send size={20} color={COLORS.white} />
-              )}
-            </TouchableOpacity>
-            <TextInput
-              style={styles.textInput}
-              value={text}
-              onChangeText={setText}
-              placeholder="اكتب رسالة..."
-              placeholderTextColor={COLORS.darkGray}
-              multiline
-              maxLength={1000}
-              textAlign="right"
-              onSubmitEditing={handleSend}
-            />
+          <View>
+            {/* Media preview */}
+            {pendingMedia && (
+              <View style={styles.mediaPreviewBar}>
+                {pendingMedia.type === "image" ? (
+                  <Image source={{ uri: pendingMedia.uri }} style={styles.mediaPreviewThumb} />
+                ) : (
+                  <View style={[styles.mediaPreviewThumb, styles.videoPreviewBox]}>
+                    <Play size={20} color={COLORS.white} />
+                  </View>
+                )}
+                {isUploading && (
+                  <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />
+                )}
+                {!isUploading && pendingMedia.url && (
+                  <Text style={styles.mediaReadyText}>جاهز للإرسال</Text>
+                )}
+                <TouchableOpacity onPress={() => setPendingMedia(null)} style={styles.mediaRemoveBtn}>
+                  <X size={16} color={COLORS.error} />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            <View style={styles.inputBar}>
+              <TouchableOpacity
+                style={[styles.sendButton, (!text.trim() && !pendingMedia?.url) && styles.sendButtonDisabled]}
+                onPress={handleSend}
+                disabled={(!text.trim() && !pendingMedia?.url) || sendMutation.isPending || isUploading}
+              >
+                {sendMutation.isPending ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <Send size={20} color={COLORS.white} />
+                )}
+              </TouchableOpacity>
+              <TextInput
+                style={styles.textInput}
+                value={text}
+                onChangeText={setText}
+                placeholder="اكتب رسالة..."
+                placeholderTextColor={COLORS.darkGray}
+                multiline
+                maxLength={1000}
+                textAlign="right"
+                onSubmitEditing={handleSend}
+              />
+              <TouchableOpacity
+                style={styles.attachButton}
+                onPress={handlePickMedia}
+                disabled={isUploading}
+              >
+                <Paperclip size={22} color={COLORS.darkGray} />
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>
@@ -309,5 +413,70 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: COLORS.lightGray,
+  },
+  attachButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  mediaPreviewBar: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+    gap: 8,
+  },
+  mediaPreviewThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: COLORS.lightGray,
+  },
+  videoPreviewBox: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: COLORS.darkGray,
+  },
+  mediaReadyText: {
+    flex: 1,
+    fontSize: 12,
+    color: COLORS.success,
+    textAlign: "right",
+  },
+  mediaRemoveBtn: {
+    padding: 4,
+  },
+  mediaImage: {
+    width: 200,
+    height: 160,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  videoThumb: {
+    width: 200,
+    height: 120,
+    borderRadius: 10,
+    backgroundColor: "#1a1a2e",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+    gap: 8,
+  },
+  playIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  videoLabel: {
+    color: COLORS.white,
+    fontSize: 12,
+    opacity: 0.85,
   },
 });
