@@ -26,7 +26,7 @@ export default function LostPetsListScreen() {
       requestType: "lost_pet",
       limit: 50,
       offset: 0,
-    })
+    }),
   );
 
   // Filter lost pets based on user's location (country and city)
@@ -166,31 +166,10 @@ export default function LostPetsListScreen() {
 
               {/* Action Buttons */}
               <View style={styles.lostPetActions}>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => {
-                    router.push({
-                      pathname: "/map-location",
-                      params: {
-                        mode: "directions",
-                        name: `موقع فقدان ${pet.petName || pet.title}`,
-                        address: pet.location,
-                        latitude: "24.7136", // Mock coordinates - in real app would come from pet data
-                        longitude: "46.6753",
-                      },
-                    });
-                  }}
-                >
+                <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
                   <Text style={styles.actionButtonText}>الموقع</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => {
-                    console.log(`Report found pet ${pet.id}`);
-                    console.log("Contact info:", pet.contactInfo);
-                    // TODO: Implement report found functionality
-                  }}
-                >
+                <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
                   <Text style={styles.actionButtonText}>ابلاغ</Text>
                 </TouchableOpacity>
               </View>

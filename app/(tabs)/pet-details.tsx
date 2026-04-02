@@ -14,11 +14,11 @@ import {
 // Using remote service for barcode images instead of react-native-barcode-builder
 // to avoid native ART dependencies incompatible with Expo Go.
 import { Image as RNImage } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Button from "../../components/Button 2";
 import { Edit3, Trash2, X, AlertTriangle, Plus, Check, XIcon, MessageCircle, PauseCircle, PlayCircle } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -30,23 +30,66 @@ import ImageViewerModal from "@/components/ImageViewerModal";
 // Small component so hooks can be called per follow-up card without violating rules of hooks
 function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicId: number; petName: string }) {
   const router = useRouter();
-  const { data } = useQuery(trpc.clinics.chat.getChat.queryOptions({ petId, clinicId }));
+  const queryClient = useQueryClient();
+  const { data, refetch } = useQuery({
+    ...trpc.clinics.chat.getChat.queryOptions({ petId, clinicId }),
+    refetchInterval: 15000,
+  });
+  const markAsReadMutation = useMutation(trpc.clinics.chat.markAsRead.mutationOptions());
+
+  useFocusEffect(useCallback(() => { refetch(); }, []));
+
   const chat = (data as any)?.chat;
   if (!chat || !chat.isActive) return null;
+  const unread: number = chat.unreadCount ?? 0;
+
+  const handlePress = () => {
+    if (unread > 0) {
+      markAsReadMutation.mutate(
+        { chatId: chat.id },
+        { onSuccess: () => refetch() },
+      );
+    }
+    router.push({
+      pathname: "/clinic-chat-thread",
+      params: { chatId: chat.id, petName, senderRole: "owner" },
+    });
+  };
+
   return (
     <TouchableOpacity
-      style={{ padding: 6, marginLeft: 8 }}
-      onPress={() =>
-        router.push({
-          pathname: "/clinic-chat-thread",
-          params: { chatId: chat.id, petName, senderRole: "owner" },
-        })
-      }
+      style={{ padding: 6, marginLeft: 8, position: "relative" }}
+      onPress={handlePress}
     >
       <MessageCircle size={22} color={COLORS.primary} />
+      {unread > 0 && (
+        <View style={chatBadgeStyles.badge}>
+          <Text style={chatBadgeStyles.badgeText}>{unread > 99 ? "99+" : unread}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
+
+const chatBadgeStyles = StyleSheet.create({
+  badge: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 3,
+  },
+  badgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "bold",
+  },
+});
 
 interface Medication {
   name: string;
