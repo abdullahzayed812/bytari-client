@@ -94,8 +94,62 @@ export const useImageUpload = (options: UseImageUploadOptions = {}) => {
     }
   };
 
+  const takeAndUploadFromCamera = async (aspect: [number, number] = [1, 1]) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        const msg = "Permission to access camera is required";
+        setError(msg);
+        options.onUploadError?.(msg);
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        quality: 0.8,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      const asset = result.assets[0];
+      const formData = new FormData();
+      const filename = asset.uri.split("/").pop() || "photo.jpg";
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+      // @ts-ignore - React Native FormData
+      formData.append("file", { uri: asset.uri, name: filename, type });
+
+      const response = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
+      if (!response.ok) throw new Error(`Upload failed with status ${response.status}`);
+
+      const data = await response.json();
+      if (data.success && data.url) {
+        options.onUploadSuccess?.(data.url);
+        return data.url;
+      } else {
+        throw new Error(data.error || "Failed to get image URL");
+      }
+    } catch (err: any) {
+      const msg = err.message || "An error occurred during upload";
+      setError(msg);
+      options.onUploadError?.(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     pickAndUploadImage,
+    takeAndUploadFromCamera,
     isLoading,
     error,
   };

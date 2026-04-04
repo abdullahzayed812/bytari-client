@@ -203,7 +203,7 @@ export default function TermsAndConditions({
                 {accountType === "pet_owner" ? "14" : "14"}. القانون الواجب التطبيق
               </Text>
               <Text style={styles.paragraph}>تخضع هذه الاتفاقية لقوانين:</Text>
-              <Text style={styles.listItem}>(قوانين الدولة العراقية)</Text>
+              <Text style={styles.listItem}>(قوانين بلدك او الدولة التي تقيم بها)</Text>
               <Text style={styles.paragraph}>وتُحال النزاعات إلى محاكمها المختصة.</Text>
 
               <Text style={styles.subSectionTitle}>{accountType === "pet_owner" ? "15" : "15"}. الإقرار والموافقة</Text>

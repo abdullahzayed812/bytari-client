@@ -366,7 +366,7 @@ export default function ClinicDashboard() {
             </View>
 
             <FlatList
-              data={isSearching ? filteredAnimals : clinicPets?.pets}
+              data={isSearching ? filteredAnimals : clinicPets?.pets?.slice(0, 3)}
               renderItem={renderAnimalItem}
               keyExtractor={(item) => item.id.toString()}
               scrollEnabled={false}

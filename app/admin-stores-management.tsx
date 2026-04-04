@@ -105,6 +105,7 @@ export default function AdminStoresManagement() {
   const stores: StoreData[] = useMemo(() => (storesData as any)?.stores, [storesData]);
 
   const deleteStoreMutation = useMutation(trpc.stores.delete.mutationOptions());
+  const setStoreActiveMutation = useMutation(trpc.stores.setActive.mutationOptions());
 
   const storeTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = [
     {
@@ -267,30 +268,24 @@ export default function AdminStoresManagement() {
       return; // Stop execution here
     }
 
-    let message = "";
-    switch (actionType) {
-      case "activate":
-        message = "تم تفعيل المتجر بنجاح";
-        break;
-      case "ban":
-        message = "تم حظر المتجر بنجاح";
-        break;
-      case "unban":
-        message = "تم إلغاء حظر المتجر بنجاح";
-        break;
-      // case "delete":
-      //   message = "تم حذف المتجر بنجاح";
-      //   break;
-      case "suspend":
-        message = "تم إيقاف المتجر مؤقتاً";
-        break;
-    }
+    const isActive = actionType === "activate" || actionType === "unban";
+    const message = isActive ? "تم تفعيل المتجر بنجاح" : "تم إيقاف المتجر بنجاح";
 
-    // console.log(`${actionType} store:`, selectedStore.id, "Reason:", actionReason);
-    // Alert.alert("تم", message);
-    // setShowActionModal(false);
-    // setShowDetailModal(false);
-    // setActionReason("");
+    setStoreActiveMutation.mutate(
+      { storeId: selectedStore.id, isActive },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
+          Alert.alert("نجاح", message);
+          setShowActionModal(false);
+          setShowDetailModal(false);
+          setActionReason("");
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", `فشل تنفيذ الإجراء: ${error.message}`);
+        },
+      },
+    );
   };
 
   const renderDetailModal = () => {

@@ -69,9 +69,12 @@ export default function UserConsultationsListScreen() {
 
   const filteredConsultations = data?.consultations?.filter((consultation) => {
     const matchesSearch =
+      !searchQuery.trim() ||
       consultation.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       consultation.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    const matchesStatus = statusFilter === "all" || consultation.status === statusFilter;
+    const matchesUrgency = urgencyFilter === "all" || consultation.urgencyLevel === urgencyFilter;
+    return matchesSearch && matchesStatus && matchesUrgency;
   });
 
   const getStatusCount = (status: StatusFilter) => {

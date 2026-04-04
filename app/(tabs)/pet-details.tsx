@@ -20,9 +20,10 @@ import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Button from "../../components/Button 2";
-import { Edit3, Trash2, X, AlertTriangle, Plus, Check, XIcon, MessageCircle, PauseCircle, PlayCircle } from "lucide-react-native";
+import { Edit3, Trash2, X, AlertTriangle, Plus, Check, XIcon, MessageCircle, PauseCircle, PlayCircle, Camera, ImageIcon } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { trpc } from "../../lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
 import ImageViewerModal from "@/components/ImageViewerModal";
@@ -162,6 +163,10 @@ export default function PetDetailsScreen() {
 
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
+
+  const { pickAndUploadImage, takeAndUploadFromCamera, isLoading: isMedicalImageUploading } = useImageUpload({
+    onUploadSuccess: (url) => setMedicalForm((prev) => ({ ...prev, prescriptionImage: url })),
+  });
 
   // barcode modal state
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
@@ -2087,13 +2092,53 @@ export default function PetDetailsScreen() {
             />
 
             <Text style={styles.modalSectionTitle}>صورة الوصفة (اختياري)</Text>
-            <ImageUploader
-              imageUri={medicalForm.prescriptionImage}
-              onUploadComplete={(url) => setMedicalForm((prev) => ({ ...prev, prescriptionImage: url }))}
-              aspect={[4, 3]}
-              imageStyle={{ width: 250, height: 180, borderRadius: 12 }}
-              containerStyle={{ marginBottom: 8 }}
-            />
+
+            {medicalForm.prescriptionImage ? (
+              <View style={styles.prescriptionImageContainer}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedImageUrl(medicalForm.prescriptionImage!);
+                    setShowImageModal(true);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <RNImage
+                    source={{ uri: medicalForm.prescriptionImage }}
+                    style={styles.prescriptionImageThumb}
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.prescriptionImageRemove}
+                  onPress={() => setMedicalForm((prev) => ({ ...prev, prescriptionImage: undefined }))}
+                >
+                  <X size={14} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            <View style={styles.prescriptionButtonsRow}>
+              <TouchableOpacity
+                style={[styles.prescriptionPickBtn, isMedicalImageUploading && { opacity: 0.6 }]}
+                onPress={() => takeAndUploadFromCamera([4, 3])}
+                disabled={isMedicalImageUploading}
+              >
+                {isMedicalImageUploading ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <Camera size={18} color={COLORS.white} />
+                )}
+                <Text style={styles.prescriptionPickBtnText}>التقاط صورة</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.prescriptionPickBtn, { backgroundColor: COLORS.darkGray }, isMedicalImageUploading && { opacity: 0.6 }]}
+                onPress={() => pickAndUploadImage([4, 3])}
+                disabled={isMedicalImageUploading}
+              >
+                <ImageIcon size={18} color={COLORS.white} />
+                <Text style={styles.prescriptionPickBtnText}>من المعرض</Text>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
 
           <View style={styles.modalFooter}>
@@ -2849,6 +2894,45 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  prescriptionImageContainer: {
+    alignSelf: "center",
+    marginBottom: 12,
+    position: "relative",
+  },
+  prescriptionImageThumb: {
+    width: 200,
+    height: 140,
+    borderRadius: 10,
+    backgroundColor: COLORS.lightGray,
+  },
+  prescriptionImageRemove: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 12,
+    padding: 4,
+  },
+  prescriptionButtonsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 16,
+  },
+  prescriptionPickBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingVertical: 10,
+  },
+  prescriptionPickBtnText: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: "600",
   },
   petInfoCard: {
     backgroundColor: COLORS.gray,

@@ -217,7 +217,7 @@ export default function ClinicChatThreadScreen() {
 
       <KeyboardAvoidingView
         style={styles.container}
-        behavior="padding"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
       >
         {isLoading ? (

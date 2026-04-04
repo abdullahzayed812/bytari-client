@@ -102,6 +102,7 @@ export default function AdminClinicsManagement() {
   const clinics: Clinic[] = useMemo(() => (data as any)?.clinics || [], [data]);
 
   const deleteClinicMutation = useMutation(trpc.clinics.deleteClinic.mutationOptions());
+  const setClinicActiveMutation = useMutation(trpc.clinics.toggleClinicVisibility.mutationOptions());
 
   // Define getFilteredClinics BEFORE using it in useMemo
   const getFilteredClinics = useCallback(
@@ -114,7 +115,7 @@ export default function AdminClinicsManagement() {
           (clinic) =>
             clinic.name.toLowerCase().includes(search.toLowerCase()) ||
             clinic.ownerName.toLowerCase().includes(search.toLowerCase()) ||
-            clinic.address.toLowerCase().includes(search.toLowerCase())
+            clinic.address.toLowerCase().includes(search.toLowerCase()),
         );
       }
 
@@ -132,7 +133,7 @@ export default function AdminClinicsManagement() {
           return filtered;
       }
     },
-    []
+    [],
   );
 
   const clinicTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = useMemo(
@@ -171,12 +172,12 @@ export default function AdminClinicsManagement() {
         count: clinics?.filter((c) => c.isPremium).length || 0,
       },
     ],
-    [clinics]
+    [clinics],
   );
 
   const filteredClinics = useMemo(
     () => getFilteredClinics(clinics, searchQuery, selectedFilter),
-    [clinics, searchQuery, selectedFilter, getFilteredClinics]
+    [clinics, searchQuery, selectedFilter, getFilteredClinics],
   );
 
   const getStatusColor = useCallback((status: string) => {
@@ -253,32 +254,35 @@ export default function AdminClinicsManagement() {
                   onError: (error) => {
                     Alert.alert("خطأ", `فشل حذف العيادة: ${error.message}`);
                   },
-                }
+                },
               );
             },
             style: "destructive",
           },
-        ]
+        ],
       );
       return;
     }
 
-    let message = "";
-    switch (actionType) {
-      case "activate":
-        message = "تم تفعيل العيادة بنجاح";
-        break;
-      case "ban":
-        message = "تم حظر العيادة بنجاح";
-        break;
-      case "unban":
-        message = "تم إلغاء حظر العيادة بنجاح";
-        break;
-      case "suspend":
-        message = "تم إيقاف العيادة مؤقتاً";
-        break;
-    }
-  }, [selectedClinic, actionType, actionReason, deleteClinicMutation]);
+    const isActive = actionType === "activate" || actionType === "unban";
+    const message = isActive ? "تم تفعيل العيادة بنجاح" : "تم إيقاف العيادة بنجاح";
+
+    setClinicActiveMutation.mutate(
+      { clinicId: selectedClinic.id, isActive },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey as any);
+          Alert.alert("نجاح", message);
+          setShowActionModal(false);
+          setShowDetailModal(false);
+          setActionReason("");
+        },
+        onError: (error) => {
+          Alert.alert("خطأ", `فشل تنفيذ الإجراء: ${error.message}`);
+        },
+      },
+    );
+  }, [selectedClinic, actionType, actionReason, deleteClinicMutation, setClinicActiveMutation]);
 
   // Early returns AFTER all hooks
   if (clinicsLoading) {

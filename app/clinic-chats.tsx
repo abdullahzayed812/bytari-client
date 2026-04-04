@@ -53,23 +53,12 @@ export default function ClinicChatsScreen() {
   const chats = ((data as any)?.chats ?? []) as ChatItem[];
 
   const renderItem = ({ item }: { item: ChatItem }) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() =>
-        router.push({
-          pathname: "/clinic-chat-thread",
-          params: {
-            chatId: item.id,
-            petName: item.petName,
-            ownerName: item.ownerName,
-            senderRole: "clinic",
-            clinicId: String(item.clinicId),
-            initialIsActive: item.isActive ? "true" : "false",
-          },
-        })
-      }
-    >
-      <View style={styles.avatarWrapper}>
+    <View style={styles.chatItem}>
+      <TouchableOpacity
+        style={styles.avatarWrapper}
+        onPress={() => router.push({ pathname: "/(tabs)/pet-details", params: { petId: String(item.petId), clinicId: String(item.clinicId) } })}
+        activeOpacity={0.7}
+      >
         <Image
           source={{ uri: item.petImage ?? undefined }}
           style={styles.avatar}
@@ -81,9 +70,25 @@ export default function ClinicChatsScreen() {
             </Text>
           </View>
         )}
-      </View>
+      </TouchableOpacity>
 
-      <View style={styles.chatInfo}>
+      <TouchableOpacity
+        style={styles.chatInfo}
+        onPress={() =>
+          router.push({
+            pathname: "/clinic-chat-thread",
+            params: {
+              chatId: item.id,
+              petName: item.petName,
+              ownerName: item.ownerName,
+              senderRole: "clinic",
+              clinicId: String(item.clinicId),
+              initialIsActive: item.isActive ? "true" : "false",
+            },
+          })
+        }
+        activeOpacity={0.7}
+      >
         <View style={styles.chatTopRow}>
           <Text style={styles.lastTime}>{formatTime(item.lastMessageAt)}</Text>
           <Text style={styles.petName}>{item.petName}</Text>
@@ -97,8 +102,8 @@ export default function ClinicChatsScreen() {
             {item.lastMessage}
           </Text>
         )}
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 
   return (

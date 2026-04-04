@@ -116,6 +116,17 @@ export default function NotificationsScreen() {
             pathname: "/pet-details",
             params: { petId: notification?.data?.petId },
           });
+        } else if (notification?.type === "clinic_chat") {
+          const data = notification?.data;
+          router.push({
+            pathname: "/clinic-chat-thread",
+            params: {
+              chatId: data?.chatId,
+              senderRole: data?.recipientRole,
+              clinicId: data?.clinicId,
+              petName: "",
+            },
+          });
         }
       },
       onError: () => {},

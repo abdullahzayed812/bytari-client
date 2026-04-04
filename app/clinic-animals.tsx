@@ -16,7 +16,7 @@ export default function ClinicAnimals() {
   const { data: clinicPets, isLoading: isClinicPetsLoading } = useQuery({
     ...trpc.clinics.getLatestPets.queryOptions({
       clinicId: Number(clinicId),
-      limit: 5, // Show 5 latest pets
+      limit: 1000,
     }),
     enabled: !!clinicId,
   });

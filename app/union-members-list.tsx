@@ -7,14 +7,20 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  TextInput,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
-import { XCircle } from "lucide-react-native";
+import { XCircle, Send } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToastContext } from "../providers/ToastProvider";
 
 interface MemberItem {
   registrationId: number;
@@ -62,6 +68,14 @@ export default function UnionMembersListScreen() {
 
   const parsedMainUnionId = mainUnionId ? Number(mainUnionId) : undefined;
   const parsedBranchId = branchId ? Number(branchId) : undefined;
+  const [searchQuery, setSearchQuery] = useState("");
+  const [msgModalVisible, setMsgModalVisible] = useState(false);
+  const [msgTitle, setMsgTitle] = useState("");
+  const [msgBody, setMsgBody] = useState("");
+  const [msgTarget, setMsgTarget] = useState<"members" | "followers" | "all">("members");
+  const { showToast } = useToastContext();
+
+  const sendMessageMutation = useMutation(trpc.union.messaging.sendToMembers.mutationOptions());
 
   const canManage =
     isSuperAdmin ||
@@ -182,8 +196,31 @@ export default function UnionMembersListScreen() {
     </TouchableOpacity>
   );
 
-  const members = (membersQuery.data?.members ?? []) as MemberItem[];
-  const followers = (followersQuery.data?.followers ?? []) as FollowerItem[];
+  const handleSendMessage = () => {
+    if (!msgTitle.trim() || !msgBody.trim()) {
+      showToast({ message: "يرجى تعبئة العنوان والرسالة", type: "error" });
+      return;
+    }
+    sendMessageMutation.mutate(
+      { mainUnionId: parsedMainUnionId, branchId: parsedBranchId, title: msgTitle.trim(), message: msgBody.trim(), target: msgTarget },
+      {
+        onSuccess: (data) => {
+          showToast({ message: `تم إرسال الرسالة إلى ${data.sentCount} مستخدم`, type: "success" });
+          setMsgModalVisible(false);
+          setMsgTitle("");
+          setMsgBody("");
+        },
+        onError: () => showToast({ message: "فشل إرسال الرسالة", type: "error" }),
+      },
+    );
+  };
+
+  const members = ((membersQuery.data?.members ?? []) as MemberItem[]).filter(
+    (m) => !searchQuery || (m.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+  const followers = ((followersQuery.data?.followers ?? []) as FollowerItem[]).filter(
+    (f) => !searchQuery || (f.name ?? "").toLowerCase().includes(searchQuery.toLowerCase()),
+  );
   const emptyText = type === "followers" ? "لا يوجد متابعون بعد" : "لا يوجد أعضاء مسجلون بعد";
 
   return (
@@ -194,10 +231,27 @@ export default function UnionMembersListScreen() {
           headerStyle: { backgroundColor: COLORS.primary },
           headerTintColor: COLORS.white,
           headerTitleStyle: { fontWeight: "bold" },
+          headerRight: canManage
+            ? () => (
+                <TouchableOpacity onPress={() => setMsgModalVisible(true)} style={{ marginRight: 8 }}>
+                  <Send size={20} color={COLORS.white} />
+                </TouchableOpacity>
+              )
+            : undefined,
         }}
       />
 
       <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="ابحث باسم العضو..."
+            placeholderTextColor={COLORS.darkGray}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            textAlign="right"
+          />
+        </View>
         {isLoading ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
         ) : type === "members" ? (
@@ -222,6 +276,67 @@ export default function UnionMembersListScreen() {
           />
         )}
       </View>
+      <Modal visible={msgModalVisible} animationType="slide" transparent onRequestClose={() => setMsgModalVisible(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>إرسال رسالة</Text>
+
+            <Text style={styles.modalLabel}>المستهدفون</Text>
+            <View style={styles.targetRow}>
+              {(["members", "followers", "all"] as const).map((t) => (
+                <TouchableOpacity
+                  key={t}
+                  style={[styles.targetChip, msgTarget === t && styles.targetChipActive]}
+                  onPress={() => setMsgTarget(t)}
+                >
+                  <Text style={[styles.targetChipText, msgTarget === t && styles.targetChipTextActive]}>
+                    {t === "members" ? "الأعضاء" : t === "followers" ? "المتابعون" : "الكل"}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.modalLabel}>العنوان</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={msgTitle}
+              onChangeText={setMsgTitle}
+              placeholder="عنوان الرسالة"
+              placeholderTextColor={COLORS.darkGray}
+              textAlign="right"
+            />
+
+            <Text style={styles.modalLabel}>الرسالة</Text>
+            <TextInput
+              style={[styles.modalInput, styles.modalTextArea]}
+              value={msgBody}
+              onChangeText={setMsgBody}
+              placeholder="نص الرسالة..."
+              placeholderTextColor={COLORS.darkGray}
+              textAlign="right"
+              multiline
+              numberOfLines={4}
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => setMsgModalVisible(false)}>
+                <Text style={styles.cancelButtonText}>إلغاء</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.sendButton, sendMessageMutation.isPending && { opacity: 0.6 }]}
+                onPress={handleSendMessage}
+                disabled={sendMessageMutation.isPending}
+              >
+                {sendMessageMutation.isPending ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <Text style={styles.sendButtonText}>إرسال</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </>
   );
 }
@@ -303,5 +418,111 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     fontSize: 16,
     marginTop: 40,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "#F5F5F5",
+  },
+  searchInput: {
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: COLORS.black,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    gap: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  modalLabel: {
+    fontSize: 13,
+    color: COLORS.darkGray,
+    textAlign: "right",
+    marginTop: 8,
+  },
+  targetRow: {
+    flexDirection: "row-reverse",
+    gap: 8,
+    marginBottom: 4,
+  },
+  targetChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  targetChipActive: {
+    backgroundColor: COLORS.primary,
+  },
+  targetChipText: {
+    fontSize: 13,
+    color: COLORS.primary,
+  },
+  targetChipTextActive: {
+    color: COLORS.white,
+  },
+  modalInput: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: COLORS.black,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  modalTextArea: {
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+  modalActions: {
+    flexDirection: "row-reverse",
+    gap: 12,
+    marginTop: 16,
+  },
+  sendButton: {
+    flex: 1,
+    backgroundColor: COLORS.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  sendButtonText: {
+    color: COLORS.white,
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  cancelButtonText: {
+    color: COLORS.darkGray,
+    fontSize: 15,
   },
 });
