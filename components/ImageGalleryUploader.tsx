@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { X, Plus } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useImageUpload } from "../hooks/useImageUpload";
@@ -21,7 +21,7 @@ export function ImageGalleryUploader({
 }: ImageGalleryUploaderProps) {
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
 
-  const { pickAndUploadImage, isLoading } = useImageUpload({
+  const { pickAndUploadImage, takeAndUploadFromCamera, isLoading } = useImageUpload({
     onUploadSuccess: (url) => {
       onImagesChange([...images, url]);
       setUploadingIndex(null);
@@ -33,11 +33,24 @@ export function ImageGalleryUploader({
   });
 
   const handleAddImage = () => {
-    if (images.length >= maxImages) {
-      return;
-    }
-    setUploadingIndex(images.length);
-    pickAndUploadImage(aspect);
+    if (images.length >= maxImages) return;
+    Alert.alert("إضافة صورة", "اختر مصدر الصورة", [
+      {
+        text: "الكاميرا",
+        onPress: () => {
+          setUploadingIndex(images.length);
+          takeAndUploadFromCamera(aspect);
+        },
+      },
+      {
+        text: "معرض الصور",
+        onPress: () => {
+          setUploadingIndex(images.length);
+          pickAndUploadImage(aspect);
+        },
+      },
+      { text: "إلغاء", style: "cancel" },
+    ]);
   };
 
   const handleRemoveImage = (index: number) => {

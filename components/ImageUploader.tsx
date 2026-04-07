@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Image, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Image, TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { Camera } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useImageUpload } from "../hooks/useImageUpload";
@@ -21,15 +21,22 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   containerStyle,
   imageStyle,
 }) => {
-  const { pickAndUploadImage, isLoading, error } = useImageUpload({
+  const { pickAndUploadImage, takeAndUploadFromCamera, isLoading, error } = useImageUpload({
     onUploadSuccess: (url) => {
       onUploadComplete(url);
     },
     onUploadError: (err) => {
-      // You might want to show a toast here via a global toast provider
       console.error("Upload failed:", err);
     },
   });
+
+  const handlePickImage = () => {
+    Alert.alert("إضافة صورة", "اختر مصدر الصورة", [
+      { text: "الكاميرا", onPress: () => takeAndUploadFromCamera(aspect) },
+      { text: "معرض الصور", onPress: () => pickAndUploadImage(aspect) },
+      { text: "إلغاء", style: "cancel" },
+    ]);
+  };
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -49,7 +56,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </View>
         )}
 
-        <TouchableOpacity style={styles.cameraButton} onPress={() => pickAndUploadImage(aspect)} disabled={isLoading}>
+        <TouchableOpacity style={styles.cameraButton} onPress={handlePickImage} disabled={isLoading}>
           <Camera size={20} color={COLORS.white} />
         </TouchableOpacity>
       </View>

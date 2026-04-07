@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
   },
   managementBadge: {
     position: "absolute",
-    top: -6,
+    bottom: -6,
     right: -6,
     minWidth: 20,
     height: 20,

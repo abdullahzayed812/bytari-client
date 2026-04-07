@@ -68,12 +68,14 @@ export default function AddCourseScreen() {
   const createCourseMutation = useMutation(
     trpc.courses.create.mutationOptions({
       onSuccess: () => {
-        Alert.alert(t("common.success"), t("addCourse.addSuccess"), [{ text: t("common.ok"), onPress: () => router.back() }]);
+        Alert.alert(t("common.success"), t("addCourse.addSuccess"), [
+          { text: t("common.ok"), onPress: () => router.back() },
+        ]);
       },
       onError: () => {
         Alert.alert(t("common.error"), t("addCourse.saveError"));
       },
-    })
+    }),
   );
 
   const handleBack = () => {
@@ -157,7 +159,7 @@ export default function AddCourseScreen() {
             <ArrowLeft size={24} color={COLORS.white} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t("addCourse.title")}</Text>
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton} disabled={isLoading}>
+          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
             <Save size={24} color={COLORS.white} />
           </TouchableOpacity>
         </View>
@@ -369,7 +371,9 @@ export default function AddCourseScreen() {
             disabled={createCourseMutation.isPending}
           >
             <Save size={20} color={COLORS.white} />
-            <Text style={styles.saveButtonText}>{createCourseMutation.isPending ? t("common.loading") : t("addCourse.saveCourse")}</Text>
+            <Text style={styles.saveButtonText}>
+              {createCourseMutation.isPending ? t("common.loading") : t("addCourse.saveCourse")}
+            </Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>

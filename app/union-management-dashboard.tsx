@@ -63,7 +63,7 @@ export default function UnionManagementDashboardScreen() {
   const mainFollowersCount = (mainUnionData?.union as any)?.followersCount ?? 0;
 
   const { data: announcements, isLoading: isAnnouncementsLoading } = useQuery(
-    trpc.union.announcement.list.queryOptions({})
+    trpc.union.announcement.list.queryOptions({ mainUnionId }),
   );
 
   const deleteUnionMutation = useMutation(
@@ -75,7 +75,7 @@ export default function UnionManagementDashboardScreen() {
       onError: (error) => {
         Alert.alert("خطأ", "حدث خطأ أثناء حذف النقابة");
       },
-    })
+    }),
   );
 
   const filteredUnions = allUnions?.filter((union) => union) || [];
@@ -383,7 +383,7 @@ export default function UnionManagementDashboardScreen() {
                     router.push(
                       `/edit-union-announcement?announcementId=${announcement.id}&branchId=${
                         announcement.branchId || "main"
-                      }`
+                      }`,
                     )
                   }
                 >
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   },
   quickActionBadge: {
     position: "absolute",
-    top: -6,
+    bottom: -6,
     right: -6,
     minWidth: 20,
     height: 20,

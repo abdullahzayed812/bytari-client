@@ -20,7 +20,20 @@ import { useI18n } from "../../providers/I18nProvider";
 import { useApp } from "../../providers/AppProvider";
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import Button from "../../components/Button 2";
-import { Edit3, Trash2, X, AlertTriangle, Plus, Check, XIcon, MessageCircle, PauseCircle, PlayCircle, Camera, ImageIcon } from "lucide-react-native";
+import {
+  Edit3,
+  Trash2,
+  X,
+  AlertTriangle,
+  Plus,
+  Check,
+  XIcon,
+  MessageCircle,
+  PauseCircle,
+  PlayCircle,
+  Camera,
+  ImageIcon,
+} from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
 import { useImageUpload } from "@/hooks/useImageUpload";
@@ -31,14 +44,18 @@ import ImageViewerModal from "@/components/ImageViewerModal";
 // Small component so hooks can be called per follow-up card without violating rules of hooks
 function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicId: number; petName: string }) {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   const { data, refetch } = useQuery({
     ...trpc.clinics.chat.getChat.queryOptions({ petId, clinicId }),
     refetchInterval: 15000,
   });
   const markAsReadMutation = useMutation(trpc.clinics.chat.markAsRead.mutationOptions());
 
-  useFocusEffect(useCallback(() => { refetch(); }, []));
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, []),
+  );
 
   const chat = (data as any)?.chat;
   if (!chat || !chat.isActive) return null;
@@ -46,10 +63,7 @@ function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicI
 
   const handlePress = () => {
     if (unread > 0) {
-      markAsReadMutation.mutate(
-        { chatId: chat.id },
-        { onSuccess: () => refetch() },
-      );
+      markAsReadMutation.mutate({ chatId: chat.id }, { onSuccess: () => refetch() });
     }
     router.push({
       pathname: "/clinic-chat-thread",
@@ -58,10 +72,7 @@ function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicI
   };
 
   return (
-    <TouchableOpacity
-      style={{ padding: 6, marginLeft: 8, position: "relative" }}
-      onPress={handlePress}
-    >
+    <TouchableOpacity style={{ padding: 6, marginLeft: 8, position: "relative" }} onPress={handlePress}>
       <MessageCircle size={22} color={COLORS.primary} />
       {unread > 0 && (
         <View style={chatBadgeStyles.badge}>
@@ -164,7 +175,11 @@ export default function PetDetailsScreen() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
 
-  const { pickAndUploadImage, takeAndUploadFromCamera, isLoading: isMedicalImageUploading } = useImageUpload({
+  const {
+    pickAndUploadImage,
+    takeAndUploadFromCamera,
+    isLoading: isMedicalImageUploading,
+  } = useImageUpload({
     onUploadSuccess: (url) => setMedicalForm((prev) => ({ ...prev, prescriptionImage: url })),
   });
 
@@ -330,9 +345,7 @@ export default function PetDetailsScreen() {
     }),
     enabled: isClinicAccess && hasAccess,
   });
-  const chatData = (clinicChatQuery.data as any)?.chat as
-    | { id: number; isActive: boolean }
-    | undefined;
+  const chatData = (clinicChatQuery.data as any)?.chat as { id: number; isActive: boolean } | undefined;
 
   const toggleChatMutation = useMutation(trpc.clinics.chat.toggleActive.mutationOptions());
 
@@ -1188,9 +1201,7 @@ export default function PetDetailsScreen() {
                         ) : (
                           <PlayCircle size={18} color={COLORS.darkGray} />
                         )}
-                        <Text style={styles.chatActionText}>
-                          {chatData.isActive ? "إيقاف" : "تفعيل"}
-                        </Text>
+                        <Text style={styles.chatActionText}>{chatData.isActive ? "إيقاف" : "تفعيل"}</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -2102,10 +2113,7 @@ export default function PetDetailsScreen() {
                   }}
                   activeOpacity={0.85}
                 >
-                  <RNImage
-                    source={{ uri: medicalForm.prescriptionImage }}
-                    style={styles.prescriptionImageThumb}
-                  />
+                  <RNImage source={{ uri: medicalForm.prescriptionImage }} style={styles.prescriptionImageThumb} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.prescriptionImageRemove}
@@ -2131,7 +2139,11 @@ export default function PetDetailsScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.prescriptionPickBtn, { backgroundColor: COLORS.darkGray }, isMedicalImageUploading && { opacity: 0.6 }]}
+                style={[
+                  styles.prescriptionPickBtn,
+                  { backgroundColor: COLORS.darkGray },
+                  isMedicalImageUploading && { opacity: 0.6 },
+                ]}
                 onPress={() => pickAndUploadImage([4, 3])}
                 disabled={isMedicalImageUploading}
               >

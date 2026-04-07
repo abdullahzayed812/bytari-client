@@ -18,6 +18,8 @@
         "CAMERA",
         "INTERNET",
         "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
         "RECORD_AUDIO",
         "SYSTEM_ALERT_WINDOW",
         "VIBRATE",
@@ -38,7 +40,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos"
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ],
       [

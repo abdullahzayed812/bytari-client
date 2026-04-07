@@ -42,16 +42,15 @@ function formatMessageTime(dateStr: string): string {
 }
 
 export default function ClinicChatThreadScreen() {
-  const { chatId, petName, clinicName, ownerName, senderRole, clinicId, initialIsActive } =
-    useLocalSearchParams<{
-      chatId: string;
-      petName: string;
-      clinicName?: string;
-      ownerName?: string;
-      senderRole: string;
-      clinicId?: string;
-      initialIsActive?: string;
-    }>();
+  const { chatId, petName, clinicName, ownerName, senderRole, clinicId, initialIsActive } = useLocalSearchParams<{
+    chatId: string;
+    petName: string;
+    clinicName?: string;
+    ownerName?: string;
+    senderRole: string;
+    clinicId?: string;
+    initialIsActive?: string;
+  }>();
   const { user } = useApp();
   const { showToast } = useToastContext();
   const flatListRef = useRef<FlatList>(null);
@@ -106,7 +105,7 @@ export default function ClinicChatThreadScreen() {
       const response = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
       const data = await response.json();
       if (data.success && data.url) {
-        setPendingMedia((prev) => prev ? { ...prev, url: data.url } : null);
+        setPendingMedia((prev) => (prev ? { ...prev, url: data.url } : null));
       } else {
         throw new Error(data.error || "Upload failed");
       }
@@ -159,7 +158,7 @@ export default function ClinicChatThreadScreen() {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isOwn = item.senderId === Number(user?.id);
-    const senderLabel = isOwn ? "أنت" : (isVet ? (ownerName ?? "صاحب الحيوان") : (clinicName ?? "العيادة"));
+    const senderLabel = isOwn ? "أنت" : isVet ? (ownerName ?? "صاحب الحيوان") : (clinicName ?? "العيادة");
 
     return (
       <View style={[styles.messageBubbleWrapper, isOwn ? styles.ownWrapper : styles.otherWrapper]}>
@@ -179,9 +178,7 @@ export default function ClinicChatThreadScreen() {
             </TouchableOpacity>
           )}
           {item.message.trim().length > 0 && (
-            <Text style={[styles.messageText, isOwn ? styles.ownText : styles.otherText]}>
-              {item.message}
-            </Text>
+            <Text style={[styles.messageText, isOwn ? styles.ownText : styles.otherText]}>{item.message}</Text>
           )}
         </View>
         <Text style={styles.timeText}>{formatMessageTime(item.createdAt)}</Text>
@@ -215,11 +212,7 @@ export default function ClinicChatThreadScreen() {
         }}
       />
 
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      >
+      <View style={styles.container}>
         {isLoading ? (
           <ActivityIndicator size="large" color={COLORS.primary} style={styles.loader} />
         ) : (
@@ -230,6 +223,7 @@ export default function ClinicChatThreadScreen() {
             renderItem={renderMessage}
             contentContainerStyle={styles.messagesList}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            style={{ flex: 1 }}
           />
         )}
 
@@ -242,7 +236,7 @@ export default function ClinicChatThreadScreen() {
 
         {/* Input bar — hide for owner when paused */}
         {(!isPaused || isVet) && (
-          <View>
+          <KeyboardAvoidingView behavior={"padding"} keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 120}>
             {/* Media preview */}
             {pendingMedia && (
               <View style={styles.mediaPreviewBar}>
@@ -253,12 +247,8 @@ export default function ClinicChatThreadScreen() {
                     <Play size={20} color={COLORS.white} />
                   </View>
                 )}
-                {isUploading && (
-                  <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />
-                )}
-                {!isUploading && pendingMedia.url && (
-                  <Text style={styles.mediaReadyText}>جاهز للإرسال</Text>
-                )}
+                {isUploading && <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />}
+                {!isUploading && pendingMedia.url && <Text style={styles.mediaReadyText}>جاهز للإرسال</Text>}
                 <TouchableOpacity onPress={() => setPendingMedia(null)} style={styles.mediaRemoveBtn}>
                   <X size={16} color={COLORS.error} />
                 </TouchableOpacity>
@@ -267,7 +257,7 @@ export default function ClinicChatThreadScreen() {
 
             <View style={styles.inputBar}>
               <TouchableOpacity
-                style={[styles.sendButton, (!text.trim() && !pendingMedia?.url) && styles.sendButtonDisabled]}
+                style={[styles.sendButton, !text.trim() && !pendingMedia?.url && styles.sendButtonDisabled]}
                 onPress={handleSend}
                 disabled={(!text.trim() && !pendingMedia?.url) || sendMutation.isPending || isUploading}
               >
@@ -288,17 +278,13 @@ export default function ClinicChatThreadScreen() {
                 textAlign="right"
                 onSubmitEditing={handleSend}
               />
-              <TouchableOpacity
-                style={styles.attachButton}
-                onPress={handlePickMedia}
-                disabled={isUploading}
-              >
+              <TouchableOpacity style={styles.attachButton} onPress={handlePickMedia} disabled={isUploading}>
                 <Paperclip size={22} color={COLORS.darkGray} />
               </TouchableOpacity>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </>
   );
 }
