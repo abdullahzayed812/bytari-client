@@ -40,23 +40,21 @@ export default function AddPoultryFarmScreen() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
+    name: "مزرعة النور للدواجن",
+    location: "بغداد - الدورة",
     farmType: "broiler" as FarmType,
-    capacity: "",
-    currentPopulation: "",
-    establishedDate: "",
-    licenseNumber: "",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    facilities: "",
+    capacity: "10000",
+    currentPopulation: "8500",
+    establishedDate: "2020-01-15",
+    licenseNumber: "LIC-2024-001",
+    contactPerson: "أحمد محمد",
+    phone: "07701234567",
+    email: "farm.alnoor@gmail.com",
+    facilities: "عنبر تسمين, مخزن أعلاف, نظام تهوية, نظام سقي أوتوماتيكي",
     healthStatus: "healthy" as HealthStatus,
-    lastInspection: "",
-    description: "",
-    address: "",
-    latitude: "",
-    longitude: "",
+    lastInspection: "2024-03-10",
+    description: "حقل دواجن متخصص في إنتاج دجاج اللحم بطاقة استيعابية عالية",
+    address: "بغداد، منطقة الدورة، شارع الصناعة",
     licenseImage: "",
     images: [] as string[],
   });
@@ -154,8 +152,8 @@ export default function AddPoultryFarmScreen() {
         // Additional fields for procedure
         description: formData.description.trim() || undefined,
         address: formData.address.trim() || undefined,
-        latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
-        longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
+        // latitude: formData.latitude ? parseFloat(formData.latitude) : undefined,
+        // longitude: formData.longitude ? parseFloat(formData.longitude) : undefined,
         licenseImage: formData.licenseImage || undefined,
         images: formData.images.length > 0 ? formData.images : undefined,
       };
@@ -167,7 +165,7 @@ export default function AddPoultryFarmScreen() {
             message: data.message || "تم إنشاء حقل الدواجن بنجاح",
           });
           router.navigate("(tabs)/pets");
-          queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey);
+          queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey() as any);
         },
         onError: (error: any) => {
           showToast({
@@ -290,7 +288,7 @@ export default function AddPoultryFarmScreen() {
             </View>
 
             <View style={styles.inputRow}>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
+              {/* <View style={[styles.inputGroup, { flex: 1 }]}>
                 <View style={styles.inputHeader}>
                   <MapPin size={20} color={COLORS.primary} />
                   <Text style={styles.inputLabel}>خط العرض</Text>
@@ -304,9 +302,9 @@ export default function AddPoultryFarmScreen() {
                   textAlign={isRTL ? "right" : "left"}
                   keyboardType="decimal-pad"
                 />
-              </View>
+              </View> */}
 
-              <View style={[styles.inputGroup, { flex: 1 }]}>
+              {/* <View style={[styles.inputGroup, { flex: 1 }]}>
                 <View style={styles.inputHeader}>
                   <MapPin size={20} color={COLORS.primary} />
                   <Text style={styles.inputLabel}>خط الطول</Text>
@@ -320,7 +318,7 @@ export default function AddPoultryFarmScreen() {
                   textAlign={isRTL ? "right" : "left"}
                   keyboardType="decimal-pad"
                 />
-              </View>
+              </View> */}
             </View>
           </View>
 
@@ -606,14 +604,14 @@ export default function AddPoultryFarmScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <ImageIcon size={24} color={COLORS.primary} />
-              <Text style={styles.sectionTitle}>صور الحقل (حتى 5 صور)</Text>
+              <Text style={styles.sectionTitle}>صورة الحقل</Text>
             </View>
 
             <ImageGalleryUploader
               images={formData.images}
               onImagesChange={(images) => setFormData((prev) => ({ ...prev, images }))}
-              maxImages={5}
-              label="صور الحقل"
+              maxImages={1}
+              label="صورة الحقل"
               aspect={[4, 3]}
             />
           </View>

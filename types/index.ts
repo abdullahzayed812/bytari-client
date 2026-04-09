@@ -94,7 +94,7 @@ export interface PoultryFarm {
 export interface PoultryBatch {
   id: string;
   farmId: string;
-  batchNumber: string;
+  batchNumber: number;
   birdType: string;
   initialCount: number;
   currentCount: number;
@@ -136,14 +136,22 @@ export interface PoultryDay {
   weekNumber?: number; // رقم الأسبوع (محسوب: Math.ceil(dayNumber / 7))
   date: string;
 
-  // Feed consumption
+  // Environmental conditions
+  temperature?: number; // درجة الحرارة (°C)
+  humidity?: number; // الرطوبة (%)
+
+  // Feed & water
   feedConsumption: number; // استهلاك العلف (كيلو)
   feedCost: number; // تكلفة العلف (د.ع)
   feedType?: string; // نوع العلف
+  waterConsumption?: number; // الماء (لتر)
 
   // Weight tracking
   averageWeight: number; // متوسط الوزن (جرام)
   weightGain?: number; // الزيادة في الوزن عن اليوم السابق (جرام)
+
+  // Activity
+  activityLevel?: string; // الحركة والسلوك
 
   // Mortality tracking
   mortality: number; // عدد النفوق
@@ -154,10 +162,6 @@ export interface PoultryDay {
   treatments: Treatment[]; // العلاجات المستخدمة
   vaccinations: Vaccination[]; // التطعيمات
   healthObservations?: string[]; // ملاحظات صحية
-
-  // Environmental conditions
-  temperature?: TemperatureReading; // درجة الحرارة
-  humidity?: number; // الرطوبة (%)
   ventilation?: "poor" | "fair" | "good" | "excellent"; // التهوية
 
   // Financial

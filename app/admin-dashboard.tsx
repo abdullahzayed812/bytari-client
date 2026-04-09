@@ -48,7 +48,6 @@ import {
   ShoppingCart,
   MessageCircle,
   Egg,
-  Trash2,
 } from "lucide-react-native";
 import { useApp } from "@/providers/AppProvider";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -142,41 +141,6 @@ export default function AdminDashboard() {
 
   const sendMessageMutation = useMutation(trpc.admin.messages.sendSystemMessage.mutationOptions());
 
-  // Poultry farms management
-  const [showPoultryFarmsModal, setShowPoultryFarmsModal] = useState(false);
-  const {
-    data: poultryFarmsData,
-    isLoading: poultryFarmsLoading,
-    refetch: refetchPoultryFarms,
-  } = useQuery({
-    ...trpc.poultryFarms.list.queryOptions({}),
-    enabled: showPoultryFarmsModal,
-  });
-  const deletePoultryFarmMutation = useMutation(trpc.poultryFarms.adminDelete.mutationOptions());
-
-  const handleDeletePoultryFarm = (farmId: number, farmName: string) => {
-    Alert.alert("حذف حقل الدواجن", `هل أنت متأكد من حذف "${farmName}"؟ هذا الإجراء لا يمكن التراجع عنه.`, [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "حذف",
-        style: "destructive",
-        onPress: () => {
-          deletePoultryFarmMutation.mutate(
-            { farmId },
-            {
-              onSuccess: () => {
-                Alert.alert("نجح", "تم حذف حقل الدواجن بنجاح");
-                refetchPoultryFarms();
-              },
-              onError: (error) => {
-                Alert.alert("خطأ", error.message || "فشل في حذف حقل الدواجن");
-              },
-            },
-          );
-        },
-      },
-    ]);
-  };
 
   const hasPermission = (permission: string): boolean => {
     return userPermissions?.permissions?.some((p: any) => p.permissionName === permission) ?? false;
@@ -675,9 +639,16 @@ export default function AdminDashboard() {
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.actionCard} onPress={() => setShowPoultryFarmsModal(true)}>
-            <Egg size={24} color="#F59E0B" />
-            <Text style={styles.actionText}>إدارة حقول الدواجن</Text>
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-poultry-farms-management")}>
+            <View style={styles.actionCardContent}>
+              <Egg size={24} color="#F59E0B" />
+              <Text style={styles.actionText}>إدارة حقول الدواجن</Text>
+              {(approvalCounts?.pendingPoultryFarms || 0) > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{approvalCounts?.pendingPoultryFarms}</Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
 
           {hasPermission("manage_pets") && (
@@ -1188,64 +1159,6 @@ export default function AdminDashboard() {
       {renderDetailModal()}
       {renderMessageModal()}
 
-      {/* Poultry Farms Modal */}
-      <Modal visible={showPoultryFarmsModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.detailModalContent}>
-            <View style={styles.detailModalHeader}>
-              <Text style={styles.modalTitle}>إدارة حقول الدواجن</Text>
-              <TouchableOpacity style={styles.closeDetailButton} onPress={() => setShowPoultryFarmsModal(false)}>
-                <Text style={styles.closeDetailButtonText}>×</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.detailModalScroll}>
-              {poultryFarmsLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#F59E0B" />
-                  <Text style={styles.loadingText}>جاري تحميل الحقول...</Text>
-                </View>
-              ) : !poultryFarmsData?.farms || poultryFarmsData.farms.length === 0 ? (
-                <View style={styles.noDataContainer}>
-                  <Text style={styles.noDataText}>لا توجد حقول دواجن</Text>
-                </View>
-              ) : (
-                poultryFarmsData.farms.map((farm: any) => (
-                  <View key={farm.id} style={styles.detailItem}>
-                    <View
-                      style={{
-                        flexDirection: "row-reverse",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.detailItemTitle}>{farm.name}</Text>
-                        <Text style={styles.detailItemSubtitle}>المالك: {farm.owner?.name || "غير محدد"}</Text>
-                        <Text style={styles.detailItemSubtitle}>الموقع: {farm.location || "غير محدد"}</Text>
-                        <Text style={styles.detailItemSubtitle}>السعة: {farm.capacity || 0}</Text>
-                      </View>
-                      <TouchableOpacity
-                        style={{
-                          padding: 8,
-                          borderRadius: 8,
-                          backgroundColor: "#FEE2E2",
-                        }}
-                        onPress={() => handleDeletePoultryFarm(farm.id, farm.name)}
-                        disabled={deletePoultryFarmMutation.isPending}
-                      >
-                        <Trash2 size={20} color="#EF4444" />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))
-              )}
-            </ScrollView>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setShowPoultryFarmsModal(false)}>
-              <Text style={styles.closeButtonText}>إغلاق</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }

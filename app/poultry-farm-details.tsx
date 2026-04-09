@@ -16,6 +16,7 @@ import { useI18n } from "../providers/I18nProvider";
 import { useToastContext } from "../providers/ToastProvider";
 import Button from "../components/Button 2";
 import { trpc } from "../lib/trpc";
+import { Stack } from "expo-router";
 import {
   ArrowLeft,
   MapPin,
@@ -32,7 +33,8 @@ import {
   ShoppingCart,
   MessageCircle,
   X,
-  Trash
+  Trash,
+  Settings,
 } from "lucide-react-native";
 import { PoultryFarm, PoultryBatch, PoultryWeek, PoultryDay } from "../types";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -46,7 +48,9 @@ export default function PoultryFarmDetailsScreen() {
   const router = useRouter();
   const { showToast } = useToastContext();
 
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, workerMode, workerPermissions } = useLocalSearchParams<{ id: string; workerMode?: string; workerPermissions?: string }>();
+  const isWorkerMode = workerMode === "1";
+  const canAddDailyData = !isWorkerMode || workerPermissions === "add_daily_data";
 
   const [farm, setFarm] = useState<PoultryFarm | null>(null);
   const [currentBatch, setCurrentBatch] = useState<PoultryBatch | null>(null);
@@ -70,10 +74,13 @@ export default function PoultryFarmDetailsScreen() {
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   const [dailyDataForm, setDailyDataForm] = useState({
+    temperature: "",
+    humidity: "",
+    feedConsumption: "",
+    waterConsumption: "",
+    activityLevel: "",
     mortality: "",
     mortalityReasons: "",
-    feedConsumption: "",
-    averageWeight: "",
     treatments: "",
     notes: "",
   });
@@ -164,9 +171,13 @@ export default function PoultryFarmDetailsScreen() {
           batchId: day.batchId.toString(),
           dayNumber: day.dayNumber,
           date: day.date.toISOString(),
-          feedConsumption: parseFloat(day.feedConsumption),
+          temperature: day.temperature != null ? parseFloat(day.temperature) : undefined,
+          humidity: day.humidity != null ? parseFloat(day.humidity) : undefined,
+          feedConsumption: day.feedConsumption != null ? parseFloat(day.feedConsumption) : 0,
           feedCost: parseFloat(day.feedCost || "0"),
-          averageWeight: parseFloat(day.averageWeight),
+          waterConsumption: day.waterConsumption != null ? parseFloat(day.waterConsumption) : undefined,
+          averageWeight: day.averageWeight != null ? parseFloat(day.averageWeight) : 0,
+          activityLevel: day.activityLevel || undefined,
           mortality: day.mortality,
           mortalityReasons: day.mortalityReasons || [],
           treatments: day.treatments || [],
@@ -259,75 +270,39 @@ export default function PoultryFarmDetailsScreen() {
   const handleAddDailyData = () => {
     if (!currentBatch) return;
 
-    if (
-      !dailyDataForm.mortality.trim() ||
-      !dailyDataForm.feedConsumption.trim() ||
-      !dailyDataForm.averageWeight.trim()
-    ) {
-      showToast({ type: "error", message: "يرجى ملء الحقول المطلوبة" });
-      return;
-    }
-
-    const mortality = parseInt(dailyDataForm.mortality);
-    const feedConsumption = parseFloat(dailyDataForm.feedConsumption);
-    const averageWeight = parseFloat(dailyDataForm.averageWeight);
-
-    if (isNaN(mortality) || mortality < 0) {
-      showToast({ type: "error", message: "يرجى إدخال رقم صحيح لعدد النفوق" });
-      return;
-    }
-
-    if (isNaN(feedConsumption) || feedConsumption < 0) {
-      showToast({ type: "error", message: "يرجى إدخال رقم صحيح لاستهلاك العلف" });
-      return;
-    }
-
-    if (isNaN(averageWeight) || averageWeight < 0) {
-      showToast({ type: "error", message: "يرجى إدخال رقم صحيح لمتوسط الوزن" });
-      return;
-    }
-
-    const treatments = dailyDataForm.treatments
-      ? dailyDataForm.treatments
-        .split(",")
-        .map((t, index) => ({
-          id: `treatment${Date.now()}_${index}`,
-          name: t.trim(),
-          dosage: "",
-          frequency: "",
-          duration: 0,
-          administeredBy: "owner",
-          cost: 0,
-          reason: "preventive",
-          notes: "",
-        }))
-        .filter((t) => t.name.length > 0)
-      : [];
+    const temperature = dailyDataForm.temperature.trim() ? parseFloat(dailyDataForm.temperature) : undefined;
+    const humidity = dailyDataForm.humidity.trim() ? parseFloat(dailyDataForm.humidity) : undefined;
+    const feedConsumption = dailyDataForm.feedConsumption.trim() ? parseFloat(dailyDataForm.feedConsumption) : undefined;
+    const waterConsumption = dailyDataForm.waterConsumption.trim() ? parseFloat(dailyDataForm.waterConsumption) : undefined;
+    const mortality = dailyDataForm.mortality.trim() ? parseInt(dailyDataForm.mortality) : 0;
 
     addDailyDataMutation.mutate(
       {
         batchId: Number(currentBatch.id),
+        temperature,
+        humidity,
+        feedConsumption,
+        waterConsumption,
+        activityLevel: dailyDataForm.activityLevel.trim() || undefined,
         mortality,
         mortalityReasons: dailyDataForm.mortalityReasons
-          ? dailyDataForm.mortalityReasons
-            .split(",")
-            .map((r) => r.trim())
-            .filter((r) => r.length > 0)
+          ? dailyDataForm.mortalityReasons.split(",").map((r) => r.trim()).filter((r) => r.length > 0)
           : [],
-        feedConsumption,
-        averageWeight,
-        treatments,
-        notes: dailyDataForm.notes,
+        treatments: dailyDataForm.treatments.trim() || undefined,
+        notes: dailyDataForm.notes.trim() || undefined,
       },
       {
         onSuccess: () => {
           farmQuery.refetch();
           setShowAddDailyDataModal(false);
           setDailyDataForm({
+            temperature: "",
+            humidity: "",
+            feedConsumption: "",
+            waterConsumption: "",
+            activityLevel: "",
             mortality: "",
             mortalityReasons: "",
-            feedConsumption: "",
-            averageWeight: "",
             treatments: "",
             notes: "",
           });
@@ -727,6 +702,16 @@ export default function PoultryFarmDetailsScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>البيانات اليومية</Text>
           <Text style={styles.emptyText}>لا توجد بيانات يومية مسجلة</Text>
+          {canAddDailyData && (
+            <Button
+              title="إضافة بيانات يومية"
+              onPress={() => setShowAddDailyDataModal(true)}
+              type="primary"
+              size="medium"
+              icon={<Plus size={16} color={COLORS.white} />}
+              style={styles.addButton}
+            />
+          )}
         </View>
       );
     }
@@ -744,7 +729,18 @@ export default function PoultryFarmDetailsScreen() {
 
     return (
       <View style={[styles.card, { marginTop: 24 }]}>
-        <Text style={styles.cardTitle}>البيانات اليومية ({currentDays.length} يوم)</Text>
+        <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+          <Text style={styles.cardTitle}>البيانات اليومية ({currentDays.length} يوم)</Text>
+          {canAddDailyData && (
+            <TouchableOpacity
+              onPress={() => setShowAddDailyDataModal(true)}
+              style={{ backgroundColor: COLORS.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row-reverse", alignItems: "center", gap: 4 }}
+            >
+              <Plus size={14} color={COLORS.white} />
+              <Text style={{ color: COLORS.white, fontSize: 12, fontWeight: "600" }}>إضافة</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {Object.keys(weeklyData).map((weekNum) => {
@@ -770,30 +766,62 @@ export default function PoultryFarmDetailsScreen() {
 
                         {dayData ? (
                           <View style={styles.dayStats}>
-                            <View style={styles.dayStat}>
-                              <Text style={styles.dayStatValue}>{dayData.feedConsumption}kg</Text>
-                              <Text style={styles.dayStatLabel}>العلف</Text>
-                            </View>
-
-                            <View style={styles.dayStat}>
-                              <Text style={styles.dayStatValue}>{dayData.averageWeight}g</Text>
-                              <Text style={styles.dayStatLabel}>الوزن</Text>
-                            </View>
-
-                            <View style={styles.dayStat}>
-                              <Text style={[styles.dayStatValue, { color: COLORS.error }]}>{dayData.mortality}</Text>
-                              <Text style={styles.dayStatLabel}>النفوق</Text>
-                            </View>
-
-                            {dayData.estimatedProfit > 0 && (
+                            {dayData.temperature != null && (
                               <View style={styles.dayStat}>
-                                <Text style={[styles.dayStatValue, { color: COLORS.success }]}>
-                                  {dayData.estimatedProfit.toFixed(0)}
-                                </Text>
-                                <Text style={styles.dayStatLabel}>الربح</Text>
+                                <Text style={styles.dayStatValue}>{dayData.temperature}°</Text>
+                                <Text style={styles.dayStatLabel}>الحرارة</Text>
                               </View>
                             )}
-
+                            {dayData.humidity != null && (
+                              <View style={styles.dayStat}>
+                                <Text style={styles.dayStatValue}>{dayData.humidity}%</Text>
+                                <Text style={styles.dayStatLabel}>الرطوبة</Text>
+                              </View>
+                            )}
+                            {dayData.feedConsumption > 0 && (
+                              <View style={styles.dayStat}>
+                                <Text style={styles.dayStatValue}>{dayData.feedConsumption}k</Text>
+                                <Text style={styles.dayStatLabel}>العلف</Text>
+                              </View>
+                            )}
+                            {dayData.waterConsumption != null && (
+                              <View style={styles.dayStat}>
+                                <Text style={styles.dayStatValue}>{dayData.waterConsumption}L</Text>
+                                <Text style={styles.dayStatLabel}>الماء</Text>
+                              </View>
+                            )}
+                            {dayData.activityLevel && (
+                              <View style={[styles.dayStat, { width: "100%" }]}>
+                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={1}>{dayData.activityLevel}</Text>
+                                <Text style={styles.dayStatLabel}>الحركة</Text>
+                              </View>
+                            )}
+                            <View style={styles.dayStat}>
+                              <Text style={[styles.dayStatValue, { color: dayData.mortality > 0 ? COLORS.error : COLORS.darkGray }]}>{dayData.mortality}</Text>
+                              <Text style={styles.dayStatLabel}>النفوق</Text>
+                            </View>
+                            {dayData.mortalityReasons?.length > 0 && (
+                              <View style={[styles.dayStat, { width: "100%" }]}>
+                                <Text style={[styles.dayStatValue, { fontSize: 10, color: COLORS.error }]} numberOfLines={1}>{dayData.mortalityReasons.join("، ")}</Text>
+                                <Text style={styles.dayStatLabel}>السبب</Text>
+                              </View>
+                            )}
+                            {dayData.treatments?.length > 0 && (
+                              <View style={[styles.dayStat, { width: "100%" }]}>
+                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={1}>
+                                  {Array.isArray(dayData.treatments) && typeof dayData.treatments[0] === "object"
+                                    ? (dayData.treatments as any[]).map((t) => t.name).join("، ")
+                                    : String(dayData.treatments)}
+                                </Text>
+                                <Text style={styles.dayStatLabel}>علاجات</Text>
+                              </View>
+                            )}
+                            {dayData.notes ? (
+                              <View style={[styles.dayStat, { width: "100%" }]}>
+                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={2}>{dayData.notes}</Text>
+                                <Text style={styles.dayStatLabel}>ملاحظات</Text>
+                              </View>
+                            ) : null}
                             <Text style={styles.dayDate}>{new Date(dayData.date).toLocaleDateString("ar")}</Text>
                           </View>
                         ) : (
@@ -1028,21 +1056,41 @@ export default function PoultryFarmDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <ArrowLeft size={24} color={COLORS.white} style={{ transform: [{ scaleX: isRTL ? -1 : 1 }] }} />
-        </TouchableOpacity>
-        <Text style={styles.title}>حقل الدواجن</Text>
-        <View style={styles.placeholder} />
-      </View> */}
+      <Stack.Screen
+        options={{
+          title: farm?.name || "حقل الدواجن",
+          headerStyle: { backgroundColor: "#F59E0B" },
+          headerTintColor: "#fff",
+          headerRight: !isWorkerMode
+            ? () => (
+                <TouchableOpacity
+                  onPress={() => router.push({ pathname: "/poultry-farm-settings", params: { id, farmName: farm?.name } })}
+                  style={{ marginLeft: 12 }}
+                >
+                  <Settings size={22} color="#fff" />
+                </TouchableOpacity>
+              )
+            : undefined,
+        }}
+      />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {renderDeleteFarmModal()}
+        {!isWorkerMode && renderDeleteFarmModal()}
         {renderFarmInfo()}
-        {renderCurrentBatch()}
-        {renderDailyData()}
-        {renderCompletedBatches()}
-        {renderSupervision()}
+        {isWorkerMode ? (
+          // Worker view: only daily data
+          <>
+            {renderDailyData()}
+          </>
+        ) : (
+          // Owner view: full view
+          <>
+            {renderCurrentBatch()}
+            {renderDailyData()}
+            {renderCompletedBatches()}
+            {renderSupervision()}
+          </>
+        )}
       </ScrollView>
 
       {/* Delete Confirmation Modal */}
@@ -1150,102 +1198,115 @@ export default function PoultryFarmDetailsScreen() {
             </Text>
 
             <ScrollView style={styles.dailyForm} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>الحرارة (°C)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={dailyDataForm.temperature}
+                    onChangeText={(v) => setDailyDataForm((p) => ({ ...p, temperature: v }))}
+                    placeholder="مثال: 32"
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>الرطوبة (%)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={dailyDataForm.humidity}
+                    onChangeText={(v) => setDailyDataForm((p) => ({ ...p, humidity: v }))}
+                    placeholder="مثال: 65"
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>العلف (كيلو)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={dailyDataForm.feedConsumption}
+                    onChangeText={(v) => setDailyDataForm((p) => ({ ...p, feedConsumption: v }))}
+                    placeholder="مثال: 150"
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>الماء (لتر)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={dailyDataForm.waterConsumption}
+                    onChangeText={(v) => setDailyDataForm((p) => ({ ...p, waterConsumption: v }))}
+                    placeholder="مثال: 300"
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+              </View>
+
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>عدد النفوق اليوم * 🐔💀</Text>
+                <Text style={styles.inputLabel}>الحركة</Text>
                 <TextInput
                   style={styles.input}
-                  value={dailyDataForm.mortality}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, mortality: value }))}
-                  placeholder="أدخل عدد الطيور النافقة اليوم"
-                  keyboardType="numeric"
+                  value={dailyDataForm.activityLevel}
+                  onChangeText={(v) => setDailyDataForm((p) => ({ ...p, activityLevel: v }))}
+                  placeholder="مثال: نشطة، خاملة، طبيعية"
                   textAlign={isRTL ? "right" : "left"}
                 />
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>أسباب النفوق 📝</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={dailyDataForm.mortalityReasons}
-                  onChangeText={(value) =>
-                    setDailyDataForm((prev) => ({
-                      ...prev,
-                      mortalityReasons: value,
-                    }))
-                  }
-                  placeholder="أدخل أسباب النفوق (مفصولة بفاصلة)\nمثال: ضعف عام، مشاكل تنفسية، حوادث"
-                  multiline
-                  numberOfLines={3}
-                  textAlign={isRTL ? "right" : "left"}
-                />
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>النفوق (عدد)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={dailyDataForm.mortality}
+                    onChangeText={(v) => setDailyDataForm((p) => ({ ...p, mortality: v }))}
+                    placeholder="0"
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 2 }]}>
+                  <Text style={styles.inputLabel}>سبب النفوق</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={dailyDataForm.mortalityReasons}
+                    onChangeText={(v) => setDailyDataForm((p) => ({ ...p, mortalityReasons: v }))}
+                    placeholder="مثال: ضعف عام، مشاكل تنفسية"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>استهلاك العلف اليوم (كيلو) * 🌾</Text>
-                <TextInput
-                  style={styles.input}
-                  value={dailyDataForm.feedConsumption}
-                  onChangeText={(value) =>
-                    setDailyDataForm((prev) => ({
-                      ...prev,
-                      feedConsumption: value,
-                    }))
-                  }
-                  placeholder="أدخل كمية العلف المستهلكة اليوم بالكيلو"
-                  keyboardType="numeric"
-                  textAlign={isRTL ? "right" : "left"}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>متوسط الوزن (جرام) * ⚖️</Text>
-                <TextInput
-                  style={styles.input}
-                  value={dailyDataForm.averageWeight}
-                  onChangeText={(value) =>
-                    setDailyDataForm((prev) => ({
-                      ...prev,
-                      averageWeight: value,
-                    }))
-                  }
-                  placeholder="أدخل متوسط وزن الطيور بالجرام"
-                  keyboardType="numeric"
-                  textAlign={isRTL ? "right" : "left"}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>العلاجات المستخدمة اليوم 💊</Text>
+                <Text style={styles.inputLabel}>العلاجات أو اللقاحات</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={dailyDataForm.treatments}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, treatments: value }))}
-                  placeholder="أدخل العلاجات المستخدمة اليوم (مفصولة بفاصلة)\nمثال: مضاد حيوي، فيتامينات، مطهر"
+                  onChangeText={(v) => setDailyDataForm((p) => ({ ...p, treatments: v }))}
+                  placeholder="مثال: مضاد حيوي، فيتامينات، لقاح نيوكاسل"
                   multiline
-                  numberOfLines={3}
+                  numberOfLines={2}
                   textAlign={isRTL ? "right" : "left"}
                 />
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>ملاحظات اليوم 📋</Text>
+                <Text style={styles.inputLabel}>الملاحظات</Text>
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={dailyDataForm.notes}
-                  onChangeText={(value) => setDailyDataForm((prev) => ({ ...prev, notes: value }))}
-                  placeholder="أدخل أي ملاحظات عن اليوم\nمثال: تغيير في السلوك، حالة الطقس، مشاكل في التهوية"
+                  onChangeText={(v) => setDailyDataForm((p) => ({ ...p, notes: v }))}
+                  placeholder="أي ملاحظات إضافية عن اليوم..."
                   multiline
-                  numberOfLines={4}
+                  numberOfLines={3}
                   textAlign={isRTL ? "right" : "left"}
                 />
-              </View>
-
-              <View style={styles.infoBox}>
-                <Text style={styles.infoTitle}>💡 نصائح يومية:</Text>
-                <Text style={styles.infoText}>• سجل البيانات في نفس الوقت يومياً</Text>
-                <Text style={styles.infoText}>• راقب سلوك الطيور وشهيتها للطعام</Text>
-                <Text style={styles.infoText}>• تأكد من نظافة المياه والمعالف</Text>
-                <Text style={styles.infoText}>• لاحظ أي تغييرات في البيئة المحيطة</Text>
               </View>
             </ScrollView>
 
@@ -1255,10 +1316,13 @@ export default function PoultryFarmDetailsScreen() {
                 onPress={() => {
                   setShowAddDailyDataModal(false);
                   setDailyDataForm({
+                    temperature: "",
+                    humidity: "",
+                    feedConsumption: "",
+                    waterConsumption: "",
+                    activityLevel: "",
                     mortality: "",
                     mortalityReasons: "",
-                    feedConsumption: "",
-                    averageWeight: "",
                     treatments: "",
                     notes: "",
                   });
@@ -1900,10 +1964,11 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     flexWrap: "wrap",
     gap: 8,
+    overflow: "hidden",
   },
   actionButton: {
-    flex: 1,
-    minWidth: "45%",
+    width: "48%",
+    flexShrink: 1,
   },
   weekItem: {
     backgroundColor: COLORS.gray,
@@ -2007,6 +2072,11 @@ const styles = StyleSheet.create({
   modalForm: {
     marginBottom: 20,
   },
+  inputRow: {
+    flexDirection: "row-reverse",
+    gap: 10,
+    marginBottom: 0,
+  },
   inputGroup: {
     marginBottom: 16,
   },
@@ -2084,7 +2154,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   dailyForm: {
-    maxHeight: 400,
+    maxHeight: 500,
     marginBottom: 20,
   },
   dailyScroll: {
@@ -2095,7 +2165,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginRight: 8,
-    minWidth: 120,
+    minWidth: 140,
+    width: 140,
   },
   emptyDayCard: {
     backgroundColor: COLORS.lightGray,

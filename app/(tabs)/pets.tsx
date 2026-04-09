@@ -42,6 +42,12 @@ export default function PetsScreen() {
   // Fetch user's own farms
   const userFarmsQuery = useQuery(trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) }));
 
+  // Fetch farms where user is a worker
+  const workerFarmsQuery = useQuery({
+    ...trpc.poultryFarms.getWorkerFarms.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user?.id,
+  });
+
   // Fetch ALL user's clinics (owned + assigned) using the new procedure
   const allUserClinicsQuery = useQuery({
     ...trpc.clinics.getUserApprovedClinics.queryOptions({ userId: Number(user?.id) }),
@@ -93,9 +99,10 @@ export default function PetsScreen() {
     return items;
   }, [ownedClinics, ownedStores]);
 
-  // Renewal mutation (you'll need to add this to your tRPC router)
+  // Renewal mutations
   const requestClinicRenewalMutation = useMutation(trpc.clinics.settings.requestRenewal.mutationOptions());
   const requestStoreRenewalMutation = useMutation(trpc.stores.settings.requestRenewal.mutationOptions());
+  const requestFarmRenewalMutation = useMutation(trpc.poultryFarms.requestRenewal.mutationOptions());
 
   // Scroll to top when tab is focused
   useFocusEffect(
@@ -113,6 +120,10 @@ export default function PetsScreen() {
   const displayFarms = useMemo(() => {
     return userFarmsQuery.data?.farms || [];
   }, [userFarmsQuery.data]);
+
+  const workerFarms = useMemo(() => {
+    return workerFarmsQuery.data?.farms || [];
+  }, [workerFarmsQuery.data]);
 
   const handlePetPress = (pet: any) => {
     console.log(pet);
@@ -189,6 +200,25 @@ export default function PetsScreen() {
     router.push("/add-pet");
   };
 
+  const handleRenewFarmSubscription = (farmId: number, ownerId: number, hasRenewal: boolean) => {
+    if (hasRenewal) {
+      showToast({ type: "warning", message: "يوجد طلب تجديد قيد المراجعة بالفعل. سيتم إشعارك عند الموافقة عليه." });
+      return;
+    }
+    requestFarmRenewalMutation.mutate(
+      { farmId, ownerId },
+      {
+        onSuccess: () => {
+          userFarmsQuery.refetch();
+          showToast({ type: "success", message: "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة." });
+        },
+        onError: (error) => {
+          showToast({ type: "error", message: error.message || "حدث خطأ أثناء إرسال طلب التجديد" });
+        },
+      }
+    );
+  };
+
   const handleRenewSubscription = (type: "clinic" | "store", id: number, hasRenewal: boolean) => {
     // Validate required data
     if (!id || !type) {
@@ -256,13 +286,17 @@ export default function PetsScreen() {
   };
 
   // Render subscription renewal card
-  const renderSubscriptionCard = (item: { type: "clinic" | "store"; data: any }) => {
+  const renderSubscriptionCard = (item: { type: "clinic" | "store" | "farm"; data: any }) => {
     const { type, data } = item;
     const isClinic = type === "clinic";
-    const resourceName = isClinic ? data.name : data.name;
+    const isFarm = type === "farm";
+    const resourceName = data.name;
     const startDate = data.activationStartDate ? new Date(data.activationStartDate) : null;
     const endDate = data.activationEndDate ? new Date(data.activationEndDate) : null;
-    const daysRemaining = data.daysRemaining || 0;
+    // farms don't have pre-computed daysRemaining — compute client-side
+    const daysRemaining = isFarm
+      ? endDate ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0
+      : (data.daysRemaining || 0);
     const needsRenewal = data.needsRenewal || false;
     const reviewingRenewalRequest = data.reviewingRenewalRequest || false;
     const isExpired = daysRemaining < 1;
@@ -284,17 +318,28 @@ export default function PetsScreen() {
     };
 
     const statusInfo = getStatusInfo();
-    const isLoading =
-      type === "clinic" ? requestClinicRenewalMutation.isPending : requestStoreRenewalMutation.isPending;
+    const isLoading = isFarm
+      ? requestFarmRenewalMutation.isPending
+      : type === "clinic"
+      ? requestClinicRenewalMutation.isPending
+      : requestStoreRenewalMutation.isPending;
 
     return (
       <View key={`${type}-${data.id}`} style={styles.subscriptionCard}>
         <View style={styles.subscriptionHeader}>
           <View style={styles.subscriptionIconContainer}>
-            {isClinic ? <Stethoscope size={20} color={COLORS.primary} /> : <Package size={20} color={COLORS.primary} />}
+            {isClinic ? (
+              <Stethoscope size={20} color={COLORS.primary} />
+            ) : isFarm ? (
+              <Feather size={20} color="#F59E0B" />
+            ) : (
+              <Package size={20} color={COLORS.primary} />
+            )}
           </View>
           <View style={styles.subscriptionHeaderText}>
-            <Text style={styles.subscriptionTitle}>{isClinic ? "اشتراك العيادة" : "اشتراك المذخر"}</Text>
+            <Text style={styles.subscriptionTitle}>
+              {isClinic ? "اشتراك العيادة" : isFarm ? "اشتراك حقل الدواجن" : "اشتراك المذخر"}
+            </Text>
             <Text style={styles.subscriptionResourceName} numberOfLines={1}>
               {resourceName}
             </Text>
@@ -341,7 +386,11 @@ export default function PetsScreen() {
           <View style={styles.subscriptionActions}>
             <TouchableOpacity
               style={[styles.renewButton, (isLoading || reviewingRenewalRequest) && { opacity: 0.6 }]}
-              onPress={() => handleRenewSubscription(type, data.id, reviewingRenewalRequest)}
+              onPress={() =>
+                isFarm
+                  ? handleRenewFarmSubscription(data.id, data.ownerId ?? Number(user?.id), reviewingRenewalRequest)
+                  : handleRenewSubscription(type as "clinic" | "store", data.id, reviewingRenewalRequest)
+              }
               disabled={isLoading || reviewingRenewalRequest}
             >
               {isLoading ? (
@@ -372,7 +421,7 @@ export default function PetsScreen() {
                 <AlertCircle size={16} color={COLORS.error} />
               </View>
               <Text style={styles.expiredText}>
-                الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : "المذخر"}
+                الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : "المذخر"}
               </Text>
             </View>
           )}
@@ -768,80 +817,172 @@ export default function PetsScreen() {
             </View>
 
             {displayFarms.length > 0 ? (
-              displayFarms.map((farm: any) => (
-                <TouchableOpacity
-                  key={farm.id}
-                  style={styles.poultryFarmCard}
-                  onPress={() => handleFarmPress(farm)}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.farmHeader}>
-                    <View style={styles.farmIconContainer}>
-                      <Feather size={32} color={COLORS.white} />
-                    </View>
-                    <View style={styles.farmInfo}>
-                      <Text style={styles.farmName}>{farm.name}</Text>
-                      <View style={styles.farmLocationRow}>
-                        <MapPin size={14} color={COLORS.darkGray} />
-                        <Text style={styles.farmLocation}>{farm.location}</Text>
+              displayFarms.map((farm: any) => {
+                // Expired subscription → renewal card
+                if (farm.needsRenewal) {
+                  return renderSubscriptionCard({ type: "farm", data: farm });
+                }
+
+                // Pending admin approval → non-clickable card
+                if (!farm.isActive) {
+                  return (
+                    <View key={farm.id} style={[styles.poultryFarmCard, styles.farmPendingCard]}>
+                      <View style={styles.farmPendingBanner}>
+                        <Clock size={14} color="#F59E0B" />
+                        <Text style={styles.farmPendingText}>في انتظار موافقة الإدارة</Text>
                       </View>
-
-                      {/* Show owner info for admins */}
-                      {(hasAdminAccess || isSuperAdmin || isModerator) && farm.ownerName && (
-                        <View style={styles.ownerInfo}>
-                          <Users size={14} color={COLORS.primary} />
-                          <Text style={styles.ownerText}>المالك: {farm.ownerName}</Text>
-                        </View>
-                      )}
-
-                      <View style={styles.farmBadges}>
-                        <View
-                          style={[
-                            styles.statusBadge,
-                            {
-                              backgroundColor: getStatusColor(farm.healthStatus || "healthy"),
-                            },
-                          ]}
-                        >
-                          <Text style={styles.statusText}>{getHealthStatusLabel(farm.healthStatus || "healthy")}</Text>
-                        </View>
-                        <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
-                          <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
-                        </View>
-                        {farm.isVerified && (
-                          <View style={[styles.verifiedBadge, { backgroundColor: COLORS.success }]}>
-                            <CheckCircle size={12} color={COLORS.white} />
-                            <Text style={styles.verifiedBadgeText}>موثق</Text>
+                      <View style={styles.farmHeader}>
+                        {farm.images?.[0] ? (
+                          <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
+                        ) : (
+                          <View style={[styles.farmIconContainer, { backgroundColor: "#D1D5DB" }]}>
+                            <Feather size={32} color={COLORS.white} />
                           </View>
                         )}
+                        <View style={styles.farmInfo}>
+                          <Text style={styles.farmName}>{farm.name}</Text>
+                          <View style={styles.farmLocationRow}>
+                            <MapPin size={14} color={COLORS.darkGray} />
+                            <Text style={styles.farmLocation}>{farm.location}</Text>
+                          </View>
+                          <View style={styles.farmBadges}>
+                            <View style={[styles.typeBadge, { backgroundColor: "#9CA3AF" }]}>
+                              <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.farmDetails}>
+                        <View style={styles.detailItem}>
+                          <Users size={16} color={COLORS.primary} />
+                          <Text style={styles.detailLabel}>السعة:</Text>
+                          <Text style={styles.detailValue}>{farm.capacity || 0} طائر</Text>
+                        </View>
                       </View>
                     </View>
-                  </View>
+                  );
+                }
 
-                  <View style={styles.farmDetails}>
-                    <View style={styles.detailItem}>
-                      <Users size={16} color={COLORS.primary} />
-                      <Text style={styles.detailLabel}>السعة:</Text>
-                      <Text style={styles.detailValue}>{farm.capacity || 0} طائر</Text>
-                    </View>
-                    <View style={styles.detailItem}>
-                      <Activity size={16} color={COLORS.success} />
-                      <Text style={styles.detailLabel}>الحالي:</Text>
-                      <Text style={styles.detailValue}>{farm.currentPopulation || 0} طائر</Text>
-                    </View>
-                  </View>
+                // Active farm → normal clickable card
+                return (
+                  <TouchableOpacity
+                    key={farm.id}
+                    style={styles.poultryFarmCard}
+                    onPress={() => handleFarmPress(farm)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.farmHeader}>
+                      {farm.images?.[0] ? (
+                        <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
+                      ) : (
+                        <View style={styles.farmIconContainer}>
+                          <Feather size={32} color={COLORS.white} />
+                        </View>
+                      )}
+                      <View style={styles.farmInfo}>
+                        <Text style={styles.farmName}>{farm.name}</Text>
+                        <View style={styles.farmLocationRow}>
+                          <MapPin size={14} color={COLORS.darkGray} />
+                          <Text style={styles.farmLocation}>{farm.location}</Text>
+                        </View>
 
-                  {farm.licenseNumber && (
-                    <View style={styles.licenseInfo}>
-                      <Text style={styles.licenseText}>رقم الترخيص: {farm.licenseNumber}</Text>
+                        {(hasAdminAccess || isSuperAdmin || isModerator) && farm.owner?.name && (
+                          <View style={styles.ownerInfo}>
+                            <Users size={14} color={COLORS.primary} />
+                            <Text style={styles.ownerText}>المالك: {farm.owner.name}</Text>
+                          </View>
+                        )}
+
+                        <View style={styles.farmBadges}>
+                          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(farm.healthStatus || "healthy") }]}>
+                            <Text style={styles.statusText}>{getHealthStatusLabel(farm.healthStatus || "healthy")}</Text>
+                          </View>
+                          <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
+                            <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
+                          </View>
+                          {farm.isVerified && (
+                            <View style={[styles.verifiedBadge, { backgroundColor: COLORS.success }]}>
+                              <CheckCircle size={12} color={COLORS.white} />
+                              <Text style={styles.verifiedBadgeText}>موثق</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
                     </View>
-                  )}
-                </TouchableOpacity>
-              ))
+
+                    <View style={styles.farmDetails}>
+                      <View style={styles.detailItem}>
+                        <Users size={16} color={COLORS.primary} />
+                        <Text style={styles.detailLabel}>السعة:</Text>
+                        <Text style={styles.detailValue}>{farm.capacity || 0} طائر</Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Activity size={16} color={COLORS.success} />
+                        <Text style={styles.detailLabel}>الحالي:</Text>
+                        <Text style={styles.detailValue}>{farm.currentPopulation || 0} طائر</Text>
+                      </View>
+                    </View>
+
+                    {farm.licenseNumber && (
+                      <View style={styles.licenseInfo}>
+                        <Text style={styles.licenseText}>رقم الترخيص: {farm.licenseNumber}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })
             ) : (
               <View style={styles.emptyPoultryContainer}>
                 <Feather size={48} color={COLORS.lightGray} />
                 <Text style={styles.emptyPoultryText}>لا يوجد حقول دواجن مسجلة</Text>
+              </View>
+            )}
+
+            {/* Worker Farms Section */}
+            {workerFarms.length > 0 && (
+              <View style={{ marginTop: 8 }}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>أعمل فيها ({workerFarms.length})</Text>
+                </View>
+                {workerFarms.map((farm: any) => (
+                  <TouchableOpacity
+                    key={`worker-${farm.id}`}
+                    style={[styles.poultryFarmCard, { borderWidth: 1, borderColor: "#D1FAE5" }]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/poultry-farm-details",
+                        params: {
+                          id: farm.id,
+                          workerMode: "1",
+                          workerPermissions: farm.permissions || "view_only",
+                        },
+                      })
+                    }
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.farmPendingBanner, { backgroundColor: "#D1FAE5" }]}>
+                      <Users size={14} color="#059669" />
+                      <Text style={[styles.farmPendingText, { color: "#059669" }]}>
+                        موظف • {farm.permissions === "add_daily_data" ? "إضافة بيانات يومية" : "عرض فقط"}
+                      </Text>
+                    </View>
+                    <View style={styles.farmHeader}>
+                      <View style={[styles.farmIconContainer, { backgroundColor: "#059669" }]}>
+                        <Feather size={32} color="#fff" />
+                      </View>
+                      <View style={styles.farmInfo}>
+                        <Text style={styles.farmName}>{farm.name}</Text>
+                        <View style={styles.farmLocationRow}>
+                          <MapPin size={14} color={COLORS.darkGray} />
+                          <Text style={styles.farmLocation}>{farm.location}</Text>
+                        </View>
+                        <Text style={{ fontSize: 12, color: "#888", textAlign: "right", marginTop: 2 }}>
+                          المالك: {farm.owner?.name || farm.ownerName || "—"}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
             )}
           </View>
@@ -978,6 +1119,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  farmImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+  },
   farmInfo: {
     flex: 1,
     marginRight: 16,
@@ -1069,6 +1215,27 @@ const styles = StyleSheet.create({
   licenseText: {
     fontSize: 12,
     color: COLORS.primary,
+    fontWeight: "600",
+  },
+  farmPendingCard: {
+    opacity: 0.75,
+    borderWidth: 1.5,
+    borderColor: "#F59E0B",
+    borderStyle: "dashed",
+  },
+  farmPendingBanner: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FEF9C3",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
+  },
+  farmPendingText: {
+    color: "#92400E",
+    fontSize: 13,
     fontWeight: "600",
   },
   emptyPoultryContainer: {

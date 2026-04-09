@@ -23,6 +23,7 @@ import {
   Shield,
   DollarSign,
   Clock,
+  Bird,
 } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -65,6 +66,8 @@ export default function AdminApprovalsScreen() {
     | "store_activation"
     | "clinic_renewal"
     | "store_renewal"
+    | "poultry_farm_activation"
+    | "poultry_farm_renewal"
     | "lost_pets"
     | "breeding_pets"
     | "pet_management"
@@ -95,7 +98,7 @@ export default function AdminApprovalsScreen() {
       type:
         selectedType === "lost_pets" || selectedType === "breeding_pets" || selectedType === "pet_management"
           ? "all"
-          : selectedType,
+          : (selectedType as any),
     }),
     retry: 1,
     refetchOnWindowFocus: false,
@@ -129,6 +132,10 @@ export default function AdminApprovalsScreen() {
         return <Heart size={20} color="#9B59B6" />;
       case "pet_management":
         return <UserCheck size={20} color="#3498DB" />;
+      case "poultry_farm_activation":
+        return <Bird size={20} color="#F59E0B" />;
+      case "poultry_farm_renewal":
+        return <Bird size={20} color="#D97706" />;
       default:
         return <FileText size={20} color={COLORS.gray} />;
     }
@@ -152,6 +159,10 @@ export default function AdminApprovalsScreen() {
         return "حيوانات تزاوج";
       case "pet_management":
         return "إدارة الحيوانات";
+      case "poultry_farm_activation":
+        return "تفعيل حقل دواجن";
+      case "poultry_farm_renewal":
+        return "تجديد حقل دواجن";
       default:
         return "طلب موافقة";
     }
@@ -211,6 +222,8 @@ export default function AdminApprovalsScreen() {
             queryClient.invalidateQueries(trpc.clinics.getUserApprovedClinics.queryKey as any);
           } else if (data.requestType === "store_activation" || data.requestType === "store_renewal") {
             queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey as any);
+          } else if (data.requestType === "poultry_farm_activation" || data.requestType === "poultry_farm_renewal") {
+            queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey() as any);
           }
         },
         onError: (error) => {
@@ -344,8 +357,13 @@ export default function AdminApprovalsScreen() {
             />
 
             <Text style={styles.dateNote}>
-              ملاحظة: سيتم تفعيل {selectedRequest?.requestType?.includes("clinic") ? "العيادة" : "المتجر"} من التاريخ
-              المحدد وحتى تاريخ الانتهاء
+              ملاحظة: سيتم تفعيل{" "}
+              {selectedRequest?.requestType?.includes("clinic")
+                ? "العيادة"
+                : selectedRequest?.requestType?.includes("poultry")
+                ? "حقل الدواجن"
+                : "المتجر"}{" "}
+              من التاريخ المحدد وحتى تاريخ الانتهاء
             </Text>
           </View>
 
