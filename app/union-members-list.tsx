@@ -72,6 +72,7 @@ export default function UnionMembersListScreen() {
   const [msgModalVisible, setMsgModalVisible] = useState(false);
   const [msgTitle, setMsgTitle] = useState("");
   const [msgBody, setMsgBody] = useState("");
+  const [msgLink, setMsgLink] = useState("");
   const [msgTarget, setMsgTarget] = useState<"members" | "followers" | "all">("members");
   const { showToast } = useToastContext();
 
@@ -202,13 +203,14 @@ export default function UnionMembersListScreen() {
       return;
     }
     sendMessageMutation.mutate(
-      { mainUnionId: parsedMainUnionId, branchId: parsedBranchId, title: msgTitle.trim(), message: msgBody.trim(), target: msgTarget },
+      { mainUnionId: parsedMainUnionId, branchId: parsedBranchId, title: msgTitle.trim(), message: msgBody.trim(), target: msgTarget, linkUrl: msgLink.trim() || undefined },
       {
         onSuccess: (data) => {
           showToast({ message: `تم إرسال الرسالة إلى ${data.sentCount} مستخدم`, type: "success" });
           setMsgModalVisible(false);
           setMsgTitle("");
           setMsgBody("");
+          setMsgLink("");
         },
         onError: () => showToast({ message: "فشل إرسال الرسالة", type: "error" }),
       },
@@ -316,6 +318,18 @@ export default function UnionMembersListScreen() {
               textAlign="right"
               multiline
               numberOfLines={4}
+            />
+
+            <Text style={styles.modalLabel}>رابط (اختياري)</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={msgLink}
+              onChangeText={setMsgLink}
+              placeholder="https://..."
+              placeholderTextColor={COLORS.darkGray}
+              textAlign="left"
+              autoCapitalize="none"
+              keyboardType="url"
             />
 
             <View style={styles.modalActions}>

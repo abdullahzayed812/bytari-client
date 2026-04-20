@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Linking } from "react-native";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
 import { useRouter } from "expo-router";
@@ -39,6 +40,7 @@ interface Message {
   title: string;
   content: string;
   imageUrl?: string | null;
+  linkUrl?: string | null;
   createdAt: Date;
   isRead: boolean;
   readAt: Date | null;
@@ -48,6 +50,7 @@ interface Message {
   metadata?: {
     clinicName?: string;
     storeName?: string;
+    unionName?: string;
   } | null;
 }
 
@@ -231,6 +234,10 @@ export default function MessagesScreen() {
                       <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>
                         {message.metadata.storeName}
                       </Text>
+                    ) : message.metadata?.unionName ? (
+                      <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>
+                        {message.metadata.unionName}
+                      </Text>
                     ) : (
                       <Text style={[styles.senderName, { textAlign: isRTL ? "right" : "left" }]}>
                         {message.senderType === "admin"
@@ -258,6 +265,12 @@ export default function MessagesScreen() {
 
                   {message.imageUrl ? (
                     <Image source={{ uri: message.imageUrl }} style={styles.messageImage} resizeMode="cover" />
+                  ) : null}
+
+                  {message.linkUrl ? (
+                    <TouchableOpacity onPress={() => Linking.openURL(message.linkUrl!)} style={styles.linkButton}>
+                      <Text style={styles.linkButtonText}>فتح الرابط</Text>
+                    </TouchableOpacity>
                   ) : null}
 
                   {/* Footer row: priority + read status */}
@@ -320,10 +333,16 @@ export default function MessagesScreen() {
                 {selectedMessage.imageUrl ? (
                   <Image source={{ uri: selectedMessage.imageUrl }} style={styles.modalImage} resizeMode="cover" />
                 ) : null}
+                {selectedMessage.linkUrl ? (
+                  <TouchableOpacity onPress={() => Linking.openURL(selectedMessage.linkUrl!)} style={[styles.linkButton, { marginBottom: 8 }]}>
+                    <Text style={styles.linkButtonText}>فتح الرابط</Text>
+                  </TouchableOpacity>
+                ) : null}
                 <Text style={styles.originalFrom}>
                   من:{" "}
                   {selectedMessage?.metadata?.clinicName ??
                     selectedMessage?.metadata?.storeName ??
+                    selectedMessage?.metadata?.unionName ??
                     (selectedMessage?.senderType === "admin"
                       ? "الإدارة"
                       : selectedMessage?.senderName ?? "الإدارة")}
@@ -687,5 +706,21 @@ const styles = StyleSheet.create({
   replyContent: {
     fontSize: 14,
     color: COLORS.black,
+  },
+  linkButton: {
+    alignSelf: "flex-start",
+    backgroundColor: COLORS.primary + "15",
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  linkButtonText: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

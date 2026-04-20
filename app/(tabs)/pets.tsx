@@ -24,6 +24,7 @@ import {
   Briefcase,
   RefreshCw,
   Clock,
+  ArrowRightLeft,
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -803,6 +804,15 @@ export default function PetsScreen() {
               />
             </View>
 
+            <TouchableOpacity
+              style={styles.transferRequestsButton}
+              onPress={() => router.push("/pet-transfer-requests")}
+              activeOpacity={0.8}
+            >
+              <ArrowRightLeft size={16} color={COLORS.primary} />
+              <Text style={styles.transferRequestsText}>طلبات نقل الملكية</Text>
+            </TouchableOpacity>
+
             {/* Pets Section Title */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>الحيوانات الأليفة ({displayPets.length})</Text>
@@ -1043,6 +1053,30 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     flex: 1,
+  },
+  transferRequestsButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary + "40",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  transferRequestsText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.primary,
+    textAlign: "left",
   },
   sectionHeader: {
     marginBottom: 12,

@@ -1,16 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  TextInput,
-  Modal,
-  ActivityIndicator,
-  Clipboard,
-} from "react-native";
+import { StyleSheet, Text, View, Image, ScrollView, TouchableOpacity, Alert, TextInput, Modal, ActivityIndicator, Clipboard } from "react-native";
 // Using remote service for barcode images instead of react-native-barcode-builder
 // to avoid native ART dependencies incompatible with Expo Go.
 import { Image as RNImage } from "react-native";
@@ -33,8 +21,9 @@ import {
   PlayCircle,
   Camera,
   ImageIcon,
+  ArrowRightLeft,
 } from "lucide-react-native";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { trpc } from "../../lib/trpc";
@@ -157,10 +146,12 @@ export default function PetDetailsScreen() {
     openSection?: string;
   }>();
   const { showToast } = useToastContext();
+  const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<
-    "info" | "medical" | "vaccinations" | "reminders" | "requests" | "myRequests"
-  >("info");
+  const [activeTab, setActiveTab] = useState<"info" | "medical" | "vaccinations" | "reminders" | "requests" | "myRequests">("info");
+
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferEmail, setTransferEmail] = useState("");
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTreatmentModal, setShowTreatmentModal] = useState(false);
@@ -308,6 +299,7 @@ export default function PetDetailsScreen() {
   }, [checkAccess.data]);
 
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
+  const initiateTransferMutation = useMutation(trpc.pets.transfer.initiate.mutationOptions({}));
   const updatePetMutation = useMutation(trpc.admin.pets.updateProfile.mutationOptions({}));
   const deletePetMutation = useMutation(trpc.admin.pets.delete.mutationOptions({}));
   const updatePetOwnerMutation = useMutation(trpc.pets.update.mutationOptions({}));
@@ -414,9 +406,29 @@ export default function PetDetailsScreen() {
   }, [openSection, pet]);
 
   // Check if pet has any clinic follow-ups
-  const hasClinicFollowUps = pet
-    ? pet.medicalRecords?.length > 0 || pet.vaccinations?.some((v: any) => v.clinicName) || pet.reminders?.length > 0
-    : false;
+  const hasClinicFollowUps = pet ? pet.medicalRecords?.length > 0 || pet.vaccinations?.some((v: any) => v.clinicName) || pet.reminders?.length > 0 : false;
+
+  const handleTransferOwnership = () => {
+    if (!transferEmail.trim()) {
+      showToast({ type: "error", message: "يرجى إدخال البريد الإلكتروني" });
+      return;
+    }
+    if (!pet) return;
+    initiateTransferMutation.mutate(
+      { petId: pet.id, toEmail: transferEmail.trim() },
+      {
+        onSuccess: () => {
+          showToast({ type: "success", message: "تم إرسال طلب نقل الملكية بنجاح. سيتم إشعار المستلم." });
+          setShowTransferModal(false);
+          setTransferEmail("");
+          queryClient.invalidateQueries(trpc.pets.transfer.getSent.queryKey as any);
+        },
+        onError: (error) => {
+          showToast({ type: "error", message: error.message || "حدث خطأ أثناء إرسال الطلب" });
+        },
+      },
+    );
+  };
 
   const handleReportLost = () => {
     if (pet) {
@@ -598,9 +610,7 @@ export default function PetDetailsScreen() {
       setFollowUpForm({ reason: "", notes: "", urgency: "normal" });
       accessRequestsQuery.refetch();
 
-      Alert.alert("تم إرسال الطلب", "تم إرسال طلب الصلاحية إلى مالك الحيوان. ستتمكن من إضافة البيانات بعد الموافقة.", [
-        { text: "موافق" },
-      ]);
+      Alert.alert("تم إرسال الطلب", "تم إرسال طلب الصلاحية إلى مالك الحيوان. ستتمكن من إضافة البيانات بعد الموافقة.", [{ text: "موافق" }]);
     } catch (error: any) {
       Alert.alert("خطأ", error.message || "فشل في إرسال طلب الصلاحية");
     }
@@ -625,9 +635,7 @@ export default function PetDetailsScreen() {
       setAccessRequestForm({ reason: "" });
       accessRequestsQuery.refetch();
 
-      Alert.alert("تم إرسال الطلب", "تم إرسال طلب الصلاحية إلى مالك الحيوان. ستتمكن من إضافة البيانات بعد الموافقة.", [
-        { text: "موافق" },
-      ]);
+      Alert.alert("تم إرسال الطلب", "تم إرسال طلب الصلاحية إلى مالك الحيوان. ستتمكن من إضافة البيانات بعد الموافقة.", [{ text: "موافق" }]);
     } catch (error: any) {
       Alert.alert("خطأ", error.message || "فشل في إرسال طلب الصلاحية");
     }
@@ -1021,82 +1029,78 @@ export default function PetDetailsScreen() {
   };
 
   const handleAdoptionBreeding = (type: string) => {
-    Alert.alert(
-      `عرض ${type === "adoption" ? "للتبني" : "للتزاوج"}`,
-      `هل تريد عرض هذا الحيوان ${type === "adoption" ? "للتبني" : "للتزاوج"}؟`,
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "نعم",
-          onPress: () => {
-            // ✅ Validate required fields
-            if (!pet?.name?.trim()) {
-              showToast({
-                type: "error",
-                message: "يرجى إدخال اسم الحيوان",
-              });
-              return;
-            }
-            if (!pet?.age > 0) {
-              showToast({
-                type: "error",
-                message: "يرجى إدخال عمر الحيوان",
-              });
-              return;
-            }
-            if (!pet?.color?.trim()) {
-              showToast({
-                type: "error",
-                message: "يرجى إدخال لون الحيوان",
-              });
-              return;
-            }
-            if (!user) {
-              showToast({
-                type: "error",
-                message: "يرجى تسجيل الدخول أولاً",
-              });
-              return;
-            }
+    Alert.alert(`عرض ${type === "adoption" ? "للتبني" : "للتزاوج"}`, `هل تريد عرض هذا الحيوان ${type === "adoption" ? "للتبني" : "للتزاوج"}؟`, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "نعم",
+        onPress: () => {
+          // ✅ Validate required fields
+          if (!pet?.name?.trim()) {
+            showToast({
+              type: "error",
+              message: "يرجى إدخال اسم الحيوان",
+            });
+            return;
+          }
+          if (!pet?.age > 0) {
+            showToast({
+              type: "error",
+              message: "يرجى إدخال عمر الحيوان",
+            });
+            return;
+          }
+          if (!pet?.color?.trim()) {
+            showToast({
+              type: "error",
+              message: "يرجى إدخال لون الحيوان",
+            });
+            return;
+          }
+          if (!user) {
+            showToast({
+              type: "error",
+              message: "يرجى تسجيل الدخول أولاً",
+            });
+            return;
+          }
 
-            createApprovalMutation.mutate(
-              {
-                name: pet?.name,
-                type: pet?.type,
-                breed: pet?.breed || undefined,
-                age: pet?.age ? parseInt(pet?.age) : undefined,
-                gender: pet?.gender,
-                weight: pet?.weight ? parseFloat(pet?.weight) : undefined,
-                color: pet?.color || undefined,
-                image: pet?.image,
-                ownerId: parseInt(user?.id.toString()),
-                requestType: type,
-                description: pet?.description,
-                images: [pet?.image],
-                contactInfo: pet?.contactInfo || undefined,
-                location: pet?.location,
-                price: pet?.price ? parseFloat(pet?.price) : undefined,
-                specialRequirements: pet.specialRequirements || undefined,
-              } as any,
-              {
-                onSuccess: (data) => {
-                  showToast({
-                    type: "success",
-                    message: data?.message || "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
-                  });
-                },
-                onError: (error) => {
-                  showToast({
-                    type: "error",
-                    message: error.message || "حدث خطأ أثناء إرسال الطلب",
-                  });
-                },
+          createApprovalMutation.mutate(
+            {
+              name: pet?.name,
+              type: pet?.type,
+              breed: pet?.breed || undefined,
+              age: pet?.age ? parseInt(pet?.age) : undefined,
+              gender: pet?.gender,
+              weight: pet?.weight ? parseFloat(pet?.weight) : undefined,
+              color: pet?.color || undefined,
+              image: pet?.image,
+              ownerId: parseInt(user?.id.toString()),
+              requestType: type,
+              description: pet?.description,
+              images: [pet?.image],
+              contactInfo: pet?.contactInfo || undefined,
+              location: pet?.location,
+              price: pet?.price ? parseFloat(pet?.price) : undefined,
+              specialRequirements: pet.specialRequirements || undefined,
+            } as any,
+            {
+              onSuccess: (data) => {
+                showToast({
+                  type: "success",
+                  message: data?.message || "تم إرسال الطلب بنجاح وهو الآن في انتظار موافقة الإدارة",
+                });
               },
-            );
-          },
+              onError: (error) => {
+                showToast({
+                  type: "error",
+                  message: error.message || "حدث خطأ أثناء إرسال الطلب",
+                });
+              },
+            },
+          );
         },
-      ],
-    );
+      },
+    ]);
   };
 
   if (isLoading) {
@@ -1174,9 +1178,7 @@ export default function PetDetailsScreen() {
               {/* use external service to render a Code128 barcode as an image */}
               <RNImage
                 source={{
-                  uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
-                    pet.id.toString(),
-                  )}&code=Code128&translate-esc=true`,
+                  uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(pet.id.toString())}&code=Code128&translate-esc=true`,
                 }}
                 style={{ width: 200, height: 80 }}
               />
@@ -1196,11 +1198,7 @@ export default function PetDetailsScreen() {
                     </TouchableOpacity>
                     {chatData && (
                       <TouchableOpacity style={styles.chatActionButton} onPress={handleToggleChat}>
-                        {chatData.isActive ? (
-                          <PauseCircle size={18} color={COLORS.success} />
-                        ) : (
-                          <PlayCircle size={18} color={COLORS.darkGray} />
-                        )}
+                        {chatData.isActive ? <PauseCircle size={18} color={COLORS.success} /> : <PlayCircle size={18} color={COLORS.darkGray} />}
                         <Text style={styles.chatActionText}>{chatData.isActive ? "إيقاف" : "تفعيل"}</Text>
                       </TouchableOpacity>
                     )}
@@ -1221,48 +1219,30 @@ export default function PetDetailsScreen() {
       </View>
 
       <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "info" && styles.activeTab]}
-          onPress={() => setActiveTab("info")}
-        >
+        <TouchableOpacity style={[styles.tab, activeTab === "info" && styles.activeTab]} onPress={() => setActiveTab("info")}>
           <Text style={[styles.tabText, activeTab === "info" && styles.activeTabText]}>معلومات</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "medical" && styles.activeTab]}
-          onPress={() => setActiveTab("medical")}
-        >
+        <TouchableOpacity style={[styles.tab, activeTab === "medical" && styles.activeTab]} onPress={() => setActiveTab("medical")}>
           <Text style={[styles.tabText, activeTab === "medical" && styles.activeTabText]}>السجل الطبي</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]}
-          onPress={() => setActiveTab("vaccinations")}
-        >
+        <TouchableOpacity style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]} onPress={() => setActiveTab("vaccinations")}>
           <Text style={[styles.tabText, activeTab === "vaccinations" && styles.activeTabText]}>التطعيمات</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "reminders" && styles.activeTab]}
-          onPress={() => setActiveTab("reminders")}
-        >
+        <TouchableOpacity style={[styles.tab, activeTab === "reminders" && styles.activeTab]} onPress={() => setActiveTab("reminders")}>
           <Text style={[styles.tabText, activeTab === "reminders" && styles.activeTabText]}>التذكيرات</Text>
         </TouchableOpacity>
 
         {isOwner && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "requests" && styles.activeTab]}
-            onPress={() => setActiveTab("requests")}
-          >
+          <TouchableOpacity style={[styles.tab, activeTab === "requests" && styles.activeTab]} onPress={() => setActiveTab("requests")}>
             <Text style={[styles.tabText, activeTab === "requests" && styles.activeTabText]}>طلبات العيادات</Text>
           </TouchableOpacity>
         )}
 
         {isClinicAccess && (
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "myRequests" && styles.activeTab]}
-            onPress={() => setActiveTab("myRequests")}
-          >
+          <TouchableOpacity style={[styles.tab, activeTab === "myRequests" && styles.activeTab]} onPress={() => setActiveTab("myRequests")}>
             <Text style={[styles.tabText, activeTab === "myRequests" && styles.activeTabText]}>طلباتي</Text>
           </TouchableOpacity>
         )}
@@ -1335,24 +1315,15 @@ export default function PetDetailsScreen() {
                         <View style={styles.clinicInfo}>
                           <View style={styles.clinicNameRow}>
                             <Text style={styles.clinicName}>{clinic.clinicName}</Text>
-                            <ClinicChatButton
-                              petId={petId as string}
-                              clinicId={clinic.clinicId}
-                              petName={pet?.name ?? ""}
-                            />
+                            <ClinicChatButton petId={petId as string} clinicId={clinic.clinicId} petName={pet?.name ?? ""} />
                           </View>
                           <Text style={styles.followUpDetails}>
-                            {clinic.medicalRecordsCount} سجلات طبية • {clinic.vaccinationsCount} تطعيمات •{" "}
-                            {clinic.remindersCount} تذكيرات
+                            {clinic.medicalRecordsCount} سجلات طبية • {clinic.vaccinationsCount} تطعيمات • {clinic.remindersCount} تذكيرات
                           </Text>
                           {clinic.expiresAt && (
-                            <Text style={styles.followUpDate}>
-                              الصلاحية تنتهي: {new Date(clinic.expiresAt).toLocaleDateString("ar-SA")}
-                            </Text>
+                            <Text style={styles.followUpDate}>الصلاحية تنتهي: {new Date(clinic.expiresAt).toLocaleDateString("ar-SA")}</Text>
                           )}
-                          {clinic.pendingFollowUpsCount > 0 && (
-                            <Text style={styles.pendingRequests}>{clinic.pendingFollowUpsCount} طلب متابعة معلق</Text>
-                          )}
+                          {clinic.pendingFollowUpsCount > 0 && <Text style={styles.pendingRequests}>{clinic.pendingFollowUpsCount} طلب متابعة معلق</Text>}
                         </View>
                         <TouchableOpacity
                           style={styles.cancelClinicFollowUpButton}
@@ -1392,6 +1363,15 @@ export default function PetDetailsScreen() {
                     style={[styles.actionButton, styles.breedingButton]}
                   />
                 </View>
+
+                <Button
+                  title="نقل الملكية"
+                  onPress={() => setShowTransferModal(true)}
+                  type="outline"
+                  size="medium"
+                  style={styles.actionButton}
+                  icon={<ArrowRightLeft size={16} color={COLORS.primary} />}
+                />
               </View>
             )}
 
@@ -1438,10 +1418,7 @@ export default function PetDetailsScreen() {
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{record.diagnosis}</Text>
                       {isOwner && (
-                        <TouchableOpacity
-                          onPress={() => handleDeleteMedicalRecord(record.id)}
-                          style={styles.deleteButton}
-                        >
+                        <TouchableOpacity onPress={() => handleDeleteMedicalRecord(record.id)} style={styles.deleteButton}>
                           <Trash2 size={16} color={COLORS.error} />
                         </TouchableOpacity>
                       )}
@@ -1489,19 +1466,10 @@ export default function PetDetailsScreen() {
           </View>
         )}
 
-        <ImageViewerModal
-          visible={showImageModal}
-          imageUrl={selectedImageUrl}
-          onClose={() => setShowImageModal(false)}
-        />
+        <ImageViewerModal visible={showImageModal} imageUrl={selectedImageUrl} onClose={() => setShowImageModal(false)} />
 
         {/* barcode enlarged modal */}
-        <Modal
-          visible={showBarcodeModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowBarcodeModal(false)}
-        >
+        <Modal visible={showBarcodeModal} transparent={true} animationType="fade" onRequestClose={() => setShowBarcodeModal(false)}>
           <View
             style={{
               flex: 1,
@@ -1521,9 +1489,7 @@ export default function PetDetailsScreen() {
               {pet.id && (
                 <RNImage
                   source={{
-                    uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(
-                      pet.id.toString(),
-                    )}&code=Code128&translate-esc=true`,
+                    uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(pet.id.toString())}&code=Code128&translate-esc=true`,
                   }}
                   style={{ width: 300, height: 120 }}
                 />
@@ -1547,9 +1513,7 @@ export default function PetDetailsScreen() {
                   disabled={!hasAccess}
                 >
                   <Plus size={16} color={hasAccess ? COLORS.primary : COLORS.darkGray} />
-                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>
-                    إضافة تطعيم
-                  </Text>
+                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>إضافة تطعيم</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1565,10 +1529,7 @@ export default function PetDetailsScreen() {
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{vaccination.name}</Text>
                       {isOwner && (
-                        <TouchableOpacity
-                          onPress={() => handleDeleteVaccination(vaccination.id)}
-                          style={styles.deleteButton}
-                        >
+                        <TouchableOpacity onPress={() => handleDeleteVaccination(vaccination.id)} style={styles.deleteButton}>
                           <Trash2 size={16} color={COLORS.error} />
                         </TouchableOpacity>
                       )}
@@ -1589,9 +1550,7 @@ export default function PetDetailsScreen() {
                     {vaccination.nextDate && (
                       <View style={styles.recordItem}>
                         <Text style={styles.recordLabel}>الموعد القادم</Text>
-                        <Text style={styles.recordValue}>
-                          {new Date(vaccination.nextDate).toLocaleDateString("ar-SA")}
-                        </Text>
+                        <Text style={styles.recordValue}>{new Date(vaccination.nextDate).toLocaleDateString("ar-SA")}</Text>
                       </View>
                     )}
 
@@ -1625,9 +1584,7 @@ export default function PetDetailsScreen() {
                   disabled={!hasAccess}
                 >
                   <Plus size={16} color={hasAccess ? COLORS.primary : COLORS.darkGray} />
-                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>
-                    إضافة تذكير
-                  </Text>
+                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>إضافة تذكير</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -1635,16 +1592,11 @@ export default function PetDetailsScreen() {
             {!pet.reminders || pet.reminders.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>لا يوجد تذكيرات</Text>
-                {isClinicAccess && !hasAccess && (
-                  <Text style={styles.noAccessText}>يجب الحصول على صلاحية الوصول لإضافة تذكيرات</Text>
-                )}
+                {isClinicAccess && !hasAccess && <Text style={styles.noAccessText}>يجب الحصول على صلاحية الوصول لإضافة تذكيرات</Text>}
               </View>
             ) : (
               pet.reminders.map((reminder: any) => (
-                <View
-                  key={reminder.id}
-                  style={[styles.recordCard, reminder.isCompleted && styles.completedReminderCard]}
-                >
+                <View key={reminder.id} style={[styles.recordCard, reminder.isCompleted && styles.completedReminderCard]}>
                   <View style={styles.recordTitleRow}>
                     <Text style={styles.recordTitle}>{reminder.title}</Text>
                     {isOwner && (
@@ -1669,21 +1621,13 @@ export default function PetDetailsScreen() {
                   <View style={styles.recordItem}>
                     <Text style={styles.recordLabel}>النوع</Text>
                     <Text style={styles.recordValue}>
-                      {reminder.type === "vaccination"
-                        ? "تطعيم"
-                        : reminder.type === "medication"
-                          ? "دواء"
-                          : reminder.type === "checkup"
-                            ? "فحص"
-                            : "أخرى"}
+                      {reminder.type === "vaccination" ? "تطعيم" : reminder.type === "medication" ? "دواء" : reminder.type === "checkup" ? "فحص" : "أخرى"}
                     </Text>
                   </View>
 
                   <View style={styles.recordItem}>
                     <Text style={styles.recordLabel}>الحالة</Text>
-                    <Text
-                      style={[styles.recordValue, reminder.isCompleted ? styles.completedStatus : styles.pendingStatus]}
-                    >
+                    <Text style={[styles.recordValue, reminder.isCompleted ? styles.completedStatus : styles.pendingStatus]}>
                       {reminder.isCompleted ? "مكتمل" : "قيد الانتظار"}
                     </Text>
                   </View>
@@ -1711,13 +1655,7 @@ export default function PetDetailsScreen() {
             ) : !myRequestsQuery.data?.requests || myRequestsQuery.data.requests.length === 0 ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>لا توجد طلبات صلاحية</Text>
-                <Button
-                  title="طلب متابعة جديد"
-                  onPress={handleFollowUp}
-                  type="primary"
-                  size="medium"
-                  style={styles.requestAccessButton}
-                />
+                <Button title="طلب متابعة جديد" onPress={handleFollowUp} type="primary" size="medium" style={styles.requestAccessButton} />
               </View>
             ) : (
               myRequestsQuery.data.requests.map((request: any) => (
@@ -1732,11 +1670,7 @@ export default function PetDetailsScreen() {
                         request.status === "pending" && styles.statusPending,
                       ]}
                     >
-                      {request.status === "approved"
-                        ? "مقبول"
-                        : request.status === "rejected"
-                          ? "مرفوض"
-                          : "قيد الانتظار"}
+                      {request.status === "approved" ? "مقبول" : request.status === "rejected" ? "مرفوض" : "قيد الانتظار"}
                     </Text>
                   </View>
 
@@ -1772,18 +1706,12 @@ export default function PetDetailsScreen() {
                   <Text style={styles.requestReason}>{request.reason}</Text>
 
                   <View style={styles.requestActions}>
-                    <TouchableOpacity
-                      style={[styles.requestButton, styles.approveButton]}
-                      onPress={() => handleApproveRequest(request.id)}
-                    >
+                    <TouchableOpacity style={[styles.requestButton, styles.approveButton]} onPress={() => handleApproveRequest(request.id)}>
                       <Check size={16} color={COLORS.white} />
                       <Text style={styles.requestButtonText}>موافقة</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[styles.requestButton, styles.rejectButton]}
-                      onPress={() => handleRejectRequest(request.id)}
-                    >
+                    <TouchableOpacity style={[styles.requestButton, styles.rejectButton]} onPress={() => handleRejectRequest(request.id)}>
                       <XIcon size={16} color={COLORS.white} />
                       <Text style={styles.requestButtonText}>رفض</Text>
                     </TouchableOpacity>
@@ -1812,11 +1740,7 @@ export default function PetDetailsScreen() {
                   </View>
 
                   <Text style={styles.requestType}>
-                    {request.actionType === "medical_record"
-                      ? "سجل طبي"
-                      : request.actionType === "vaccination"
-                        ? "تطعيم"
-                        : "تذكير"}
+                    {request.actionType === "medical_record" ? "سجل طبي" : request.actionType === "vaccination" ? "تطعيم" : "تذكير"}
                   </Text>
 
                   <Text style={styles.requestReason}>{request.reason}</Text>
@@ -1845,18 +1769,12 @@ export default function PetDetailsScreen() {
                   </View>
 
                   <View style={styles.requestActions}>
-                    <TouchableOpacity
-                      style={[styles.requestButton, styles.approveButton]}
-                      onPress={() => handleApproveMedicalAction(request.id)}
-                    >
+                    <TouchableOpacity style={[styles.requestButton, styles.approveButton]} onPress={() => handleApproveMedicalAction(request.id)}>
                       <Check size={16} color={COLORS.white} />
                       <Text style={styles.requestButtonText}>موافقة</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={[styles.requestButton, styles.rejectButton]}
-                      onPress={() => handleRejectMedicalAction(request.id)}
-                    >
+                    <TouchableOpacity style={[styles.requestButton, styles.rejectButton]} onPress={() => handleRejectMedicalAction(request.id)}>
                       <XIcon size={16} color={COLORS.white} />
                       <Text style={styles.requestButtonText}>رفض</Text>
                     </TouchableOpacity>
@@ -1897,26 +1815,13 @@ export default function PetDetailsScreen() {
             />
 
             <Text style={styles.modalDescription}>
-              بعد الموافقة على طلبك، ستتمكن من: • إضافة السجلات الطبية • إضافة التطعيمات • إضافة التذكيرات • إنشاء كروت
-              العلاج • متابعة الحالة الصحية
+              بعد الموافقة على طلبك، ستتمكن من: • إضافة السجلات الطبية • إضافة التطعيمات • إضافة التذكيرات • إنشاء كروت العلاج • متابعة الحالة الصحية
             </Text>
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowFollowUpModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
-            <Button
-              title="إرسال طلب الصلاحية"
-              onPress={submitFollowUpRequest}
-              type="primary"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowFollowUpModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إرسال طلب الصلاحية" onPress={submitFollowUpRequest} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
       </Modal>
@@ -1934,9 +1839,7 @@ export default function PetDetailsScreen() {
           <ScrollView style={styles.modalContent}>
             <Text style={styles.modalSectionTitle}>أنت تطلب صلاحية الوصول إلى {pet?.name}</Text>
 
-            <Text style={styles.modalDescription}>
-              سيتم إرسال طلب الصلاحية إلى مالك الحيوان. بعد الموافقة، ستتمكن من إضافة البيانات الطبية.
-            </Text>
+            <Text style={styles.modalDescription}>سيتم إرسال طلب الصلاحية إلى مالك الحيوان. بعد الموافقة، ستتمكن من إضافة البيانات الطبية.</Text>
 
             <Text style={styles.modalSectionTitle}>سبب الطلب *</Text>
             <TextInput
@@ -1950,20 +1853,8 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowAccessRequestModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
-            <Button
-              title="إرسال طلب الصلاحية"
-              onPress={submitAccessRequest}
-              type="primary"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowAccessRequestModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إرسال طلب الصلاحية" onPress={submitAccessRequest} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
       </Modal>
@@ -2047,20 +1938,8 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowTreatmentModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
-            <Button
-              title="إرسال"
-              onPress={submitTreatmentCard}
-              type="primary"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowTreatmentModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إرسال" onPress={submitTreatmentCard} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
       </Modal>
@@ -2115,10 +1994,7 @@ export default function PetDetailsScreen() {
                 >
                   <RNImage source={{ uri: medicalForm.prescriptionImage }} style={styles.prescriptionImageThumb} />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.prescriptionImageRemove}
-                  onPress={() => setMedicalForm((prev) => ({ ...prev, prescriptionImage: undefined }))}
-                >
+                <TouchableOpacity style={styles.prescriptionImageRemove} onPress={() => setMedicalForm((prev) => ({ ...prev, prescriptionImage: undefined }))}>
                   <X size={14} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
@@ -2130,20 +2006,12 @@ export default function PetDetailsScreen() {
                 onPress={() => takeAndUploadFromCamera([4, 3])}
                 disabled={isMedicalImageUploading}
               >
-                {isMedicalImageUploading ? (
-                  <ActivityIndicator size="small" color={COLORS.white} />
-                ) : (
-                  <Camera size={18} color={COLORS.white} />
-                )}
+                {isMedicalImageUploading ? <ActivityIndicator size="small" color={COLORS.white} /> : <Camera size={18} color={COLORS.white} />}
                 <Text style={styles.prescriptionPickBtnText}>التقاط صورة</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[
-                  styles.prescriptionPickBtn,
-                  { backgroundColor: COLORS.darkGray },
-                  isMedicalImageUploading && { opacity: 0.6 },
-                ]}
+                style={[styles.prescriptionPickBtn, { backgroundColor: COLORS.darkGray }, isMedicalImageUploading && { opacity: 0.6 }]}
                 onPress={() => pickAndUploadImage([4, 3])}
                 disabled={isMedicalImageUploading}
               >
@@ -2154,13 +2022,7 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowMedicalModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowMedicalModal(false)} type="outline" size="medium" style={styles.modalButton} />
             <Button title="حفظ" onPress={submitMedicalRecord} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2205,13 +2067,7 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowVaccinationModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowVaccinationModal(false)} type="outline" size="medium" style={styles.modalButton} />
             <Button title="حفظ" onPress={submitVaccination} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2256,13 +2112,7 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowReminderModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowReminderModal(false)} type="outline" size="medium" style={styles.modalButton} />
             <Button title="حفظ" onPress={submitReminder} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2312,46 +2162,28 @@ export default function PetDetailsScreen() {
                 style={[styles.urgencyOption, followUpForm.urgency === "low" && styles.urgencyOptionSelected]}
                 onPress={() => setFollowUpForm((prev) => ({ ...prev, urgency: "low" }))}
               >
-                <Text style={[styles.urgencyText, followUpForm.urgency === "low" && styles.urgencyTextSelected]}>
-                  منخفضة
-                </Text>
+                <Text style={[styles.urgencyText, followUpForm.urgency === "low" && styles.urgencyTextSelected]}>منخفضة</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.urgencyOption, followUpForm.urgency === "normal" && styles.urgencyOptionSelected]}
                 onPress={() => setFollowUpForm((prev) => ({ ...prev, urgency: "normal" }))}
               >
-                <Text style={[styles.urgencyText, followUpForm.urgency === "normal" && styles.urgencyTextSelected]}>
-                  عادية
-                </Text>
+                <Text style={[styles.urgencyText, followUpForm.urgency === "normal" && styles.urgencyTextSelected]}>عادية</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.urgencyOption, followUpForm.urgency === "high" && styles.urgencyOptionSelected]}
                 onPress={() => setFollowUpForm((prev) => ({ ...prev, urgency: "high" }))}
               >
-                <Text style={[styles.urgencyText, followUpForm.urgency === "high" && styles.urgencyTextSelected]}>
-                  عالية
-                </Text>
+                <Text style={[styles.urgencyText, followUpForm.urgency === "high" && styles.urgencyTextSelected]}>عالية</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="إلغاء"
-              onPress={() => setShowFollowUpModal(false)}
-              type="outline"
-              size="medium"
-              style={styles.modalButton}
-            />
-            <Button
-              title="إرسال الطلب"
-              onPress={submitFollowUpRequest}
-              type="primary"
-              size="medium"
-              style={styles.modalButton}
-            />
+            <Button title="إلغاء" onPress={() => setShowFollowUpModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إرسال الطلب" onPress={submitFollowUpRequest} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
       </Modal>
@@ -2364,13 +2196,8 @@ export default function PetDetailsScreen() {
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>تعديل معلومات الحيوان</Text>
-            <TouchableOpacity
-              onPress={submitEditPet}
-              disabled={updatePetMutation.isPending || updatePetOwnerMutation.isPending}
-            >
-              <Text style={styles.saveButton}>
-                {updatePetMutation.isPending || updatePetOwnerMutation.isPending ? "جاري الحفظ..." : "حفظ"}
-              </Text>
+            <TouchableOpacity onPress={submitEditPet} disabled={updatePetMutation.isPending || updatePetOwnerMutation.isPending}>
+              <Text style={styles.saveButton}>{updatePetMutation.isPending || updatePetOwnerMutation.isPending ? "جاري الحفظ..." : "حفظ"}</Text>
             </TouchableOpacity>
           </View>
 
@@ -2406,15 +2233,7 @@ export default function PetDetailsScreen() {
                     onPress={() => setEditForm((prev) => ({ ...prev, type }))}
                   >
                     <Text style={[styles.typeOptionText, editForm.type === type && styles.selectedTypeOptionText]}>
-                      {type === "dog"
-                        ? "كلب"
-                        : type === "cat"
-                          ? "قطة"
-                          : type === "rabbit"
-                            ? "أرنب"
-                            : type === "bird"
-                              ? "طائر"
-                              : "أخرى"}
+                      {type === "dog" ? "كلب" : type === "cat" ? "قطة" : type === "rabbit" ? "أرنب" : type === "bird" ? "طائر" : "أخرى"}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -2465,22 +2284,14 @@ export default function PetDetailsScreen() {
                   style={[styles.genderOption, editForm.gender === "male" && styles.selectedGenderOption]}
                   onPress={() => setEditForm((prev) => ({ ...prev, gender: "male" }))}
                 >
-                  <Text
-                    style={[styles.genderOptionText, editForm.gender === "male" && styles.selectedGenderOptionText]}
-                  >
-                    ذكر
-                  </Text>
+                  <Text style={[styles.genderOptionText, editForm.gender === "male" && styles.selectedGenderOptionText]}>ذكر</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[styles.genderOption, editForm.gender === "female" && styles.selectedGenderOption]}
                   onPress={() => setEditForm((prev) => ({ ...prev, gender: "female" }))}
                 >
-                  <Text
-                    style={[styles.genderOptionText, editForm.gender === "female" && styles.selectedGenderOptionText]}
-                  >
-                    أنثى
-                  </Text>
+                  <Text style={[styles.genderOptionText, editForm.gender === "female" && styles.selectedGenderOptionText]}>أنثى</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -2543,6 +2354,54 @@ export default function PetDetailsScreen() {
                 </View>
               </>
             )}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Transfer Ownership Modal */}
+      <Modal visible={showTransferModal} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowTransferModal(false);
+                setTransferEmail("");
+              }}
+            >
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>نقل ملكية الحيوان</Text>
+            <View style={{ width: 24 }} />
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.transferInfoBox}>
+              <ArrowRightLeft size={32} color={COLORS.primary} />
+              <Text style={styles.transferInfoTitle}>نقل ملكية "{pet?.name}"</Text>
+              <Text style={styles.transferInfoText}>
+                أدخل البريد الإلكتروني للشخص الذي تريد نقل ملكية الحيوان إليه. سيتلقى إشعاراً ويمكنه قبول أو رفض الطلب.
+              </Text>
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>البريد الإلكتروني للمالك الجديد *</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={transferEmail}
+                onChangeText={setTransferEmail}
+                placeholder="example@email.com"
+                placeholderTextColor={COLORS.darkGray}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            <Button
+              title={initiateTransferMutation.isPending ? "جاري الإرسال..." : "إرسال طلب النقل"}
+              onPress={handleTransferOwnership}
+              type="primary"
+              size="medium"
+              disabled={initiateTransferMutation.isPending}
+              style={{ marginTop: 8 }}
+            />
           </ScrollView>
         </View>
       </Modal>
@@ -3403,5 +3262,32 @@ const styles = StyleSheet.create({
     color: COLORS.error,
     fontWeight: "600",
     marginBottom: 4,
+  },
+  transferInfoBox: {
+    alignItems: "center",
+    backgroundColor: COLORS.gray,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    gap: 10,
+  },
+  transferInfoTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "center",
+  },
+  transferInfoText: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  formLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginBottom: 8,
+    textAlign: "left",
   },
 });

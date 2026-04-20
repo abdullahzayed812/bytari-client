@@ -530,6 +530,7 @@ export default function PetDetailsScreen() {
                     style={[styles.actionButton, styles.breedingButton]}
                   />
                 </View>
+
               </View>
             )}
 
