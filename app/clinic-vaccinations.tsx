@@ -3,18 +3,7 @@ import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ArrowLeft,
-  Syringe,
-  Calendar,
-  Clock,
-  Shield,
-  User,
-  CheckCircle,
-  AlertCircle,
-  X,
-  Calendar as CalendarIcon,
-} from "lucide-react-native";
+import { ArrowLeft, Syringe, Calendar, Clock, Shield, User, CheckCircle, AlertCircle, X, Calendar as CalendarIcon } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
@@ -148,15 +137,7 @@ const RescheduleModal = ({ visible, onClose, vaccination, onConfirm }: any) => {
               <Text style={styles.datePickerText}>{selectedDate.toLocaleDateString("ar-EG")}</Text>
             </TouchableOpacity>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
-            )}
+            {showDatePicker && <DateTimePicker value={selectedDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />}
           </View>
 
           <View style={styles.modalActions}>
@@ -216,15 +197,7 @@ const CompleteVaccinationModal = ({ visible, onClose, vaccination, onConfirm }: 
                 <Text style={styles.datePickerText}>{nextDate.toLocaleDateString("ar-EG")}</Text>
               </TouchableOpacity>
 
-              {showDatePicker && (
-                <DateTimePicker
-                  value={nextDate}
-                  mode="date"
-                  display="default"
-                  onChange={handleDateChange}
-                  minimumDate={new Date()}
-                />
-              )}
+              {showDatePicker && <DateTimePicker value={nextDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />}
             </View>
           </View>
 
@@ -264,8 +237,8 @@ export default function ClinicVaccinations() {
       },
       {
         enabled: !!clinicId,
-      }
-    )
+      },
+    ),
   );
 
   const vaccinations = useMemo(() => (vaccinationsData as any)?.vaccinations || [], [vaccinationsData]);
@@ -312,7 +285,7 @@ export default function ClinicVaccinations() {
             message: error.message || "فشل في تحديث حالة التطعيم",
           });
         },
-      }
+      },
     );
 
     setDetailsModalVisible(false);
@@ -341,7 +314,7 @@ export default function ClinicVaccinations() {
             message: error.message || "فشل في تأجيل موعد التطعيم",
           });
         },
-      }
+      },
     );
 
     setSelectedVaccination(null);
@@ -370,7 +343,7 @@ export default function ClinicVaccinations() {
             message: error.message || "فشل في تحديث حالة التطعيم",
           });
         },
-      }
+      },
     );
 
     setSelectedVaccination(null);
@@ -506,7 +479,7 @@ export default function ClinicVaccinations() {
         </View>
 
         <View style={styles.detailsContainer}>
-          <Text style={styles.veterinarian}>الطبيب: {item.veterinarian}</Text>
+          {/* <Text style={styles.veterinarian}>الطبيب: {item.veterinarian}</Text> */}
           <Text style={styles.nextDue}>الجرعة التالية: {item.nextDueDate}</Text>
         </View>
 
@@ -593,9 +566,7 @@ export default function ClinicVaccinations() {
                     style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilterButton]}
                     onPress={() => setSelectedFilter(filter.key)}
                   >
-                    <Text
-                      style={[styles.filterButtonText, selectedFilter === filter.key && styles.activeFilterButtonText]}
-                    >
+                    <Text style={[styles.filterButtonText, selectedFilter === filter.key && styles.activeFilterButtonText]}>
                       {filter.label} ({filter.count})
                     </Text>
                   </TouchableOpacity>
@@ -607,9 +578,7 @@ export default function ClinicVaccinations() {
           {/* Vaccinations List */}
           <View style={styles.vaccinationsSection}>
             <Text style={styles.sectionTitle}>
-              {selectedFilter === "all"
-                ? "جميع التطعيمات"
-                : `تطعيمات ${filterButtons.find((f) => f.key === selectedFilter)?.label}`}
+              {selectedFilter === "all" ? "جميع التطعيمات" : `تطعيمات ${filterButtons.find((f) => f.key === selectedFilter)?.label}`}
             </Text>
 
             <FlatList
@@ -638,19 +607,9 @@ export default function ClinicVaccinations() {
           onCancel={handleCancelVaccination}
         />
 
-        <RescheduleModal
-          visible={rescheduleModalVisible}
-          onClose={closeModals}
-          vaccination={selectedVaccination}
-          onConfirm={handleConfirmReschedule}
-        />
+        <RescheduleModal visible={rescheduleModalVisible} onClose={closeModals} vaccination={selectedVaccination} onConfirm={handleConfirmReschedule} />
 
-        <CompleteVaccinationModal
-          visible={completeModalVisible}
-          onClose={closeModals}
-          vaccination={selectedVaccination}
-          onConfirm={handleConfirmComplete}
-        />
+        <CompleteVaccinationModal visible={completeModalVisible} onClose={closeModals} vaccination={selectedVaccination} onConfirm={handleConfirmComplete} />
       </SafeAreaView>
     </View>
   );

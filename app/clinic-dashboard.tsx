@@ -1,20 +1,8 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  FlatList,
-  Alert,
-  Modal,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, FlatList, Alert, Modal, ActivityIndicator } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { COLORS } from "../constants/colors";
-import { useRouter, Stack, useLocalSearchParams } from "expo-router";
+import { useRouter, Stack, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ArrowLeft,
@@ -32,6 +20,8 @@ import {
   X,
   Camera as CameraIcon,
   MessageCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -53,6 +43,7 @@ export default function ClinicDashboard() {
   const [filteredAnimals, setFilteredAnimals] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showPetsList, setShowPetsList] = useState(true);
   const [scanned, setScanned] = useState(false);
   const [cameraRef, setCameraRef] = useState<React.LegacyRef<any> | null>(null); // reference to camera
 
@@ -77,6 +68,7 @@ export default function ClinicDashboard() {
   const [messageTitle, setMessageTitle] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [messageImage, setMessageImage] = useState("");
+  const [messageLinkUrl, setMessageLinkUrl] = useState("");
 
   const sendMessageMutation = useMutation(trpc.clinics.sendMessageToFollowers.mutationOptions());
 
@@ -91,12 +83,14 @@ export default function ClinicDashboard() {
         title: messageTitle.trim(),
         message: messageBody.trim(),
         ...(messageImage ? { imageUrl: messageImage } : {}),
+        ...(messageLinkUrl.trim() ? { linkUrl: messageLinkUrl.trim() } : {}),
       });
       showToast({ type: "success", message: `تم إرسال الرسالة إلى ${result.count} متابع` });
       setShowMessageModal(false);
       setMessageTitle("");
       setMessageBody("");
       setMessageImage("");
+      setMessageLinkUrl("");
     } catch {
       showToast({ type: "error", message: "حدث خطأ أثناء إرسال الرسالة" });
     }
@@ -111,12 +105,16 @@ export default function ClinicDashboard() {
   const access = useMemo(() => (clinicData as any)?.access, [clinicData]);
   const permissions = useMemo(() => (clinicData as any)?.permissions, [clinicData]);
 
-  const { data: unreadData } = useQuery({
+  const { data: unreadData, refetch: refetchUnread } = useQuery({
     ...trpc.clinics.chat.getUnreadCount.queryOptions({ clinicId: Number(clinicId) }),
     enabled: !!clinicId,
     refetchInterval: 30000,
   });
   const chatUnreadCount = (unreadData as any)?.count ?? 0;
+
+  useFocusEffect(useCallback(() => {
+    refetchUnread();
+  }, [refetchUnread]));
 
   const { data: allPets, isLoading: isAllPetsLoading } = useQuery(trpc.pets.getAllPets.queryOptions({}));
 
@@ -354,36 +352,45 @@ export default function ClinicDashboard() {
           <View style={styles.recentSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{isSearching ? "نتائج البحث" : "الحيوانات الأخيرة"}</Text>
-              {isSearching ? (
-                <TouchableOpacity onPress={clearSearch}>
-                  <Text style={styles.clearSearchText}>مسح البحث</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity onPress={() => handleAllAnimals()}>
-                  <Text style={styles.viewAllText}>عرض الكل</Text>
-                </TouchableOpacity>
-              )}
+              <View style={{ flexDirection: "row-reverse", alignItems: "center", gap: 12 }}>
+                {isSearching ? (
+                  <TouchableOpacity onPress={clearSearch}>
+                    <Text style={styles.clearSearchText}>مسح البحث</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity onPress={() => handleAllAnimals()}>
+                    <Text style={styles.viewAllText}>عرض الكل</Text>
+                  </TouchableOpacity>
+                )}
+                {!isSearching && (
+                  <TouchableOpacity onPress={() => setShowPetsList((v) => !v)}>
+                    {showPetsList ? <ChevronUp size={20} color={COLORS.darkGray} /> : <ChevronDown size={20} color={COLORS.darkGray} />}
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
 
-            <FlatList
-              data={isSearching ? filteredAnimals : clinicPets?.pets?.slice(0, 3)}
-              renderItem={renderAnimalItem}
-              keyExtractor={(item) => item.id.toString()}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-              ListEmptyComponent={
-                isSearching ? (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>لا توجد نتائج للبحث</Text>
-                  </View>
-                ) : (
-                  <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>لا توجد حيوانات متاحة للعيادة</Text>
-                    <Text style={styles.emptySubtext}>يجب طلب صلاحية الوصول من مالكي الحيوانات أولاً</Text>
-                  </View>
-                )
-              }
-            />
+            {(showPetsList || isSearching) && (
+              <FlatList
+                data={isSearching ? filteredAnimals : clinicPets?.pets?.slice(0, 3)}
+                renderItem={renderAnimalItem}
+                keyExtractor={(item) => item.id.toString()}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  isSearching ? (
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>لا توجد نتائج للبحث</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>لا توجد حيوانات متاحة للعيادة</Text>
+                      <Text style={styles.emptySubtext}>يجب طلب صلاحية الوصول من مالكي الحيوانات أولاً</Text>
+                    </View>
+                  )
+                }
+              />
+            )}
 
             {/* Scanner modal */}
             <Modal visible={showScanner} transparent={false} animationType="slide">
@@ -426,10 +433,7 @@ export default function ClinicDashboard() {
           <View style={styles.actionsSection}>
             <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
             <View style={styles.actionsGrid}>
-              <TouchableOpacity
-                style={styles.settingCard}
-                onPress={() => router.push({ pathname: "/clinic-followups", params: { clinicId: clinic?.id } })}
-              >
+              <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-followups", params: { clinicId: clinic?.id } })}>
                 <Heart size={20} color={COLORS.error} />
                 <Text style={styles.settingText}>المتابعات</Text>
               </TouchableOpacity>
@@ -471,19 +475,12 @@ export default function ClinicDashboard() {
                 <Syringe size={24} color={COLORS.error} />
                 <Text style={styles.actionText}>التطعيمات</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() =>
-                  router.push({ pathname: "/clinic-chats", params: { clinicId: clinic?.id } })
-                }
-              >
+              <TouchableOpacity style={styles.actionCard} onPress={() => router.push({ pathname: "/clinic-chats", params: { clinicId: clinic?.id } })}>
                 <View style={{ position: "relative" }}>
                   <MessageCircle size={24} color={COLORS.primary} />
                   {chatUnreadCount > 0 && (
                     <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadBadgeText}>
-                        {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
-                      </Text>
+                      <Text style={styles.unreadBadgeText}>{chatUnreadCount > 99 ? "99+" : chatUnreadCount}</Text>
                     </View>
                   )}
                 </View>
@@ -497,10 +494,7 @@ export default function ClinicDashboard() {
             <View style={styles.settingsSection}>
               <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
               <View style={styles.settingsGrid}>
-                <TouchableOpacity
-                  style={styles.settingCard}
-                  onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}
-                >
+                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}>
                   <Settings size={20} color={COLORS.primary} />
                   <Text style={styles.settingText}>إعدادات عامة</Text>
                 </TouchableOpacity>
@@ -517,13 +511,7 @@ export default function ClinicDashboard() {
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>إرسال رسالة للمتابعين</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="عنوان الرسالة"
-                value={messageTitle}
-                onChangeText={setMessageTitle}
-                textAlign="right"
-              />
+              <TextInput style={styles.modalInput} placeholder="عنوان الرسالة" value={messageTitle} onChangeText={setMessageTitle} textAlign="right" />
               <TextInput
                 style={[styles.modalInput, { height: 100, textAlignVertical: "top" }]}
                 placeholder="نص الرسالة"
@@ -532,11 +520,15 @@ export default function ClinicDashboard() {
                 multiline
                 textAlign="right"
               />
-              <ImageUploader
-                imageUri={messageImage}
-                onUploadComplete={setMessageImage}
-                label="صورة (اختياري)"
-                aspect={[16, 9]}
+              <ImageUploader imageUri={messageImage} onUploadComplete={setMessageImage} label="صورة (اختياري)" aspect={[16, 9]} />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="رابط (اختياري) https://..."
+                value={messageLinkUrl}
+                onChangeText={setMessageLinkUrl}
+                textAlign="left"
+                autoCapitalize="none"
+                keyboardType="url"
               />
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -544,16 +536,9 @@ export default function ClinicDashboard() {
                   onPress={handleSendMessage}
                   disabled={sendMessageMutation.isPending}
                 >
-                  {sendMessageMutation.isPending ? (
-                    <ActivityIndicator color={COLORS.white} />
-                  ) : (
-                    <Text style={styles.modalButtonText}>إرسال</Text>
-                  )}
+                  {sendMessageMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.modalButtonText}>إرسال</Text>}
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: COLORS.darkGray }]}
-                  onPress={() => setShowMessageModal(false)}
-                >
+                <TouchableOpacity style={[styles.modalButton, { backgroundColor: COLORS.darkGray }]} onPress={() => setShowMessageModal(false)}>
                   <Text style={styles.modalButtonText}>إلغاء</Text>
                 </TouchableOpacity>
               </View>

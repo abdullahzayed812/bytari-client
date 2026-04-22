@@ -1,32 +1,9 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Linking,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Linking, Alert, ActivityIndicator } from "react-native";
 import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import {
-  ArrowRight,
-  MapPin,
-  Phone,
-  Clock,
-  Star,
-  Mail,
-  Bell,
-  BellOff,
-  MessageSquare,
-  Earth,
-  Facebook,
-  Instagram,
-} from "lucide-react-native";
+import { ArrowRight, MapPin, Phone, Clock, Star, Mail, Bell, BellOff, MessageSquare, Earth, Facebook, Instagram } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { VetStoreProduct } from "../mocks/data"; // Assuming this is still valid for products
@@ -72,9 +49,7 @@ export default function StoreDetailsScreen() {
     }),
   );
 
-  const { data: isFollowingData } = useQuery(
-    trpc.stores.isFollowing.queryOptions({ storeId: Number(id), userId: Number(user?.id) }, { enabled: !!user }),
-  );
+  const { data: isFollowingData } = useQuery(trpc.stores.isFollowing.queryOptions({ storeId: Number(id), userId: Number(user?.id) }, { enabled: !!user }));
   const isFollowing = isFollowingData?.isFollowing;
 
   const { data: followerCountData } = useQuery(trpc.stores.getFollowerCount.queryOptions({ storeId: Number(id) }));
@@ -84,10 +59,7 @@ export default function StoreDetailsScreen() {
 
   const unfollowMutation = useMutation(trpc.stores.unfollow.mutationOptions());
 
-  const storeProducts = useMemo(
-    () => (rawStoreProducts as any)?.products as VetStoreProduct[] | undefined,
-    [rawStoreProducts],
-  );
+  const storeProducts = useMemo(() => (rawStoreProducts as any)?.products as VetStoreProduct[] | undefined, [rawStoreProducts]);
   const featuredProducts = storeProducts?.slice(0, 3);
 
   // Handlers
@@ -128,13 +100,13 @@ export default function StoreDetailsScreen() {
     if (!user) {
       showToast({
         type: "error",
-        message: "الرجاء تسجيل الدخول لمتابعة المتجر",
+        message: "الرجاء تسجيل الدخول لمتابعة المكتب",
       });
       return;
     }
     if (!storeData) return;
     if (isFollowing) {
-      Alert.alert("إلغاء المتابعة", "هل تريد إلغاء متابعة هذا المتجر؟ لن تصلك إشعارات عند إضافة منتجات جديدة.", [
+      Alert.alert("إلغاء المتابعة", "هل تريد إلغاء متابعة هذا المكتب؟ لن تصلك إشعارات عند إضافة منتجات جديدة.", [
         { text: "إلغاء", style: "cancel" },
         {
           text: "نعم",
@@ -187,9 +159,7 @@ export default function StoreDetailsScreen() {
 
   const handleToggleNotifications = () => {
     setNotificationsEnabled(!notificationsEnabled);
-    const message = !notificationsEnabled
-      ? "تم تفعيل الإشعارات للمنتجات الجديدة"
-      : "تم إيقاف الإشعارات للمنتجات الجديدة";
+    const message = !notificationsEnabled ? "تم تفعيل الإشعارات للمنتجات الجديدة" : "تم إيقاف الإشعارات للمنتجات الجديدة";
     Alert.alert("إعدادات الإشعارات", message);
   };
 
@@ -335,34 +305,22 @@ export default function StoreDetailsScreen() {
 
           <View style={styles.followSection}>
             <Button
-              title={isFollowing ? "إلغاء المتابعة" : "متابعة المتجر"}
+              title={isFollowing ? "إلغاء المتابعة" : "متابعة المكتب"}
               onPress={handleFollowStore}
               type={isFollowing ? "outline" : "primary"}
               style={[styles.followButton, isFollowing && styles.unfollowButton]}
-              icon={
-                isFollowing ? (
-                  <BellOff size={20} color={isFollowing ? COLORS.error : COLORS.white} />
-                ) : (
-                  <Bell size={20} color={COLORS.white} />
-                )
-              }
+              icon={isFollowing ? <BellOff size={20} color={isFollowing ? COLORS.error : COLORS.white} /> : <Bell size={20} color={COLORS.white} />}
             />
 
             {isFollowing && (
               <TouchableOpacity style={styles.notificationToggle} onPress={handleToggleNotifications}>
                 <View style={styles.notificationRow}>
-                  {notificationsEnabled ? (
-                    <Bell size={20} color={COLORS.primary} />
-                  ) : (
-                    <BellOff size={20} color={COLORS.darkGray} />
-                  )}
+                  {notificationsEnabled ? <Bell size={20} color={COLORS.primary} /> : <BellOff size={20} color={COLORS.darkGray} />}
                   <Text style={[styles.notificationText, !notificationsEnabled && styles.disabledText]}>
                     {notificationsEnabled ? "الإشعارات مفعلة" : "الإشعارات معطلة"}
                   </Text>
                 </View>
-                <Text style={styles.notificationSubtext}>
-                  {notificationsEnabled ? "ستصلك إشعارات عند إضافة منتجات جديدة" : "اضغط لتفعيل الإشعارات"}
-                </Text>
+                <Text style={styles.notificationSubtext}>{notificationsEnabled ? "ستصلك إشعارات عند إضافة منتجات جديدة" : "اضغط لتفعيل الإشعارات"}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -370,12 +328,7 @@ export default function StoreDetailsScreen() {
           {featuredProducts && featuredProducts.length > 0 && (
             <View style={styles.productsSection}>
               <Text style={styles.sectionTitle}>المنتجات المميزة</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.productsScroll}
-                contentContainerStyle={styles.productsContainer}
-              >
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.productsScroll} contentContainerStyle={styles.productsContainer}>
                 {featuredProducts.map(renderProductCard)}
               </ScrollView>
 
@@ -390,9 +343,7 @@ export default function StoreDetailsScreen() {
 
           <TouchableOpacity
             style={styles.ratingButton}
-            onPress={() =>
-              router.push({ pathname: "/store-reviews", params: { id: storeData.id, name: storeData.name } })
-            }
+            onPress={() => router.push({ pathname: "/store-reviews", params: { id: storeData.id, name: storeData.name } })}
           >
             <MessageSquare size={20} color={COLORS.primary} />
             <Text style={styles.ratingButtonText}>التقييمات</Text>

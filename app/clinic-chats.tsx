@@ -11,7 +11,7 @@ import React from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 
 interface ChatItem {
@@ -47,10 +47,32 @@ function formatTime(dateStr: string): string {
 export default function ClinicChatsScreen() {
   const { clinicId } = useLocalSearchParams();
 
-  const { data, isLoading } = useQuery(
+  const { data, isLoading, refetch } = useQuery(
     trpc.clinics.chat.getClinicChats.queryOptions({ clinicId: Number(clinicId) }),
   );
   const chats = ((data as any)?.chats ?? []) as ChatItem[];
+
+  const markAsReadMutation = useMutation(trpc.clinics.chat.markAsRead.mutationOptions());
+
+  const handleOpenChat = async (item: ChatItem) => {
+    if (item.unreadCount > 0) {
+      try {
+        await markAsReadMutation.mutateAsync({ chatId: item.id });
+      } catch {}
+      refetch();
+    }
+    router.push({
+      pathname: "/clinic-chat-thread",
+      params: {
+        chatId: item.id,
+        petName: item.petName,
+        ownerName: item.ownerName,
+        senderRole: "clinic",
+        clinicId: String(item.clinicId),
+        initialIsActive: item.isActive ? "true" : "false",
+      },
+    });
+  };
 
   const renderItem = ({ item }: { item: ChatItem }) => (
     <View style={styles.chatItem}>
@@ -74,19 +96,7 @@ export default function ClinicChatsScreen() {
 
       <TouchableOpacity
         style={styles.chatInfo}
-        onPress={() =>
-          router.push({
-            pathname: "/clinic-chat-thread",
-            params: {
-              chatId: item.id,
-              petName: item.petName,
-              ownerName: item.ownerName,
-              senderRole: "clinic",
-              clinicId: String(item.clinicId),
-              initialIsActive: item.isActive ? "true" : "false",
-            },
-          })
-        }
+        onPress={() => handleOpenChat(item)}
         activeOpacity={0.7}
       >
         <View style={styles.chatTopRow}>

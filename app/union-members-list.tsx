@@ -21,6 +21,7 @@ import { XCircle, Send } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "../providers/ToastProvider";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface MemberItem {
   registrationId: number;
@@ -73,6 +74,7 @@ export default function UnionMembersListScreen() {
   const [msgTitle, setMsgTitle] = useState("");
   const [msgBody, setMsgBody] = useState("");
   const [msgLink, setMsgLink] = useState("");
+  const [msgImage, setMsgImage] = useState("");
   const [msgTarget, setMsgTarget] = useState<"members" | "followers" | "all">("members");
   const { showToast } = useToastContext();
 
@@ -203,7 +205,7 @@ export default function UnionMembersListScreen() {
       return;
     }
     sendMessageMutation.mutate(
-      { mainUnionId: parsedMainUnionId, branchId: parsedBranchId, title: msgTitle.trim(), message: msgBody.trim(), target: msgTarget, linkUrl: msgLink.trim() || undefined },
+      { mainUnionId: parsedMainUnionId, branchId: parsedBranchId, title: msgTitle.trim(), message: msgBody.trim(), target: msgTarget, linkUrl: msgLink.trim() || undefined, imageUrl: msgImage || undefined },
       {
         onSuccess: (data) => {
           showToast({ message: `تم إرسال الرسالة إلى ${data.sentCount} مستخدم`, type: "success" });
@@ -211,6 +213,7 @@ export default function UnionMembersListScreen() {
           setMsgTitle("");
           setMsgBody("");
           setMsgLink("");
+          setMsgImage("");
         },
         onError: () => showToast({ message: "فشل إرسال الرسالة", type: "error" }),
       },
@@ -330,6 +333,13 @@ export default function UnionMembersListScreen() {
               textAlign="left"
               autoCapitalize="none"
               keyboardType="url"
+            />
+
+            <ImageUploader
+              imageUri={msgImage}
+              onUploadComplete={setMsgImage}
+              label="صورة (اختياري)"
+              aspect={[16, 9]}
             />
 
             <View style={styles.modalActions}>

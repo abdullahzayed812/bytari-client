@@ -1106,6 +1106,18 @@ export default function AdminDashboard() {
               />
             </View>
 
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>رابط (اختياري)</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="https://..."
+                value={newMessage.linkUrl}
+                onChangeText={(text) => setNewMessage((prev) => ({ ...prev, linkUrl: text }))}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+            </View>
+
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.cancelButton} onPress={() => setSendMessageModalVisible(false)}>
                 <Text style={styles.cancelButtonText}>إلغاء</Text>

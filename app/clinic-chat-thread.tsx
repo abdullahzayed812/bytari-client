@@ -67,6 +67,13 @@ export default function ClinicChatThreadScreen() {
   });
   const messages = ((data as any)?.messages ?? []) as Message[];
 
+  const markAsReadMutation = useMutation(trpc.clinics.chat.markAsRead.mutationOptions());
+
+  // Mark messages as read immediately on mount (both sides)
+  useEffect(() => {
+    markAsReadMutation.mutate({ chatId: Number(chatId) });
+  }, []);
+
   // Scroll to bottom on initial load
   useEffect(() => {
     if (messages.length > 0) {

@@ -62,6 +62,7 @@ export default function WarehouseManagementScreen() {
   const [messageTitle, setMessageTitle] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [messageImage, setMessageImage] = useState("");
+  const [messageLinkUrl, setMessageLinkUrl] = useState("");
 
   const sendMessageMutation = useMutation(trpc.stores.sendMessageToFollowers.mutationOptions());
 
@@ -82,12 +83,14 @@ export default function WarehouseManagementScreen() {
         title: messageTitle.trim(),
         message: messageBody.trim(),
         ...(messageImage ? { imageUrl: messageImage } : {}),
+        ...(messageLinkUrl.trim() ? { linkUrl: messageLinkUrl.trim() } : {}),
       });
       showToast({ type: "success", message: `تم إرسال الرسالة إلى ${result.count} متابع` });
       setShowMessageModal(false);
       setMessageTitle("");
       setMessageBody("");
       setMessageImage("");
+      setMessageLinkUrl("");
     } catch {
       showToast({ type: "error", message: "حدث خطأ أثناء إرسال الرسالة" });
     }
@@ -639,6 +642,15 @@ export default function WarehouseManagementScreen() {
               onUploadComplete={setMessageImage}
               label="صورة (اختياري)"
               aspect={[16, 9]}
+            />
+            <TextInput
+              style={styles.messageModalInput}
+              placeholder="رابط (اختياري) https://..."
+              value={messageLinkUrl}
+              onChangeText={setMessageLinkUrl}
+              textAlign="left"
+              autoCapitalize="none"
+              keyboardType="url"
             />
             <View style={styles.messageModalButtons}>
               <TouchableOpacity

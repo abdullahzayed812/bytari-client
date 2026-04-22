@@ -1,15 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  TextInput,
-  Modal,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, TextInput, Modal, Alert, ActivityIndicator } from "react-native";
 import React, { useMemo, useState } from "react";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, Phone, Mail, MapPin, Calendar, Briefcase, MessageCircle, Send, X } from "lucide-react-native";
@@ -18,6 +7,7 @@ import { trpc } from "../lib/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
 import { useI18n } from "@/providers/I18nProvider";
+import { ImageUploader } from "@/components/ImageUploader";
 
 interface UserProfile {
   id: string;
@@ -43,18 +33,15 @@ export default function UserProfileScreen() {
   const [showMessageModal, setShowMessageModal] = useState<boolean>(false);
   const [messageSubject, setMessageSubject] = useState<string>("");
   const [messageContent, setMessageContent] = useState<string>("");
+  const [messageLinkUrl, setMessageLinkUrl] = useState<string>("");
+  const [messageImage, setMessageImage] = useState<string>("");
 
   console.log(params);
 
   // Determine which query to use
   const isAdminView = !!params.userId;
   const ownProfileQuery = useQuery(trpc.auth.getProfile.queryOptions({ enabled: !isAdminView }));
-  const userProfileQuery = useQuery(
-    trpc.admin.users.getProfile.queryOptions(
-      { userId: +params.userId!, adminId: Number(user?.id) },
-      { enabled: isAdminView }
-    )
-  );
+  const userProfileQuery = useQuery(trpc.admin.users.getProfile.queryOptions({ userId: +params.userId!, adminId: Number(user?.id) }, { enabled: isAdminView }));
 
   const { data, isLoading, error } = isAdminView ? userProfileQuery : ownProfileQuery;
   const userData = useMemo(() => data as any, [data]);
@@ -69,7 +56,8 @@ export default function UserProfileScreen() {
         phone: userData.phone || null,
         location: userData.province || t("common.unknown"),
         joinDate: new Date(userData.createdAt).toLocaleDateString("ar-SA"),
-        profession: userData.userType === "vet" ? t("auth.vetDoctor") : userData.userType === "admin" ? t("userProfile.supervisor") : t("userProfile.regularUser"),
+        profession:
+          userData.userType === "vet" ? t("auth.vetDoctor") : userData.userType === "admin" ? t("userProfile.supervisor") : t("userProfile.regularUser"),
         experience: userData.experience || t("common.unknown"),
         education: userData.education || t("common.unknown"),
         bio: userData.bio || t("userProfile.noBio"),
@@ -80,7 +68,7 @@ export default function UserProfileScreen() {
     : null;
 
   const { data: petsData, isLoading: petsLoading } = useQuery(
-    trpc.pets.getUserPets.queryOptions({ userId: userProfile?.id! }, { enabled: !isAdminView && !!userProfile?.id })
+    trpc.pets.getUserPets.queryOptions({ userId: userProfile?.id! }, { enabled: !isAdminView && !!userProfile?.id }),
   );
 
   const handleSendMessage = () => {
@@ -101,6 +89,8 @@ export default function UserProfileScreen() {
         type: "announcement",
         targetAudience: "specific",
         targetUserIds: [Number(userProfile.id)],
+        ...(messageImage ? { imageUrl: messageImage } : {}),
+        ...(messageLinkUrl.trim() ? { linkUrl: messageLinkUrl.trim() } : {}),
       },
       {
         onSuccess: () => {
@@ -108,11 +98,13 @@ export default function UserProfileScreen() {
           setShowMessageModal(false);
           setMessageSubject("");
           setMessageContent("");
+          setMessageLinkUrl("");
+          setMessageImage("");
         },
         onError: (err) => {
           Alert.alert(t("common.error"), err.message || t("messages.sendError"));
         },
-      }
+      },
     );
   };
 
@@ -120,6 +112,8 @@ export default function UserProfileScreen() {
     setShowMessageModal(false);
     setMessageSubject("");
     setMessageContent("");
+    setMessageLinkUrl("");
+    setMessageImage("");
   };
 
   if (isLoading) {
@@ -170,11 +164,7 @@ export default function UserProfileScreen() {
         }}
       />
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
@@ -241,9 +231,7 @@ export default function UserProfileScreen() {
           </View>
 
           <View style={styles.infoItem}>
-            <View
-              style={[styles.statusBadge, { backgroundColor: (userProfile as any).isActive ? "#4CAF50" : "#F44336" }]}
-            >
+            <View style={[styles.statusBadge, { backgroundColor: (userProfile as any).isActive ? "#4CAF50" : "#F44336" }]}>
               <Text style={styles.statusText}>{(userProfile as any).isActive ? t("common.active") : t("userProfile.disabled")}</Text>
             </View>
             <View style={styles.infoContent}>
@@ -299,11 +287,7 @@ export default function UserProfileScreen() {
             ) : petsData && petsData.length > 0 ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {petsData.map((pet) => (
-                  <TouchableOpacity
-                    key={pet.id}
-                    style={styles.petCard}
-                    onPress={() => router.push(`/pet-details?petId=${pet.id}`)}
-                  >
+                  <TouchableOpacity key={pet.id} style={styles.petCard} onPress={() => router.push(`/pet-details?petId=${pet.id}`)}>
                     <Image source={{ uri: pet.image || undefined }} style={styles.petImage} />
                     <Text style={styles.petName}>{pet.name}</Text>
                   </TouchableOpacity>
@@ -335,12 +319,7 @@ export default function UserProfileScreen() {
       </ScrollView>
 
       {/* Message Modal */}
-      <Modal
-        visible={showMessageModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={handleCloseModal}
-      >
+      <Modal visible={showMessageModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleCloseModal}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
@@ -368,7 +347,9 @@ export default function UserProfileScreen() {
                 )}
               </View>
               <View style={styles.recipientDetails}>
-                <Text style={styles.recipientName}>{t("common.to")}: {userProfile?.name}</Text>
+                <Text style={styles.recipientName}>
+                  {t("common.to")}: {userProfile?.name}
+                </Text>
                 <Text style={styles.recipientProfession}>{userProfile?.profession}</Text>
               </View>
             </View>
@@ -399,6 +380,22 @@ export default function UserProfileScreen() {
                 textAlign="right"
               />
             </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>رابط (اختياري)</Text>
+              <TextInput
+                style={styles.subjectInput}
+                value={messageLinkUrl}
+                onChangeText={setMessageLinkUrl}
+                placeholder="https://..."
+                placeholderTextColor={COLORS.lightGray}
+                textAlign="left"
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+            </View>
+
+            <ImageUploader imageUri={messageImage} onUploadComplete={setMessageImage} label="صورة (اختياري)" aspect={[16, 9]} />
 
             <View style={styles.messageInfo}>
               <Text style={styles.messageInfoText}>{t("userProfile.messageTip")}</Text>
@@ -459,8 +456,8 @@ const styles = StyleSheet.create({
     borderRadius: 40,
   },
   avatarPlaceholder: {
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
     borderRadius: 40,
     backgroundColor: COLORS.primary,
     justifyContent: "center",

@@ -50,9 +50,12 @@ function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicI
   if (!chat || !chat.isActive) return null;
   const unread: number = chat.unreadCount ?? 0;
 
-  const handlePress = () => {
+  const handlePress = async () => {
     if (unread > 0) {
-      markAsReadMutation.mutate({ chatId: chat.id }, { onSuccess: () => refetch() });
+      try {
+        await markAsReadMutation.mutateAsync({ chatId: chat.id });
+      } catch {}
+      refetch();
     }
     router.push({
       pathname: "/clinic-chat-thread",
@@ -61,8 +64,9 @@ function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicI
   };
 
   return (
-    <TouchableOpacity style={{ padding: 6, marginLeft: 8, position: "relative" }} onPress={handlePress}>
+    <TouchableOpacity style={{ flexDirection: "row", gap: 4, padding: 6, marginLeft: 8, position: "relative" }} onPress={handlePress}>
       <MessageCircle size={22} color={COLORS.primary} />
+      <Text style={styles.clinicName}>محادثة</Text>
       {unread > 0 && (
         <View style={chatBadgeStyles.badge}>
           <Text style={chatBadgeStyles.badgeText}>{unread > 99 ? "99+" : unread}</Text>
@@ -1314,9 +1318,19 @@ export default function PetDetailsScreen() {
                       <View key={clinic.clinicId} style={styles.clinicFollowUpCard}>
                         <View style={styles.clinicInfo}>
                           <View style={styles.clinicNameRow}>
-                            <Text style={styles.clinicName}>{clinic.clinicName}</Text>
                             <ClinicChatButton petId={petId as string} clinicId={clinic.clinicId} petName={pet?.name ?? ""} />
                           </View>
+                          <TouchableOpacity
+                            style={styles.clinicNameRow}
+                            onPress={() =>
+                              router.push({
+                                pathname: "/clinic-profile",
+                                params: { id: clinic.clinicId },
+                              })
+                            }
+                          >
+                            <Text style={styles.clinicName}>{clinic.clinicName}</Text>
+                          </TouchableOpacity>
                           <Text style={styles.followUpDetails}>
                             {clinic.medicalRecordsCount} سجلات طبية • {clinic.vaccinationsCount} تطعيمات • {clinic.remindersCount} تذكيرات
                           </Text>
@@ -2581,10 +2595,11 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
+    // marginBottom: 12,
   },
   recordTitleRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
   },

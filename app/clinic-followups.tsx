@@ -3,18 +3,7 @@ import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ArrowLeft,
-  Heart,
-  Calendar,
-  Clock,
-  User,
-  X,
-  CheckCircle,
-  AlertCircle,
-  Calendar as CalendarIcon,
-  Trash2,
-} from "lucide-react-native";
+import { ArrowLeft, Heart, Calendar, Clock, User, X, CheckCircle, AlertCircle, Calendar as CalendarIcon, Trash2 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useToastContext } from "@/providers/ToastProvider";
@@ -310,15 +299,7 @@ const RescheduleModal = ({ visible, onClose, followup, onConfirm }: any) => {
               <Text style={styles.datePickerText}>{selectedDate.toLocaleDateString("ar-EG")}</Text>
             </TouchableOpacity>
 
-            {showDatePicker && (
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
-            )}
+            {showDatePicker && <DateTimePicker value={selectedDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />}
           </View>
 
           <View style={styles.modalActions}>
@@ -428,7 +409,7 @@ export default function ClinicFollowups() {
             message: error.message || "فشل في تحديث حالة المتابعة",
           });
         },
-      }
+      },
     );
 
     setDetailsModalVisible(false);
@@ -473,7 +454,7 @@ export default function ClinicFollowups() {
             message: error.message || "فشل في تحديث حالة المتابعة",
           });
         },
-      }
+      },
     );
 
     setSelectedFollowup(null);
@@ -501,7 +482,7 @@ export default function ClinicFollowups() {
             message: error.message || "فشل في تأجيل المتابعة",
           });
         },
-      }
+      },
     );
 
     setSelectedFollowup(null);
@@ -528,7 +509,7 @@ export default function ClinicFollowups() {
             message: error.message || "فشل في حذف المتابعة",
           });
         },
-      }
+      },
     );
 
     setSelectedFollowup(null);
@@ -549,12 +530,7 @@ export default function ClinicFollowups() {
 
     return (
       <TouchableOpacity
-        style={[
-          styles.followupCard,
-          isRejected && styles.rejectedCard,
-          isToday && styles.todayCard,
-          isApproved && styles.approvedCard,
-        ]}
+        style={[styles.followupCard, isRejected && styles.rejectedCard, isToday && styles.todayCard, isApproved && styles.approvedCard]}
         activeOpacity={0.8}
         onPress={() => handleFollowupPress(item)}
       >
@@ -600,7 +576,7 @@ export default function ClinicFollowups() {
         </View>
 
         <Text style={[styles.description, isRejected && styles.rejectedText]}>{item.description}</Text>
-        <Text style={[styles.veterinarian, isRejected && styles.rejectedText]}>الطبيب: {item.veterinarian}</Text>
+        {/* <Text style={[styles.veterinarian, isRejected && styles.rejectedText]}>الطبيب: {item.veterinarian}</Text> */}
 
         {isToday && item.status === "pending" && (
           <View style={styles.todayIndicator}>
@@ -682,9 +658,7 @@ export default function ClinicFollowups() {
                     style={[styles.filterButton, selectedFilter === filter.key && styles.activeFilterButton]}
                     onPress={() => setSelectedFilter(filter.key)}
                   >
-                    <Text
-                      style={[styles.filterButtonText, selectedFilter === filter.key && styles.activeFilterButtonText]}
-                    >
+                    <Text style={[styles.filterButtonText, selectedFilter === filter.key && styles.activeFilterButtonText]}>
                       {filter.label} ({filter.count})
                     </Text>
                   </TouchableOpacity>
@@ -696,9 +670,7 @@ export default function ClinicFollowups() {
           {/* Followups List */}
           <View style={styles.followupsSection}>
             <Text style={styles.sectionTitle}>
-              {selectedFilter === "all"
-                ? "جميع طلبات المتابعة"
-                : `طلبات ${filterButtons.find((f) => f.key === selectedFilter)?.label}`}
+              {selectedFilter === "all" ? "جميع طلبات المتابعة" : `طلبات ${filterButtons.find((f) => f.key === selectedFilter)?.label}`}
             </Text>
 
             <FlatList
@@ -728,26 +700,11 @@ export default function ClinicFollowups() {
           onDelete={handleDelete}
         />
 
-        <RejectFollowupModal
-          visible={rejectModalVisible}
-          onClose={closeModals}
-          followup={selectedFollowup}
-          onConfirm={handleConfirmReject}
-        />
+        <RejectFollowupModal visible={rejectModalVisible} onClose={closeModals} followup={selectedFollowup} onConfirm={handleConfirmReject} />
 
-        <RescheduleModal
-          visible={rescheduleModalVisible}
-          onClose={closeModals}
-          followup={selectedFollowup}
-          onConfirm={handleConfirmReschedule}
-        />
+        <RescheduleModal visible={rescheduleModalVisible} onClose={closeModals} followup={selectedFollowup} onConfirm={handleConfirmReschedule} />
 
-        <DeleteFollowupModal
-          visible={deleteModalVisible}
-          onClose={closeModals}
-          followup={selectedFollowup}
-          onConfirm={handleConfirmDelete}
-        />
+        <DeleteFollowupModal visible={deleteModalVisible} onClose={closeModals} followup={selectedFollowup} onConfirm={handleConfirmDelete} />
       </SafeAreaView>
     </View>
   );

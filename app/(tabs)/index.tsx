@@ -1,17 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-  Platform,
-  ActivityIndicator,
-  Linking,
-  Alert,
-  Modal,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Platform, ActivityIndicator, Linking, Alert, Modal } from "react-native";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { COLORS } from "../../constants/colors";
 import { useI18n } from "../../providers/I18nProvider";
@@ -21,21 +8,7 @@ import Button from "../../components/Button";
 import SectionHeader from "../../components/SectionHeader";
 import Card from "../../components/Card";
 import { trpc } from "../../lib/trpc";
-import {
-  Bell,
-  Calendar,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Star,
-  Search,
-  Heart,
-  Download,
-  User,
-  X,
-  CheckCircle2,
-  Info,
-} from "lucide-react-native";
+import { Bell, Calendar, MapPin, MessageCircle, Phone, Star, Search, Heart, Download, User, X, CheckCircle2, Info } from "lucide-react-native";
 import { UserModeToggle } from "../../components/UserModeToggle";
 import AutoScrollView from "../../components/AutoScrollView";
 import { useBookDownload } from "@/hooks/useBookDownload";
@@ -90,9 +63,7 @@ export default function HomeScreen() {
 
   const vetStores = useMemo(() => (rawVetStores as any)?.stores, [rawVetStores]);
 
-  const { data: inquiriesData, isLoading: inquiriesLoading } = useQuery(
-    trpc.inquiries.listForUser.queryOptions({ userId: Number(user?.id) }),
-  );
+  const { data: inquiriesData, isLoading: inquiriesLoading } = useQuery(trpc.inquiries.listForUser.queryOptions({ userId: Number(user?.id) }));
   const inquiries = useMemo(() => (inquiriesData as any)?.inquiries, [inquiriesData]);
 
   const { data: consultationsData, isLoading: consultationsLoading } = useQuery({
@@ -103,19 +74,13 @@ export default function HomeScreen() {
   const { data: tipsData, isLoading: tipsLoading } = useQuery(trpc.content.listTips.queryOptions({}));
   const tips = useMemo(() => (tipsData as any)?.tips, [tipsData]);
 
-  const { data: articlesData, isLoading: articlesLoading } = useQuery(
-    trpc.content.listMagazineArticles.queryOptions({ isPublished: true }),
-  );
+  const { data: articlesData, isLoading: articlesLoading } = useQuery(trpc.content.listMagazineArticles.queryOptions({ isPublished: true }));
   const articles = useMemo(() => (articlesData as any)?.articles, [articlesData]);
 
-  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(
-    trpc.content.listVetBooks.queryOptions({ isPublished: true }),
-  );
+  const { data: vetBooksData, isLoading: vetBooksLoading } = useQuery(trpc.content.listVetBooks.queryOptions({ isPublished: true }));
   const vetBooks = useMemo(() => (vetBooksData as any)?.books, [vetBooksData]);
 
-  const { data: lostPetsData, isLoading: lostPetsLoading } = useQuery(
-    trpc.pets.getApproved.queryOptions({ requestType: "lost_pet" }),
-  );
+  const { data: lostPetsData, isLoading: lostPetsLoading } = useQuery(trpc.pets.getApproved.queryOptions({ requestType: "lost_pet" }));
   const lostPets = useMemo(() => (lostPetsData as any)?.pets, [lostPetsData]);
 
   const { data: adoptionPetsData, isLoading: adoptionPetsLoading } = useQuery(trpc.pets.getApproved.queryOptions({}));
@@ -133,9 +98,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (systemMessagesData?.messages && systemMessagesData.messages.length > 0) {
-      const welcomeMsg = systemMessagesData.messages.find(
-        (m: any) => m.title === "مرحباً بك في تطبيق بيطري!" && !m.isRead,
-      );
+      const welcomeMsg = systemMessagesData.messages.find((m: any) => m.title === "مرحباً بك في تطبيق بيطري!" && !m.isRead);
       if (welcomeMsg) {
         setWelcomeMessage(welcomeMsg);
         setShowWelcomeModal(true);
@@ -366,9 +329,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <View style={[styles.userTextContainer, { marginRight: isRTL ? 8 : 0, marginLeft: isRTL ? 0 : 8 }]}>
-            <Text style={[styles.greetingText]}>
-              {userMode === "veterinarian" ? t("home.greetingDoctor") : t("home.greeting")}
-            </Text>
+            <Text style={[styles.greetingText]}>{userMode === "veterinarian" ? t("home.greetingDoctor") : t("home.greeting")}</Text>
             <Text style={[styles.userNameText]}>{user?.name || t("common.unknown")}</Text>
           </View>
         </View>
@@ -398,11 +359,9 @@ export default function HomeScreen() {
                   { userId: Number(user.id) },
                   {
                     onSuccess: () => {
-                      queryClient.invalidateQueries(
-                        trpc.admin.stats.getUserMessageNotificationCounts.queryKey as any
-                      );
+                      queryClient.invalidateQueries(trpc.admin.stats.getUserMessageNotificationCounts.queryKey as any);
                     },
-                  }
+                  },
                 );
               }
               router.push("/notifications");
@@ -411,9 +370,7 @@ export default function HomeScreen() {
             <Bell size={22} color={COLORS.black} />
             {countData?.notificationsCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {countData?.notificationsCount > 99 ? "99+" : countData?.notificationsCount?.toString()}
-                </Text>
+                <Text style={styles.badgeText}>{countData?.notificationsCount > 99 ? "99+" : countData?.notificationsCount?.toString()}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -433,9 +390,7 @@ export default function HomeScreen() {
             <MessageCircle size={22} color={COLORS.black} />
             {countData?.messagesCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {countData?.messagesCount > 99 ? "99+" : countData?.messagesCount?.toString()}
-                </Text>
+                <Text style={styles.badgeText}>{countData?.messagesCount > 99 ? "99+" : countData?.messagesCount?.toString()}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -484,12 +439,7 @@ export default function HomeScreen() {
                   </View>
                 ) : (
                   heroImages?.map((ad, index) => (
-                    <TouchableOpacity
-                      key={ad.id}
-                      style={styles.adImageWrapper}
-                      onPress={() => handleAdClick(ad)}
-                      activeOpacity={0.9}
-                    >
+                    <TouchableOpacity key={ad.id} style={styles.adImageWrapper} onPress={() => handleAdClick(ad)} activeOpacity={0.9}>
                       <Image source={{ uri: ad.imageUrl }} style={styles.adImage} resizeMode="cover" />
                       {/* Ad Text Overlay - Direct on image without background */}
                       <View style={styles.adTextOverlay}>
@@ -506,10 +456,7 @@ export default function HomeScreen() {
                   {heroImages?.map((_, index) => (
                     <TouchableOpacity
                       key={index}
-                      style={[
-                        styles.paginationDot,
-                        index === currentImageIndex ? styles.paginationDotActive : styles.paginationDotInactive,
-                      ]}
+                      style={[styles.paginationDot, index === currentImageIndex ? styles.paginationDotActive : styles.paginationDotInactive]}
                       onPress={() => {
                         setCurrentImageIndex(index);
                         // Scroll to the selected image immediately
@@ -568,10 +515,7 @@ export default function HomeScreen() {
                 inquiries.slice(0, 3).map((inquiry) => (
                   <TouchableOpacity
                     key={inquiry.id}
-                    style={[
-                      styles.consultationHistoryCard,
-                      { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 },
-                    ]}
+                    style={[styles.consultationHistoryCard, { marginRight: isRTL ? 0 : 16, marginLeft: isRTL ? 16 : 0 }]}
                     onPress={() => router.push({ pathname: "/inquiry-details", params: { id: inquiry?.id } })}
                   >
                     <View style={[styles.consultationHistoryContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -579,27 +523,16 @@ export default function HomeScreen() {
                         <View
                           style={[
                             styles.statusIndicator,
-                            inquiry.status === "pending"
-                              ? styles.statusPending
-                              : inquiry.status === "answered"
-                                ? styles.statusAnswered
-                                : styles.statusClosed,
+                            inquiry.status === "pending" ? styles.statusPending : inquiry.status === "answered" ? styles.statusAnswered : styles.statusClosed,
                           ]}
                         />
                         <Text style={styles.statusText}>
-                          {inquiry.status === "pending"
-                            ? t("common.underReview")
-                            : inquiry.status === "answered"
-                              ? t("common.replied")
-                              : t("common.closed")}
+                          {inquiry.status === "pending" ? t("common.underReview") : inquiry.status === "answered" ? t("common.replied") : t("common.closed")}
                         </Text>
                       </View>
 
                       <View style={styles.consultationHistoryDetails}>
-                        <Text
-                          style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
-                          numberOfLines={2}
-                        >
+                        <Text style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                           {inquiry.title}
                         </Text>
 
@@ -609,10 +542,7 @@ export default function HomeScreen() {
                           </Text>
                         )}
 
-                        <Text
-                          style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
-                          numberOfLines={3}
-                        >
+                        <Text style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={3}>
                           {inquiry.content}
                         </Text>
 
@@ -645,27 +575,16 @@ export default function HomeScreen() {
                       <View
                         style={[
                           styles.statusIndicator,
-                          con.status === "pending"
-                            ? styles.statusPending
-                            : con.status === "answered"
-                              ? styles.statusAnswered
-                              : styles.statusClosed,
+                          con.status === "pending" ? styles.statusPending : con.status === "answered" ? styles.statusAnswered : styles.statusClosed,
                         ]}
                       />
                       <Text style={styles.statusText}>
-                        {con.status === "pending"
-                          ? t("common.underReview")
-                          : con.status === "answered"
-                            ? t("common.replied")
-                            : t("common.closed")}
+                        {con.status === "pending" ? t("common.underReview") : con.status === "answered" ? t("common.replied") : t("common.closed")}
                       </Text>
                     </View>
 
                     <View style={styles.consultationHistoryDetails}>
-                      <Text
-                        style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]}
-                        numberOfLines={2}
-                      >
+                      <Text style={[styles.consultationHistoryTitle, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                         {con.title}
                       </Text>
 
@@ -675,10 +594,7 @@ export default function HomeScreen() {
                         </Text>
                       )}
 
-                      <Text
-                        style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]}
-                        numberOfLines={3}
-                      >
+                      <Text style={[styles.consultationHistoryDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={3}>
                         {con.description}
                       </Text>
 
@@ -686,12 +602,7 @@ export default function HomeScreen() {
                         style={[
                           styles.consultationUrgency,
                           {
-                            color:
-                              con.urgencyLevel === "emergency"
-                                ? COLORS.error
-                                : con.urgencyLevel === "high"
-                                  ? COLORS.warning
-                                  : COLORS.darkGray,
+                            color: con.urgencyLevel === "emergency" ? COLORS.error : con.urgencyLevel === "high" ? COLORS.warning : COLORS.darkGray,
                             textAlign: isRTL ? "left" : "right",
                           },
                         ]}
@@ -770,9 +681,7 @@ export default function HomeScreen() {
                       >
                         {/* Active Badge */}
                         {store.isActive && (
-                          <View
-                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                          >
+                          <View style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
                               <Text style={styles.premiumBadgeText}>{t("common.active")}</Text>
@@ -833,9 +742,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Store Image */}
-                      {store.images.length > 0 && (
-                        <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />
-                      )}
+                      {store.images.length > 0 && <Image source={{ uri: store.images[0] }} style={styles.clinicImage} />}
                     </View>
 
                     {/* Action Buttons */}
@@ -850,16 +757,14 @@ export default function HomeScreen() {
                           }
                         }}
                       >
-                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>
-                          {t("common.call")}
-                        </Text>
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>{t("common.call")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.clinicActionButton}
                         onPress={() => {
                           router.push({
                             pathname: "/store-products",
-                            params: { id: store.id },
+                            params: { storeId: store.id },
                           });
                         }}
                       >
@@ -900,9 +805,7 @@ export default function HomeScreen() {
                       >
                         {/* Premium Badge */}
                         {clinic.isPremium && (
-                          <View
-                            style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}
-                          >
+                          <View style={[styles.premiumBadgeContainer, { alignSelf: isRTL ? "flex-start" : "flex-end" }]}>
                             <View style={styles.premiumBadge}>
                               <Star size={12} color={COLORS.white} fill={COLORS.white} />
                               <Text style={styles.premiumBadgeText}>{t("common.premium")}</Text>
@@ -963,9 +866,7 @@ export default function HomeScreen() {
                       </View>
 
                       {/* Clinic Image */}
-                      {clinic.images[0] ? (
-                        <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
-                      ) : null}
+                      {clinic.images[0] ? <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} /> : null}
                     </View>
 
                     {/* Action Buttons */}
@@ -976,9 +877,7 @@ export default function HomeScreen() {
                           // TODO: Implement phone call functionality
                         }}
                       >
-                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>
-                          {t("common.call")}
-                        </Text>
+                        <Text style={[styles.clinicActionButtonText, styles.primaryClinicActionButtonText]}>{t("common.call")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.clinicActionButton}
@@ -1034,10 +933,7 @@ export default function HomeScreen() {
                       <Text style={[styles.articleTitle, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                         {article.title}
                       </Text>
-                      <Text
-                        style={[styles.articleDescription, { textAlign: isRTL ? "left" : "right" }]}
-                        numberOfLines={2}
-                      >
+                      <Text style={[styles.articleDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                         {article.description}
                       </Text>
                       <View style={[styles.articleAuthor, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
@@ -1054,10 +950,7 @@ export default function HomeScreen() {
                           {article.author}
                         </Text>
                       </View>
-                      <Text
-                        style={[styles.articleAuthorTitle, { textAlign: isRTL ? "left" : "right" }]}
-                        numberOfLines={1}
-                      >
+                      <Text style={[styles.articleAuthorTitle, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={1}>
                         {article.authorTitle}
                       </Text>
                       <View style={[styles.articleStats, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
@@ -1119,11 +1012,7 @@ export default function HomeScreen() {
         {/* Adoption and Breeding Section - Only for pet owners */}
         {userMode !== "veterinarian" && (
           <View style={styles.section}>
-            <SectionHeader
-              title={t("home.petsAdoptionMating")}
-              onSeeAll={() => router.push("/adoption-breeding-list")}
-              isRTL={isRTL}
-            />
+            <SectionHeader title={t("home.petsAdoptionMating")} onSeeAll={() => router.push("/adoption-breeding-list")} isRTL={isRTL} />
             <AutoScrollView
               itemWidth={320}
               autoScrollInterval={3000}
@@ -1172,31 +1061,19 @@ export default function HomeScreen() {
                             style={[
                               styles.adoptionBadge,
                               {
-                                backgroundColor: pet.isClosedByOwner
-                                  ? COLORS.darkGray
-                                  : pet.type === "adoption"
-                                    ? "#10B981"
-                                    : "#8B5CF6",
+                                backgroundColor: pet.isClosedByOwner ? COLORS.darkGray : pet.type === "adoption" ? "#10B981" : "#8B5CF6",
                               },
                             ]}
                           >
                             <Text style={styles.adoptionBadgeText}>
-                              {pet.isClosedByOwner
-                                ? t("common.closed")
-                                : pet.requestType === "adoption"
-                                  ? t("common.forAdoption")
-                                  : t("common.forMating")}
+                              {pet.isClosedByOwner ? t("common.closed") : pet.requestType === "adoption" ? t("common.forAdoption") : t("common.forMating")}
                             </Text>
                           </View>
                         </View>
 
                         {/* Pet Name and Type */}
-                        <Text style={[styles.adoptionPetName, { textAlign: isRTL ? "left" : "right" }]}>
-                          {pet.name}
-                        </Text>
-                        <Text style={[styles.adoptionPetType, { textAlign: isRTL ? "left" : "right" }]}>
-                          {t(`${pet.type}`)}
-                        </Text>
+                        <Text style={[styles.adoptionPetName, { textAlign: isRTL ? "left" : "right" }]}>{pet.name}</Text>
+                        <Text style={[styles.adoptionPetType, { textAlign: isRTL ? "left" : "right" }]}>{t(`${pet.type}`)}</Text>
 
                         {/* Age */}
                         <View style={[styles.adoptionPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -1249,10 +1126,7 @@ export default function HomeScreen() {
                     </View>
 
                     {/* Description */}
-                    <Text
-                      style={[styles.adoptionPetDescription, { textAlign: isRTL ? "left" : "right" }]}
-                      numberOfLines={2}
-                    >
+                    <Text style={[styles.adoptionPetDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                       {pet.description}
                     </Text>
 
@@ -1278,9 +1152,7 @@ export default function HomeScreen() {
                             }
                           }}
                         >
-                          <Text style={[styles.adoptionActionButtonText, styles.primaryAdoptionActionButtonText]}>
-                            {t("common.call")}
-                          </Text>
+                          <Text style={[styles.adoptionActionButtonText, styles.primaryAdoptionActionButtonText]}>{t("common.call")}</Text>
                         </TouchableOpacity>
                       </View>
                     )}
@@ -1363,11 +1235,7 @@ export default function HomeScreen() {
                         }}
                         disabled={isDownloading}
                       >
-                        {isDownloading ? (
-                          <ActivityIndicator size="small" color={COLORS.white} />
-                        ) : (
-                          <Download size={16} color={COLORS.white} />
-                        )}
+                        {isDownloading ? <ActivityIndicator size="small" color={COLORS.white} /> : <Download size={16} color={COLORS.white} />}
                         <Text style={styles.downloadButtonText}>{isDownloading ? "..." : t("common.download")}</Text>
                       </TouchableOpacity>
                     </View>
@@ -1414,9 +1282,7 @@ export default function HomeScreen() {
                       </View>
                       {/* Pet Name and Type */}
                       <Text style={[styles.lostPetName, { textAlign: isRTL ? "left" : "right" }]}>{pet.name}</Text>
-                      <Text style={[styles.lostPetType, { textAlign: isRTL ? "left" : "right" }]}>
-                        {t(`${pet.type}`)}
-                      </Text>
+                      <Text style={[styles.lostPetType, { textAlign: isRTL ? "left" : "right" }]}>{t(`${pet.type}`)}</Text>
 
                       {/* Location */}
                       <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
@@ -1511,13 +1377,7 @@ export default function HomeScreen() {
             )}
           </AutoScrollView>
           {userMode !== "veterinarian" && (
-            <Button
-              title={t("home.reportLostPet")}
-              onPress={handleReportLostPet}
-              type="outline"
-              size="medium"
-              style={styles.reportButton}
-            />
+            <Button title={t("home.reportLostPet")} onPress={handleReportLostPet} type="outline" size="medium" style={styles.reportButton} />
           )}
         </View>
       </ScrollView>
@@ -1555,12 +1415,7 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <Button
-              title={t("home.welcomeModal.getStarted")}
-              onPress={handleCloseWelcome}
-              type="primary"
-              style={styles.startBtn}
-            />
+            <Button title={t("home.welcomeModal.getStarted")} onPress={handleCloseWelcome} type="primary" style={styles.startBtn} />
           </View>
         </View>
       </Modal>

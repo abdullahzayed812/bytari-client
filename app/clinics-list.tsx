@@ -4,18 +4,7 @@ import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { useRouter, Stack } from "expo-router";
-import {
-  ArrowLeft,
-  ArrowRight,
-  MapPin,
-  Phone,
-  Star,
-  Plus,
-  Search,
-  Edit3,
-  Filter,
-  MessageSquare,
-} from "lucide-react-native";
+import { ArrowLeft, ArrowRight, MapPin, Phone, Star, Plus, Search, Edit3, Filter, MessageSquare } from "lucide-react-native";
 import { Clinic } from "../types";
 import RatingComponent from "../components/RatingComponent";
 import { trpc } from "../lib/trpc";
@@ -61,11 +50,10 @@ export default function ClinicsListScreen() {
           onError: (error) => {
             console.error("Error submitting rating:", error);
           },
-        }
+        },
       );
     }
   };
-
 
   const handleRateClinic = (clinic: Clinic) => {
     setSelectedClinic(clinic);
@@ -79,9 +67,7 @@ export default function ClinicsListScreen() {
 
     // Filter by user's location (country and city)
     if (user?.country && user?.city) {
-      filteredClinics = filteredClinics.filter(
-        (clinic) => clinic.country === user.country && clinic.city === user.city
-      );
+      filteredClinics = filteredClinics.filter((clinic) => clinic.country === user.country && clinic.city === user.city);
     }
 
     // Apply search filter
@@ -91,8 +77,8 @@ export default function ClinicsListScreen() {
         (clinic) =>
           clinic.name.toLowerCase().includes(query) ||
           clinic.address.toLowerCase().includes(query) ||
-          clinic.services?.some((service) => service.toLowerCase().includes(query)) ||
-          clinic.specialty?.toLowerCase().includes(query)
+          clinic.services?.split(", ")?.some((service) => service?.toLowerCase()?.includes(query)) ||
+          clinic.specialty?.toLowerCase().includes(query),
       );
     }
 
@@ -172,16 +158,10 @@ export default function ClinicsListScreen() {
           headerRight: () =>
             isSuperAdmin ? (
               <View style={styles.headerActions}>
-                <TouchableOpacity
-                  onPress={() => router.push("/add-clinic")}
-                  style={[styles.headerButton, styles.addButton]}
-                >
+                <TouchableOpacity onPress={() => router.push("/add-clinic")} style={[styles.headerButton, styles.addButton]}>
                   <Plus size={20} color={COLORS.white} />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push("/registered-clinics-management")}
-                  style={[styles.headerButton, styles.editButton]}
-                >
+                <TouchableOpacity onPress={() => router.push("/registered-clinics-management")} style={[styles.headerButton, styles.editButton]}>
                   <Edit3 size={20} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
@@ -210,38 +190,20 @@ export default function ClinicsListScreen() {
 
         {/* Filter Buttons */}
         <View style={styles.filterButtonsContainer}>
-          <TouchableOpacity
-            style={[styles.filterChip, selectedFilter === "all" && styles.filterChipActive]}
-            onPress={() => setSelectedFilter("all")}
-          >
+          <TouchableOpacity style={[styles.filterChip, selectedFilter === "all" && styles.filterChipActive]} onPress={() => setSelectedFilter("all")}>
             <Text style={[styles.filterChipText, selectedFilter === "all" && styles.filterChipTextActive]}>الكل</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, selectedFilter === "active" && styles.filterChipActive]}
-            onPress={() => setSelectedFilter("active")}
-          >
-            <Text style={[styles.filterChipText, selectedFilter === "active" && styles.filterChipTextActive]}>
-              نشط الآن
-            </Text>
+          <TouchableOpacity style={[styles.filterChip, selectedFilter === "active" && styles.filterChipActive]} onPress={() => setSelectedFilter("active")}>
+            <Text style={[styles.filterChipText, selectedFilter === "active" && styles.filterChipTextActive]}>نشط الآن</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, selectedFilter === "nearest" && styles.filterChipActive]}
-            onPress={() => setSelectedFilter("nearest")}
-          >
-            <Text style={[styles.filterChipText, selectedFilter === "nearest" && styles.filterChipTextActive]}>
-              الأقرب
-            </Text>
+          <TouchableOpacity style={[styles.filterChip, selectedFilter === "nearest" && styles.filterChipActive]} onPress={() => setSelectedFilter("nearest")}>
+            <Text style={[styles.filterChipText, selectedFilter === "nearest" && styles.filterChipTextActive]}>الأقرب</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.filterChip, selectedFilter === "topRated" && styles.filterChipActive]}
-            onPress={() => setSelectedFilter("topRated")}
-          >
-            <Text style={[styles.filterChipText, selectedFilter === "topRated" && styles.filterChipTextActive]}>
-              الأعلى تقييماً
-            </Text>
+          <TouchableOpacity style={[styles.filterChip, selectedFilter === "topRated" && styles.filterChipActive]} onPress={() => setSelectedFilter("topRated")}>
+            <Text style={[styles.filterChipText, selectedFilter === "topRated" && styles.filterChipTextActive]}>الأعلى تقييماً</Text>
           </TouchableOpacity>
         </View>
 
@@ -260,9 +222,7 @@ export default function ClinicsListScreen() {
           <TouchableOpacity style={styles.addClinicButton} onPress={() => router.push("/clinic-system")}>
             <View style={[styles.addClinicButtonContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
               <Plus size={24} color={COLORS.white} />
-              <Text style={[styles.addClinicButtonText, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
-                اضف عيادتك
-              </Text>
+              <Text style={[styles.addClinicButtonText, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>اضف عيادتك</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -270,10 +230,7 @@ export default function ClinicsListScreen() {
         <FlatList
           data={clinicsToShow}
           renderItem={({ item: clinic }) => (
-            <TouchableOpacity
-              style={styles.clinicCard}
-              onPress={() => router.push({ pathname: "/clinic-profile", params: { id: clinic.id } })}
-            >
+            <TouchableOpacity style={styles.clinicCard} onPress={() => router.push({ pathname: "/clinic-profile", params: { id: clinic.id } })}>
               <Image source={{ uri: clinic.images[0] }} style={styles.clinicImage} />
 
               <View style={styles.clinicInfo}>
@@ -337,10 +294,7 @@ export default function ClinicsListScreen() {
                   <MapPin size={16} color="#10B981" />
                   <Text style={styles.clinicActionButtonText}>الخريطة</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.clinicActionButton, styles.ratingActionButton]}
-                  onPress={() => handleRateClinic(clinic)}
-                >
+                <TouchableOpacity style={[styles.clinicActionButton, styles.ratingActionButton]} onPress={() => handleRateClinic(clinic)}>
                   <MessageSquare size={16} color={COLORS.primary} />
                   <Text style={[styles.clinicActionButtonText, styles.ratingActionButtonText]}>تقييم</Text>
                 </TouchableOpacity>
@@ -352,9 +306,7 @@ export default function ClinicsListScreen() {
           contentContainerStyle={styles.clinicsList}
           ListEmptyComponent={() => (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>
-                {searchQuery.trim() ? "لا توجد عيادات تطابق البحث" : "لا توجد عيادات متاحة"}
-              </Text>
+              <Text style={styles.emptyStateText}>{searchQuery.trim() ? "لا توجد عيادات تطابق البحث" : "لا توجد عيادات متاحة"}</Text>
             </View>
           )}
         />
