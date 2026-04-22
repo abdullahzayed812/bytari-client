@@ -1,13 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator } from "react-native";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -33,18 +24,15 @@ import {
   ShoppingCart,
   MessageCircle,
   X,
-  Trash,
   Settings,
 } from "lucide-react-native";
 import { PoultryFarm, PoultryBatch, PoultryWeek, PoultryDay } from "../types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function PoultryFarmDetailsScreen() {
   const { isSuperAdmin, user } = useApp();
   const { isRTL } = useI18n();
-  const queryclient = useQueryClient();
   const router = useRouter();
   const { showToast } = useToastContext();
 
@@ -67,17 +55,31 @@ export default function PoultryFarmDetailsScreen() {
   const [selectedBatch, setSelectedBatch] = useState<PoultryBatch | null>(null);
   const [showConfirmVetRemoval, setShowConfirmVetRemoval] = useState(false);
   const [showConfirmSupervisorRemoval, setShowConfirmSupervisorRemoval] = useState(false);
+  const [showEditDayModal, setShowEditDayModal] = useState(false);
+  const [editingDay, setEditingDay] = useState<PoultryDay | null>(null);
+  const [editDayForm, setEditDayForm] = useState({
+    temperature: "",
+    humidity: "",
+    feedConsumption: "",
+    waterConsumption: "",
+    averageWeight: "",
+    activityLevel: "",
+    mortality: "",
+    mortalityReasons: "",
+    treatments: "",
+    notes: "",
+  });
+  const [expandedCompletedWeek, setExpandedCompletedWeek] = useState<{ batchId: string; weekNumber: number } | null>(null);
   const [showContactVetModal, setShowContactVetModal] = useState(false);
   const [showContactSupervisorModal, setShowContactSupervisorModal] = useState(false);
   const [showRequestVetModal, setShowRequestVetModal] = useState(false);
   const [showRequestSupervisorModal, setShowRequestSupervisorModal] = useState(false);
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-
   const [dailyDataForm, setDailyDataForm] = useState({
     temperature: "",
     humidity: "",
     feedConsumption: "",
     waterConsumption: "",
+    averageWeight: "",
     activityLevel: "",
     mortality: "",
     mortalityReasons: "",
@@ -99,17 +101,17 @@ export default function PoultryFarmDetailsScreen() {
   const farmQuery = useQuery(
     trpc.poultryFarms.getDetails.queryOptions({
       farmId: Number(id),
-    })
+    }),
   );
 
   const addBatchMutation = useMutation(trpc.poultryBatches.add.mutationOptions());
   const addDailyDataMutation = useMutation(trpc.poultryBatches.addDailyData.mutationOptions());
+  const updateDailyDataMutation = useMutation(trpc.poultryBatches.updateDailyData.mutationOptions());
   const sellBatchMutation = useMutation(trpc.poultryBatches.sell.mutationOptions());
 
   const requestVetMutation = useMutation(trpc.assignmentRequests.requestVet.mutationOptions());
   const requestSupervisorMutation = useMutation(trpc.assignmentRequests.requestSupervisor.mutationOptions());
   const requestRemovalMutation = useMutation(trpc.assignmentRequests.requestRemoval.mutationOptions());
-  const deleteFarmMutation = useMutation(trpc.poultryFarms.delete.mutationOptions());
 
   useEffect(() => {
     if (farmQuery.data) {
@@ -130,21 +132,21 @@ export default function PoultryFarmDetailsScreen() {
         status: farmData.status,
         assignedVet: farmData.assignedVetId
           ? {
-            id: farmData.assignedVetId.toString(),
-            name: farmData.assignedVetName || "",
-            phone: farmData.assignedVetPhone || "",
-            specialization: "طب الدواجن",
-            assignedAt: farmData.updatedAt.toISOString(),
-          }
+              id: farmData.assignedVetId.toString(),
+              name: farmData.assignedVetName || "",
+              phone: farmData.assignedVetPhone || "",
+              specialization: "طب الدواجن",
+              assignedAt: farmData.updatedAt.toISOString(),
+            }
           : undefined,
         assignedSupervisor: farmData.assignedSupervisorId
           ? {
-            id: farmData.assignedSupervisorId.toString(),
-            name: farmData.assignedSupervisorName || "",
-            phone: farmData.assignedSupervisorPhone || "",
-            experience: "5 سنوات",
-            assignedAt: farmData.updatedAt.toISOString(),
-          }
+              id: farmData.assignedSupervisorId.toString(),
+              name: farmData.assignedSupervisorName || "",
+              phone: farmData.assignedSupervisorPhone || "",
+              experience: "5 سنوات",
+              assignedAt: farmData.updatedAt.toISOString(),
+            }
           : undefined,
       });
 
@@ -227,30 +229,6 @@ export default function PoultryFarmDetailsScreen() {
     }
   }, [farmQuery.data]);
 
-  const handleDeleteFarm = () => {
-    setShowDeleteConfirmModal(true);
-  };
-
-  const handleConfirmDeleteFarm = () => {
-    deleteFarmMutation.mutate(
-      {
-        farmId: Number(id),
-        ownerId: Number(user?.id),
-      },
-      {
-        onSuccess: () => {
-          setShowDeleteConfirmModal(false);
-          showToast({ type: "success", message: "تم حذف حقل الدواجن بنجاح" });
-          queryclient.invalidateQueries(trpc.poultryFarms.getAll.queryKey as any);
-          router.back();
-        },
-        onError: (error) => {
-          showToast({ type: "error", message: error.message });
-        },
-      }
-    );
-  };
-
   if (farmQuery.isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -268,12 +246,16 @@ export default function PoultryFarmDetailsScreen() {
   }
 
   const handleAddDailyData = () => {
-    if (!currentBatch) return;
+    if (!currentBatch) {
+      showToast({ type: "error", message: "أضف دفعة اولا!" });
+      return;
+    }
 
     const temperature = dailyDataForm.temperature.trim() ? parseFloat(dailyDataForm.temperature) : undefined;
     const humidity = dailyDataForm.humidity.trim() ? parseFloat(dailyDataForm.humidity) : undefined;
     const feedConsumption = dailyDataForm.feedConsumption.trim() ? parseFloat(dailyDataForm.feedConsumption) : undefined;
     const waterConsumption = dailyDataForm.waterConsumption.trim() ? parseFloat(dailyDataForm.waterConsumption) : undefined;
+    const averageWeight = dailyDataForm.averageWeight.trim() ? parseFloat(dailyDataForm.averageWeight) : undefined;
     const mortality = dailyDataForm.mortality.trim() ? parseInt(dailyDataForm.mortality) : 0;
 
     addDailyDataMutation.mutate(
@@ -283,10 +265,14 @@ export default function PoultryFarmDetailsScreen() {
         humidity,
         feedConsumption,
         waterConsumption,
+        averageWeight,
         activityLevel: dailyDataForm.activityLevel.trim() || undefined,
         mortality,
         mortalityReasons: dailyDataForm.mortalityReasons
-          ? dailyDataForm.mortalityReasons.split(",").map((r) => r.trim()).filter((r) => r.length > 0)
+          ? dailyDataForm.mortalityReasons
+              .split(",")
+              .map((r) => r.trim())
+              .filter((r) => r.length > 0)
           : [],
         treatments: dailyDataForm.treatments.trim() || undefined,
         notes: dailyDataForm.notes.trim() || undefined,
@@ -300,6 +286,7 @@ export default function PoultryFarmDetailsScreen() {
             humidity: "",
             feedConsumption: "",
             waterConsumption: "",
+            averageWeight: "",
             activityLevel: "",
             mortality: "",
             mortalityReasons: "",
@@ -311,7 +298,7 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
-      }
+      },
     );
   };
 
@@ -338,7 +325,7 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
-      }
+      },
     );
   };
 
@@ -390,7 +377,7 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
-      }
+      },
     );
   };
 
@@ -417,7 +404,7 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
-      }
+      },
     );
   };
 
@@ -452,7 +439,7 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
-      }
+      },
     );
   };
 
@@ -474,7 +461,7 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
-      }
+      },
     );
   };
 
@@ -509,6 +496,58 @@ export default function PoultryFarmDetailsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message });
         },
+      },
+    );
+  };
+
+  const handleEditDay = (day: PoultryDay) => {
+    setEditingDay(day);
+    setEditDayForm({
+      temperature: day.temperature != null ? String(day.temperature) : "",
+      humidity: day.humidity != null ? String(day.humidity) : "",
+      feedConsumption: day.feedConsumption > 0 ? String(day.feedConsumption) : "",
+      waterConsumption: day.waterConsumption != null ? String(day.waterConsumption) : "",
+      averageWeight: day.averageWeight > 0 ? String(day.averageWeight) : "",
+      activityLevel: day.activityLevel || "",
+      mortality: String(day.mortality),
+      mortalityReasons: Array.isArray(day.mortalityReasons) ? day.mortalityReasons.join(", ") : "",
+      treatments:
+        Array.isArray(day.treatments) && day.treatments.length > 0
+          ? typeof day.treatments[0] === "object"
+            ? (day.treatments as any[]).map((t) => t.name).join(", ")
+            : String(day.treatments)
+          : "",
+      notes: day.notes || "",
+    });
+    setShowEditDayModal(true);
+  };
+
+  const handleSaveEditDay = () => {
+    if (!editingDay) return;
+    updateDailyDataMutation.mutate(
+      {
+        dayId: Number(editingDay.id),
+        temperature: editDayForm.temperature.trim() ? parseFloat(editDayForm.temperature) : undefined,
+        humidity: editDayForm.humidity.trim() ? parseFloat(editDayForm.humidity) : undefined,
+        feedConsumption: editDayForm.feedConsumption.trim() ? parseFloat(editDayForm.feedConsumption) : undefined,
+        waterConsumption: editDayForm.waterConsumption.trim() ? parseFloat(editDayForm.waterConsumption) : undefined,
+        averageWeight: editDayForm.averageWeight.trim() ? parseFloat(editDayForm.averageWeight) : undefined,
+        activityLevel: editDayForm.activityLevel.trim() || undefined,
+        mortality: editDayForm.mortality.trim() ? parseInt(editDayForm.mortality) : undefined,
+        mortalityReasons: editDayForm.mortalityReasons
+          ? editDayForm.mortalityReasons.split(",").map((r) => r.trim()).filter(Boolean)
+          : undefined,
+        treatments: editDayForm.treatments.trim() || undefined,
+        notes: editDayForm.notes.trim() || undefined,
+      },
+      {
+        onSuccess: () => {
+          farmQuery.refetch();
+          setShowEditDayModal(false);
+          setEditingDay(null);
+          showToast({ type: "success", message: "تم تحديث بيانات اليوم بنجاح ✅" });
+        },
+        onError: (error) => showToast({ type: "error", message: error.message }),
       }
     );
   };
@@ -552,8 +591,6 @@ export default function PoultryFarmDetailsScreen() {
     <View style={styles.card}>
       <Text style={styles.cardTitle}>معلومات الحقل</Text>
 
-
-
       <View style={styles.infoRow}>
         <Home size={20} color={COLORS.primary} />
         <Text style={styles.infoLabel}>اسم الحقل:</Text>
@@ -580,16 +617,6 @@ export default function PoultryFarmDetailsScreen() {
     </View>
   );
 
-  const renderDeleteFarmModal = () => (
-    <TouchableOpacity
-      style={styles.deleteButton}
-      onPress={() => setShowDeleteConfirmModal(true)}
-    >
-      <Trash size={20} color={COLORS.primary} />
-      <Text style={styles.deleteButtonText}>حذف الحقل</Text>
-    </TouchableOpacity>
-  );
-
   const renderCurrentBatch = () => {
     if (!currentBatch) {
       return (
@@ -614,13 +641,7 @@ export default function PoultryFarmDetailsScreen() {
           <Text style={styles.cardTitle}>الدفعة رقم {currentBatch.batchNumber}</Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(currentBatch.status) }]}>
             <Text style={styles.statusText}>
-              {currentBatch.status === "active"
-                ? "نشط"
-                : currentBatch.status === "completed"
-                  ? "مكتمل"
-                  : currentBatch.status === "sold"
-                    ? "مباع"
-                    : "غير محدد"}
+              {currentBatch.status === "active" ? "نشط" : currentBatch.status === "completed" ? "مكتمل" : currentBatch.status === "sold" ? "مباع" : "غير محدد"}
             </Text>
           </View>
         </View>
@@ -641,16 +662,19 @@ export default function PoultryFarmDetailsScreen() {
           <View style={styles.statItem}>
             <Weight size={24} color={COLORS.warning} />
             <Text style={styles.statValue}>
-              {currentDays.length > 0 ? currentDays[currentDays.length - 1].averageWeight : 0}g
+              {(() => {
+                const withWeight = currentDays.filter((d) => d.averageWeight > 0);
+                if (!withWeight.length) return "0";
+                return Math.round(withWeight.reduce((s, d) => s + d.averageWeight, 0) / withWeight.length);
+              })()}
+              g
             </Text>
             <Text style={styles.statLabel}>متوسط الوزن</Text>
           </View>
 
           <View style={styles.statItem}>
             <DollarSign size={24} color={COLORS.success} />
-            <Text style={styles.statValue}>
-              {currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(0)}
-            </Text>
+            <Text style={styles.statValue}>{currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(0)}</Text>
             <Text style={styles.statLabel}>الربح المقدر</Text>
           </View>
         </View>
@@ -734,7 +758,15 @@ export default function PoultryFarmDetailsScreen() {
           {canAddDailyData && (
             <TouchableOpacity
               onPress={() => setShowAddDailyDataModal(true)}
-              style={{ backgroundColor: COLORS.primary, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row-reverse", alignItems: "center", gap: 4 }}
+              style={{
+                backgroundColor: COLORS.primary,
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                flexDirection: "row-reverse",
+                alignItems: "center",
+                gap: 4,
+              }}
             >
               <Plus size={14} color={COLORS.white} />
               <Text style={{ color: COLORS.white, fontSize: 12, fontWeight: "600" }}>إضافة</Text>
@@ -761,7 +793,17 @@ export default function PoultryFarmDetailsScreen() {
 
                     return (
                       <View key={dayIndex} style={[styles.dayCard, !dayData && styles.emptyDayCard]}>
-                        <Text style={styles.dayTitle}>اليوم {dayIndex + 1}</Text>
+                        <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
+                          <Text style={styles.dayTitle}>اليوم {dayIndex + 1}</Text>
+                          {dayData && canAddDailyData && (
+                            <TouchableOpacity
+                              onPress={() => handleEditDay(dayData)}
+                              style={{ padding: 2, backgroundColor: "#E3F2FD", borderRadius: 4 }}
+                            >
+                              <Text style={{ fontSize: 10, color: COLORS.primary, fontWeight: "600" }}>تعديل</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
                         <Text style={styles.dayNumber}>({dayNumber})</Text>
 
                         {dayData ? (
@@ -784,6 +826,12 @@ export default function PoultryFarmDetailsScreen() {
                                 <Text style={styles.dayStatLabel}>العلف</Text>
                               </View>
                             )}
+                            {dayData.averageWeight > 0 && (
+                              <View style={styles.dayStat}>
+                                <Text style={[styles.dayStatValue, { color: COLORS.warning }]}>{dayData.averageWeight}g</Text>
+                                <Text style={styles.dayStatLabel}>الوزن</Text>
+                              </View>
+                            )}
                             {dayData.waterConsumption != null && (
                               <View style={styles.dayStat}>
                                 <Text style={styles.dayStatValue}>{dayData.waterConsumption}L</Text>
@@ -792,17 +840,21 @@ export default function PoultryFarmDetailsScreen() {
                             )}
                             {dayData.activityLevel && (
                               <View style={[styles.dayStat, { width: "100%" }]}>
-                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={1}>{dayData.activityLevel}</Text>
+                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={1}>
+                                  {dayData.activityLevel}
+                                </Text>
                                 <Text style={styles.dayStatLabel}>الحركة</Text>
                               </View>
                             )}
                             <View style={styles.dayStat}>
                               <Text style={[styles.dayStatValue, { color: dayData.mortality > 0 ? COLORS.error : COLORS.darkGray }]}>{dayData.mortality}</Text>
-                              <Text style={styles.dayStatLabel}>النفوق</Text>
+                              <Text style={styles.dayStatLabel}>النفوق%</Text>
                             </View>
                             {dayData.mortalityReasons?.length > 0 && (
                               <View style={[styles.dayStat, { width: "100%" }]}>
-                                <Text style={[styles.dayStatValue, { fontSize: 10, color: COLORS.error }]} numberOfLines={1}>{dayData.mortalityReasons.join("، ")}</Text>
+                                <Text style={[styles.dayStatValue, { fontSize: 10, color: COLORS.error }]} numberOfLines={1}>
+                                  {dayData.mortalityReasons.join("، ")}
+                                </Text>
                                 <Text style={styles.dayStatLabel}>السبب</Text>
                               </View>
                             )}
@@ -818,7 +870,9 @@ export default function PoultryFarmDetailsScreen() {
                             )}
                             {dayData.notes ? (
                               <View style={[styles.dayStat, { width: "100%" }]}>
-                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={2}>{dayData.notes}</Text>
+                                <Text style={[styles.dayStatValue, { fontSize: 10 }]} numberOfLines={2}>
+                                  {dayData.notes}
+                                </Text>
                                 <Text style={styles.dayStatLabel}>ملاحظات</Text>
                               </View>
                             ) : null}
@@ -847,15 +901,17 @@ export default function PoultryFarmDetailsScreen() {
                     </View>
 
                     <View style={styles.weekSummaryStat}>
-                      <Text style={[styles.weekSummaryValue, { color: COLORS.error }]}>
-                        {weekDays.reduce((sum, day) => sum + day.mortality, 0)}
-                      </Text>
+                      <Text style={[styles.weekSummaryValue, { color: COLORS.error }]}>{weekDays.reduce((sum, day) => sum + day.mortality, 0)}</Text>
                       <Text style={styles.weekSummaryLabel}>إجمالي النفوق</Text>
                     </View>
 
                     <View style={styles.weekSummaryStat}>
                       <Text style={styles.weekSummaryValue}>
-                        {Math.round(weekDays.reduce((sum, day) => sum + day.averageWeight, 0) / weekDays.length)}g
+                        {(() => {
+                          const w = weekDays.filter((d) => d.averageWeight > 0);
+                          return w.length ? Math.round(w.reduce((s, d) => s + d.averageWeight, 0) / w.length) : 0;
+                        })()}
+                        g
                       </Text>
                       <Text style={styles.weekSummaryLabel}>متوسط الوزن</Text>
                     </View>
@@ -884,11 +940,7 @@ export default function PoultryFarmDetailsScreen() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {completedBatches.length > 0 ? (
             completedBatches?.map((batch) => (
-              <TouchableOpacity
-                key={batch.id}
-                style={styles.completedBatchItem}
-                onPress={() => handleViewBatchDetails(batch)}
-              >
+              <TouchableOpacity key={batch.id} style={styles.completedBatchItem} onPress={() => handleViewBatchDetails(batch)}>
                 <View style={styles.batchItemHeader}>
                   <Text style={styles.batchItemTitle}>الدفعة رقم {batch.batchNumber}</Text>
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(batch.status) }]}>
@@ -904,26 +956,19 @@ export default function PoultryFarmDetailsScreen() {
 
                   <View style={styles.batchItemStat}>
                     <Text style={styles.batchItemStatLabel}>الربح الصافي:</Text>
-                    <Text style={[styles.batchItemStatValue, { color: COLORS.success }]}>
-                      {batch.totalProfit?.toFixed(2) || "0.00"} د.ع
-                    </Text>
+                    <Text style={[styles.batchItemStatValue, { color: COLORS.success }]}>{batch.totalProfit?.toFixed(2) || "0.00"} د.ع</Text>
                   </View>
 
                   <View style={styles.batchItemStat}>
                     <Text style={styles.batchItemStatLabel}>المدة:</Text>
                     <Text style={styles.batchItemStatValue}>
-                      {Math.ceil(
-                        (new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) /
-                        (1000 * 60 * 60 * 24)
-                      )}{" "}
-                      يوم
+                      {Math.ceil((new Date(batch.endDate || batch.createdAt).getTime() - new Date(batch.startDate).getTime()) / (1000 * 60 * 60 * 24))} يوم
                     </Text>
                   </View>
                 </View>
 
                 <Text style={styles.batchItemDate}>
-                  {new Date(batch.startDate).toLocaleDateString("ar")} -{" "}
-                  {new Date(batch.endDate || batch.createdAt).toLocaleDateString("ar")}
+                  {new Date(batch.startDate).toLocaleDateString("ar")} - {new Date(batch.endDate || batch.createdAt).toLocaleDateString("ar")}
                 </Text>
 
                 <Text style={styles.viewDetailsText}>اضغط لعرض التفاصيل الكاملة</Text>
@@ -957,9 +1002,7 @@ export default function PoultryFarmDetailsScreen() {
                       <Text style={styles.personName}>{farm?.assignedVet.name}</Text>
                       <Text style={styles.personRole}>طبيب بيطري - {farm?.assignedVet.specialization}</Text>
                       <Text style={styles.personPhone}>{farm?.assignedVet.phone}</Text>
-                      <Text style={styles.assignmentDate}>
-                        تم التعيين: {new Date(farm?.assignedVet.assignedAt!).toLocaleDateString("ar")}
-                      </Text>
+                      <Text style={styles.assignmentDate}>تم التعيين: {new Date(farm?.assignedVet.assignedAt!).toLocaleDateString("ar")}</Text>
                     </View>
                   </View>
                   <View style={styles.personActions}>
@@ -1000,9 +1043,7 @@ export default function PoultryFarmDetailsScreen() {
                       <Text style={styles.personName}>{farm?.assignedSupervisor.name}</Text>
                       <Text style={styles.personRole}>مشرف - خبرة {farm?.assignedSupervisor.experience}</Text>
                       <Text style={styles.personPhone}>{farm?.assignedSupervisor.phone}</Text>
-                      <Text style={styles.assignmentDate}>
-                        تم التعيين: {new Date(farm?.assignedSupervisor.assignedAt!).toLocaleDateString("ar")}
-                      </Text>
+                      <Text style={styles.assignmentDate}>تم التعيين: {new Date(farm?.assignedSupervisor.assignedAt!).toLocaleDateString("ar")}</Text>
                     </View>
                   </View>
                   <View style={styles.personActions}>
@@ -1055,7 +1096,7 @@ export default function PoultryFarmDetailsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       <Stack.Screen
         options={{
           title: farm?.name || "حقل الدواجن",
@@ -1075,13 +1116,10 @@ export default function PoultryFarmDetailsScreen() {
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {!isWorkerMode && renderDeleteFarmModal()}
         {renderFarmInfo()}
         {isWorkerMode ? (
           // Worker view: only daily data
-          <>
-            {renderDailyData()}
-          </>
+          <>{renderDailyData()}</>
         ) : (
           // Owner view: full view
           <>
@@ -1093,40 +1131,8 @@ export default function PoultryFarmDetailsScreen() {
         )}
       </ScrollView>
 
-      {/* Delete Confirmation Modal */}
-      <Modal visible={showDeleteConfirmModal} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.confirmModal}>
-            <Text style={styles.confirmTitle}>حذف الحقل</Text>
-            <Text style={styles.confirmMessage}>هل أنت متأكد من رغبتك في حذف هذا الحقل؟ سيتم حذف جميع البيانات المرتبطة به نهائياً.</Text>
-            <View style={styles.confirmActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowDeleteConfirmModal(false)}
-                type="secondary"
-                size="small"
-                style={styles.confirmButton}
-              />
-              <Button
-                title="حذف"
-                onPress={handleConfirmDeleteFarm}
-                type="primary"
-                size="small"
-                style={[styles.confirmButton, { backgroundColor: COLORS.error }]}
-                loading={deleteFarmMutation.isPending}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* Add Batch Modal */}
-      <Modal
-        visible={showAddBatchModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowAddBatchModal(false)}
-      >
+      <Modal visible={showAddBatchModal} transparent animationType="slide" onRequestClose={() => setShowAddBatchModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>إدخال دفعة جديدة</Text>
@@ -1170,13 +1176,7 @@ export default function PoultryFarmDetailsScreen() {
             </View>
 
             <View style={styles.modalActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowAddBatchModal(false)}
-                type="secondary"
-                size="medium"
-                style={styles.modalButton}
-              />
+              <Button title="إلغاء" onPress={() => setShowAddBatchModal(false)} type="secondary" size="medium" style={styles.modalButton} />
               <Button title="إضافة" onPress={handleAddBatch} type="primary" size="medium" style={styles.modalButton} />
             </View>
           </View>
@@ -1184,12 +1184,7 @@ export default function PoultryFarmDetailsScreen() {
       </Modal>
 
       {/* Add Daily Data Modal */}
-      <Modal
-        visible={showAddDailyDataModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowAddDailyDataModal(false)}
-      >
+      <Modal visible={showAddDailyDataModal} transparent animationType="slide" onRequestClose={() => setShowAddDailyDataModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { maxHeight: "90%" }]}>
             <Text style={styles.modalTitle}>إضافة بيانات يومية</Text>
@@ -1246,6 +1241,18 @@ export default function PoultryFarmDetailsScreen() {
                     textAlign={isRTL ? "right" : "left"}
                   />
                 </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>متوسط وزن الفرد (جرام)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={dailyDataForm.averageWeight}
+                  onChangeText={(v) => setDailyDataForm((p) => ({ ...p, averageWeight: v }))}
+                  placeholder="مثال: 1200"
+                  keyboardType="numeric"
+                  textAlign={isRTL ? "right" : "left"}
+                />
               </View>
 
               <View style={styles.inputGroup}>
@@ -1331,25 +1338,14 @@ export default function PoultryFarmDetailsScreen() {
                 size="medium"
                 style={styles.modalButton}
               />
-              <Button
-                title="حفظ البيانات"
-                onPress={handleAddDailyData}
-                type="primary"
-                size="medium"
-                style={styles.modalButton}
-              />
+              <Button title="حفظ البيانات" onPress={handleAddDailyData} type="primary" size="medium" style={styles.modalButton} />
             </View>
           </View>
         </View>
       </Modal>
 
       {/* Weekly Report Modal */}
-      <Modal
-        visible={showWeeklyReportModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowWeeklyReportModal(false)}
-      >
+      <Modal visible={showWeeklyReportModal} transparent animationType="slide" onRequestClose={() => setShowWeeklyReportModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { maxHeight: "90%" }]}>
             <Text style={styles.modalTitle}>التقرير الأسبوعي</Text>
@@ -1360,8 +1356,7 @@ export default function PoultryFarmDetailsScreen() {
                   <View style={styles.weekReportHeader}>
                     <Text style={styles.weekReportTitle}>الأسبوع {week.weekNumber}</Text>
                     <Text style={styles.weekReportDate}>
-                      {new Date(week.startDate).toLocaleDateString("ar")} -{" "}
-                      {new Date(week.endDate).toLocaleDateString("ar")}
+                      {new Date(week.startDate).toLocaleDateString("ar")} - {new Date(week.endDate).toLocaleDateString("ar")}
                     </Text>
                   </View>
 
@@ -1390,33 +1385,22 @@ export default function PoultryFarmDetailsScreen() {
                   <Text style={styles.weekReportDays}>عدد الأيام المسجلة: {week.days.length}</Text>
                 </View>
               )) || (
-                  <View style={styles.emptyReport}>
-                    <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
-                    <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
-                  </View>
-                )}
+                <View style={styles.emptyReport}>
+                  <Text style={styles.emptyReportText}>لا توجد بيانات كافية لإنشاء تقرير أسبوعي</Text>
+                  <Text style={styles.emptyReportSubtext}>يجب تسجيل البيانات اليومية أولاً</Text>
+                </View>
+              )}
             </ScrollView>
 
             <View style={styles.modalActions}>
-              <Button
-                title="إغلاق"
-                onPress={() => setShowWeeklyReportModal(false)}
-                type="secondary"
-                size="medium"
-                style={styles.modalButton}
-              />
+              <Button title="إغلاق" onPress={() => setShowWeeklyReportModal(false)} type="secondary" size="medium" style={styles.modalButton} />
             </View>
           </View>
         </View>
       </Modal>
 
       {/* Sell Batch Modal */}
-      <Modal
-        visible={showSellBatchModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowSellBatchModal(false)}
-      >
+      <Modal visible={showSellBatchModal} transparent animationType="slide" onRequestClose={() => setShowSellBatchModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>بيع الدفعة</Text>
@@ -1444,9 +1428,7 @@ export default function PoultryFarmDetailsScreen() {
                   style={styles.input}
                   value={sellBatchForm.netProfit}
                   onChangeText={(value) => setSellBatchForm((prev) => ({ ...prev, netProfit: value }))}
-                  placeholder={`الربح المقدر: ${currentDays
-                    .reduce((sum, day) => sum + day.estimatedProfit, 0)
-                    .toFixed(2)} د.ع`}
+                  placeholder={`الربح المقدر: ${currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(2)} د.ع`}
                   keyboardType="numeric"
                   textAlign={isRTL ? "right" : "left"}
                 />
@@ -1472,25 +1454,14 @@ export default function PoultryFarmDetailsScreen() {
                 size="medium"
                 style={styles.modalButton}
               />
-              <Button
-                title="تأكيد البيع"
-                onPress={handleConfirmSellBatch}
-                type="primary"
-                size="medium"
-                style={styles.modalButton}
-              />
+              <Button title="تأكيد البيع" onPress={handleConfirmSellBatch} type="primary" size="medium" style={styles.modalButton} />
             </View>
           </View>
         </View>
       </Modal>
 
       {/* Batch Details Modal */}
-      <Modal
-        visible={showBatchDetailsModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowBatchDetailsModal(false)}
-      >
+      <Modal visible={showBatchDetailsModal} transparent animationType="slide" onRequestClose={() => setShowBatchDetailsModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { maxHeight: "90%" }]}>
             <Text style={styles.modalTitle}>تفاصيل الدفعة رقم {selectedBatch?.batchNumber}</Text>
@@ -1503,16 +1474,12 @@ export default function PoultryFarmDetailsScreen() {
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>تاريخ البداية:</Text>
-                    <Text style={styles.summaryValue}>
-                      {new Date(selectedBatch.startDate).toLocaleDateString("ar")}
-                    </Text>
+                    <Text style={styles.summaryValue}>{new Date(selectedBatch.startDate).toLocaleDateString("ar")}</Text>
                   </View>
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>تاريخ النهاية:</Text>
-                    <Text style={styles.summaryValue}>
-                      {selectedBatch.endDate ? new Date(selectedBatch.endDate).toLocaleDateString("ar") : "غير محدد"}
-                    </Text>
+                    <Text style={styles.summaryValue}>{selectedBatch.endDate ? new Date(selectedBatch.endDate).toLocaleDateString("ar") : "غير محدد"}</Text>
                   </View>
 
                   <View style={styles.summaryRow}>
@@ -1527,9 +1494,7 @@ export default function PoultryFarmDetailsScreen() {
 
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>الربح الصافي:</Text>
-                    <Text style={[styles.summaryValue, { color: COLORS.success }]}>
-                      {selectedBatch.totalProfit?.toFixed(2) || "0.00"} د.ع
-                    </Text>
+                    <Text style={[styles.summaryValue, { color: COLORS.success }]}>{selectedBatch.totalProfit?.toFixed(2) || "0.00"} د.ع</Text>
                   </View>
 
                   <View style={styles.summaryRow}>
@@ -1556,6 +1521,10 @@ export default function PoultryFarmDetailsScreen() {
                       return Object.keys(weeklyData).map((weekNum) => {
                         const weekNumber = parseInt(weekNum);
                         const weekDays = weeklyData[weekNumber];
+                        const batchId = selectedBatch?.id || "";
+                        const isExpanded =
+                          expandedCompletedWeek?.batchId === batchId &&
+                          expandedCompletedWeek?.weekNumber === weekNumber;
 
                         const totalFeedConsumption = weekDays.reduce((sum, day) => sum + day.feedConsumption, 0);
                         const totalMortality = weekDays.reduce((sum, day) => sum + day.mortality, 0);
@@ -1564,35 +1533,64 @@ export default function PoultryFarmDetailsScreen() {
 
                         return (
                           <View key={weekNumber} style={styles.weekDetailCard}>
-                            <Text style={styles.weekDetailTitle}>الأسبوع {weekNumber}</Text>
+                            <TouchableOpacity
+                              onPress={() =>
+                                setExpandedCompletedWeek(
+                                  isExpanded ? null : { batchId, weekNumber }
+                                )
+                              }
+                              style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}
+                            >
+                              <Text style={styles.weekDetailTitle}>الأسبوع {weekNumber}</Text>
+                              <Text style={{ fontSize: 18, color: COLORS.primary }}>{isExpanded ? "▲" : "▼"}</Text>
+                            </TouchableOpacity>
 
                             <View style={styles.weekDetailStats}>
                               <View style={styles.weekDetailStat}>
                                 <Text style={styles.weekDetailStatValue}>{totalFeedConsumption.toFixed(1)}kg</Text>
                                 <Text style={styles.weekDetailStatLabel}>إجمالي العلف</Text>
                               </View>
-
                               <View style={styles.weekDetailStat}>
                                 <Text style={styles.weekDetailStatValue}>{Math.round(avgWeight)}g</Text>
                                 <Text style={styles.weekDetailStatLabel}>متوسط الوزن</Text>
                               </View>
-
                               <View style={styles.weekDetailStat}>
-                                <Text style={[styles.weekDetailStatValue, { color: COLORS.error }]}>
-                                  {totalMortality}
-                                </Text>
+                                <Text style={[styles.weekDetailStatValue, { color: COLORS.error }]}>{totalMortality}</Text>
                                 <Text style={styles.weekDetailStatLabel}>إجمالي النفوق</Text>
                               </View>
-
                               <View style={styles.weekDetailStat}>
-                                <Text style={[styles.weekDetailStatValue, { color: COLORS.success }]}>
-                                  {totalProfit.toFixed(0)}
-                                </Text>
+                                <Text style={[styles.weekDetailStatValue, { color: COLORS.success }]}>{totalProfit.toFixed(0)}</Text>
                                 <Text style={styles.weekDetailStatLabel}>الربح المقدر</Text>
                               </View>
                             </View>
 
                             <Text style={styles.weekDetailDays}>عدد الأيام المسجلة: {weekDays.length}</Text>
+
+                            {isExpanded && (
+                              <View style={{ marginTop: 10, gap: 8 }}>
+                                {weekDays.map((day) => (
+                                  <View key={day.id} style={styles.expandedDayRow}>
+                                    <Text style={styles.expandedDayTitle}>اليوم {day.dayNumber}</Text>
+                                    <View style={styles.expandedDayStats}>
+                                      {day.temperature != null && <Text style={styles.expandedDayStat}>🌡 {day.temperature}°C</Text>}
+                                      {day.humidity != null && <Text style={styles.expandedDayStat}>💧 {day.humidity}%</Text>}
+                                      {day.feedConsumption > 0 && <Text style={styles.expandedDayStat}>🌾 {day.feedConsumption}kg</Text>}
+                                      {day.averageWeight > 0 && <Text style={styles.expandedDayStat}>⚖️ {day.averageWeight}g</Text>}
+                                      {day.waterConsumption != null && <Text style={styles.expandedDayStat}>🪣 {day.waterConsumption}L</Text>}
+                                      <Text style={[styles.expandedDayStat, { color: day.mortality > 0 ? COLORS.error : COLORS.darkGray }]}>
+                                        💀 {day.mortality}
+                                      </Text>
+                                    </View>
+                                    {day.activityLevel ? <Text style={styles.expandedDayNote}>الحركة: {day.activityLevel}</Text> : null}
+                                    {Array.isArray(day.mortalityReasons) && day.mortalityReasons.length > 0 && (
+                                      <Text style={[styles.expandedDayNote, { color: COLORS.error }]}>السبب: {day.mortalityReasons.join("، ")}</Text>
+                                    )}
+                                    {day.notes ? <Text style={styles.expandedDayNote}>ملاحظات: {day.notes}</Text> : null}
+                                    <Text style={styles.expandedDayDate}>{new Date(day.date).toLocaleDateString("ar")}</Text>
+                                  </View>
+                                ))}
+                              </View>
+                            )}
                           </View>
                         );
                       });
@@ -1619,57 +1617,29 @@ export default function PoultryFarmDetailsScreen() {
       </Modal>
 
       {/* Request Vet Confirmation Modal */}
-      <Modal
-        visible={showRequestVetModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRequestVetModal(false)}
-      >
+      <Modal visible={showRequestVetModal} transparent animationType="fade" onRequestClose={() => setShowRequestVetModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.confirmModal}>
             <Text style={styles.confirmTitle}>طلب تعيين طبيب بيطري</Text>
             <Text style={styles.confirmMessage}>سيتم إرسال طلبك إلى الإدارة لتعيين طبيب بيطري</Text>
 
             <View style={styles.confirmActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowRequestVetModal(false)}
-                type="secondary"
-                size="medium"
-                style={styles.confirmButton}
-              />
-              <Button
-                title="إرسال الطلب"
-                onPress={handleConfirmRequestVet}
-                type="primary"
-                size="medium"
-                style={styles.confirmButton}
-              />
+              <Button title="إلغاء" onPress={() => setShowRequestVetModal(false)} type="secondary" size="medium" style={styles.confirmButton} />
+              <Button title="إرسال الطلب" onPress={handleConfirmRequestVet} type="primary" size="medium" style={styles.confirmButton} />
             </View>
           </View>
         </View>
       </Modal>
 
       {/* Contact Vet Modal */}
-      <Modal
-        visible={showContactVetModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowContactVetModal(false)}
-      >
+      <Modal visible={showContactVetModal} transparent animationType="fade" onRequestClose={() => setShowContactVetModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.confirmModal}>
             <Text style={styles.confirmTitle}>تواصل مع الطبيب البيطري</Text>
             <Text style={styles.confirmMessage}>هل تريد التواصل مع {farm?.assignedVet?.name}؟</Text>
 
             <View style={styles.confirmActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowContactVetModal(false)}
-                type="secondary"
-                size="medium"
-                style={styles.confirmButton}
-              />
+              <Button title="إلغاء" onPress={() => setShowContactVetModal(false)} type="secondary" size="medium" style={styles.confirmButton} />
               <Button
                 title="اتصال"
                 onPress={() => {
@@ -1696,89 +1666,44 @@ export default function PoultryFarmDetailsScreen() {
       </Modal>
 
       {/* Confirm Vet Removal Modal */}
-      <Modal
-        visible={showConfirmVetRemoval}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowConfirmVetRemoval(false)}
-      >
+      <Modal visible={showConfirmVetRemoval} transparent animationType="fade" onRequestClose={() => setShowConfirmVetRemoval(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.confirmModal}>
             <Text style={styles.confirmTitle}>طلب إلغاء تعيين الطبيب</Text>
             <Text style={styles.confirmMessage}>هل أنت متأكد من إرسال طلب إلغاء تعيين {farm?.assignedVet?.name}؟</Text>
 
             <View style={styles.confirmActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowConfirmVetRemoval(false)}
-                type="secondary"
-                size="medium"
-                style={styles.confirmButton}
-              />
-              <Button
-                title="إرسال طلب الإلغاء"
-                onPress={handleConfirmRemoveVet}
-                type="primary"
-                size="medium"
-                style={styles.confirmButton}
-              />
+              <Button title="إلغاء" onPress={() => setShowConfirmVetRemoval(false)} type="secondary" size="medium" style={styles.confirmButton} />
+              <Button title="إرسال طلب الإلغاء" onPress={handleConfirmRemoveVet} type="primary" size="medium" style={styles.confirmButton} />
             </View>
           </View>
         </View>
       </Modal>
 
       {/* Request Supervisor Confirmation Modal */}
-      <Modal
-        visible={showRequestSupervisorModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowRequestSupervisorModal(false)}
-      >
+      <Modal visible={showRequestSupervisorModal} transparent animationType="fade" onRequestClose={() => setShowRequestSupervisorModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.confirmModal}>
             <Text style={styles.confirmTitle}>طلب إشراف</Text>
             <Text style={styles.confirmMessage}>سيتم إرسال طلبك إلى الإدارة لتعيين مشرف</Text>
 
             <View style={styles.confirmActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowRequestSupervisorModal(false)}
-                type="secondary"
-                size="medium"
-                style={styles.confirmButton}
-              />
-              <Button
-                title="إرسال الطلب"
-                onPress={handleConfirmRequestSupervisor}
-                type="primary"
-                size="medium"
-                style={styles.confirmButton}
-              />
+              <Button title="إلغاء" onPress={() => setShowRequestSupervisorModal(false)} type="secondary" size="medium" style={styles.confirmButton} />
+              <Button title="إرسال الطلب" onPress={handleConfirmRequestSupervisor} type="primary" size="medium" style={styles.confirmButton} />
             </View>
           </View>
         </View>
       </Modal>
 
       {/* Contact Supervisor Modal */}
-      <Modal
-        visible={showContactSupervisorModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowContactSupervisorModal(false)}
-      >
+      <Modal visible={showContactSupervisorModal} transparent animationType="fade" onRequestClose={() => setShowContactSupervisorModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.confirmModal}>
             <Text style={styles.confirmTitle}>تواصل مع المشرف</Text>
             <Text style={styles.confirmMessage}>هل تريد التواصل مع {farm?.assignedSupervisor?.name}؟</Text>
 
             <View style={styles.confirmActions}>
-              <Button
-                title="إلغاء"
-                onPress={() => setShowContactSupervisorModal(false)}
-                type="secondary"
-                size="medium"
-                style={styles.confirmButton}
-              />
+              <Button title="إلغاء" onPress={() => setShowContactSupervisorModal(false)} type="secondary" size="medium" style={styles.confirmButton} />
               <Button
                 title="اتصال"
                 onPress={() => {
@@ -1805,33 +1730,156 @@ export default function PoultryFarmDetailsScreen() {
       </Modal>
 
       {/* Confirm Supervisor Removal Modal */}
-      <Modal
-        visible={showConfirmSupervisorRemoval}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowConfirmSupervisorRemoval(false)}
-      >
+      <Modal visible={showConfirmSupervisorRemoval} transparent animationType="fade" onRequestClose={() => setShowConfirmSupervisorRemoval(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.confirmModal}>
             <Text style={styles.confirmTitle}>طلب إلغاء تعيين المشرف</Text>
-            <Text style={styles.confirmMessage}>
-              هل أنت متأكد من إرسال طلب إلغاء تعيين {farm?.assignedSupervisor?.name}؟
-            </Text>
+            <Text style={styles.confirmMessage}>هل أنت متأكد من إرسال طلب إلغاء تعيين {farm?.assignedSupervisor?.name}؟</Text>
 
             <View style={styles.confirmActions}>
+              <Button title="إلغاء" onPress={() => setShowConfirmSupervisorRemoval(false)} type="secondary" size="medium" style={styles.confirmButton} />
+              <Button title="إرسال طلب الإلغاء" onPress={handleConfirmRemoveSupervisor} type="primary" size="medium" style={styles.confirmButton} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Day Modal */}
+      <Modal visible={showEditDayModal} transparent animationType="slide" onRequestClose={() => setShowEditDayModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: "90%" }]}>
+            <Text style={styles.modalTitle}>تعديل بيانات اليوم {editingDay?.dayNumber}</Text>
+
+            <ScrollView style={styles.dailyForm} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>الحرارة (°C)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editDayForm.temperature}
+                    onChangeText={(v) => setEditDayForm((p) => ({ ...p, temperature: v }))}
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>الرطوبة (%)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editDayForm.humidity}
+                    onChangeText={(v) => setEditDayForm((p) => ({ ...p, humidity: v }))}
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>العلف (كيلو)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editDayForm.feedConsumption}
+                    onChangeText={(v) => setEditDayForm((p) => ({ ...p, feedConsumption: v }))}
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>الماء (لتر)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editDayForm.waterConsumption}
+                    onChangeText={(v) => setEditDayForm((p) => ({ ...p, waterConsumption: v }))}
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>متوسط وزن الفرد (جرام)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editDayForm.averageWeight}
+                  onChangeText={(v) => setEditDayForm((p) => ({ ...p, averageWeight: v }))}
+                  keyboardType="numeric"
+                  textAlign={isRTL ? "right" : "left"}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>الحركة</Text>
+                <TextInput
+                  style={styles.input}
+                  value={editDayForm.activityLevel}
+                  onChangeText={(v) => setEditDayForm((p) => ({ ...p, activityLevel: v }))}
+                  textAlign={isRTL ? "right" : "left"}
+                />
+              </View>
+
+              <View style={styles.inputRow}>
+                <View style={[styles.inputGroup, { flex: 1 }]}>
+                  <Text style={styles.inputLabel}>النفوق (عدد)</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editDayForm.mortality}
+                    onChangeText={(v) => setEditDayForm((p) => ({ ...p, mortality: v }))}
+                    keyboardType="numeric"
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+                <View style={[styles.inputGroup, { flex: 2 }]}>
+                  <Text style={styles.inputLabel}>سبب النفوق</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={editDayForm.mortalityReasons}
+                    onChangeText={(v) => setEditDayForm((p) => ({ ...p, mortalityReasons: v }))}
+                    textAlign={isRTL ? "right" : "left"}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>العلاجات أو اللقاحات</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={editDayForm.treatments}
+                  onChangeText={(v) => setEditDayForm((p) => ({ ...p, treatments: v }))}
+                  multiline
+                  numberOfLines={2}
+                  textAlign={isRTL ? "right" : "left"}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>الملاحظات</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={editDayForm.notes}
+                  onChangeText={(v) => setEditDayForm((p) => ({ ...p, notes: v }))}
+                  multiline
+                  numberOfLines={3}
+                  textAlign={isRTL ? "right" : "left"}
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalActions}>
               <Button
                 title="إلغاء"
-                onPress={() => setShowConfirmSupervisorRemoval(false)}
+                onPress={() => { setShowEditDayModal(false); setEditingDay(null); }}
                 type="secondary"
                 size="medium"
-                style={styles.confirmButton}
+                style={styles.modalButton}
               />
               <Button
-                title="إرسال طلب الإلغاء"
-                onPress={handleConfirmRemoveSupervisor}
+                title="حفظ التعديلات"
+                onPress={handleSaveEditDay}
                 type="primary"
                 size="medium"
-                style={styles.confirmButton}
+                style={styles.modalButton}
+                disabled={updateDailyDataMutation.isPending}
               />
             </View>
           </View>
@@ -2530,6 +2578,46 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     textAlign: "left",
     fontWeight: "600",
+  },
+  expandedDayRow: {
+    backgroundColor: "#F8F9FA",
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
+  },
+  expandedDayTitle: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "right",
+    marginBottom: 4,
+  },
+  expandedDayStats: {
+    flexDirection: "row-reverse",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 4,
+  },
+  expandedDayStat: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    backgroundColor: COLORS.white,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  expandedDayNote: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    textAlign: "right",
+    marginTop: 2,
+  },
+  expandedDayDate: {
+    fontSize: 10,
+    color: "#aaa",
+    textAlign: "left",
+    marginTop: 4,
   },
   loadingContainer: {
     padding: 20,

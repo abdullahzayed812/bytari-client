@@ -37,6 +37,7 @@ export default function AddPetScreen() {
     image: "https://images.unsplash.com/photo-1552053831-71594a27632d",
     medicalHistory: "No major illnesses. Had minor skin allergy in 2023.",
     vaccinations: "Rabies, DHPP, Bordetella",
+    isNeutered: false,
   });
 
   const createPetMutation = useMutation(trpc.pets.create.mutationOptions({}));
@@ -122,6 +123,7 @@ export default function AddPetScreen() {
         image: formData.image,
         medicalHistory: formData.medicalHistory.trim() || undefined,
         vaccinations: formData.vaccinations.trim() || undefined,
+        isNeutered: formData.isNeutered,
       },
       {
         onSuccess: () => {
@@ -171,6 +173,23 @@ export default function AddPetScreen() {
           </Text>
         </TouchableOpacity>
       ))}
+    </View>
+  );
+
+  const renderNeuteredSelector = () => (
+    <View style={styles.genderContainer}>
+      <TouchableOpacity
+        style={[styles.genderButton, formData.isNeutered && styles.genderButtonActive]}
+        onPress={() => setFormData((prev) => ({ ...prev, isNeutered: true }))}
+      >
+        <Text style={[styles.genderButtonText, formData.isNeutered && styles.genderButtonTextActive]}>عقيم</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.genderButton, !formData.isNeutered && styles.genderButtonActive]}
+        onPress={() => setFormData((prev) => ({ ...prev, isNeutered: false }))}
+      >
+        <Text style={[styles.genderButtonText, !formData.isNeutered && styles.genderButtonTextActive]}>غير عقيم</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -243,6 +262,12 @@ export default function AddPetScreen() {
             <Text style={styles.label}>الجنس</Text>
             {renderGenderSelector()}
           </View>
+        </View>
+
+        {/* Neutered */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>التعقيم</Text>
+          {renderNeuteredSelector()}
         </View>
 
         {/* Weight and Color Row */}

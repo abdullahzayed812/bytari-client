@@ -1,15 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Image,
-  ActivityIndicator,
-  TextInput,
-  Linking,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator, TextInput, Linking } from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
@@ -96,6 +85,12 @@ export default function UnionBranchDetailsScreen() {
 
   const assignSupervisorMutation = useMutation(trpc.union.branch.assignSupervisor.mutationOptions());
 
+  const { data: supervisorsData } = useQuery({
+    ...trpc.union.supervisors.list.queryOptions(),
+    enabled: !!branch?.id,
+  });
+  const branchSupervisors = (supervisorsData?.supervisors ?? []).filter((s) => s.branchId === branch?.id);
+
   const handleAssignSupervisor = () => {
     if (branch && email) {
       assignSupervisorMutation.mutate(
@@ -103,6 +98,7 @@ export default function UnionBranchDetailsScreen() {
         {
           onSuccess: () => {
             Alert.alert("عملية ناجحة", "تم اضافة المستخدم مشرف لفرع النقابة");
+            setEmail("");
             queryClient.invalidateQueries(trpc.union.branch.get.queryKey as any);
           },
           onError: (error) => {
@@ -137,10 +133,7 @@ export default function UnionBranchDetailsScreen() {
           text: "تأكيد الإلغاء",
           style: "destructive",
           onPress: () => {
-            registerMutation.mutate(
-              { branchId: branch.id },
-              { onSuccess: (data) => setIsRegistered(data.isRegistered) },
-            );
+            registerMutation.mutate({ branchId: branch.id }, { onSuccess: (data) => setIsRegistered(data.isRegistered) });
           },
         },
       ]);
@@ -153,10 +146,7 @@ export default function UnionBranchDetailsScreen() {
           {
             text: "تأكيد التسجيل",
             onPress: () => {
-              registerMutation.mutate(
-                { branchId: branch.id },
-                { onSuccess: (data) => setIsRegistered(data.isRegistered) },
-              );
+              registerMutation.mutate({ branchId: branch.id }, { onSuccess: (data) => setIsRegistered(data.isRegistered) });
             },
           },
         ],
@@ -221,8 +211,7 @@ export default function UnionBranchDetailsScreen() {
     return stars;
   };
 
-  const canManageBranch =
-    isSuperAdmin || moderatorPermissions?.unionManagement || supervisedBranchIds?.includes(branch?.id);
+  const canManageBranch = isSuperAdmin || moderatorPermissions?.unionManagement || supervisedBranchIds?.includes(branch?.id);
 
   if (isLoading) {
     return (
@@ -251,16 +240,10 @@ export default function UnionBranchDetailsScreen() {
           headerRight: () =>
             isSuperAdmin || moderatorPermissions?.unionManagement ? (
               <View style={styles.headerActions}>
-                <TouchableOpacity
-                  onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
-                  style={[styles.headerButton, styles.addButton]}
-                >
+                <TouchableOpacity onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)} style={[styles.headerButton, styles.addButton]}>
                   <Plus size={20} color={COLORS.white} />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push(`/edit-union-branch?id=${branch.id}`)}
-                  style={[styles.headerButton, styles.editButton]}
-                >
+                <TouchableOpacity onPress={() => router.push(`/edit-union-branch?id=${branch.id}`)} style={[styles.headerButton, styles.editButton]}>
                   <Edit3 size={20} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
@@ -274,10 +257,7 @@ export default function UnionBranchDetailsScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.topSectionTitle}>إعلانات النقابة</Text>
             {canManageBranch && (
-              <TouchableOpacity
-                onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)}
-                style={styles.addAnnouncementButton}
-              >
+              <TouchableOpacity onPress={() => router.push(`/add-union-announcement?branchId=${branch.id}`)} style={styles.addAnnouncementButton}>
                 <Plus size={16} color={COLORS.primary} />
                 <Text style={styles.addAnnouncementText}>إضافة إعلان</Text>
               </TouchableOpacity>
@@ -291,12 +271,7 @@ export default function UnionBranchDetailsScreen() {
               announcements?.slice(0, 2)?.map((announcement) => (
                 <View key={announcement.id} style={styles.topAnnouncementCard}>
                   <View style={styles.announcementHeader}>
-                    <View
-                      style={[
-                        styles.announcementType,
-                        { backgroundColor: getAnnouncementTypeColor(announcement.type) },
-                      ]}
-                    >
+                    <View style={[styles.announcementType, { backgroundColor: getAnnouncementTypeColor(announcement.type) }]}>
                       <Text style={styles.announcementTypeText}>{getAnnouncementTypeLabel(announcement.type)}</Text>
                     </View>
                     {announcement.isImportant && (
@@ -323,10 +298,7 @@ export default function UnionBranchDetailsScreen() {
                   )}
 
                   {announcement.link && (
-                    <TouchableOpacity
-                      style={styles.announcementLink}
-                      onPress={() => handleLinkPress(announcement.link)}
-                    >
+                    <TouchableOpacity style={styles.announcementLink} onPress={() => handleLinkPress(announcement.link)}>
                       <Link size={16} color={COLORS.primary} />
                       <Text style={styles.announcementLinkText}>{announcement.linkText || "رابط ذات صلة"}</Text>
                       <ExternalLink size={14} color={COLORS.primary} />
@@ -334,9 +306,7 @@ export default function UnionBranchDetailsScreen() {
                   )}
 
                   <View style={styles.announcementFooter}>
-                    {announcement.author && (
-                      <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>
-                    )}
+                    {announcement.author && <Text style={styles.announcementAuthor}>بواسطة: {announcement.author}</Text>}
                     {announcement.views && <Text style={styles.announcementViews}>{announcement.views} مشاهدة</Text>}
                   </View>
 
@@ -344,11 +314,7 @@ export default function UnionBranchDetailsScreen() {
                     <View style={styles.announcementActions}>
                       <TouchableOpacity
                         style={styles.editAnnouncementButton}
-                        onPress={() =>
-                          router.push(
-                            `/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`,
-                          )
-                        }
+                        onPress={() => router.push(`/edit-union-announcement?branchId=${branch.id}&announcementId=${announcement.id}`)}
                       >
                         <Edit3 size={14} color={COLORS.primary} />
                         <Text style={styles.editAnnouncementText}>تعديل</Text>
@@ -376,23 +342,11 @@ export default function UnionBranchDetailsScreen() {
           </View>
           <View style={styles.branchActions}>
             <TouchableOpacity
-              style={[
-                styles.followButton,
-                isFollowing || branch.isFollowing ? styles.followingButton : styles.notFollowingButton,
-              ]}
+              style={[styles.followButton, isFollowing || branch.isFollowing ? styles.followingButton : styles.notFollowingButton]}
               onPress={handleFollowToggle}
             >
-              {isFollowing || branch.isFollowing ? (
-                <BellOff size={16} color={COLORS.white} />
-              ) : (
-                <Bell size={16} color={COLORS.primary} />
-              )}
-              <Text
-                style={[
-                  styles.followButtonText,
-                  isFollowing || branch.isFollowing ? styles.followingText : styles.notFollowingText,
-                ]}
-              >
+              {isFollowing || branch.isFollowing ? <BellOff size={16} color={COLORS.white} /> : <Bell size={16} color={COLORS.primary} />}
+              <Text style={[styles.followButtonText, isFollowing || branch.isFollowing ? styles.followingText : styles.notFollowingText]}>
                 {isFollowing || branch.isFollowing ? "متابع" : "متابعة"}
               </Text>
             </TouchableOpacity>
@@ -403,9 +357,7 @@ export default function UnionBranchDetailsScreen() {
               disabled={registerMutation.isPending}
             >
               <UserCheck size={16} color={isRegistered ? COLORS.white : COLORS.primary} />
-              <Text style={[styles.followButtonText, isRegistered ? styles.followingText : styles.notFollowingText]}>
-                {isRegistered ? "مسجل" : "تسجيل"}
-              </Text>
+              <Text style={[styles.followButtonText, isRegistered ? styles.followingText : styles.notFollowingText]}>{isRegistered ? "مسجل" : "تسجيل"}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -482,6 +434,30 @@ export default function UnionBranchDetailsScreen() {
             <TouchableOpacity style={styles.button} onPress={handleAssignSupervisor}>
               <Text style={styles.buttonText}>Assign Supervisor</Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Branch Supervisors */}
+        {branchSupervisors.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>مشرفو الفرع</Text>
+            <View style={styles.supervisorsList}>
+              {branchSupervisors.map((s) => (
+                <TouchableOpacity
+                  key={s.id}
+                  style={styles.supervisorCard}
+                  onPress={() => router.push({ pathname: "/user-profile", params: { userId: String(s.userId) } })}
+                >
+                  <View style={styles.supervisorAvatarCircle}>
+                    <UserCheck size={22} color={COLORS.primary} />
+                  </View>
+                  <View style={styles.supervisorInfo}>
+                    <Text style={styles.supervisorName}>{s.userName ?? "—"}</Text>
+                    <Text style={styles.supervisorEmail}>{s.userEmail ?? "—"}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         )}
 
@@ -1013,5 +989,39 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 10,
     fontWeight: "bold",
+  },
+  supervisorsList: {
+    gap: 10,
+  },
+  supervisorCard: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
+    padding: 12,
+  },
+  supervisorAvatarCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#EBF5FF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  supervisorInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  supervisorName: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "right",
+  },
+  supervisorEmail: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "right",
   },
 });

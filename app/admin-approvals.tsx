@@ -33,7 +33,7 @@ import ImageViewerModal from "../components/ImageViewerModal";
 
 interface ApprovalRequest {
   id: number;
-  requestType: "vet_registration" | "clinic_activation" | "store_activation" | "clinic_renewal" | "store_renewal";
+  requestType: "vet_registration" | "clinic_activation" | "store_activation" | "clinic_renewal" | "store_renewal" | "poultry_farm_activation" | "poultry_farm_renewal";
   requesterId: number;
   resourceId: number;
   title: string;
@@ -66,8 +66,6 @@ export default function AdminApprovalsScreen() {
     | "store_activation"
     | "clinic_renewal"
     | "store_renewal"
-    | "poultry_farm_activation"
-    | "poultry_farm_renewal"
     | "lost_pets"
     | "breeding_pets"
     | "pet_management"
@@ -1056,8 +1054,8 @@ export default function AdminApprovalsScreen() {
       </View>
 
       <ScrollView style={styles.scrollView}>
-        {approvals?.length > 0 ? (
-          approvals?.map((request: ApprovalRequest) => {
+        {approvals?.filter((r: ApprovalRequest) => r.requestType !== "poultry_farm_activation" && r.requestType !== "poultry_farm_renewal")?.length > 0 ? (
+          approvals?.filter((r: ApprovalRequest) => r.requestType !== "poultry_farm_activation" && r.requestType !== "poultry_farm_renewal")?.map((request: ApprovalRequest) => {
             const thumbnailUri =
               request.requestType === "vet_registration"
                 ? getFirstImage(request.identityImages)

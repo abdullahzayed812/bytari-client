@@ -27,6 +27,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { trpc } from "../../lib/trpc";
+import { PET_TYPE_LABELS } from "../add-adoption-pet";
 import { useToastContext } from "@/providers/ToastProvider";
 import ImageViewerModal from "@/components/ImageViewerModal";
 
@@ -1154,7 +1155,7 @@ export default function PetDetailsScreen() {
             )}
           </View>
           <Text style={styles.petType}>
-            {t(`${pet.type}`)} {pet.breed ? `- ${pet.breed}` : ""}
+            {PET_TYPE_LABELS[pet.type as keyof typeof PET_TYPE_LABELS] ?? pet.type} {pet.breed ? `- ${pet.breed}` : ""}
           </Text>
 
           <View style={styles.petDetailsRow}>
@@ -1189,6 +1190,15 @@ export default function PetDetailsScreen() {
               <Text style={{ fontSize: 12, marginTop: 4 }}>{pet.id}</Text>
             </TouchableOpacity>
           )}
+
+          {/* Neutered status */}
+          <View style={{ marginTop: 8, alignItems: "center" }}>
+            <View style={[styles.neuteredBadge, (pet as any).isNeutered ? styles.neuteredBadgeYes : styles.neuteredBadgeNo]}>
+              <Text style={styles.neuteredBadgeText}>
+                {(pet as any).isNeutered ? "عقيم" : "غير عقيم"}
+              </Text>
+            </View>
+          </View>
 
           {isClinicAccess && (
             <View style={styles.clinicActions}>
@@ -2486,6 +2496,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: COLORS.black,
+  },
+  neuteredBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderRadius: 20,
+    marginTop: 4,
+  },
+  neuteredBadgeYes: {
+    backgroundColor: "#E0F2FE",
+  },
+  neuteredBadgeNo: {
+    backgroundColor: "#F3F4F6",
+  },
+  neuteredBadgeText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#374151",
   },
   tabsContainer: {
     flexDirection: "row",

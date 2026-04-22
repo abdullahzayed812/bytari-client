@@ -345,6 +345,17 @@ export default function VetUnionScreen() {
                 )}
               </TouchableOpacity>
             </View>
+
+            {/* Supervisors row */}
+            <View style={[styles.managementCardsRow, { marginTop: 12 }]}>
+              <TouchableOpacity
+                style={[styles.managementCard, { width: "100%" }]}
+                onPress={() => router.push("/union-supervisors")}
+              >
+                <UserCheck size={28} color="#7C3AED" />
+                <Text style={styles.managementCardTitle}>مشرفو فروع النقابة</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 

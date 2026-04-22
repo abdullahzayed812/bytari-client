@@ -1,30 +1,8 @@
 import React, { useMemo, useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  FlatList,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, FlatList, ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import {
-  CheckCircle,
-  XCircle,
-  Trash2,
-  Search,
-  Phone,
-  Clock,
-  RefreshCw,
-  AlertTriangle,
-  Calendar,
-  Bird,
-} from "lucide-react-native";
+import { CheckCircle, XCircle, Trash2, Search, Phone, Clock, RefreshCw, AlertTriangle, Calendar, Bird } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
@@ -120,7 +98,7 @@ export default function AdminPoultryFarmsManagement() {
         (f) =>
           f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           f.owner?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          f.location.toLowerCase().includes(searchQuery.toLowerCase())
+          f.location.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
     switch (selectedFilter) {
@@ -178,7 +156,7 @@ export default function AdminPoultryFarmsManagement() {
         count: farms.filter((f) => f.status === "banned").length,
       },
     ],
-    [farms]
+    [farms],
   );
 
   const confirmActivate = useCallback(() => {
@@ -204,7 +182,7 @@ export default function AdminPoultryFarmsManagement() {
           setActivationEndDate("");
         },
         onError: (err) => showToast({ type: "error", message: err.message }),
-      }
+      },
     );
   }, [selectedFarm, activationStartDate, activationEndDate]);
 
@@ -225,7 +203,7 @@ export default function AdminPoultryFarmsManagement() {
           setRejectionReason("");
         },
         onError: (err) => showToast({ type: "error", message: err.message }),
-      }
+      },
     );
   }, [selectedFarm, rejectionReason]);
 
@@ -246,32 +224,35 @@ export default function AdminPoultryFarmsManagement() {
           setBanReason("");
         },
         onError: (err) => showToast({ type: "error", message: err.message }),
-      }
+      },
     );
   }, [selectedFarm, banReason]);
 
-  const confirmDeactivate = useCallback((farm: PoultryFarm) => {
-    Alert.alert("إيقاف التفعيل", `هل تريد إيقاف تفعيل "${farm.name}"؟`, [
-      { text: "إلغاء", style: "cancel" },
-      {
-        text: "إيقاف",
-        style: "destructive",
-        onPress: () =>
-          deactivateMutation.mutate(
-            { farmId: farm.id },
-            {
-              onSuccess: () => {
-                showToast({ type: "success", message: "تم إيقاف تفعيل الحقل" });
-                queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey() as any);
-                refetch();
-                setShowDetailModal(false);
+  const confirmDeactivate = useCallback(
+    (farm: PoultryFarm) => {
+      Alert.alert("إيقاف التفعيل", `هل تريد إيقاف تفعيل "${farm.name}"؟`, [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "إيقاف",
+          style: "destructive",
+          onPress: () =>
+            deactivateMutation.mutate(
+              { farmId: farm.id },
+              {
+                onSuccess: () => {
+                  showToast({ type: "success", message: "تم إيقاف تفعيل الحقل" });
+                  queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey() as any);
+                  refetch();
+                  setShowDetailModal(false);
+                },
+                onError: (err) => showToast({ type: "error", message: err.message }),
               },
-              onError: (err) => showToast({ type: "error", message: err.message }),
-            }
-          ),
-      },
-    ]);
-  }, [deactivateMutation]);
+            ),
+        },
+      ]);
+    },
+    [deactivateMutation],
+  );
 
   const handleDelete = useCallback(
     (farm: PoultryFarm) => {
@@ -291,12 +272,12 @@ export default function AdminPoultryFarmsManagement() {
                   setShowDetailModal(false);
                 },
                 onError: (err) => showToast({ type: "error", message: err.message }),
-              }
+              },
             ),
         },
       ]);
     },
-    [deleteMutation]
+    [deleteMutation],
   );
 
   const renderActivateModal = () => (
@@ -336,9 +317,7 @@ export default function AdminPoultryFarmsManagement() {
             textAlign="right"
           />
 
-          <Text style={styles.dateNote}>
-            سيتم تفعيل حقل الدواجن من تاريخ البدء حتى تاريخ الانتهاء
-          </Text>
+          <Text style={styles.dateNote}>سيتم تفعيل حقل الدواجن من تاريخ البدء حتى تاريخ الانتهاء</Text>
 
           <View style={styles.modalButtons}>
             <TouchableOpacity
@@ -351,11 +330,7 @@ export default function AdminPoultryFarmsManagement() {
             >
               <Text style={styles.cancelBtnText}>إلغاء</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalBtn, styles.confirmBtn]}
-              onPress={confirmActivate}
-              disabled={activateMutation.isPending}
-            >
+            <TouchableOpacity style={[styles.modalBtn, styles.confirmBtn]} onPress={confirmActivate} disabled={activateMutation.isPending}>
               <CheckCircle size={18} color="#fff" />
               <Text style={styles.confirmBtnText}>تفعيل</Text>
             </TouchableOpacity>
@@ -371,7 +346,12 @@ export default function AdminPoultryFarmsManagement() {
         <View style={styles.actionModalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>رفض الطلب</Text>
-            <TouchableOpacity onPress={() => { setShowRejectModal(false); setRejectionReason(""); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowRejectModal(false);
+                setRejectionReason("");
+              }}
+            >
               <XCircle size={24} color="#999" />
             </TouchableOpacity>
           </View>
@@ -392,15 +372,14 @@ export default function AdminPoultryFarmsManagement() {
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalBtn, styles.cancelBtn]}
-              onPress={() => { setShowRejectModal(false); setRejectionReason(""); }}
+              onPress={() => {
+                setShowRejectModal(false);
+                setRejectionReason("");
+              }}
             >
               <Text style={styles.cancelBtnText}>إلغاء</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalBtn, styles.rejectBtn]}
-              onPress={confirmReject}
-              disabled={rejectMutation.isPending}
-            >
+            <TouchableOpacity style={[styles.modalBtn, styles.rejectBtn]} onPress={confirmReject} disabled={rejectMutation.isPending}>
               <XCircle size={18} color="#fff" />
               <Text style={styles.confirmBtnText}>رفض</Text>
             </TouchableOpacity>
@@ -416,7 +395,12 @@ export default function AdminPoultryFarmsManagement() {
         <View style={styles.actionModalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>حظر الحقل</Text>
-            <TouchableOpacity onPress={() => { setShowBanModal(false); setBanReason(""); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowBanModal(false);
+                setBanReason("");
+              }}
+            >
               <XCircle size={24} color="#999" />
             </TouchableOpacity>
           </View>
@@ -437,15 +421,14 @@ export default function AdminPoultryFarmsManagement() {
           <View style={styles.modalButtons}>
             <TouchableOpacity
               style={[styles.modalBtn, styles.cancelBtn]}
-              onPress={() => { setShowBanModal(false); setBanReason(""); }}
+              onPress={() => {
+                setShowBanModal(false);
+                setBanReason("");
+              }}
             >
               <Text style={styles.cancelBtnText}>إلغاء</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalBtn, { backgroundColor: "#7F1D1D" }]}
-              onPress={confirmBan}
-              disabled={banMutation.isPending}
-            >
+            <TouchableOpacity style={[styles.modalBtn, { backgroundColor: "#7F1D1D" }]} onPress={confirmBan} disabled={banMutation.isPending}>
               <AlertTriangle size={18} color="#fff" />
               <Text style={styles.confirmBtnText}>حظر</Text>
             </TouchableOpacity>
@@ -477,9 +460,7 @@ export default function AdminPoultryFarmsManagement() {
                 <View style={styles.renewalBanner}>
                   <AlertTriangle size={18} color="#fff" />
                   <Text style={styles.renewalBannerText}>
-                    {selectedFarm.reviewingRenewalRequest
-                      ? "طلب تجديد قيد المراجعة"
-                      : "انتهى الاشتراك – يحتاج تجديد"}
+                    {selectedFarm.reviewingRenewalRequest ? "طلب تجديد قيد المراجعة" : "انتهى الاشتراك – يحتاج تجديد"}
                   </Text>
                 </View>
               )}
@@ -514,19 +495,21 @@ export default function AdminPoultryFarmsManagement() {
                 <InfoRow
                   label="الحالة"
                   value={
-                    selectedFarm.status === "active" ? "نشط"
-                    : selectedFarm.status === "pending" ? "قيد المراجعة"
-                    : selectedFarm.status === "rejected" ? "مرفوض"
-                    : selectedFarm.status === "deactivated" ? "موقوف"
-                    : selectedFarm.status === "banned" ? "محظور"
-                    : selectedFarm.needsRenewal ? "منتهي"
-                    : "غير محدد"
+                    selectedFarm.status === "active"
+                      ? "نشط"
+                      : selectedFarm.status === "pending"
+                        ? "قيد المراجعة"
+                        : selectedFarm.status === "rejected"
+                          ? "مرفوض"
+                          : selectedFarm.status === "deactivated"
+                            ? "موقوف"
+                            : selectedFarm.status === "banned"
+                              ? "محظور"
+                              : selectedFarm.needsRenewal
+                                ? "منتهي"
+                                : "غير محدد"
                   }
-                  valueColor={
-                    selectedFarm.status === "active" ? "#27AE60"
-                    : selectedFarm.status === "banned" ? "#7F1D1D"
-                    : "#E74C3C"
-                  }
+                  valueColor={selectedFarm.status === "active" ? "#27AE60" : selectedFarm.status === "banned" ? "#7F1D1D" : "#E74C3C"}
                 />
                 <InfoRow label="تاريخ البدء" value={formatDate(selectedFarm.activationStartDate)} />
                 <InfoRow label="تاريخ الانتهاء" value={formatDate(selectedFarm.activationEndDate)} />
@@ -547,14 +530,20 @@ export default function AdminPoultryFarmsManagement() {
                 <>
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.activateActionBtn]}
-                    onPress={() => { setShowDetailModal(false); setShowActivateModal(true); }}
+                    onPress={() => {
+                      setShowDetailModal(false);
+                      setShowActivateModal(true);
+                    }}
                   >
                     <CheckCircle size={18} color="#fff" />
                     <Text style={styles.actionBtnText}>تفعيل</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionBtn, styles.rejectActionBtn]}
-                    onPress={() => { setShowDetailModal(false); setShowRejectModal(true); }}
+                    onPress={() => {
+                      setShowDetailModal(false);
+                      setShowRejectModal(true);
+                    }}
                   >
                     <XCircle size={18} color="#fff" />
                     <Text style={styles.actionBtnText}>رفض</Text>
@@ -566,7 +555,10 @@ export default function AdminPoultryFarmsManagement() {
               {selectedFarm.needsRenewal && (
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.activateActionBtn]}
-                  onPress={() => { setShowDetailModal(false); setShowActivateModal(true); }}
+                  onPress={() => {
+                    setShowDetailModal(false);
+                    setShowActivateModal(true);
+                  }}
                 >
                   <RefreshCw size={18} color="#fff" />
                   <Text style={styles.actionBtnText}>تجديد الاشتراك</Text>
@@ -575,10 +567,7 @@ export default function AdminPoultryFarmsManagement() {
 
               {/* Active → deactivate */}
               {selectedFarm.status === "active" && !selectedFarm.needsRenewal && (
-                <TouchableOpacity
-                  style={[styles.actionBtn, { backgroundColor: "#95A5A6" }]}
-                  onPress={() => confirmDeactivate(selectedFarm)}
-                >
+                <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#95A5A6" }]} onPress={() => confirmDeactivate(selectedFarm)}>
                   <XCircle size={18} color="#fff" />
                   <Text style={styles.actionBtnText}>إيقاف</Text>
                 </TouchableOpacity>
@@ -588,7 +577,10 @@ export default function AdminPoultryFarmsManagement() {
               {(selectedFarm.status === "rejected" || selectedFarm.status === "deactivated") && (
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.activateActionBtn]}
-                  onPress={() => { setShowDetailModal(false); setShowActivateModal(true); }}
+                  onPress={() => {
+                    setShowDetailModal(false);
+                    setShowActivateModal(true);
+                  }}
                 >
                   <CheckCircle size={18} color="#fff" />
                   <Text style={styles.actionBtnText}>إعادة تفعيل</Text>
@@ -599,7 +591,10 @@ export default function AdminPoultryFarmsManagement() {
               {selectedFarm.status !== "banned" && (
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: "#7F1D1D" }]}
-                  onPress={() => { setShowDetailModal(false); setShowBanModal(true); }}
+                  onPress={() => {
+                    setShowDetailModal(false);
+                    setShowBanModal(true);
+                  }}
                 >
                   <AlertTriangle size={18} color="#fff" />
                   <Text style={styles.actionBtnText}>حظر</Text>
@@ -610,17 +605,17 @@ export default function AdminPoultryFarmsManagement() {
               {selectedFarm.status === "banned" && (
                 <TouchableOpacity
                   style={[styles.actionBtn, styles.activateActionBtn]}
-                  onPress={() => { setShowDetailModal(false); setShowActivateModal(true); }}
+                  onPress={() => {
+                    setShowDetailModal(false);
+                    setShowActivateModal(true);
+                  }}
                 >
                   <CheckCircle size={18} color="#fff" />
                   <Text style={styles.actionBtnText}>رفع الحظر وتفعيل</Text>
                 </TouchableOpacity>
               )}
 
-              <TouchableOpacity
-                style={[styles.actionBtn, styles.deleteActionBtn]}
-                onPress={() => handleDelete(selectedFarm)}
-              >
+              <TouchableOpacity style={[styles.actionBtn, styles.deleteActionBtn]} onPress={() => handleDelete(selectedFarm)}>
                 <Trash2 size={18} color="#fff" />
                 <Text style={styles.actionBtnText}>حذف</Text>
               </TouchableOpacity>
@@ -635,18 +630,27 @@ export default function AdminPoultryFarmsManagement() {
     const daysRemaining = getDaysRemaining(item.activationEndDate);
     const isExpiringSoon = daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30;
     const statusColor =
-      item.status === "active" && !item.needsRenewal ? "#27AE60"
-      : item.status === "banned" ? "#7F1D1D"
-      : item.status === "rejected" || item.status === "deactivated" ? "#95A5A6"
-      : item.needsRenewal ? "#E74C3C"
-      : "#F39C12";
+      item.status === "active" && !item.needsRenewal
+        ? "#27AE60"
+        : item.status === "banned"
+          ? "#7F1D1D"
+          : item.status === "rejected" || item.status === "deactivated"
+            ? "#95A5A6"
+            : item.needsRenewal
+              ? "#E74C3C"
+              : "#F39C12";
     const statusLabel =
-      item.status === "active" && !item.needsRenewal ? "نشط"
-      : item.status === "banned" ? "محظور"
-      : item.status === "rejected" ? "مرفوض"
-      : item.status === "deactivated" ? "موقوف"
-      : item.needsRenewal ? "تجديد"
-      : "قيد المراجعة";
+      item.status === "active" && !item.needsRenewal
+        ? "نشط"
+        : item.status === "banned"
+          ? "محظور"
+          : item.status === "rejected"
+            ? "مرفوض"
+            : item.status === "deactivated"
+              ? "موقوف"
+              : item.needsRenewal
+                ? "تجديد"
+                : "قيد المراجعة";
 
     return (
       <TouchableOpacity
@@ -656,7 +660,10 @@ export default function AdminPoultryFarmsManagement() {
           item.status === "banned" && styles.farmCardBanned,
           (item.status === "rejected" || item.status === "deactivated") && styles.farmCardDeactive,
         ]}
-        onPress={() => { setSelectedFarm(item); setShowDetailModal(true); }}
+        onPress={() => {
+          setSelectedFarm(item);
+          setShowDetailModal(true);
+        }}
       >
         <View style={styles.farmCardHeader}>
           <View style={{ flex: 1 }}>
@@ -697,9 +704,7 @@ export default function AdminPoultryFarmsManagement() {
         {item.needsRenewal && (
           <View style={styles.renewalCard}>
             <AlertTriangle size={15} color="#E74C3C" />
-            <Text style={styles.renewalCardText}>
-              {item.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "طلب تجديد الاشتراك"}
-            </Text>
+            <Text style={styles.renewalCardText}>{item.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "طلب تجديد الاشتراك"}</Text>
           </View>
         )}
 
@@ -761,9 +766,7 @@ export default function AdminPoultryFarmsManagement() {
           <View style={styles.emptyContainer}>
             <Bird size={48} color="#ccc" />
             <Text style={styles.emptyText}>لا توجد حقول دواجن</Text>
-            <Text style={styles.emptySubtext}>
-              {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد حقول في هذه الفئة"}
-            </Text>
+            <Text style={styles.emptySubtext}>{searchQuery ? "لا توجد نتائج للبحث" : "لا توجد حقول في هذه الفئة"}</Text>
           </View>
         }
       />

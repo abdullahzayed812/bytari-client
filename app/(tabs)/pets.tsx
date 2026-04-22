@@ -28,6 +28,7 @@ import {
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PET_TYPE_LABELS } from "../add-adoption-pet";
 
 export default function PetsScreen() {
   const router = useRouter();
@@ -216,7 +217,7 @@ export default function PetsScreen() {
         onError: (error) => {
           showToast({ type: "error", message: error.message || "حدث خطأ أثناء إرسال طلب التجديد" });
         },
-      }
+      },
     );
   };
 
@@ -295,9 +296,7 @@ export default function PetsScreen() {
     const startDate = data.activationStartDate ? new Date(data.activationStartDate) : null;
     const endDate = data.activationEndDate ? new Date(data.activationEndDate) : null;
     // farms don't have pre-computed daysRemaining — compute client-side
-    const daysRemaining = isFarm
-      ? endDate ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0
-      : (data.daysRemaining || 0);
+    const daysRemaining = isFarm ? (endDate ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0) : data.daysRemaining || 0;
     const needsRenewal = data.needsRenewal || false;
     const reviewingRenewalRequest = data.reviewingRenewalRequest || false;
     const isExpired = daysRemaining < 1;
@@ -322,8 +321,8 @@ export default function PetsScreen() {
     const isLoading = isFarm
       ? requestFarmRenewalMutation.isPending
       : type === "clinic"
-      ? requestClinicRenewalMutation.isPending
-      : requestStoreRenewalMutation.isPending;
+        ? requestClinicRenewalMutation.isPending
+        : requestStoreRenewalMutation.isPending;
 
     return (
       <View key={`${type}-${data.id}`} style={styles.subscriptionCard}>
@@ -338,9 +337,7 @@ export default function PetsScreen() {
             )}
           </View>
           <View style={styles.subscriptionHeaderText}>
-            <Text style={styles.subscriptionTitle}>
-              {isClinic ? "اشتراك العيادة" : isFarm ? "اشتراك حقل الدواجن" : "اشتراك المذخر"}
-            </Text>
+            <Text style={styles.subscriptionTitle}>{isClinic ? "اشتراك العيادة" : isFarm ? "اشتراك حقل الدواجن" : "اشتراك المذخر"}</Text>
             <Text style={styles.subscriptionResourceName} numberOfLines={1}>
               {resourceName}
             </Text>
@@ -399,9 +396,7 @@ export default function PetsScreen() {
               ) : (
                 <>
                   <RefreshCw size={16} color={COLORS.white} />
-                  <Text style={styles.renewButtonText}>
-                    {reviewingRenewalRequest ? "قيد المراجعة" : "تجديد الاشتراك"}
-                  </Text>
+                  <Text style={styles.renewButtonText}>{reviewingRenewalRequest ? "قيد المراجعة" : "تجديد الاشتراك"}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -421,9 +416,7 @@ export default function PetsScreen() {
               <View style={styles.expiredIcon}>
                 <AlertCircle size={16} color={COLORS.error} />
               </View>
-              <Text style={styles.expiredText}>
-                الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : "المذخر"}
-              </Text>
+              <Text style={styles.expiredText}>الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : "المذخر"}</Text>
             </View>
           )}
         </View>
@@ -501,9 +494,7 @@ export default function PetsScreen() {
           {!isOwned && clinic.assignedAt && (
             <View style={styles.clinicInfoRow}>
               <Calendar size={14} color={COLORS.primary} />
-              <Text style={styles.clinicInfoText}>
-                تم التعيين: {new Date(clinic.assignedAt).toLocaleDateString("ar-SA")}
-              </Text>
+              <Text style={styles.clinicInfoText}>تم التعيين: {new Date(clinic.assignedAt).toLocaleDateString("ar-SA")}</Text>
             </View>
           )}
         </View>
@@ -544,8 +535,7 @@ export default function PetsScreen() {
             pathname: "/warehouse-management",
             params: {
               isOwner: store.isOwned,
-              canEdit:
-                store?.role === "view_edit_inventory" || store?.role === "all" || store?.isOwned ? "true" : "false",
+              canEdit: store?.role === "view_edit_inventory" || store?.role === "all" || store?.isOwned ? "true" : "false",
             },
           })
         }
@@ -602,18 +592,14 @@ export default function PetsScreen() {
           {!isOwned && store.assignedAt && (
             <View style={styles.warehouseInfoRow}>
               <Calendar size={14} color={COLORS.primary} />
-              <Text style={styles.warehouseInfoText}>
-                تم التعيين: {new Date(store.assignedAt).toLocaleDateString("ar-SA")}
-              </Text>
+              <Text style={styles.warehouseInfoText}>تم التعيين: {new Date(store.assignedAt).toLocaleDateString("ar-SA")}</Text>
             </View>
           )}
 
           {isOwned && store.activationEndDate && (
             <View style={styles.warehouseInfoRow}>
               <Calendar size={14} color={COLORS.primary} />
-              <Text style={styles.warehouseInfoText}>
-                صالح حتى: {new Date(store.activationEndDate).toLocaleDateString("ar-SA")}
-              </Text>
+              <Text style={styles.warehouseInfoText}>صالح حتى: {new Date(store.activationEndDate).toLocaleDateString("ar-SA")}</Text>
             </View>
           )}
         </View>
@@ -699,16 +685,13 @@ export default function PetsScreen() {
           )}
 
           {/* Empty State for No Clinics/Warehouses */}
-          {ownedClinics.length === 0 &&
-            assignedClinics.length === 0 &&
-            ownedStores.length === 0 &&
-            assignedStores.length === 0 && (
-              <View style={styles.emptyStateContainer}>
-                <Stethoscope size={64} color={COLORS.lightGray} />
-                <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
-                <Text style={styles.emptyStateSubtext}>بعد الموافقة على طلباتك ستظهر لوحات التحكم هنا</Text>
-              </View>
-            )}
+          {ownedClinics.length === 0 && assignedClinics.length === 0 && ownedStores.length === 0 && assignedStores.length === 0 && (
+            <View style={styles.emptyStateContainer}>
+              <Stethoscope size={64} color={COLORS.lightGray} />
+              <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
+              <Text style={styles.emptyStateSubtext}>بعد الموافقة على طلباتك ستظهر لوحات التحكم هنا</Text>
+            </View>
+          )}
           <View style={styles.clinicActions}>
             <Button
               title="إضافة عيادة جديدة"
@@ -747,7 +730,7 @@ export default function PetsScreen() {
         <View style={styles.petInfo}>
           <Text style={styles.petName}>{item.name}</Text>
           <Text style={styles.petType}>
-            {t(`${item.type}`)} {item.breed ? `- ${item.breed}` : ""}
+            {PET_TYPE_LABELS[item.type as keyof typeof PET_TYPE_LABELS] ?? item.type} {item.breed ? `- ${item.breed}` : ""}
           </Text>
 
           {/* Show owner info for admins */}
@@ -780,9 +763,7 @@ export default function PetsScreen() {
         ListHeaderComponent={
           <View>
             <View style={styles.header}>
-              <Text style={styles.title}>
-                {hasAdminAccess || isSuperAdmin || isModerator ? "إدارة الحيوانات والمزارع" : "حيواناتي"}
-              </Text>
+              <Text style={styles.title}>{hasAdminAccess || isSuperAdmin || isModerator ? "إدارة الحيوانات والمزارع" : "حيواناتي"}</Text>
             </View>
 
             <View style={styles.headerButtons}>
@@ -804,11 +785,7 @@ export default function PetsScreen() {
               />
             </View>
 
-            <TouchableOpacity
-              style={styles.transferRequestsButton}
-              onPress={() => router.push("/pet-transfer-requests")}
-              activeOpacity={0.8}
-            >
+            <TouchableOpacity style={styles.transferRequestsButton} onPress={() => router.push("/pet-transfer-requests")} activeOpacity={0.8}>
               <ArrowRightLeft size={16} color={COLORS.primary} />
               <Text style={styles.transferRequestsText}>طلبات نقل الملكية</Text>
             </TouchableOpacity>
@@ -875,12 +852,7 @@ export default function PetsScreen() {
 
                 // Active farm → normal clickable card
                 return (
-                  <TouchableOpacity
-                    key={farm.id}
-                    style={styles.poultryFarmCard}
-                    onPress={() => handleFarmPress(farm)}
-                    activeOpacity={0.8}
-                  >
+                  <TouchableOpacity key={farm.id} style={styles.poultryFarmCard} onPress={() => handleFarmPress(farm)} activeOpacity={0.8}>
                     <View style={styles.farmHeader}>
                       {farm.images?.[0] ? (
                         <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
@@ -1047,7 +1019,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   headerButtons: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     gap: 8,
     marginBottom: 20,
   },
@@ -1055,7 +1027,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   transferRequestsButton: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
     backgroundColor: COLORS.white,
@@ -1083,7 +1055,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   sectionHeaderRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
     marginBottom: 4,
@@ -1107,7 +1079,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   renewalSectionHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 8,
     marginBottom: 16,
@@ -1142,7 +1114,7 @@ const styles = StyleSheet.create({
   },
   farmHeader: {
     flexDirection: "row-reverse",
-    alignItems: "flex-start",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   farmIconContainer: {
@@ -1170,7 +1142,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   farmLocationRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
     gap: 4,
@@ -1180,7 +1152,7 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   farmBadges: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     flexWrap: "wrap",
     gap: 6,
     marginTop: 4,
@@ -1206,7 +1178,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   verifiedBadge: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -1219,7 +1191,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   farmDetails: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 12,
     backgroundColor: COLORS.gray,
@@ -1227,7 +1199,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailItem: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
@@ -1258,7 +1230,7 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
   },
   farmPendingBanner: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 6,
     backgroundColor: "#FEF9C3",
@@ -1322,7 +1294,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   ownerInfo: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
     gap: 4,
@@ -1333,7 +1305,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   lostBadge: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
     backgroundColor: COLORS.error,
@@ -1379,7 +1351,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 6,

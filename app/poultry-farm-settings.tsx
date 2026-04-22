@@ -1,25 +1,8 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import {
-  Settings,
-  Users,
-  UserPlus,
-  Trash2,
-  ChevronDown,
-  Check,
-  Mail,
-} from "lucide-react-native";
+import { Settings, Users, UserPlus, Trash2, ChevronDown, Check, Mail } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -52,6 +35,7 @@ export default function PoultryFarmSettingsScreen() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<"info" | "staff">("info");
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [emailInput, setEmailInput] = useState("");
   const [newWorkerPermission, setNewWorkerPermission] = useState<"add_daily_data" | "view_only">("add_daily_data");
 
@@ -98,6 +82,7 @@ export default function PoultryFarmSettingsScreen() {
   const workersQuery = useQuery(trpc.poultryFarms.getWorkers.queryOptions({ farmId: Number(id) }));
 
   const updateMutation = useMutation(trpc.poultryFarms.update.mutationOptions());
+  const deleteFarmMutation = useMutation(trpc.poultryFarms.delete.mutationOptions());
   const addWorkerMutation = useMutation(trpc.poultryFarms.addWorker.mutationOptions());
   const removeWorkerMutation = useMutation(trpc.poultryFarms.removeWorker.mutationOptions());
   const updatePermMutation = useMutation(trpc.poultryFarms.updateWorkerPermissions.mutationOptions());
@@ -131,7 +116,22 @@ export default function PoultryFarmSettingsScreen() {
           queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey() as any);
         },
         onError: (e) => showToast({ type: "error", message: e.message }),
-      }
+      },
+    );
+  };
+
+  const handleConfirmDeleteFarm = () => {
+    deleteFarmMutation.mutate(
+      { farmId: Number(id), ownerId: Number(user?.id) },
+      {
+        onSuccess: () => {
+          setShowDeleteConfirmModal(false);
+          showToast({ type: "success", message: "تم حذف حقل الدواجن بنجاح" });
+          queryClient.invalidateQueries(trpc.poultryFarms.list.queryKey() as any);
+          router.replace("/(tabs)/pets");
+        },
+        onError: (e) => showToast({ type: "error", message: e.message }),
+      },
     );
   };
 
@@ -154,7 +154,7 @@ export default function PoultryFarmSettingsScreen() {
           workersQuery.refetch();
         },
         onError: (e) => showToast({ type: "error", message: e.message }),
-      }
+      },
     );
   };
 
@@ -173,7 +173,7 @@ export default function PoultryFarmSettingsScreen() {
                 workersQuery.refetch();
               },
               onError: (e) => showToast({ type: "error", message: e.message }),
-            }
+            },
           ),
       },
     ]);
@@ -188,7 +188,7 @@ export default function PoultryFarmSettingsScreen() {
           workersQuery.refetch();
         },
         onError: (e) => showToast({ type: "error", message: e.message }),
-      }
+      },
     );
   };
 
@@ -217,9 +217,7 @@ export default function PoultryFarmSettingsScreen() {
             style={[styles.selectChip, form[key] === opt.value && styles.selectChipActive]}
             onPress={() => setForm((p) => ({ ...p, [key]: opt.value }))}
           >
-            <Text style={[styles.selectChipText, form[key] === opt.value && styles.selectChipTextActive]}>
-              {opt.label}
-            </Text>
+            <Text style={[styles.selectChipText, form[key] === opt.value && styles.selectChipTextActive]}>{opt.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -227,7 +225,7 @@ export default function PoultryFarmSettingsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
       <Stack.Screen
         options={{
           title: "إعدادات الحقل",
@@ -238,21 +236,13 @@ export default function PoultryFarmSettingsScreen() {
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "info" && styles.tabActive]}
-          onPress={() => setActiveTab("info")}
-        >
+        <TouchableOpacity style={[styles.tab, activeTab === "info" && styles.tabActive]} onPress={() => setActiveTab("info")}>
           <Settings size={16} color={activeTab === "info" ? "#F59E0B" : "#888"} />
           <Text style={[styles.tabText, activeTab === "info" && styles.tabTextActive]}>معلومات الحقل</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "staff" && styles.tabActive]}
-          onPress={() => setActiveTab("staff")}
-        >
+        <TouchableOpacity style={[styles.tab, activeTab === "staff" && styles.tabActive]} onPress={() => setActiveTab("staff")}>
           <Users size={16} color={activeTab === "staff" ? "#F59E0B" : "#888"} />
-          <Text style={[styles.tabText, activeTab === "staff" && styles.tabTextActive]}>
-            الموظفون ({workers.length})
-          </Text>
+          <Text style={[styles.tabText, activeTab === "staff" && styles.tabTextActive]}>الموظفون ({workers.length})</Text>
         </TouchableOpacity>
       </View>
 
@@ -288,12 +278,17 @@ export default function PoultryFarmSettingsScreen() {
             onPress={handleSaveInfo}
             disabled={updateMutation.isPending}
           >
-            {updateMutation.isPending ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.saveBtnText}>حفظ التغييرات</Text>
-            )}
+            {updateMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>حفظ التغييرات</Text>}
           </TouchableOpacity>
+
+          {/* Danger zone */}
+          <View style={styles.dangerZone}>
+            <Text style={styles.dangerZoneTitle}>حذف الحقل</Text>
+            <TouchableOpacity style={styles.deleteBtn} onPress={() => setShowDeleteConfirmModal(true)}>
+              <Trash2 size={18} color="#fff" />
+              <Text style={styles.deleteBtnText}>حذف الحقل نهائياً</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       ) : (
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -322,9 +317,7 @@ export default function PoultryFarmSettingsScreen() {
                   style={[styles.selectChip, newWorkerPermission === opt.value && styles.selectChipActive]}
                   onPress={() => setNewWorkerPermission(opt.value as any)}
                 >
-                  <Text style={[styles.selectChipText, newWorkerPermission === opt.value && styles.selectChipTextActive]}>
-                    {opt.label}
-                  </Text>
+                  <Text style={[styles.selectChipText, newWorkerPermission === opt.value && styles.selectChipTextActive]}>{opt.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -361,9 +354,7 @@ export default function PoultryFarmSettingsScreen() {
                 <View style={styles.workerInfo}>
                   <Text style={styles.workerName}>{w.name}</Text>
                   <Text style={styles.workerEmail}>{w.email}</Text>
-                  <Text style={styles.workerType}>
-                    {w.userType === "vet" ? "طبيب بيطري" : "مستخدم"}
-                  </Text>
+                  <Text style={styles.workerType}>{w.userType === "vet" ? "طبيب بيطري" : "مستخدم"}</Text>
                 </View>
 
                 {/* Permission toggle */}
@@ -375,16 +366,11 @@ export default function PoultryFarmSettingsScreen() {
                         style={[styles.permChip, w.permissions === opt.value && styles.permChipActive]}
                         onPress={() => handleUpdatePermission(w.id, opt.value as any)}
                       >
-                        <Text style={[styles.permChipText, w.permissions === opt.value && styles.permChipTextActive]}>
-                          {opt.label}
-                        </Text>
+                        <Text style={[styles.permChipText, w.permissions === opt.value && styles.permChipTextActive]}>{opt.label}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <TouchableOpacity
-                    style={styles.removeBtn}
-                    onPress={() => handleRemoveWorker(w.id, w.name || "")}
-                  >
+                  <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemoveWorker(w.id, w.name || "")}>
                     <Trash2 size={16} color="#E74C3C" />
                   </TouchableOpacity>
                 </View>
@@ -393,6 +379,28 @@ export default function PoultryFarmSettingsScreen() {
           )}
         </ScrollView>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal visible={showDeleteConfirmModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.confirmModal}>
+            <Text style={styles.confirmTitle}>حذف الحقل</Text>
+            <Text style={styles.confirmMessage}>هل أنت متأكد من رغبتك في حذف هذا الحقل؟ سيتم حذف جميع البيانات المرتبطة به نهائياً.</Text>
+            <View style={styles.confirmActions}>
+              <TouchableOpacity style={[styles.confirmBtn, styles.confirmBtnCancel]} onPress={() => setShowDeleteConfirmModal(false)}>
+                <Text style={styles.confirmBtnCancelText}>إلغاء</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.confirmBtnDelete, deleteFarmMutation.isPending && { opacity: 0.6 }]}
+                onPress={handleConfirmDeleteFarm}
+                disabled={deleteFarmMutation.isPending}
+              >
+                {deleteFarmMutation.isPending ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.confirmBtnDeleteText}>حذف</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -534,4 +542,74 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#FEF2F2",
   },
+
+  dangerZone: {
+    marginTop: 24,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: "#FEF2F2",
+  },
+  dangerZoneTitle: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#DC2626",
+    textAlign: "left",
+    marginBottom: 12,
+  },
+  deleteBtn: {
+    backgroundColor: "#DC2626",
+    borderRadius: 10,
+    paddingVertical: 13,
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  deleteBtnText: { color: "#fff", fontSize: 15, fontWeight: "bold" },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  confirmModal: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+  },
+  confirmTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  confirmMessage: {
+    fontSize: 14,
+    color: "#555",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 22,
+  },
+  confirmActions: {
+    flexDirection: "row-reverse",
+    gap: 10,
+    justifyContent: "center",
+  },
+  confirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  confirmBtnCancel: { backgroundColor: "#f0f0f0" },
+  confirmBtnCancelText: { fontSize: 15, color: "#555", fontWeight: "600" },
+  confirmBtnDelete: { backgroundColor: "#DC2626" },
+  confirmBtnDeleteText: { fontSize: 15, color: "#fff", fontWeight: "bold" },
 });
