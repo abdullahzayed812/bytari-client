@@ -30,6 +30,8 @@ import {
   Upload,
   Eye,
   Image as ImageIcon,
+  Ban,
+  CheckCircle,
 } from "lucide-react-native";
 import { router, Stack } from "expo-router";
 import { mockVetStores, VetStore } from "../mocks/data";
@@ -89,11 +91,12 @@ export default function StoresAdminManagementScreen() {
   const queryClient = useQueryClient();
 
   // ✅ tRPC hooks
-  const { data, isLoading } = useQuery(trpc.stores.listActive.queryOptions());
+  const { data, isLoading } = useQuery(trpc.stores.getAdminList.queryOptions({}));
   const updateStoreMutation = useMutation(trpc.stores.update.mutationOptions());
   const deleteStoreMutation = useMutation(trpc.stores.delete.mutationOptions());
+  const setActiveMutation = useMutation(trpc.stores.setActive.mutationOptions());
 
-  const stores = data?.stores || [];
+  const stores = (data?.stores || []) as any[];
 
   // ✅ Filter + Search
   const filteredStores = stores.filter((store: any) => {
@@ -113,6 +116,31 @@ export default function StoresAdminManagementScreen() {
         return true;
     }
   });
+
+  const handleToggleActive = (store: any) => {
+    const newActive = !store.isActive;
+    const message = newActive ? `هل أنت متأكد من تفعيل المذخر "${store.name}"؟` : `هل أنت متأكد من تعطيل المذخر "${store.name}"؟`;
+    Alert.alert(newActive ? "تفعيل المذخر" : "تعطيل المذخر", message, [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: newActive ? "تفعيل" : "تعطيل",
+        style: newActive ? "default" : "destructive",
+        onPress: () => {
+          setActiveMutation.mutate(
+            { storeId: Number(store.id), isActive: newActive },
+            {
+              onSuccess: () => {
+                showToast({ message: newActive ? "تم تفعيل المذخر بنجاح" : "تم تعطيل المذخر بنجاح", type: "success" });
+                queryClient.invalidateQueries(trpc.stores.getAdminList.queryKey as any);
+                setDetailsModalVisible(false);
+              },
+              onError: () => showToast({ message: "حدث خطأ أثناء تغيير حالة المذخر", type: "error" }),
+            },
+          );
+        },
+      },
+    ]);
+  };
 
   // ✅ View Store Details
   const handleViewDetails = (store: any) => {
@@ -162,7 +190,7 @@ export default function StoresAdminManagementScreen() {
           setEditModalVisible(false);
           setEditingStore(null);
           setSelectedImage(null);
-          queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
+          queryClient.invalidateQueries(trpc.stores.getAdminList.queryKey as any);
         },
         onError: (error) => {
           console.error("Error updating store:", error);
@@ -185,7 +213,7 @@ export default function StoresAdminManagementScreen() {
             {
               onSuccess: () => {
                 showToast({ message: "تم حذف المتجر بنجاح", type: "success" });
-                queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
+                queryClient.invalidateQueries(trpc.stores.getAdminList.queryKey as any);
               },
               onError: (error) => {
                 console.error("Error deleting store:", error);
@@ -370,22 +398,36 @@ export default function StoresAdminManagementScreen() {
               </View>
             </View>
           </ScrollView>
+
+          <View style={styles.detailsActions}>
+            <TouchableOpacity
+              style={[styles.detailActionButton, { backgroundColor: selectedStore.isActive ? "#E74C3C" : "#27AE60" }]}
+              onPress={() => handleToggleActive(selectedStore)}
+            >
+              <Text style={styles.detailActionButtonText}>{selectedStore.isActive ? "تعطيل المذخر" : "تفعيل المذخر"}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     );
   };
 
-  const renderStoreCard = ({ item }: { item: VetStore }) => (
+  const renderStoreCard = ({ item }: { item: any }) => (
     <View style={styles.storeCard}>
       <Image source={{ uri: item.image }} style={styles.storeImage} />
 
       <View style={styles.storeInfo}>
         <View style={styles.storeHeader}>
           <Text style={styles.storeName}>{item.name}</Text>
-          <View style={styles.ratingContainer}>
-            <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-            <Text style={styles.rating}>{item.rating}</Text>
-            <Text style={styles.reviewCount}>({item.reviewCount})</Text>
+          <View style={{ alignItems: "flex-end", gap: 4 }}>
+            <View style={[styles.statusBadge, { backgroundColor: item.isActive ? "#27AE60" : "#E74C3C" }]}>
+              <Text style={styles.statusText}>{item.isActive ? "نشط" : "غير نشط"}</Text>
+            </View>
+            <View style={styles.ratingContainer}>
+              <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
+              <Text style={styles.rating}>{item.rating}</Text>
+              <Text style={styles.reviewCount}>({item.reviewCount})</Text>
+            </View>
           </View>
         </View>
 
@@ -419,6 +461,13 @@ export default function StoresAdminManagementScreen() {
           onPress={() => handleViewDetails(item)}
         >
           <Eye size={18} color={COLORS.white} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: item.isActive ? "#E74C3C" : "#27AE60" }]}
+          onPress={() => handleToggleActive(item)}
+        >
+          {item.isActive ? <Ban size={18} color={COLORS.white} /> : <CheckCircle size={18} color={COLORS.white} />}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -609,7 +658,7 @@ export default function StoresAdminManagementScreen() {
             onPress={() => setSelectedFilter("active")}
           >
             <Text style={[styles.filterChipText, selectedFilter === "active" && styles.filterChipTextActive]}>
-              نشط ({stores.filter((s) => s.rating >= 4.0).length})
+              نشط ({stores.filter((s: any) => s.isActive).length})
             </Text>
           </TouchableOpacity>
 
@@ -618,7 +667,7 @@ export default function StoresAdminManagementScreen() {
             onPress={() => setSelectedFilter("inactive")}
           >
             <Text style={[styles.filterChipText, selectedFilter === "inactive" && styles.filterChipTextActive]}>
-              غير نشط ({stores.filter((s) => s.rating < 4.0).length})
+              غير نشط ({stores.filter((s: any) => !s.isActive).length})
             </Text>
           </TouchableOpacity>
         </View>
@@ -1045,5 +1094,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.primary,
     fontWeight: "500",
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  statusText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+  detailsActions: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+  },
+  detailActionButton: {
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  detailActionButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

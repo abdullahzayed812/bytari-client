@@ -1,31 +1,8 @@
 import React, { useMemo, useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  Alert,
-  FlatList,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, FlatList, ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import {
-  Building2,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Ban,
-  Trash2,
-  Search,
-  Phone,
-  Clock,
-  Star,
-  Image as ImageIcon,
-} from "lucide-react-native";
+import { Building2, CheckCircle, XCircle, Eye, Ban, Trash2, Search, Phone, Clock, Star, Image as ImageIcon } from "lucide-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
@@ -98,43 +75,40 @@ export default function AdminClinicsManagement() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
-  const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getActiveList.queryOptions({}));
+  const { data, isLoading: clinicsLoading, error } = useQuery(trpc.clinics.getAdminList.queryOptions({}));
   const clinics: Clinic[] = useMemo(() => (data as any)?.clinics || [], [data]);
 
   const deleteClinicMutation = useMutation(trpc.clinics.deleteClinic.mutationOptions());
   const setClinicActiveMutation = useMutation(trpc.clinics.toggleClinicVisibility.mutationOptions());
 
   // Define getFilteredClinics BEFORE using it in useMemo
-  const getFilteredClinics = useCallback(
-    (clinicsList: Clinic[], search: string, filter: "all" | "active" | "pending" | "banned" | "premium") => {
-      let filtered = clinicsList;
+  const getFilteredClinics = useCallback((clinicsList: Clinic[], search: string, filter: "all" | "active" | "pending" | "banned" | "premium") => {
+    let filtered = clinicsList;
 
-      // Apply search filter
-      if (search.trim()) {
-        filtered = filtered.filter(
-          (clinic) =>
-            clinic.name.toLowerCase().includes(search.toLowerCase()) ||
-            clinic.ownerName.toLowerCase().includes(search.toLowerCase()) ||
-            clinic.address.toLowerCase().includes(search.toLowerCase()),
-        );
-      }
+    // Apply search filter
+    if (search.trim()) {
+      filtered = filtered.filter(
+        (clinic) =>
+          clinic.name.toLowerCase().includes(search.toLowerCase()) ||
+          clinic.ownerName.toLowerCase().includes(search.toLowerCase()) ||
+          clinic.address.toLowerCase().includes(search.toLowerCase()),
+      );
+    }
 
-      // Apply status filter
-      switch (filter) {
-        case "active":
-          return filtered.filter((clinic) => clinic.status === "active");
-        case "pending":
-          return filtered.filter((clinic) => clinic.status === "pending");
-        case "banned":
-          return filtered.filter((clinic) => clinic.status === "banned");
-        case "premium":
-          return filtered.filter((clinic) => clinic.isPremium);
-        default:
-          return filtered;
-      }
-    },
-    [],
-  );
+    // Apply status filter
+    switch (filter) {
+      case "active":
+        return filtered.filter((clinic) => clinic.status === "active");
+      case "pending":
+        return filtered.filter((clinic) => clinic.status === "pending");
+      case "banned":
+        return filtered.filter((clinic) => clinic.status === "banned");
+      case "premium":
+        return filtered.filter((clinic) => clinic.isPremium);
+      default:
+        return filtered;
+    }
+  }, []);
 
   const clinicTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = useMemo(
     () => [
@@ -175,10 +149,7 @@ export default function AdminClinicsManagement() {
     [clinics],
   );
 
-  const filteredClinics = useMemo(
-    () => getFilteredClinics(clinics, searchQuery, selectedFilter),
-    [clinics, searchQuery, selectedFilter, getFilteredClinics],
-  );
+  const filteredClinics = useMemo(() => getFilteredClinics(clinics, searchQuery, selectedFilter), [clinics, searchQuery, selectedFilter, getFilteredClinics]);
 
   const getStatusColor = useCallback((status: string) => {
     switch (status) {
@@ -230,37 +201,33 @@ export default function AdminClinicsManagement() {
     }
 
     if (actionType === "delete") {
-      Alert.alert(
-        "تأكيد الحذف",
-        `هل أنت متأكد أنك تريد حذف عيادة "${selectedClinic.name}"? لا يمكن التراجع عن هذا الإجراء.`,
-        [
-          {
-            text: "إلغاء",
-            style: "cancel",
-          },
-          {
-            text: "حذف",
-            onPress: () => {
-              deleteClinicMutation.mutate(
-                { clinicId: selectedClinic.id },
-                {
-                  onSuccess: (data) => {
-                    queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey as any);
-                    Alert.alert("نجاح", "تم حذف العيادة بنجاح.");
-                    setShowActionModal(false);
-                    setShowDetailModal(false);
-                    setActionReason("");
-                  },
-                  onError: (error) => {
-                    Alert.alert("خطأ", `فشل حذف العيادة: ${error.message}`);
-                  },
+      Alert.alert("تأكيد الحذف", `هل أنت متأكد أنك تريد حذف عيادة "${selectedClinic.name}"? لا يمكن التراجع عن هذا الإجراء.`, [
+        {
+          text: "إلغاء",
+          style: "cancel",
+        },
+        {
+          text: "حذف",
+          onPress: () => {
+            deleteClinicMutation.mutate(
+              { clinicId: selectedClinic.id },
+              {
+                onSuccess: (data) => {
+                  queryClient.invalidateQueries(trpc.clinics.getAdminList.queryKey as any);
+                  Alert.alert("نجاح", "تم حذف العيادة بنجاح.");
+                  setShowActionModal(false);
+                  setShowDetailModal(false);
+                  setActionReason("");
                 },
-              );
-            },
-            style: "destructive",
+                onError: (error) => {
+                  Alert.alert("خطأ", `فشل حذف العيادة: ${error.message}`);
+                },
+              },
+            );
           },
-        ],
-      );
+          style: "destructive",
+        },
+      ]);
       return;
     }
 
@@ -271,7 +238,7 @@ export default function AdminClinicsManagement() {
       { clinicId: selectedClinic.id, isActive },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries(trpc.clinics.getActiveList.queryKey as any);
+          queryClient.invalidateQueries(trpc.clinics.getAdminList.queryKey as any);
           Alert.alert("نجاح", message);
           setShowActionModal(false);
           setShowDetailModal(false);
@@ -404,11 +371,7 @@ export default function AdminClinicsManagement() {
                   <Text style={styles.sectionTitle}>صور الهوية</Text>
                   <View style={styles.imagesContainer}>
                     {identityImages.map((imageUrl, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.imageButton}
-                        onPress={() => handleViewImage(imageUrl)}
-                      >
+                      <TouchableOpacity key={index} style={styles.imageButton} onPress={() => handleViewImage(imageUrl)}>
                         <ImageIcon size={20} color="#2196F3" />
                         <Text style={styles.imageButtonText}>صورة الهوية {index + 1}</Text>
                       </TouchableOpacity>
@@ -423,11 +386,7 @@ export default function AdminClinicsManagement() {
                   <Text style={styles.sectionTitle}>صور الترخيص</Text>
                   <View style={styles.imagesContainer}>
                     {licenseImages.map((imageUrl, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.imageButton}
-                        onPress={() => handleViewImage(imageUrl)}
-                      >
+                      <TouchableOpacity key={index} style={styles.imageButton} onPress={() => handleViewImage(imageUrl)}>
                         <ImageIcon size={20} color="#2196F3" />
                         <Text style={styles.imageButtonText}>صورة الترخيص {index + 1}</Text>
                       </TouchableOpacity>
@@ -458,20 +417,13 @@ export default function AdminClinicsManagement() {
                 {selectedClinic.lastActivity && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>آخر نشاط:</Text>
-                    <Text style={styles.infoValue}>
-                      {new Date(selectedClinic.lastActivity).toLocaleDateString("ar-SA")}
-                    </Text>
+                    <Text style={styles.infoValue}>{new Date(selectedClinic.lastActivity).toLocaleDateString("ar-SA")}</Text>
                   </View>
                 )}
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>عدد البلاغات:</Text>
-                  <Text
-                    style={[
-                      styles.infoValue,
-                      { color: selectedClinic.reportCount && selectedClinic.reportCount > 0 ? "#E74C3C" : "#27AE60" },
-                    ]}
-                  >
+                  <Text style={[styles.infoValue, { color: selectedClinic.reportCount && selectedClinic.reportCount > 0 ? "#E74C3C" : "#27AE60" }]}>
                     {selectedClinic.reportCount || 0}
                   </Text>
                 </View>
@@ -487,10 +439,7 @@ export default function AdminClinicsManagement() {
 
             <View style={styles.actionButtons}>
               {selectedClinic.status === "pending" && (
-                <TouchableOpacity
-                  style={styles.activateButton}
-                  onPress={() => handleAction(selectedClinic, "activate")}
-                >
+                <TouchableOpacity style={styles.activateButton} onPress={() => handleAction(selectedClinic, "activate")}>
                   <CheckCircle size={20} color="#fff" />
                   <Text style={styles.actionButtonText}>تفعيل</Text>
                 </TouchableOpacity>
@@ -498,10 +447,7 @@ export default function AdminClinicsManagement() {
 
               {selectedClinic.status === "active" && (
                 <>
-                  <TouchableOpacity
-                    style={styles.suspendButton}
-                    onPress={() => handleAction(selectedClinic, "suspend")}
-                  >
+                  <TouchableOpacity style={styles.suspendButton} onPress={() => handleAction(selectedClinic, "suspend")}>
                     <XCircle size={20} color="#fff" />
                     <Text style={styles.actionButtonText}>إيقاف مؤقت</Text>
                   </TouchableOpacity>
@@ -675,9 +621,7 @@ export default function AdminClinicsManagement() {
           <View style={styles.emptyContainer}>
             <Building2 size={48} color="#ccc" />
             <Text style={styles.emptyText}>لا توجد عيادات</Text>
-            <Text style={styles.emptySubtext}>
-              {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد عيادات في هذه الفئة"}
-            </Text>
+            <Text style={styles.emptySubtext}>{searchQuery ? "لا توجد نتائج للبحث" : "لا توجد عيادات في هذه الفئة"}</Text>
           </View>
         }
       />

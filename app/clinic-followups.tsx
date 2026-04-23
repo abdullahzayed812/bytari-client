@@ -141,11 +141,6 @@ const FollowupDetailsModal = ({ visible, onClose, followup, onApprove, onReject,
           </View>
 
           <View style={styles.detailSection}>
-            <Text style={styles.detailLabel}>الطبيب</Text>
-            <Text style={styles.detailValue}>{followup.veterinarian}</Text>
-          </View>
-
-          <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>سبب المتابعة</Text>
             <Text style={styles.detailValue}>{followup.description}</Text>
           </View>

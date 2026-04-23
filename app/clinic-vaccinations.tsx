@@ -56,11 +56,6 @@ const VaccinationDetailsModal = ({ visible, onClose, vaccination, onReschedule, 
           </View>
 
           <View style={styles.detailSection}>
-            <Text style={styles.detailLabel}>الطبيب</Text>
-            <Text style={styles.detailValue}>{vaccination.veterinarian}</Text>
-          </View>
-
-          <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>ملاحظات</Text>
             <Text style={styles.detailValue}>{vaccination.notes}</Text>
           </View>

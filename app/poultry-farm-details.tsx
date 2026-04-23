@@ -535,7 +535,10 @@ export default function PoultryFarmDetailsScreen() {
         activityLevel: editDayForm.activityLevel.trim() || undefined,
         mortality: editDayForm.mortality.trim() ? parseInt(editDayForm.mortality) : undefined,
         mortalityReasons: editDayForm.mortalityReasons
-          ? editDayForm.mortalityReasons.split(",").map((r) => r.trim()).filter(Boolean)
+          ? editDayForm.mortalityReasons
+              .split(",")
+              .map((r) => r.trim())
+              .filter(Boolean)
           : undefined,
         treatments: editDayForm.treatments.trim() || undefined,
         notes: editDayForm.notes.trim() || undefined,
@@ -548,7 +551,7 @@ export default function PoultryFarmDetailsScreen() {
           showToast({ type: "success", message: "تم تحديث بيانات اليوم بنجاح ✅" });
         },
         onError: (error) => showToast({ type: "error", message: error.message }),
-      }
+      },
     );
   };
 
@@ -796,10 +799,7 @@ export default function PoultryFarmDetailsScreen() {
                         <View style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}>
                           <Text style={styles.dayTitle}>اليوم {dayIndex + 1}</Text>
                           {dayData && canAddDailyData && (
-                            <TouchableOpacity
-                              onPress={() => handleEditDay(dayData)}
-                              style={{ padding: 2, backgroundColor: "#E3F2FD", borderRadius: 4 }}
-                            >
+                            <TouchableOpacity onPress={() => handleEditDay(dayData)} style={{ padding: 2, backgroundColor: "#E3F2FD", borderRadius: 4 }}>
                               <Text style={{ fontSize: 10, color: COLORS.primary, fontWeight: "600" }}>تعديل</Text>
                             </TouchableOpacity>
                           )}
@@ -1522,9 +1522,7 @@ export default function PoultryFarmDetailsScreen() {
                         const weekNumber = parseInt(weekNum);
                         const weekDays = weeklyData[weekNumber];
                         const batchId = selectedBatch?.id || "";
-                        const isExpanded =
-                          expandedCompletedWeek?.batchId === batchId &&
-                          expandedCompletedWeek?.weekNumber === weekNumber;
+                        const isExpanded = expandedCompletedWeek?.batchId === batchId && expandedCompletedWeek?.weekNumber === weekNumber;
 
                         const totalFeedConsumption = weekDays.reduce((sum, day) => sum + day.feedConsumption, 0);
                         const totalMortality = weekDays.reduce((sum, day) => sum + day.mortality, 0);
@@ -1534,11 +1532,7 @@ export default function PoultryFarmDetailsScreen() {
                         return (
                           <View key={weekNumber} style={styles.weekDetailCard}>
                             <TouchableOpacity
-                              onPress={() =>
-                                setExpandedCompletedWeek(
-                                  isExpanded ? null : { batchId, weekNumber }
-                                )
-                              }
+                              onPress={() => setExpandedCompletedWeek(isExpanded ? null : { batchId, weekNumber })}
                               style={{ flexDirection: "row-reverse", justifyContent: "space-between", alignItems: "center" }}
                             >
                               <Text style={styles.weekDetailTitle}>الأسبوع {weekNumber}</Text>
@@ -1868,7 +1862,10 @@ export default function PoultryFarmDetailsScreen() {
             <View style={styles.modalActions}>
               <Button
                 title="إلغاء"
-                onPress={() => { setShowEditDayModal(false); setEditingDay(null); }}
+                onPress={() => {
+                  setShowEditDayModal(false);
+                  setEditingDay(null);
+                }}
                 type="secondary"
                 size="medium"
                 style={styles.modalButton}
@@ -1962,7 +1959,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   infoRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
     gap: 8,

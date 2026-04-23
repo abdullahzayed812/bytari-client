@@ -195,6 +195,7 @@ export default function PetDetailsScreen() {
     medicalHistory: "",
     vaccinations: "",
     isLost: false,
+    isNeutered: false,
   });
 
   // Example with pre-filled values for testing
@@ -386,6 +387,7 @@ export default function PetDetailsScreen() {
         medicalHistory: pet.medicalHistory || "",
         vaccinations: pet.vaccinations || "",
         isLost: pet.isLost || false,
+        isNeutered: (pet as any).isNeutered || false,
       });
     }
   }, [pet]);
@@ -817,6 +819,7 @@ export default function PetDetailsScreen() {
           medicalHistory: editForm.medicalHistory.trim() || undefined,
           vaccinations: editForm.vaccinations.trim() || undefined,
           isLost: editForm.isLost,
+          isNeutered: editForm.isNeutered,
         } as any,
         {
           onSuccess: () => {
@@ -848,6 +851,7 @@ export default function PetDetailsScreen() {
           weight: editForm.weight ? parseFloat(editForm.weight) : undefined,
           color: editForm.color.trim() || undefined,
           image: editForm.image || undefined,
+          isNeutered: editForm.isNeutered,
         } as any,
         {
           onSuccess: () => {
@@ -1271,6 +1275,13 @@ export default function PetDetailsScreen() {
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>{t("اللون")}</Text>
                 <Text style={styles.infoValue}>{pet.color || "غير محدد"}</Text>
+              </View>
+
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>التعقيم</Text>
+                <View style={[styles.neuteredBadge, (pet as any).isNeutered ? styles.neuteredBadgeYes : styles.neuteredBadgeNo]}>
+                  <Text style={styles.neuteredBadgeText}>{(pet as any).isNeutered ? "عقيم" : "غير عقيم"}</Text>
+                </View>
               </View>
 
               <View style={styles.infoItem}>
@@ -2316,6 +2327,24 @@ export default function PetDetailsScreen() {
                   onPress={() => setEditForm((prev) => ({ ...prev, gender: "female" }))}
                 >
                   <Text style={[styles.genderOptionText, editForm.gender === "female" && styles.selectedGenderOptionText]}>أنثى</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>التعقيم</Text>
+              <View style={styles.genderSelector}>
+                <TouchableOpacity
+                  style={[styles.genderOption, editForm.isNeutered === false && styles.selectedGenderOption]}
+                  onPress={() => setEditForm((prev) => ({ ...prev, isNeutered: false }))}
+                >
+                  <Text style={[styles.genderOptionText, editForm.isNeutered === false && styles.selectedGenderOptionText]}>غير عقيم</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.genderOption, editForm.isNeutered === true && styles.selectedGenderOption]}
+                  onPress={() => setEditForm((prev) => ({ ...prev, isNeutered: true }))}
+                >
+                  <Text style={[styles.genderOptionText, editForm.isNeutered === true && styles.selectedGenderOptionText]}>عقيم</Text>
                 </TouchableOpacity>
               </View>
             </View>
