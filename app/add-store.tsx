@@ -38,10 +38,7 @@ const initialFormData: StoreFormData = {
   email: "contact@freshmarket.com",
   category: "Supermarket",
   licenseNumber: "SM-2026-45821",
-  licenseImages: [
-    "https://via.placeholder.com/400x300?text=License+1",
-    "https://via.placeholder.com/400x300?text=License+2",
-  ],
+  licenseImages: ["https://via.placeholder.com/400x300?text=License+1", "https://via.placeholder.com/400x300?text=License+2"],
   identityImages: ["https://via.placeholder.com/400x300?text=ID+1", "https://via.placeholder.com/400x300?text=ID+2"],
   images: ["https://via.placeholder.com/400x300?text=Store+1", "https://via.placeholder.com/400x300?text=Store+2"],
   workingHours: "Daily from 9:00 AM to 11:00 PM",
@@ -328,26 +325,15 @@ export default function AddStoreScreen() {
           </View>
 
           <View style={styles.section}>
-            <ImageGalleryUploader
-              images={formData.images}
-              onImagesChange={(images) => setFormData({ ...formData, images })}
-              maxImages={5}
-              label="صور المكتب"
-            />
+            <ImageGalleryUploader images={formData.images} onImagesChange={(images) => setFormData({ ...formData, images })} maxImages={5} label="صور المكتب" />
           </View>
 
           {/* Admin Controls for Subscription */}
           {isSuperAdmin && (
             <View style={styles.adminControls}>
               <TouchableOpacity style={styles.adminButton} onPress={() => setShowSubscription(!showSubscription)}>
-                {showSubscription ? (
-                  <EyeOff size={20} color={COLORS.primary} />
-                ) : (
-                  <Eye size={20} color={COLORS.primary} />
-                )}
-                <Text style={styles.adminButtonText}>
-                  {showSubscription ? "إخفاء معلومات الاشتراك" : "إظهار معلومات الاشتراك"}
-                </Text>
+                {showSubscription ? <EyeOff size={20} color={COLORS.primary} /> : <Eye size={20} color={COLORS.primary} />}
+                <Text style={styles.adminButtonText}>{showSubscription ? "إخفاء معلومات الاشتراك" : "إظهار معلومات الاشتراك"}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -375,6 +361,9 @@ export default function AddStoreScreen() {
             disabled={createStoreMutation.isPending}
             style={styles.submitButton}
           />
+          <View style={styles.freeTrialBadge}>
+            <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
+          </View>
         </View>
       </ScrollView>
     </>
@@ -519,6 +508,23 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   submitButton: {
+    marginBottom: 0,
+  },
+  freeTrialBadge: {
+    alignSelf: "center",
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    marginTop: 10,
     marginBottom: 20,
+  },
+  freeTrialText: {
+    color: "#B45309",
+    fontSize: 12,
+    fontStyle: "italic",
+    fontWeight: "700",
   },
 });

@@ -1,9 +1,9 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Linking, Alert, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Linking, Alert, ActivityIndicator, Share } from "react-native";
 import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useI18n } from "../providers/I18nProvider";
 import Button from "../components/Button";
-import { ArrowRight, MapPin, Phone, Clock, Star, Mail, Bell, BellOff, MessageSquare, Earth, Facebook, Instagram } from "lucide-react-native";
+import { ArrowRight, MapPin, Phone, Clock, Star, Mail, Bell, BellOff, MessageSquare, Earth, Facebook, Instagram, Share2 } from "lucide-react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack } from "expo-router";
 import { VetStoreProduct } from "../mocks/data"; // Assuming this is still valid for products
@@ -163,6 +163,14 @@ export default function StoreDetailsScreen() {
     Alert.alert("إعدادات الإشعارات", message);
   };
 
+  const handleShareApp = async () => {
+    try {
+      const appUrl = "https://bytari.app"; // TODO: replace with store link
+      const message = `تحقق من تطبيق بيطاري ${appUrl}`;
+      await Share.share({ message, url: appUrl, title: "بيطاري" });
+    } catch {}
+  };
+
   // Open external links
   const handleOpenLink = async (url: string) => {
     try {
@@ -222,20 +230,19 @@ export default function StoreDetailsScreen() {
         />
 
         <View style={styles.content}>
-          <View style={styles.storeHeader}>
-            <View style={styles.storeInfo}>
+          <View style={styles.storeHeaderCard}>
+            <View style={styles.storeTitleRow}>
               <Text style={styles.storeName}>{storeData.name}</Text>
-              <Text style={styles.followerCount}>{followerCount} متابع</Text>
-              {/* <View style={styles.ratingContainer}>
-                <Star size={16} color={COLORS.warning} fill={COLORS.warning} />
-                <Text style={styles.rating}>{storeData.rating.toFixed(1)}</Text>
-                <Text style={styles.reviewCount}>({storeData.reviewCount} تقييم)</Text>
-              </View> */}
+              <View style={styles.storeActions}>
+                <View style={[styles.statusBadge, { backgroundColor: storeData.isActive ? COLORS.success : COLORS.error }]}>
+                  <Text style={styles.statusText}>{storeData.isActive ? "نشط" : "غير نشط"}</Text>
+                </View>
+                <TouchableOpacity onPress={handleShareApp} style={styles.shareIconButton}>
+                  <Share2 size={20} color={COLORS.darkGray} />
+                </TouchableOpacity>
+              </View>
             </View>
-
-            <View style={[styles.statusBadge, { backgroundColor: storeData.isActive ? COLORS.success : COLORS.error }]}>
-              <Text style={styles.statusText}>{storeData.isActive ? "نشط" : "غير نشط"}</Text>
-            </View>
+            <Text style={styles.followerCount}>{followerCount} متابع</Text>
           </View>
 
           {storeData.description && <Text style={styles.description}>{storeData.description}</Text>}
@@ -374,28 +381,44 @@ const styles = StyleSheet.create({
   content: {
     padding: 16,
   },
-  storeHeader: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
+  storeHeaderCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  storeInfo: {
-    flex: 1,
-    alignItems: "flex-end",
+  storeTitleRow: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginBottom: 6,
+  },
+  storeActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    flexShrink: 0,
+  },
+  shareIconButton: {
+    padding: 4,
   },
   storeName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: COLORS.black,
-    marginBottom: 8,
-    textAlign: "left",
+    flex: 1,
+    textAlign: "right",
   },
   followerCount: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.darkGray,
-    textAlign: "left",
-    marginBottom: 8,
+    textAlign: "right",
   },
   ratingContainer: {
     flexDirection: "row-reverse",

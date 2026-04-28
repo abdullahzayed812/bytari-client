@@ -117,6 +117,7 @@ const permissionTranslations: Record<string, string> = {
   manage_system: "إدارة النظام",
   view_system_logs: "عرض سجلات النظام",
   manage_system_settings: "إدارة إعدادات النظام",
+  manage_poultry_farms: "إدارة حقول الدواجن",
   manage_unions: "إدارة النقابات",
   manage_users: "إدارة المستخدمين",
   view_users: "عرض المستخدمين",

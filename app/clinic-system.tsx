@@ -189,12 +189,7 @@ export default function ClinicSystemScreen() {
   };
 
   const handleRegisterClinic = async () => {
-    if (
-      !registrationData.name ||
-      !registrationData.phone ||
-      !registrationData.address ||
-      !registrationData.licenseNumber
-    ) {
+    if (!registrationData.name || !registrationData.phone || !registrationData.address || !registrationData.licenseNumber) {
       showToast({
         type: "error",
         message: "يرجى ملء جميع الحقول المطلوبة.",
@@ -301,9 +296,7 @@ export default function ClinicSystemScreen() {
     // Simulate search delay
     setTimeout(() => {
       const results = mockAnimals.filter(
-        (animal) =>
-          animal.id.toLowerCase().includes(searchId.toLowerCase()) ||
-          animal.name.toLowerCase().includes(searchId.toLowerCase()),
+        (animal) => animal.id.toLowerCase().includes(searchId.toLowerCase()) || animal.name.toLowerCase().includes(searchId.toLowerCase()),
       );
 
       setSearchResults(results);
@@ -501,14 +494,8 @@ export default function ClinicSystemScreen() {
           {isEditMode && (
             <View style={styles.adminActions}>
               <TouchableOpacity style={styles.visibilityToggleButton} onPress={toggleSubscriptionVisibility}>
-                {isSubscriptionVisible ? (
-                  <EyeOff size={16} color={COLORS.white} />
-                ) : (
-                  <Eye size={16} color={COLORS.white} />
-                )}
-                <Text style={styles.visibilityToggleText}>
-                  {isSubscriptionVisible ? "إخفاء الاشتراك" : "إظهار الاشتراك"}
-                </Text>
+                {isSubscriptionVisible ? <EyeOff size={16} color={COLORS.white} /> : <Eye size={16} color={COLORS.white} />}
+                <Text style={styles.visibilityToggleText}>{isSubscriptionVisible ? "إخفاء الاشتراك" : "إظهار الاشتراك"}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -568,9 +555,7 @@ export default function ClinicSystemScreen() {
     <View style={styles.tabContent}>
       <Text style={styles.tabTitle}>📋 تسجيل العيادة</Text>
 
-      <Text style={styles.description}>
-        املأ النموذج أدناه لتسجيل عيادتك البيطرية. سيتم مراجعة طلبك من قبل الإدارة قبل التفعيل.
-      </Text>
+      <Text style={styles.description}>املأ النموذج أدناه لتسجيل عيادتك البيطرية. سيتم مراجعة طلبك من قبل الإدارة قبل التفعيل.</Text>
 
       {/* Basic Information */}
       <View style={styles.section}>
@@ -794,17 +779,14 @@ export default function ClinicSystemScreen() {
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity
-        style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-        onPress={handleRegisterClinic}
-        disabled={isSubmitting}
-      >
+      <TouchableOpacity style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]} onPress={handleRegisterClinic} disabled={isSubmitting}>
         <Text style={styles.buttonText}>{isSubmitting ? "جاري الإرسال..." : "إرسال طلب التسجيل"}</Text>
       </TouchableOpacity>
+      <View style={styles.freeTrialBadge}>
+        <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
+      </View>
 
-      <Text style={styles.note}>
-        ملاحظة: سيتم مراجعة طلبك خلال 2-3 أيام عمل. ستصلك رسالة تأكيد عند الموافقة على الطلب.
-      </Text>
+      <Text style={styles.note}>ملاحظة: سيتم مراجعة طلبك خلال 2-3 أيام عمل. ستصلك رسالة تأكيد عند الموافقة على الطلب.</Text>
     </View>
   );
 
@@ -870,42 +852,22 @@ export default function ClinicSystemScreen() {
                 textAlign="right"
                 onSubmitEditing={handleSearchAnimal}
               />
-              <TouchableOpacity
-                style={[styles.searchButton, isSearching && styles.searchButtonDisabled]}
-                onPress={handleSearchAnimal}
-                disabled={isSearching}
-              >
-                {isSearching ? (
-                  <Text style={styles.searchButtonText}>...</Text>
-                ) : (
-                  <Search size={20} color={COLORS.white} />
-                )}
+              <TouchableOpacity style={[styles.searchButton, isSearching && styles.searchButtonDisabled]} onPress={handleSearchAnimal} disabled={isSearching}>
+                {isSearching ? <Text style={styles.searchButtonText}>...</Text> : <Search size={20} color={COLORS.white} />}
               </TouchableOpacity>
             </View>
 
             {/* Search Results */}
             {hasSearched && (
               <View style={styles.searchResultsSection}>
-                <Text style={styles.searchResultsTitle}>
-                  {searchResults.length > 0 ? `نتائج البحث (${searchResults.length})` : "لا توجد نتائج"}
-                </Text>
+                <Text style={styles.searchResultsTitle}>{searchResults.length > 0 ? `نتائج البحث (${searchResults.length})` : "لا توجد نتائج"}</Text>
                 {searchResults.map((animal) => (
-                  <TouchableOpacity
-                    key={animal.id}
-                    style={styles.searchResultCard}
-                    onPress={() => openAnimalProfile(animal)}
-                  >
+                  <TouchableOpacity key={animal.id} style={styles.searchResultCard} onPress={() => openAnimalProfile(animal)}>
                     <View style={styles.animalInfo}>
                       <View style={styles.animalHeader}>
                         <Text style={[styles.animalName, styles.clickableAnimalName]}>{animal.name}</Text>
                         <View style={[styles.statusBadge, styles[`status_${animal.status}`]]}>
-                          <Text style={styles.statusText}>
-                            {animal.status === "active"
-                              ? "نشط"
-                              : animal.status === "recovered"
-                                ? "متعافي"
-                                : "تحت العلاج"}
-                          </Text>
+                          <Text style={styles.statusText}>{animal.status === "active" ? "نشط" : animal.status === "recovered" ? "متعافي" : "تحت العلاج"}</Text>
                         </View>
                       </View>
                       <Text style={styles.animalDetails}>
@@ -931,9 +893,7 @@ export default function ClinicSystemScreen() {
                   <View style={styles.animalHeader}>
                     <Text style={[styles.animalName, styles.clickableAnimalName]}>{animal.name}</Text>
                     <View style={[styles.statusBadge, styles[`status_${animal.status}`]]}>
-                      <Text style={styles.statusText}>
-                        {animal.status === "active" ? "نشط" : animal.status === "recovered" ? "متعافي" : "تحت العلاج"}
-                      </Text>
+                      <Text style={styles.statusText}>{animal.status === "active" ? "نشط" : animal.status === "recovered" ? "متعافي" : "تحت العلاج"}</Text>
                     </View>
                   </View>
                   <Text style={styles.animalDetails}>
@@ -999,10 +959,7 @@ export default function ClinicSystemScreen() {
 
                     {/* Follow Pet Button - Only for subscribed clinics */}
                     {mockClinicData.isPremium && (
-                      <TouchableOpacity
-                        style={styles.followPetButton}
-                        onPress={() => addFollowUpRequest(selectedAnimal)}
-                      >
+                      <TouchableOpacity style={styles.followPetButton} onPress={() => addFollowUpRequest(selectedAnimal)}>
                         <Stethoscope size={20} color={COLORS.white} />
                         <Text style={styles.actionButtonText}>متابعة الحالة</Text>
                       </TouchableOpacity>
@@ -1014,10 +971,7 @@ export default function ClinicSystemScreen() {
                         <Text style={styles.clinicActionsTitle}>الإجراءات المتاحة للعيادات المشتركة:</Text>
 
                         <View style={styles.clinicActionsList}>
-                          <TouchableOpacity
-                            style={styles.clinicActionButton}
-                            onPress={() => addMedicalRecord(selectedAnimal)}
-                          >
+                          <TouchableOpacity style={styles.clinicActionButton} onPress={() => addMedicalRecord(selectedAnimal)}>
                             <Plus size={16} color={COLORS.white} />
                             <Text style={styles.clinicActionText}>إضافة سجل طبي</Text>
                           </TouchableOpacity>
@@ -1283,12 +1237,7 @@ export default function ClinicSystemScreen() {
 
                   <View style={styles.formSection}>
                     <Text style={styles.formLabel}>ملاحظات إضافية</Text>
-                    <TextInput
-                      style={styles.formInput}
-                      placeholder="أدخل ملاحظات إضافية (اختياري)"
-                      textAlign="right"
-                      multiline
-                    />
+                    <TextInput style={styles.formInput} placeholder="أدخل ملاحظات إضافية (اختياري)" textAlign="right" multiline />
                   </View>
 
                   <TouchableOpacity style={styles.prescriptionUploadSection}>
@@ -1322,17 +1271,11 @@ export default function ClinicSystemScreen() {
       />
       <View style={styles.container}>
         <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "overview" && styles.activeTab]}
-            onPress={() => setActiveTab("overview")}
-          >
+          <TouchableOpacity style={[styles.tab, activeTab === "overview" && styles.activeTab]} onPress={() => setActiveTab("overview")}>
             <Text style={[styles.tabText, activeTab === "overview" && styles.activeTabText]}>نظرة عامة</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.tab, activeTab === "register" && styles.activeTab]}
-            onPress={() => setActiveTab("register")}
-          >
+          <TouchableOpacity style={[styles.tab, activeTab === "register" && styles.activeTab]} onPress={() => setActiveTab("register")}>
             <Text style={[styles.tabText, activeTab === "register" && styles.activeTabText]}>التسجيل</Text>
           </TouchableOpacity>
         </View>
@@ -2385,6 +2328,22 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     backgroundColor: COLORS.gray,
+  },
+  freeTrialBadge: {
+    alignSelf: "center",
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    marginTop: 10,
+  },
+  freeTrialText: {
+    color: "#B45309",
+    fontSize: 12,
+    fontStyle: "italic",
+    fontWeight: "700",
   },
   imageGrid: {
     flexDirection: "row-reverse",

@@ -36,21 +36,21 @@ export default function StoreSettings() {
   } = useQuery(
     trpc.stores.settings.getSettings.queryOptions({
       storeId: Number(storeId),
-    })
+    }),
   );
 
   // Get subscription status
   const { data: subscriptionData } = useQuery(
     trpc.stores.settings.getSubscription.queryOptions({
       storeId: Number(storeId),
-    })
+    }),
   );
 
   // Get store staff
   const { data: staffData, refetch: refetchStaff } = useQuery(
     trpc.stores.settings.staff.getStaff.queryOptions({
       storeId: Number(storeId),
-    })
+    }),
   );
 
   // Mutations
@@ -80,12 +80,12 @@ export default function StoreSettings() {
           setBasicInfoModalVisible(false);
           refetch();
           // Invalidate queries to refresh data on other screens
-          queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey);
+          queryClient.invalidateQueries(trpc.stores.getUserApprovedStores.queryKey() as any);
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -105,7 +105,7 @@ export default function StoreSettings() {
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -125,7 +125,7 @@ export default function StoreSettings() {
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -145,7 +145,7 @@ export default function StoreSettings() {
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -164,7 +164,7 @@ export default function StoreSettings() {
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -181,7 +181,7 @@ export default function StoreSettings() {
         onError: (error) => {
           Alert.alert("خطأ", error.message);
         },
-      }
+      },
     );
   };
 
@@ -212,41 +212,33 @@ export default function StoreSettings() {
       return;
     }
 
-    Alert.alert(
-      "تأكيد التجديد",
-      "هل تريد إرسال طلب تجديد اشتراك المذخر لمدة سنة إضافية؟\n\nسيتم مراجعة الطلب من قبل الإدارة.",
-      [
-        { text: "إلغاء", style: "cancel" },
-        {
-          text: "تأكيد",
-          onPress: () => {
-            requestRenewalMutation.mutate(
-              { storeId: Number(storeId) },
-              {
-                onSuccess: () => {
-                  Alert.alert(
-                    "تم بنجاح",
-                    "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.",
-                    [
-                      {
-                        text: "حسناً",
-                        onPress: () => {
-                          // Refresh subscription data
-                          refetch();
-                        },
-                      },
-                    ]
-                  );
-                },
-                onError: (error) => {
-                  Alert.alert("خطأ", error.message);
-                },
-              }
-            );
-          },
+    Alert.alert("تأكيد التجديد", "هل تريد إرسال طلب تجديد اشتراك المذخر لمدة سنة إضافية؟\n\nسيتم مراجعة الطلب من قبل الإدارة.", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "تأكيد",
+        onPress: () => {
+          requestRenewalMutation.mutate(
+            { storeId: Number(storeId) },
+            {
+              onSuccess: () => {
+                Alert.alert("تم بنجاح", "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة وسيتم إشعارك عند الموافقة.", [
+                  {
+                    text: "حسناً",
+                    onPress: () => {
+                      // Refresh subscription data
+                      refetch();
+                    },
+                  },
+                ]);
+              },
+              onError: (error) => {
+                Alert.alert("خطأ", error.message);
+              },
+            },
+          );
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const settingsGroups = [
@@ -375,11 +367,7 @@ export default function StoreSettings() {
                   ]}
                 >
                   <Text style={styles.subscriptionBadgeText}>
-                    {subscription.status === "expiring_soon"
-                      ? "قريب الانتهاء"
-                      : subscription.status_under_treatment === "active"
-                      ? "نشط"
-                      : "غير نشط"}
+                    {subscription.status === "expiring_soon" ? "قريب الانتهاء" : subscription.status_under_treatment === "active" ? "نشط" : "غير نشط"}
                   </Text>
                 </View>
                 <Text style={styles.subscriptionPlan}>اشتراك المذخر المميز</Text>
@@ -389,9 +377,7 @@ export default function StoreSettings() {
                     <View style={styles.dateItem}>
                       <Calendar size={16} color={COLORS.darkGray} />
                       <Text style={styles.dateLabel}>تاريخ البدء:</Text>
-                      <Text style={styles.dateValue}>
-                        {new Date(subscription.startDate).toLocaleDateString("ar-EG")}
-                      </Text>
+                      <Text style={styles.dateValue}>{new Date(subscription.startDate).toLocaleDateString("ar-EG")}</Text>
                     </View>
                   )}
 
@@ -432,17 +418,12 @@ export default function StoreSettings() {
                     ) : (
                       <>
                         <RefreshCw size={16} color={COLORS.white} />
-                        <Text style={styles.renewButtonText}>
-                          {subscription?.needsRenewal ? "قيد المراجعة" : "تجديد الاشتراك"}
-                        </Text>
+                        <Text style={styles.renewButtonText}>{subscription?.needsRenewal ? "قيد المراجعة" : "تجديد الاشتراك"}</Text>
                       </>
                     )}
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.followUpButton}
-                    onPress={() => Alert.alert("متابعة الاشتراك", "عرض تفاصيل الاشتراك والفواتير")}
-                  >
+                  <TouchableOpacity style={styles.followUpButton} onPress={() => Alert.alert("متابعة الاشتراك", "عرض تفاصيل الاشتراك والفواتير")}>
                     <Text style={styles.followUpButtonText}>متابعة الاشتراك</Text>
                   </TouchableOpacity>
                 </View>
@@ -509,6 +490,9 @@ export default function StoreSettings() {
               phone: store.phone || "",
               email: store.email,
               website: store.website,
+              facebook: store.facebook,
+              instagram: store.instagram,
+              whatsapp: store.whatsapp,
             }}
             onSave={handleContactInfoSave}
             isLoading={updateContactInfoMutation.isPending}

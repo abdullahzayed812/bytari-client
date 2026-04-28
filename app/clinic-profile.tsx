@@ -1,33 +1,8 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-  Linking,
-  Alert,
-  ActivityIndicator,
-  Platform,
-} from "react-native";
-import React, { useState } from "react";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Linking, Alert, ActivityIndicator, Platform, Share } from "react-native";
+import React from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import {
-  ArrowLeft,
-  MapPin,
-  Phone,
-  Clock,
-  Star,
-  Navigation,
-  MessageSquare,
-  Earth,
-  Facebook,
-  Instagram,
-  Bell,
-  BellOff,
-} from "lucide-react-native";
+import { ArrowLeft, MapPin, Phone, Clock, Star, Navigation, MessageSquare, Earth, Facebook, Instagram, Bell, BellOff, Share2 } from "lucide-react-native";
 import Button from "../components/Button";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -45,9 +20,7 @@ export default function ClinicProfileScreen() {
   const userId = Number(user?.id);
 
   // Follow queries
-  const { data: isFollowingData } = useQuery(
-    trpc.clinics.isFollowing.queryOptions({ clinicId, userId }, { enabled: !!user }),
-  );
+  const { data: isFollowingData } = useQuery(trpc.clinics.isFollowing.queryOptions({ clinicId, userId }, { enabled: !!user }));
   const isFollowing = isFollowingData?.isFollowing;
 
   const { data: followerCountData } = useQuery(trpc.clinics.getFollowerCount.queryOptions({ clinicId }));
@@ -68,26 +41,26 @@ export default function ClinicProfileScreen() {
   const services = clinic?.services?.split("،");
   const doctors = clinic?.doctors?.split("،");
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
+  // const renderStars = (rating: number) => {
+  //   const stars = [];
+  //   const fullStars = Math.floor(rating);
+  //   const hasHalfStar = rating % 1 !== 0;
 
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
-    }
+  //   for (let i = 0; i < fullStars; i++) {
+  //     stars.push(<Star key={i} size={16} color="#FFD700" fill="#FFD700" />);
+  //   }
 
-    if (hasHalfStar) {
-      stars.push(<Star key="half" size={16} color="#FFD700" fill="#FFD700" />);
-    }
+  //   if (hasHalfStar) {
+  //     stars.push(<Star key="half" size={16} color="#FFD700" fill="#FFD700" />);
+  //   }
 
-    const remainingStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < remainingStars; i++) {
-      stars.push(<Star key={`empty-${i}`} size={16} color="#E5E7EB" />);
-    }
+  //   const remainingStars = 5 - Math.ceil(rating);
+  //   for (let i = 0; i < remainingStars; i++) {
+  //     stars.push(<Star key={`empty-${i}`} size={16} color="#E5E7EB" />);
+  //   }
 
-    return stars;
-  };
+  //   return stars;
+  // };
 
   // Open external links
   const handleOpenLink = async (url: string) => {
@@ -176,6 +149,14 @@ export default function ClinicProfileScreen() {
     }
   };
 
+  const handleShareClinic = async () => {
+    try {
+      const appUrl = "https://bytari.app"; // TODO: replace with store link
+      const message = `تحقق من تطبيق بيطاري ${appUrl}`;
+      await Share.share({ message, url: appUrl, title: "بيطاري" });
+    } catch {}
+  };
+
   // Open in Maps
   const handleOpenMaps = (address: string) => {
     const query = encodeURIComponent(address);
@@ -235,10 +216,13 @@ export default function ClinicProfileScreen() {
         <View style={styles.clinicHeader}>
           {clinic.images.length > 0 && <Image source={{ uri: clinic.images[0] }} style={styles.clinicHeaderImage} />}
           <View style={styles.clinicHeaderOverlay}>
-            <Text style={styles.clinicHeaderName}>{clinic.name}</Text>
             <View style={[styles.statusBadge, !clinic.isActive && styles.closedBadge]}>
               <Text style={styles.statusText}>{clinic.isActive ? "مفتوح الآن" : "مغلق"}</Text>
             </View>
+            <Text style={styles.clinicHeaderName}>{clinic.name}</Text>
+            <TouchableOpacity onPress={handleShareClinic} style={styles.shareIconButton}>
+              <Share2 size={20} color={COLORS.white} />
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -390,22 +374,14 @@ export default function ClinicProfileScreen() {
               onPress={handleFollowClinic}
               type={isFollowing ? "outline" : "primary"}
               style={[styles.followButton, isFollowing && styles.unfollowButton]}
-              icon={
-                isFollowing ? (
-                  <BellOff size={20} color={isFollowing ? COLORS.error : COLORS.white} />
-                ) : (
-                  <Bell size={20} color={COLORS.white} />
-                )
-              }
+              icon={isFollowing ? <BellOff size={20} color={isFollowing ? COLORS.error : COLORS.white} /> : <Bell size={20} color={COLORS.white} />}
             />
           </View>
 
           {/* Rating Button */}
           <TouchableOpacity
             style={styles.ratingButton}
-            onPress={() =>
-              router.push({ pathname: "/clinic-reviews", params: { id: clinicId, name: clinic.name } })
-            }
+            onPress={() => router.push({ pathname: "/clinic-reviews", params: { id: clinicId, name: clinic.name } })}
           >
             <MessageSquare size={20} color={COLORS.primary} />
             <Text style={styles.ratingButtonText}>التقييمات</Text>
@@ -474,10 +450,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
-    padding: 20,
-    flexDirection: "row-reverse",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "center",
+  },
+  shareIconButton: {
+    padding: 4,
   },
   clinicHeaderName: {
     fontSize: 20,
@@ -491,6 +471,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    marginRight: 15,
   },
   closedBadge: {
     backgroundColor: COLORS.error,

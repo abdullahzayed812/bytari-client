@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-  Switch,
-} from "react-native";
+import { Modal, View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Switch } from "react-native";
 import { COLORS } from "../constants/colors";
 import { X, Save, MapPin, Phone, Mail, Globe, Clock, Users, Shield, Trash2 } from "lucide-react-native";
 import { ImageGalleryUploader } from "./ImageGalleryUploader";
@@ -87,13 +77,7 @@ export const StoreBasicInfoModal = ({
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>اسم المذخر *</Text>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="أدخل اسم المذخر"
-                placeholderTextColor={COLORS.darkGray}
-              />
+              <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="أدخل اسم المذخر" placeholderTextColor={COLORS.darkGray} />
             </View>
 
             <View style={styles.inputGroup}>
@@ -161,11 +145,7 @@ export const StoreBasicInfoModal = ({
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={[styles.saveButton, isLoading && styles.disabledButton]}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
+            <TouchableOpacity style={[styles.saveButton, isLoading && styles.disabledButton]} onPress={handleSave} disabled={isLoading}>
               {isLoading ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
@@ -200,12 +180,18 @@ export const StoreContactInfoModal = ({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
 
   useEffect(() => {
     if (initialData) {
       setPhone(initialData.phone || "");
       setEmail(initialData.email || "");
       setWebsite(initialData.website || "");
+      setFacebook(initialData.facebook || "");
+      setInstagram(initialData.instagram || "");
+      setWhatsapp(initialData.whatsapp || "");
     }
   }, [initialData]);
 
@@ -219,6 +205,9 @@ export const StoreContactInfoModal = ({
       phone: phone.trim(),
       email: email.trim() || undefined,
       website: website.trim() || undefined,
+      facebook: facebook.trim() || undefined,
+      instagram: instagram.trim() || undefined,
+      whatsapp: whatsapp.trim() || undefined,
     });
   };
 
@@ -281,14 +270,58 @@ export const StoreContactInfoModal = ({
                 autoCapitalize="none"
               />
             </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Globe size={18} color={COLORS.primary} />
+                <Text style={styles.label}>فيس بوك</Text>
+              </View>
+              <TextInput
+                style={styles.input}
+                value={facebook}
+                onChangeText={setFacebook}
+                placeholder="https://example.com"
+                placeholderTextColor={COLORS.darkGray}
+                keyboardType="url"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Globe size={18} color={COLORS.primary} />
+                <Text style={styles.label}>انستجرام</Text>
+              </View>
+              <TextInput
+                style={styles.input}
+                value={instagram}
+                onChangeText={setInstagram}
+                placeholder="https://example.com"
+                placeholderTextColor={COLORS.darkGray}
+                keyboardType="url"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <View style={styles.labelRow}>
+                <Globe size={18} color={COLORS.primary} />
+                <Text style={styles.label}>واتساب</Text>
+              </View>
+              <TextInput
+                style={styles.input}
+                value={whatsapp}
+                onChangeText={setWhatsapp}
+                placeholder="https://example.com"
+                placeholderTextColor={COLORS.darkGray}
+                keyboardType="url"
+                autoCapitalize="none"
+              />
+            </View>
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={[styles.saveButton, isLoading && styles.disabledButton]}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
+            <TouchableOpacity style={[styles.saveButton, isLoading && styles.disabledButton]} onPress={handleSave} disabled={isLoading}>
               {isLoading ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
@@ -363,11 +396,7 @@ export const StoreWorkingHoursModal = ({
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={[styles.saveButton, isLoading && styles.disabledButton]}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
+            <TouchableOpacity style={[styles.saveButton, isLoading && styles.disabledButton]} onPress={handleSave} disabled={isLoading}>
               {isLoading ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
@@ -441,11 +470,7 @@ export const AddStoreStaffModal = ({
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={[styles.saveButton, isLoading && styles.disabledButton]}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
+            <TouchableOpacity style={[styles.saveButton, isLoading && styles.disabledButton]} onPress={handleSave} disabled={isLoading}>
               {isLoading ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
@@ -531,18 +556,14 @@ export const ManageStoreStaffModal = ({
                         {member.role === "all"
                           ? "صلاحيات كاملة"
                           : member.role === "view_edit_inventory"
-                          ? "عرض وتعديل المخزون"
-                          : member.role === "view_only"
-                          ? "عرض فقط"
-                          : "إدارة الطلبات"}
+                            ? "عرض وتعديل المخزون"
+                            : member.role === "view_only"
+                              ? "عرض فقط"
+                              : "إدارة الطلبات"}
                       </Text>
                     )}
                   </View>
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => handleRemove(member.id, member.name)}
-                    disabled={isLoading}
-                  >
+                  <TouchableOpacity style={styles.removeButton} onPress={() => handleRemove(member.id, member.name)} disabled={isLoading}>
                     <Trash2 size={20} color={COLORS.error} />
                   </TouchableOpacity>
                 </View>
@@ -671,27 +692,17 @@ export const StorePermissionsModal = ({
                     {permissionTypes?.map((permission) => (
                       <TouchableOpacity
                         key={permission.id}
-                        style={[
-                          styles.permissionOption,
-                          staffPermissions[member.id] === permission.id && styles.permissionOptionSelected,
-                        ]}
+                        style={[styles.permissionOption, staffPermissions[member.id] === permission.id && styles.permissionOptionSelected]}
                         onPress={() => handlePermissionChange(member.id, permission.id)}
                       >
                         {/* Radio */}
                         <View style={styles.permissionRadio}>
-                          {staffPermissions[member.id] === permission.id && (
-                            <View style={styles.permissionRadioInner} />
-                          )}
+                          {staffPermissions[member.id] === permission.id && <View style={styles.permissionRadioInner} />}
                         </View>
 
                         {/* Text */}
                         <View style={styles.permissionTextContainer}>
-                          <Text
-                            style={[
-                              styles.permissionTitle,
-                              staffPermissions[member.id] === permission.id && styles.permissionTitleSelected,
-                            ]}
-                          >
+                          <Text style={[styles.permissionTitle, staffPermissions[member.id] === permission.id && styles.permissionTitleSelected]}>
                             {permission.title}
                           </Text>
                           <Text style={styles.permissionDescription}>{permission.description}</Text>
@@ -710,24 +721,12 @@ export const StorePermissionsModal = ({
           {/* Footer */}
           {staff.length > 0 && (
             <View style={styles.modalFooter}>
-              <TouchableOpacity
-                style={[styles.cancelButton, isLoading && styles.disabledButton]}
-                onPress={onClose}
-                disabled={isLoading}
-              >
+              <TouchableOpacity style={[styles.cancelButton, isLoading && styles.disabledButton]} onPress={onClose} disabled={isLoading}>
                 <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.saveButton, isLoading && styles.disabledButton]}
-                onPress={handleSave}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color={COLORS.white} />
-                ) : (
-                  <Text style={styles.saveButtonText}>حفظ الصلاحيات</Text>
-                )}
+              <TouchableOpacity style={[styles.saveButton, isLoading && styles.disabledButton]} onPress={handleSave} disabled={isLoading}>
+                {isLoading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.saveButtonText}>حفظ الصلاحيات</Text>}
               </TouchableOpacity>
             </View>
           )}

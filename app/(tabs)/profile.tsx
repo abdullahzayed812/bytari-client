@@ -1,15 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  Platform,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, FlatList, Platform, Alert, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useState, useRef } from "react";
@@ -84,7 +73,7 @@ export default function ProfileScreen() {
           onError: (error) => {
             Alert.alert(t("common.error"), error.message || t("profile.photoUpdateFailed"));
           },
-        }
+        },
       );
     },
     onUploadError: (error) => {
@@ -98,7 +87,7 @@ export default function ProfileScreen() {
       scrollViewRef.current?.scrollTo({ y: 0, animated: false });
       // Load premium section visibility from storage
       loadPremiumSectionVisibility();
-    }, [])
+    }, []),
   );
 
   const loadPremiumSectionVisibility = async () => {
@@ -181,17 +170,17 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleEmailPress = (email: string) => {
-    Linking.openURL(`mailto:${email}`);
-  };
+  // const handleEmailPress = (email: string) => {
+  //   Linking.openURL(`mailto:${email}`);
+  // };
 
-  const handlePhonePress = (phone: string) => {
-    Linking.openURL(`tel:${phone}`);
-  };
+  // const handlePhonePress = (phone: string) => {
+  //   Linking.openURL(`tel:${phone}`);
+  // };
 
-  const handleWhatsAppPress = (phone: string) => {
-    Linking.openURL(`whatsapp://send?phone=${phone}`);
-  };
+  // const handleWhatsAppPress = (phone: string) => {
+  //   Linking.openURL(`whatsapp://send?phone=${phone}`);
+  // };
 
   const handleLanguageSelect = (lang: Language) => {
     // changeLanguage(lang);
@@ -202,19 +191,16 @@ export default function ProfileScreen() {
     pickAndUploadImage([1, 1]);
   };
 
-  const handleSubscribeToPremium = () => {
-    console.log("Subscribe to premium");
-    // TODO: Navigate to premium subscription page
-  };
+  // const handleSubscribeToPremium = () => {
+  //   console.log("Subscribe to premium");
+  //   // TODO: Navigate to premium subscription page
+  // };
 
   // Get current language label from context
   const currentLanguageLabel = getLanguageLabel(selectedLanguage);
 
   const renderLanguageItem = ({ item }: { item: (typeof languages)[0] }) => (
-    <TouchableOpacity
-      style={[styles.languageItem, language === item.code && styles.selectedLanguageItem]}
-      onPress={() => handleLanguageSelect(item.code)}
-    >
+    <TouchableOpacity style={[styles.languageItem, language === item.code && styles.selectedLanguageItem]} onPress={() => handleLanguageSelect(item.code)}>
       <Text style={styles.languageFlag}>{item.flag}</Text>
       <Text style={[styles.languageName, language === item.code && styles.selectedLanguageName]}>{item.name}</Text>
       {language === item.code && <View style={styles.selectedIndicator} />}
@@ -243,7 +229,10 @@ export default function ProfileScreen() {
             <View style={styles.nameContainer}>
               <Text style={styles.name}>{user?.name}</Text>
               <Text style={styles.email}>{user?.email}</Text>
-              <Text style={styles.userId}>{t("profile.userId")}{user?.id || "1001"}</Text>
+              <Text style={styles.userId}>
+                {t("profile.userId")}
+                {user?.id || "1001"}
+              </Text>
             </View>
           </View>
 
@@ -260,13 +249,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={styles.pointsValue}>{user?.points}</Text>
-              <Button
-                title={t("common.seeAll")}
-                onPress={() => router.push("/points-history")}
-                type="outline"
-                size="small"
-                style={styles.pointsButton}
-              />
+              <Button title={t("common.seeAll")} onPress={() => router.push("/points-history")} type="outline" size="small" style={styles.pointsButton} />
             </View>
           ) : null}
 
@@ -330,11 +313,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>{t("profile.favorites")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
-                {isRTL ? (
-                  <ChevronLeft size={20} color={COLORS.darkGray} />
-                ) : (
-                  <ChevronRight size={20} color={COLORS.darkGray} />
-                )}
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
 
@@ -344,11 +323,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>{t("profile.myOrders")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
-                {isRTL ? (
-                  <ChevronLeft size={20} color={COLORS.darkGray} />
-                ) : (
-                  <ChevronRight size={20} color={COLORS.darkGray} />
-                )}
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
 
@@ -360,11 +335,7 @@ export default function ProfileScreen() {
                   <Text style={styles.menuItemText}>{t("profile.addOffice")}</Text>
                 </View>
                 <View style={{ width: 20, height: 20 }}>
-                  {isRTL ? (
-                    <ChevronLeft size={20} color={COLORS.darkGray} />
-                  ) : (
-                    <ChevronRight size={20} color={COLORS.darkGray} />
-                  )}
+                  {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
                 </View>
               </TouchableOpacity>
             )}
@@ -375,11 +346,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>{t("profile.settings")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
-                {isRTL ? (
-                  <ChevronLeft size={20} color={COLORS.darkGray} />
-                ) : (
-                  <ChevronRight size={20} color={COLORS.darkGray} />
-                )}
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
 
@@ -399,11 +366,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>{t("profile.notifications")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
-                {isRTL ? (
-                  <ChevronLeft size={20} color={COLORS.darkGray} />
-                ) : (
-                  <ChevronRight size={20} color={COLORS.darkGray} />
-                )}
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
 
@@ -413,11 +376,7 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>{t("profile.shareApp")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
-                {isRTL ? (
-                  <ChevronLeft size={20} color={COLORS.darkGray} />
-                ) : (
-                  <ChevronRight size={20} color={COLORS.darkGray} />
-                )}
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
 
@@ -427,34 +386,19 @@ export default function ProfileScreen() {
                 <Text style={styles.menuItemText}>{t("profile.contactUs")}</Text>
               </View>
               <View style={{ width: 20, height: 20 }}>
-                {isRTL ? (
-                  <ChevronLeft size={20} color={COLORS.darkGray} />
-                ) : (
-                  <ChevronRight size={20} color={COLORS.darkGray} />
-                )}
+                {isRTL ? <ChevronLeft size={20} color={COLORS.darkGray} /> : <ChevronRight size={20} color={COLORS.darkGray} />}
               </View>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
-            onPress={handleLogout}
-            disabled={isLoggingOut}
-          >
+          <TouchableOpacity style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]} onPress={handleLogout} disabled={isLoggingOut}>
             <LogOut size={20} color={isLoggingOut ? COLORS.darkGray : COLORS.error} />
-            <Text style={[styles.logoutText, isLoggingOut && styles.logoutTextDisabled]}>
-              {isLoggingOut ? "جاري تسجيل الخروج..." : t("profile.logout")}
-            </Text>
+            <Text style={[styles.logoutText, isLoggingOut && styles.logoutTextDisabled]}>{isLoggingOut ? "جاري تسجيل الخروج..." : t("profile.logout")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      <Modal
-        visible={showLanguageModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowLanguageModal(false)}
-      >
+      <Modal visible={showLanguageModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowLanguageModal(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{t("profile.language")}</Text>
@@ -463,12 +407,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            data={languages}
-            renderItem={renderLanguageItem}
-            keyExtractor={(item) => item.code}
-            style={styles.languageList}
-          />
+          <FlatList data={languages} renderItem={renderLanguageItem} keyExtractor={(item) => item.code} style={styles.languageList} />
         </View>
       </Modal>
     </SafeAreaView>

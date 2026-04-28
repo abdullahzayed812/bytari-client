@@ -96,10 +96,7 @@ export default function AddPoultryFarmScreen() {
       newErrors.capacity = "السعة يجب أن تكون رقم موجب";
     }
 
-    if (
-      formData.currentPopulation &&
-      (isNaN(Number(formData.currentPopulation)) || Number(formData.currentPopulation) < 0)
-    ) {
+    if (formData.currentPopulation && (isNaN(Number(formData.currentPopulation)) || Number(formData.currentPopulation) < 0)) {
       newErrors.currentPopulation = "العدد الحالي يجب أن يكون رقم غير سالب";
     }
 
@@ -337,19 +334,8 @@ export default function AddPoultryFarmScreen() {
                   onPress={() => handleInputChange("farmType", type.value)}
                 >
                   <Text style={styles.farmTypeIcon}>{type.icon}</Text>
-                  <Text
-                    style={[styles.farmTypeLabel, formData.farmType === type.value && styles.farmTypeLabelSelected]}
-                  >
-                    {type.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.farmTypeDescription,
-                      formData.farmType === type.value && styles.farmTypeDescriptionSelected,
-                    ]}
-                  >
-                    {type.description}
-                  </Text>
+                  <Text style={[styles.farmTypeLabel, formData.farmType === type.value && styles.farmTypeLabelSelected]}>{type.label}</Text>
+                  <Text style={[styles.farmTypeDescription, formData.farmType === type.value && styles.farmTypeDescriptionSelected]}>{type.description}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -634,6 +620,9 @@ export default function AddPoultryFarmScreen() {
           style={styles.submitButton}
           icon={<Feather size={20} color={COLORS.white} />}
         />
+        <View style={styles.freeTrialBadge}>
+          <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -923,5 +912,21 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     width: "100%",
+  },
+  freeTrialBadge: {
+    alignSelf: "center",
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    marginTop: 10,
+  },
+  freeTrialText: {
+    color: "#B45309",
+    fontSize: 12,
+    fontStyle: "italic",
+    fontWeight: "700",
   },
 });

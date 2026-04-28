@@ -41,6 +41,7 @@ import {
   Book,
   ShoppingCart,
   MessageCircle,
+  Bird,
 } from "lucide-react-native";
 import { useRouter, Stack } from "expo-router";
 import { COLORS } from "../constants/colors";
@@ -495,6 +496,15 @@ export default function ModeratorQuickActionsScreen() {
                 label="إدارة الدورات"
                 onPress={() => router.push("/courses-management")}
                 color="#10B981"
+              />
+            )}
+
+            {hasPermission("manage_poultry_farms") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="إدارة حقول الدواجن"
+                onPress={() => router.push("/admin-poultry-farms-management")}
+                color="#F59E0B"
               />
             )}
 
