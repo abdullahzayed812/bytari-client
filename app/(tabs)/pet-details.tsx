@@ -34,18 +34,13 @@ import ImageViewerModal from "@/components/ImageViewerModal";
 // Small component so hooks can be called per follow-up card without violating rules of hooks
 function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicId: number; petName: string }) {
   const router = useRouter();
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
+  // const queryKey = trpc.clinics.chat.getChat.queryKey({ petId, clinicId });
   const { data, refetch } = useQuery({
     ...trpc.clinics.chat.getChat.queryOptions({ petId, clinicId }),
     refetchInterval: 15000,
   });
   const markAsReadMutation = useMutation(trpc.clinics.chat.markAsRead.mutationOptions());
-
-  useFocusEffect(
-    useCallback(() => {
-      refetch();
-    }, []),
-  );
 
   const chat = (data as any)?.chat;
   if (!chat || !chat.isActive) return null;
@@ -54,7 +49,14 @@ function ClinicChatButton({ petId, clinicId, petName }: { petId: string; clinicI
   const handlePress = async () => {
     if (unread > 0) {
       try {
-        await markAsReadMutation.mutateAsync({ chatId: chat.id });
+        markAsReadMutation.mutate(
+          { chatId: chat.id },
+          {
+            onSuccess: () => {
+              queryClient.invalidateQueries(trpc.clinics.chat.getChat.queryKey() as any);
+            },
+          },
+        );
       } catch {}
       refetch();
     }
@@ -1195,15 +1197,6 @@ export default function PetDetailsScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Neutered status */}
-          <View style={{ marginTop: 8, alignItems: "center" }}>
-            <View style={[styles.neuteredBadge, (pet as any).isNeutered ? styles.neuteredBadgeYes : styles.neuteredBadgeNo]}>
-              <Text style={styles.neuteredBadgeText}>
-                {(pet as any).isNeutered ? "عقيم" : "غير عقيم"}
-              </Text>
-            </View>
-          </View>
-
           {isClinicAccess && (
             <View style={styles.clinicActions}>
               {hasAccess ? (
@@ -1279,7 +1272,7 @@ export default function PetDetailsScreen() {
 
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>التعقيم</Text>
-                <View style={[styles.neuteredBadge, (pet as any).isNeutered ? styles.neuteredBadgeYes : styles.neuteredBadgeNo]}>
+                <View style={[styles.neuteredBadge]}>
                   <Text style={styles.neuteredBadgeText}>{(pet as any).isNeutered ? "عقيم" : "غير عقيم"}</Text>
                 </View>
               </View>
@@ -1630,51 +1623,54 @@ export default function PetDetailsScreen() {
                 {isClinicAccess && !hasAccess && <Text style={styles.noAccessText}>يجب الحصول على صلاحية الوصول لإضافة تذكيرات</Text>}
               </View>
             ) : (
-              pet.reminders.map((reminder: any) => (
-                <View key={reminder.id} style={[styles.recordCard, reminder.isCompleted && styles.completedReminderCard]}>
-                  <View style={styles.recordTitleRow}>
-                    <Text style={styles.recordTitle}>{reminder.title}</Text>
-                    {isOwner && (
-                      <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
-                        <Trash2 size={16} color={COLORS.error} />
-                      </TouchableOpacity>
+              pet.reminders
+                .slice()
+                .reverse()
+                .map((reminder: any) => (
+                  <View key={reminder.id} style={[styles.recordCard, reminder.isCompleted && styles.completedReminderCard]}>
+                    <View style={styles.recordTitleRow}>
+                      <Text style={styles.recordTitle}>{reminder.title}</Text>
+                      {isOwner && (
+                        <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
+                          <Trash2 size={16} color={COLORS.error} />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>التاريخ</Text>
+                      <Text style={styles.recordValue}>{new Date(reminder.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+
+                    {reminder.description && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>الوصف</Text>
+                        <Text style={styles.recordValue}>{reminder.description}</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>النوع</Text>
+                      <Text style={styles.recordValue}>
+                        {reminder.type === "vaccination" ? "تطعيم" : reminder.type === "medication" ? "دواء" : reminder.type === "checkup" ? "فحص" : "أخرى"}
+                      </Text>
+                    </View>
+
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>الحالة</Text>
+                      <Text style={[styles.recordValue, reminder.isCompleted ? styles.completedStatus : styles.pendingStatus]}>
+                        {reminder.isCompleted ? "مكتمل" : "قيد الانتظار"}
+                      </Text>
+                    </View>
+
+                    {reminder.clinicName && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>العيادة</Text>
+                        <Text style={styles.recordValue}>{reminder.clinicName}</Text>
+                      </View>
                     )}
                   </View>
-
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>التاريخ</Text>
-                    <Text style={styles.recordValue}>{new Date(reminder.date).toLocaleDateString("ar-SA")}</Text>
-                  </View>
-
-                  {reminder.description && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>الوصف</Text>
-                      <Text style={styles.recordValue}>{reminder.description}</Text>
-                    </View>
-                  )}
-
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>النوع</Text>
-                    <Text style={styles.recordValue}>
-                      {reminder.type === "vaccination" ? "تطعيم" : reminder.type === "medication" ? "دواء" : reminder.type === "checkup" ? "فحص" : "أخرى"}
-                    </Text>
-                  </View>
-
-                  <View style={styles.recordItem}>
-                    <Text style={styles.recordLabel}>الحالة</Text>
-                    <Text style={[styles.recordValue, reminder.isCompleted ? styles.completedStatus : styles.pendingStatus]}>
-                      {reminder.isCompleted ? "مكتمل" : "قيد الانتظار"}
-                    </Text>
-                  </View>
-
-                  {reminder.clinicName && (
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>العيادة</Text>
-                      <Text style={styles.recordValue}>{reminder.clinicName}</Text>
-                    </View>
-                  )}
-                </View>
-              ))
+                ))
             )}
           </View>
         )}
@@ -2527,20 +2523,11 @@ const styles = StyleSheet.create({
     color: COLORS.black,
   },
   neuteredBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 5,
-    borderRadius: 20,
     marginTop: 4,
   },
-  neuteredBadgeYes: {
-    backgroundColor: "#E0F2FE",
-  },
-  neuteredBadgeNo: {
-    backgroundColor: "#F3F4F6",
-  },
   neuteredBadgeText: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "bold",
     color: "#374151",
   },
   tabsContainer: {

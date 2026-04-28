@@ -9,19 +9,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  Linking,
   Alert,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, Send, PauseCircle, PlayCircle, Paperclip, X, Play } from "lucide-react-native";
-import * as ImagePicker from "expo-image-picker";
-import { API_URL } from "@/lib/trpc";
+import { ArrowLeft, Send, PauseCircle, PlayCircle, Paperclip, X, FileText, Download } from "lucide-react-native";
+import * as Linking from "expo-linking";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import ImageViewerModal from "@/components/ImageViewerModal";
 
 interface Message {
   id: number;
@@ -56,8 +57,21 @@ export default function ClinicChatThreadScreen() {
   const flatListRef = useRef<FlatList>(null);
   const [text, setText] = useState("");
   const [chatIsActive, setChatIsActive] = useState(initialIsActive !== "false");
-  const [pendingMedia, setPendingMedia] = useState<{ uri: string; type: "image" | "video"; url?: string } | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [pendingFileUrl, setPendingFileUrl] = useState<string | null>(null);
+  const [viewerImageUrl, setViewerImageUrl] = useState<string | null>(null);
+
+  const { pickAndUploadImage, takeAndUploadFromCamera, isLoading: isImageUploading } = useImageUpload({
+    onUploadSuccess: (url) => setPendingImageUrl(url),
+    onUploadError: () => showToast({ type: "error", message: "فشل رفع الصورة" }),
+  });
+
+  const { pickAndUploadFile, isLoading: isFileUploading } = useFileUpload({
+    onUploadSuccess: (url) => setPendingFileUrl(url),
+    onUploadError: () => showToast({ type: "error", message: "فشل رفع الملف" }),
+  });
+
+  const isUploading = isImageUploading || isFileUploading;
 
   const isVet = senderRole === "clinic";
 
@@ -69,12 +83,10 @@ export default function ClinicChatThreadScreen() {
 
   const markAsReadMutation = useMutation(trpc.clinics.chat.markAsRead.mutationOptions());
 
-  // Mark messages as read immediately on mount (both sides)
   useEffect(() => {
     markAsReadMutation.mutate({ chatId: Number(chatId) });
   }, []);
 
-  // Scroll to bottom on initial load
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
@@ -84,60 +96,30 @@ export default function ClinicChatThreadScreen() {
   const sendMutation = useMutation(trpc.clinics.chat.sendMessage.mutationOptions());
   const toggleMutation = useMutation(trpc.clinics.chat.toggleActive.mutationOptions());
 
-  const handlePickMedia = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("خطأ", "يلزم الإذن للوصول إلى المكتبة");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
-      quality: 0.8,
-    });
-    if (result.canceled || !result.assets?.length) return;
-
-    const asset = result.assets[0];
-    const isVideo = asset.type === "video";
-    setPendingMedia({ uri: asset.uri, type: isVideo ? "video" : "image" });
-
-    // Upload immediately
-    setIsUploading(true);
-    try {
-      const formData = new FormData();
-      const filename = asset.uri.split("/").pop() || (isVideo ? "video.mp4" : "image.jpg");
-      const ext = /\.(\w+)$/.exec(filename)?.[1] ?? (isVideo ? "mp4" : "jpg");
-      const mimeType = isVideo ? `video/${ext}` : `image/${ext}`;
-      // @ts-ignore
-      formData.append("file", { uri: asset.uri, name: filename, type: mimeType });
-      const response = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
-      const data = await response.json();
-      if (data.success && data.url) {
-        setPendingMedia((prev) => (prev ? { ...prev, url: data.url } : null));
-      } else {
-        throw new Error(data.error || "Upload failed");
-      }
-    } catch (err: any) {
-      showToast({ type: "error", message: "فشل رفع الملف" });
-      setPendingMedia(null);
-    } finally {
-      setIsUploading(false);
-    }
+  const handlePickMedia = () => {
+    Alert.alert("إرفاق", "اختر نوع المرفق", [
+      { text: "الكاميرا", onPress: () => takeAndUploadFromCamera() },
+      { text: "صورة من المعرض", onPress: () => pickAndUploadImage() },
+      { text: "ملف", onPress: () => pickAndUploadFile() },
+      { text: "إلغاء", style: "cancel" },
+    ]);
   };
 
   const handleSend = () => {
     const trimmed = text.trim();
-    if (!trimmed && !pendingMedia?.url) return;
+    if (!trimmed && !pendingImageUrl && !pendingFileUrl) return;
     setText("");
-    const mediaUrl = pendingMedia?.url;
-    const mediaType = pendingMedia?.type;
-    setPendingMedia(null);
+    const mediaUrl = pendingImageUrl ?? pendingFileUrl ?? undefined;
+    const mediaType = pendingImageUrl ? "image" : pendingFileUrl ? "file" : undefined;
+    setPendingImageUrl(null);
+    setPendingFileUrl(null);
     sendMutation.mutate(
       {
         chatId: Number(chatId),
         message: trimmed,
         senderRole: senderRole as "owner" | "clinic",
         mediaUrl,
-        mediaType,
+        mediaType: mediaType as any,
       },
       {
         onSuccess: () => {
@@ -172,16 +154,20 @@ export default function ClinicChatThreadScreen() {
         <Text style={styles.senderLabel}>{senderLabel}</Text>
         <View style={[styles.bubble, isOwn ? styles.ownBubble : styles.otherBubble]}>
           {item.mediaUrl && item.mediaType === "image" && (
-            <TouchableOpacity onPress={() => Linking.openURL(item.mediaUrl!)}>
+            <TouchableOpacity onPress={() => setViewerImageUrl(item.mediaUrl!)}>
               <Image source={{ uri: item.mediaUrl }} style={styles.mediaImage} resizeMode="cover" />
             </TouchableOpacity>
           )}
-          {item.mediaUrl && item.mediaType === "video" && (
-            <TouchableOpacity style={styles.videoThumb} onPress={() => Linking.openURL(item.mediaUrl!)}>
-              <View style={styles.playIcon}>
-                <Play size={28} color={COLORS.white} fill={COLORS.white} />
-              </View>
-              <Text style={styles.videoLabel}>فيديو — اضغط للتشغيل</Text>
+          {item.mediaUrl && item.mediaType === "file" && (
+            <TouchableOpacity
+              style={[styles.fileBubble, isOwn ? styles.fileBubbleOwn : styles.fileBubbleOther]}
+              onPress={() => Linking.openURL(item.mediaUrl!)}
+            >
+              <FileText size={22} color={isOwn ? COLORS.white : COLORS.primary} />
+              <Text style={[styles.fileNameText, isOwn ? styles.ownText : styles.otherText]} numberOfLines={1}>
+                {decodeURIComponent(item.mediaUrl.split("/").pop() ?? "ملف")}
+              </Text>
+              <Download size={18} color={isOwn ? COLORS.white : COLORS.primary} />
             </TouchableOpacity>
           )}
           {item.message.trim().length > 0 && (
@@ -242,31 +228,40 @@ export default function ClinicChatThreadScreen() {
         )}
 
         {/* Input bar — hide for owner when paused */}
+        <ImageViewerModal visible={!!viewerImageUrl} imageUrl={viewerImageUrl ?? ""} onClose={() => setViewerImageUrl(null)} />
+
         {(!isPaused || isVet) && (
           <KeyboardAvoidingView behavior={"padding"} keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 120}>
-            {/* Media preview */}
-            {pendingMedia && (
+            {/* Media / file preview */}
+            {(pendingImageUrl || pendingFileUrl || isUploading) && (
               <View style={styles.mediaPreviewBar}>
-                {pendingMedia.type === "image" ? (
-                  <Image source={{ uri: pendingMedia.uri }} style={styles.mediaPreviewThumb} />
-                ) : (
-                  <View style={[styles.mediaPreviewThumb, styles.videoPreviewBox]}>
-                    <Play size={20} color={COLORS.white} />
+                {pendingImageUrl ? (
+                  <Image source={{ uri: pendingImageUrl }} style={styles.mediaPreviewThumb} />
+                ) : pendingFileUrl ? (
+                  <View style={styles.filePreviewBox}>
+                    <FileText size={22} color={COLORS.primary} />
+                    <Text style={styles.filePreviewName} numberOfLines={1}>
+                      {decodeURIComponent(pendingFileUrl.split("/").pop() ?? "ملف")}
+                    </Text>
                   </View>
+                ) : (
+                  <View style={[styles.mediaPreviewThumb, { backgroundColor: COLORS.lightGray }]} />
                 )}
                 {isUploading && <ActivityIndicator size="small" color={COLORS.primary} style={{ marginLeft: 8 }} />}
-                {!isUploading && pendingMedia.url && <Text style={styles.mediaReadyText}>جاهز للإرسال</Text>}
-                <TouchableOpacity onPress={() => setPendingMedia(null)} style={styles.mediaRemoveBtn}>
-                  <X size={16} color={COLORS.error} />
-                </TouchableOpacity>
+                {!isUploading && (pendingImageUrl || pendingFileUrl) && <Text style={styles.mediaReadyText}>جاهز للإرسال</Text>}
+                {!isUploading && (
+                  <TouchableOpacity onPress={() => { setPendingImageUrl(null); setPendingFileUrl(null); }} style={styles.mediaRemoveBtn}>
+                    <X size={16} color={COLORS.error} />
+                  </TouchableOpacity>
+                )}
               </View>
             )}
 
             <View style={styles.inputBar}>
               <TouchableOpacity
-                style={[styles.sendButton, !text.trim() && !pendingMedia?.url && styles.sendButtonDisabled]}
+                style={[styles.sendButton, !text.trim() && !pendingImageUrl && !pendingFileUrl && styles.sendButtonDisabled]}
                 onPress={handleSend}
-                disabled={(!text.trim() && !pendingMedia?.url) || sendMutation.isPending || isUploading}
+                disabled={(!text.trim() && !pendingImageUrl && !pendingFileUrl) || sendMutation.isPending || isUploading}
               >
                 {sendMutation.isPending ? (
                   <ActivityIndicator size="small" color={COLORS.white} />
@@ -429,11 +424,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: COLORS.lightGray,
   },
-  videoPreviewBox: {
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.darkGray,
-  },
   mediaReadyText: {
     flex: 1,
     fontSize: 12,
@@ -449,27 +439,35 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 4,
   },
-  videoThumb: {
-    width: 200,
-    height: 120,
-    borderRadius: 10,
-    backgroundColor: "#1a1a2e",
-    justifyContent: "center",
+  fileBubble: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
     gap: 8,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginBottom: 4,
+    maxWidth: 220,
   },
-  playIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    justifyContent: "center",
+  fileBubbleOwn: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  fileBubbleOther: {
+    backgroundColor: COLORS.gray,
+  },
+  fileNameText: {
+    flex: 1,
+    fontSize: 13,
+  },
+  filePreviewBox: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 8,
+    flex: 1,
   },
-  videoLabel: {
-    color: COLORS.white,
+  filePreviewName: {
+    flex: 1,
     fontSize: 12,
-    opacity: 0.85,
+    color: COLORS.black,
   },
 });

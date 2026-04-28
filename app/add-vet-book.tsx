@@ -34,13 +34,13 @@ export default function AddVetBookScreen() {
     trpc.admin.content.createBook.mutationOptions({
       onSuccess: () => {
         Alert.alert(t("common.success"), t("addBook.addSuccess"));
-        queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey);
+        queryClient.invalidateQueries(trpc.content.listVetBooks.queryKey() as ny);
         router.back();
       },
       onError: (error: any) => {
         Alert.alert(t("common.error"), error.message || t("addBook.addFailed"));
       },
-    })
+    }),
   );
 
   const handleSave = () => {
@@ -62,7 +62,7 @@ export default function AddVetBookScreen() {
       category: formData.category,
       language: formData.language,
       coverImage: selectedImages[0] || "",
-      filePath: selectedFileUrl,
+      pdfUrl: selectedFileUrl,
       isPublished: false,
     });
   };
@@ -86,13 +86,7 @@ export default function AddVetBookScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.form}>
           <View style={styles.imageSection}>
-            <ImageGalleryUploader
-              images={selectedImages}
-              onImagesChange={setSelectedImages}
-              maxImages={1}
-              label={t("addBook.bookImage")}
-              aspect={[3, 4]}
-            />
+            <ImageGalleryUploader images={selectedImages} onImagesChange={setSelectedImages} maxImages={1} label={t("addBook.bookImage")} aspect={[3, 4]} />
           </View>
 
           <View style={styles.inputGroup}>
@@ -126,14 +120,7 @@ export default function AddVetBookScreen() {
                   style={[styles.categoryButton, formData.category === category && styles.selectedCategoryButton]}
                   onPress={() => setFormData({ ...formData, category })}
                 >
-                  <Text
-                    style={[
-                      styles.categoryButtonText,
-                      formData.category === category && styles.selectedCategoryButtonText,
-                    ]}
-                  >
-                    {category}
-                  </Text>
+                  <Text style={[styles.categoryButtonText, formData.category === category && styles.selectedCategoryButtonText]}>{category}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -177,11 +164,7 @@ export default function AddVetBookScreen() {
                   style={[styles.languageButton, formData.language === value && styles.selectedLanguageButton]}
                   onPress={() => setFormData({ ...formData, language: value })}
                 >
-                  <Text
-                    style={[styles.languageButtonText, formData.language === value && styles.selectedLanguageButtonText]}
-                  >
-                    {label}
-                  </Text>
+                  <Text style={[styles.languageButtonText, formData.language === value && styles.selectedLanguageButtonText]}>{label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -189,12 +172,7 @@ export default function AddVetBookScreen() {
 
           {/* File Upload Section */}
           <View style={styles.inputGroup}>
-            <FileUploader
-              fileUrl={selectedFileUrl}
-              onFileChange={setSelectedFileUrl}
-              label={t("addBook.bookFile")}
-              placeholder={t("addBook.selectFile")}
-            />
+            <FileUploader fileUrl={selectedFileUrl} onFileChange={setSelectedFileUrl} label={t("addBook.bookFile")} placeholder={t("addBook.selectFile")} />
           </View>
         </View>
       </ScrollView>
