@@ -1119,7 +1119,10 @@ export default function PoultryFarmDetailsScreen() {
         {renderFarmInfo()}
         {isWorkerMode ? (
           // Worker view: only daily data
-          <>{renderDailyData()}</>
+          <>
+            {renderCurrentBatch()}
+            {renderDailyData()}
+          </>
         ) : (
           // Owner view: full view
           <>

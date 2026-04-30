@@ -1236,7 +1236,7 @@ export default function HomeScreen() {
                         disabled={isDownloading}
                       >
                         {isDownloading ? <ActivityIndicator size="small" color={COLORS.white} /> : <Download size={16} color={COLORS.white} />}
-                        <Text style={styles.downloadButtonText}>{isDownloading ? "..." : t("common.download")}</Text>
+                        <Text style={styles.downloadButtonText}>{isDownloading ? "" : t("common.download")}</Text>
                       </TouchableOpacity>
                     </View>
                   </TouchableOpacity>
