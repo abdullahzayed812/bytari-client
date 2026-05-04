@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.anonymous.expoapp</string>
+          <string>com.petcare.bytari</string>
         </array>
       </dict>
     </array>

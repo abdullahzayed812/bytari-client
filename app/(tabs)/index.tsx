@@ -1315,22 +1315,6 @@ export default function HomeScreen() {
                           {new Date(pet?.lastSeenDate).toLocaleDateString("ar-SA")}
                         </Text>
                       </View>
-
-                      {/* Phone */}
-                      {/* <View style={[styles.lostPetInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                        <Phone size={14} color="#10B981" />
-                        <Text
-                          style={[
-                            styles.lostPetInfoRowText,
-                            {
-                              marginLeft: isRTL ? 0 : 6,
-                              marginRight: isRTL ? 6 : 0,
-                            },
-                          ]}
-                        >
-                          {pet?.ownerPhone}
-                        </Text>
-                      </View> */}
                     </View>
                   </View>
 
@@ -1338,38 +1322,6 @@ export default function HomeScreen() {
                   <Text style={[styles.lostPetDescription, { textAlign: isRTL ? "left" : "right" }]} numberOfLines={2}>
                     {pet.description}
                   </Text>
-
-                  {/* Action Buttons */}
-                  {pet.status === "lost" && (
-                    <View style={[styles.lostPetActions, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                      {/* <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => {
-                          // TODO: Implement map/location functionality
-                        }}
-                      >
-                        <Text style={styles.actionButtonText}>{t("common.location")}</Text>
-                      </TouchableOpacity> */}
-                      {/* <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => {
-                          // TODO: Implement report found functionality
-                        }}
-                      >
-                        <Text style={styles.actionButtonText}>{t("common.report")}</Text>
-                      </TouchableOpacity> */}
-                      {/* <TouchableOpacity
-                        style={[styles.actionButton, styles.primaryActionButton]}
-                        onPress={() => {
-                          // TODO: Implement contact owner functionality
-                        }}
-                      >
-                        <Text style={[styles.actionButtonText, styles.primaryActionButtonText]}>
-                          {t("common.call")}
-                        </Text>
-                      </TouchableOpacity> */}
-                    </View>
-                  )}
                 </TouchableOpacity>
               ))
             ) : (

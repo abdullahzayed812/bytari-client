@@ -1,4 +1,4 @@
-package com.anonymous.expoapp
+package com.petcare.bytari
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -3,7 +3,7 @@
     "name": "بيطري",
     "slug": "bytari",
     "android": {
-      "package": "com.anonymous.expoapp",
+      "package": "com.petcare.bytari",
       "adaptiveIcon": {
         "foregroundImage": "./assets/appicon.png",
         "backgroundColor": "#ffffff"
@@ -32,7 +32,7 @@
       }
     },
     "ios": {
-      "bundleIdentifier": "com.anonymous.expoapp"
+      "bundleIdentifier": "com.petcare.bytari"
     },
     "plugins": [
       "@react-native-community/datetimepicker",
@@ -61,7 +61,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "48d21511-cd8d-4417-94d4-400b74016c1b"
+        "projectId": "5185c05a-d1ea-4044-ad23-463e435e08d4"
       }
     }
   }

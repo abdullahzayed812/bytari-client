@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   storeTitleRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,

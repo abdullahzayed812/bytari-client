@@ -1,4 +1,4 @@
-package com.anonymous.expoapp
+package com.petcare.bytari
 
 import android.app.Application
 import android.content.res.Configuration

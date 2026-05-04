@@ -96,21 +96,21 @@ export default function ClinicSystemScreen() {
   const { hasAdminAccess, isSuperAdmin } = useApp();
   const [activeTab, setActiveTab] = useState<"overview" | "register" | "subscription">("overview");
   const [registrationData, setRegistrationData] = useState<ClinicRegistration>({
-    name: "Elite Care Clinic",
-    description: "Multi-specialty clinic providing high quality healthcare services.",
-    address: "12 El Horreya Road, Alexandria, Egypt",
-    phone: "+201234567890",
-    email: "info@elitecareclinic.com",
-    workingHours: "Sat - Thu: 10:00 AM - 8:00 PM",
-    services: "General Medicine, Dermatology, Dentistry, Pediatrics",
-    licenseNumber: "LIC-CLN-2026-001",
-    licenseImages: [""],
-    images: [""],
-    doctors: "Dr. Ahmed Hassan, Dr. Sara Mohamed",
-    facebook: "https://facebook.com/elitecareclinic",
-    instagram: "https://instagram.com/elitecareclinic",
-    whatsapp: "https://wa.me/201234567890",
-    website: "https://elitecareclinic.com",
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
+    workingHours: "",
+    services: "",
+    licenseNumber: "",
+    licenseImages: [],
+    images: [],
+    doctors: "",
+    facebook: "",
+    instagram: "",
+    whatsapp: "",
+    website: "",
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);

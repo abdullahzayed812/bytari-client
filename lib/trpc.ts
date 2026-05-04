@@ -9,8 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // For physical device, use your computer's IP (192.168.0.128)
 // For iOS simulator, use localhost
 
-export const API_URL = __DEV__ ? "http://192.168.0.128:3001" : "http://72.60.81.114:3001";
-// export const API_URL = "http://72.60.81.114:3001";
+export const API_URL = __DEV__ ? "http://192.168.0.128:3001" : "https://bytari.vet";
 
 export const queryClient = new QueryClient();
 

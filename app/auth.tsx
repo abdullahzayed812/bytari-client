@@ -77,25 +77,25 @@ export default function AuthScreen() {
     { label: "مدير محتوى", email: "content.manager@petapp.com", password: "admin123" },
   ];
 
-  const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
-    if (isLoading) return;
-    setActiveTab("login");
-    setUsernameOrEmail(account.email);
-    setPassword(account.password);
-    setErrors({});
-    loginMutation.mutate(
-      { email: account.email, password: account.password },
-      {
-        onSuccess: async (data) => {
-          await login(data.user, data.tokens.accessToken);
-          router.replace("/(tabs)");
-        },
-        onError: (error) => {
-          setErrors({ general: error.message || t("auth.loginError") });
-        },
-      },
-    );
-  };
+  // const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
+  //   if (isLoading) return;
+  //   setActiveTab("login");
+  //   setUsernameOrEmail(account.email);
+  //   setPassword(account.password);
+  //   setErrors({});
+  //   loginMutation.mutate(
+  //     { email: account.email, password: account.password },
+  //     {
+  //       onSuccess: async (data) => {
+  //         await login(data.user, data.tokens.accessToken);
+  //         router.replace("/(tabs)");
+  //       },
+  //       onError: (error) => {
+  //         setErrors({ general: error.message || t("auth.loginError") });
+  //       },
+  //     },
+  //   );
+  // };
 
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
@@ -157,15 +157,11 @@ export default function AuthScreen() {
 
     if (accountType === "veterinarian") {
       if (!idFrontImageUrl) {
-        newErrors.idFront =
-          veterinarianType === "student"
-            ? t("validation.studentIdFrontRequired")
-            : t("validation.doctorIdFrontRequired");
+        newErrors.idFront = veterinarianType === "student" ? t("validation.studentIdFrontRequired") : t("validation.doctorIdFrontRequired");
       }
 
       if (!idBackImageUrl) {
-        newErrors.idBack =
-          veterinarianType === "student" ? t("validation.studentIdBackRequired") : t("validation.doctorIdBackRequired");
+        newErrors.idBack = veterinarianType === "student" ? t("validation.studentIdBackRequired") : t("validation.doctorIdBackRequired");
       }
     }
 
@@ -379,15 +375,11 @@ export default function AuthScreen() {
               }}
               disabled={isLoading}
             >
-              <Text style={[styles.tabText, activeTab === "register" && styles.activeTabText]}>
-                {t("auth.register")}
-              </Text>
+              <Text style={[styles.tabText, activeTab === "register" && styles.activeTabText]}>{t("auth.register")}</Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.formTitle, { textAlign: "center" }]}>
-            {activeTab === "login" ? t("auth.loginTitle") : t("auth.registerTitle")}
-          </Text>
+          <Text style={[styles.formTitle, { textAlign: "center" }]}>{activeTab === "login" ? t("auth.loginTitle") : t("auth.registerTitle")}</Text>
 
           {errors.general && (
             <View style={styles.errorContainer}>
@@ -398,18 +390,14 @@ export default function AuthScreen() {
           <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: "left", marginBottom: 16 }]}>
-                  {t("auth.selectAccountType")}
-                </Text>
+                <Text style={[styles.inputLabel, { textAlign: "left", marginBottom: 16 }]}>{t("auth.selectAccountType")}</Text>
                 <View style={styles.accountTypeButtons}>
                   <TouchableOpacity
                     style={[styles.accountTypeButton, accountType === "pet_owner" && styles.accountTypeButtonActive]}
                     onPress={() => setAccountType("pet_owner")}
                   >
                     <User size={24} color={accountType === "pet_owner" ? COLORS.white : COLORS.primary} />
-                    <Text style={[styles.accountTypeText, accountType === "pet_owner" && styles.accountTypeTextActive]}>
-                      {t("auth.petOwner")}
-                    </Text>
+                    <Text style={[styles.accountTypeText, accountType === "pet_owner" && styles.accountTypeTextActive]}>{t("auth.petOwner")}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -417,11 +405,7 @@ export default function AuthScreen() {
                     onPress={() => setAccountType("veterinarian")}
                   >
                     <Stethoscope size={24} color={accountType === "veterinarian" ? COLORS.white : COLORS.primary} />
-                    <Text
-                      style={[styles.accountTypeText, accountType === "veterinarian" && styles.accountTypeTextActive]}
-                    >
-                      {t("auth.veterinarian")}
-                    </Text>
+                    <Text style={[styles.accountTypeText, accountType === "veterinarian" && styles.accountTypeTextActive]}>{t("auth.veterinarian")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -429,39 +413,21 @@ export default function AuthScreen() {
 
             {activeTab === "register" && accountType === "veterinarian" && (
               <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { textAlign: "center", marginBottom: 16 }]}>
-                  {t("auth.selectVetType")}
-                </Text>
+                <Text style={[styles.inputLabel, { textAlign: "center", marginBottom: 16 }]}>{t("auth.selectVetType")}</Text>
                 <View style={styles.veterinarianTypeButtons}>
                   <TouchableOpacity
-                    style={[
-                      styles.veterinarianTypeButton,
-                      veterinarianType === "veterinarian" && styles.veterinarianTypeButtonActive,
-                    ]}
+                    style={[styles.veterinarianTypeButton, veterinarianType === "veterinarian" && styles.veterinarianTypeButtonActive]}
                     onPress={() => setVeterinarianType("veterinarian")}
                   >
-                    <Text
-                      style={[
-                        styles.veterinarianTypeText,
-                        veterinarianType === "veterinarian" && styles.veterinarianTypeTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.veterinarianTypeText, veterinarianType === "veterinarian" && styles.veterinarianTypeTextActive]}>
                       {t("auth.vetDoctor")}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[
-                      styles.veterinarianTypeButton,
-                      veterinarianType === "student" && styles.veterinarianTypeButtonActive,
-                    ]}
+                    style={[styles.veterinarianTypeButton, veterinarianType === "student" && styles.veterinarianTypeButtonActive]}
                     onPress={() => setVeterinarianType("student")}
                   >
-                    <Text
-                      style={[
-                        styles.veterinarianTypeText,
-                        veterinarianType === "student" && styles.veterinarianTypeTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.veterinarianTypeText, veterinarianType === "student" && styles.veterinarianTypeTextActive]}>
                       {t("auth.vetStudent")}
                     </Text>
                   </TouchableOpacity>
@@ -471,12 +437,7 @@ export default function AuthScreen() {
 
             {activeTab === "register" && (
               <View style={styles.inputGroup}>
-                <ImageUploader
-                  imageUri={profileImageUrl}
-                  onUploadComplete={setProfileImageUrl}
-                  label={t("صورة الملف الشخصي (اختياري)")}
-                  aspect={[1, 1]}
-                />
+                <ImageUploader imageUri={profileImageUrl} onUploadComplete={setProfileImageUrl} label={t("صورة الملف الشخصي (اختياري)")} aspect={[1, 1]} />
                 {errors.profileImage && <Text style={styles.errorText}>{errors.profileImage}</Text>}
               </View>
             )}
@@ -501,9 +462,7 @@ export default function AuthScreen() {
             )}
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel]}>
-                {activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}
-              </Text>
+              <Text style={[styles.inputLabel]}>{activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}</Text>
               <TextInput
                 style={[styles.input, errors.usernameOrEmail && styles.inputError]}
                 placeholder={activeTab === "login" ? t("auth.emailUsername") : t("auth.emailLabel")}
@@ -525,10 +484,7 @@ export default function AuthScreen() {
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel]}>{t("auth.phoneNumber")}</Text>
                 <View style={styles.phoneContainer}>
-                  <TouchableOpacity
-                    style={styles.countrySelector}
-                    onPress={() => setShowCountryPicker(!showCountryPicker)}
-                  >
+                  <TouchableOpacity style={styles.countrySelector} onPress={() => setShowCountryPicker(!showCountryPicker)}>
                     <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
                     <Text style={styles.countryCode}>{selectedCountry.code}</Text>
                     <ChevronDown size={16} color={COLORS.darkGray} />
@@ -554,11 +510,7 @@ export default function AuthScreen() {
                       {countries
                         .filter((country) => country.name === "العراق")
                         .map((country, index) => (
-                          <TouchableOpacity
-                            key={index}
-                            style={styles.countryItem}
-                            onPress={() => handleCountrySelect(country)}
-                          >
+                          <TouchableOpacity key={index} style={styles.countryItem} onPress={() => handleCountrySelect(country)}>
                             <Text style={styles.countryFlag}>{country.flag}</Text>
                             <Text style={styles.countryName}>{country.name}</Text>
                             <Text style={styles.countryCodeInList}>{country.code}</Text>
@@ -631,11 +583,7 @@ export default function AuthScreen() {
                   <View style={styles.pickerDropdown}>
                     <ScrollView style={styles.pickerList} nestedScrollEnabled>
                       {Object.keys(provinces).map((country, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={styles.pickerItem}
-                          onPress={() => handleLocationCountrySelect(country)}
-                        >
+                        <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleLocationCountrySelect(country)}>
                           <Text style={styles.pickerItemText}>{country}</Text>
                         </TouchableOpacity>
                       ))}
@@ -658,9 +606,7 @@ export default function AuthScreen() {
                     }
                   }}
                 >
-                  <Text style={[styles.pickerButtonText, !selectedProvince && styles.placeholderText]}>
-                    {selectedProvince || t("auth.selectProvince")}
-                  </Text>
+                  <Text style={[styles.pickerButtonText, !selectedProvince && styles.placeholderText]}>{selectedProvince || t("auth.selectProvince")}</Text>
                   <ChevronDown size={16} color={COLORS.darkGray} />
                 </TouchableOpacity>
 
@@ -668,11 +614,7 @@ export default function AuthScreen() {
                   <View style={styles.pickerDropdown}>
                     <ScrollView style={styles.pickerList} nestedScrollEnabled>
                       {provinces[selectedLocationCountry as keyof typeof provinces]?.map((province, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={styles.pickerItem}
-                          onPress={() => handleProvinceSelect(province)}
-                        >
+                        <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleProvinceSelect(province)}>
                           <Text style={styles.pickerItemText}>{province}</Text>
                         </TouchableOpacity>
                       ))}
@@ -705,11 +647,7 @@ export default function AuthScreen() {
                   <View style={styles.pickerDropdown}>
                     <ScrollView style={styles.pickerList} nestedScrollEnabled>
                       {genders.map((gender, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={styles.pickerItem}
-                          onPress={() => handleGenderSelect(gender)}
-                        >
+                        <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleGenderSelect(gender)}>
                           <Text style={styles.pickerItemText}>{gender.label}</Text>
                         </TouchableOpacity>
                       ))}
@@ -762,11 +700,7 @@ export default function AuthScreen() {
                       }}
                       style={styles.checkbox}
                     >
-                      {termsAccepted ? (
-                        <CheckSquare size={24} color={COLORS.primary} />
-                      ) : (
-                        <Square size={24} color={COLORS.darkGray} />
-                      )}
+                      {termsAccepted ? <CheckSquare size={24} color={COLORS.primary} /> : <Square size={24} color={COLORS.darkGray} />}
                     </TouchableOpacity>
                     <View style={styles.termsTextContainer}>
                       <Text style={styles.termsText}>
@@ -781,9 +715,7 @@ export default function AuthScreen() {
             )}
 
             <Button
-              title={
-                isLoading ? t("common.loading") : activeTab === "login" ? t("auth.login") : t("auth.createAccount")
-              }
+              title={isLoading ? t("common.loading") : activeTab === "login" ? t("auth.login") : t("auth.createAccount")}
               onPress={activeTab === "login" ? handleLogin : handleRegister}
               type="primary"
               size="large"
@@ -792,9 +724,7 @@ export default function AuthScreen() {
             />
 
             <View style={[styles.switchContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <Text style={styles.switchText}>
-                {activeTab === "login" ? t("auth.dontHaveAccount") + " " : t("auth.alreadyHaveAccount") + " "}
-              </Text>
+              <Text style={styles.switchText}>{activeTab === "login" ? t("auth.dontHaveAccount") + " " : t("auth.alreadyHaveAccount") + " "}</Text>
               <TouchableOpacity
                 onPress={() => {
                   if (!isLoading) {
@@ -804,14 +734,12 @@ export default function AuthScreen() {
                 }}
                 disabled={isLoading}
               >
-                <Text style={styles.switchButtonText}>
-                  {activeTab === "login" ? t("auth.register") : t("auth.login")}
-                </Text>
+                <Text style={styles.switchButtonText}>{activeTab === "login" ? t("auth.register") : t("auth.login")}</Text>
               </TouchableOpacity>
             </View>
 
             {/* Fake login buttons for seeded admin accounts */}
-            {activeTab === "login" && (
+            {/* {activeTab === "login" && (
               <View style={styles.fakeLoginContainer}>
                 <Text style={styles.fakeLoginTitle}>دخول سريع (حسابات تجريبية)</Text>
                 <View style={styles.fakeLoginButtons}>
@@ -828,18 +756,13 @@ export default function AuthScreen() {
                   ))}
                 </View>
               </View>
-            )}
+            )} */}
           </ScrollView>
         </View>
       </View>
 
       {/* Terms and Conditions Modal */}
-      <TermsAndConditions
-        visible={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-        onAccept={handleAcceptTerms}
-        accountType={accountType}
-      />
+      <TermsAndConditions visible={showTermsModal} onClose={() => setShowTermsModal(false)} onAccept={handleAcceptTerms} accountType={accountType} />
     </View>
   );
 }

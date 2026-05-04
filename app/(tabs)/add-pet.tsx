@@ -26,17 +26,17 @@ export default function AddPetScreen() {
   const isEditMode = params.editMode === "true";
 
   const [formData, setFormData] = useState({
-    name: "Bella",
+    name: "",
     type: "dog" as Pet["type"],
-    breed: "Golden Retriever",
-    age: "3",
-    gender: "female" as Pet["gender"],
-    weight: "28",
-    color: "Golden",
-    birthDate: "2022-05-10",
-    image: "https://images.unsplash.com/photo-1552053831-71594a27632d",
-    medicalHistory: "No major illnesses. Had minor skin allergy in 2023.",
-    vaccinations: "Rabies, DHPP, Bordetella",
+    breed: "",
+    age: "",
+    gender: "femail" as Pet["gender"],
+    weight: "",
+    color: "",
+    birthDate: "",
+    image: "",
+    medicalHistory: "",
+    vaccinations: "",
     isNeutered: false,
   });
 
@@ -152,9 +152,7 @@ export default function AddPetScreen() {
           style={[styles.typeButton, formData.type === type && styles.typeButtonActive]}
           onPress={() => handleInputChange("type", type)}
         >
-          <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>
-            {PET_TYPE_LABELS[type]}
-          </Text>
+          <Text style={[styles.typeButtonText, formData.type === type && styles.typeButtonTextActive]}>{PET_TYPE_LABELS[type]}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -168,9 +166,7 @@ export default function AddPetScreen() {
           style={[styles.genderButton, formData.gender === gender && styles.genderButtonActive]}
           onPress={() => handleInputChange("gender", gender)}
         >
-          <Text style={[styles.genderButtonText, formData.gender === gender && styles.genderButtonTextActive]}>
-            {gender === "male" ? "ذكر" : "أنثى"}
-          </Text>
+          <Text style={[styles.genderButtonText, formData.gender === gender && styles.genderButtonTextActive]}>{gender === "male" ? "ذكر" : "أنثى"}</Text>
         </TouchableOpacity>
       ))}
     </View>

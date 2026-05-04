@@ -40,24 +40,25 @@ export default function AddPoultryFarmScreen() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: "مزرعة النور للدواجن",
-    location: "بغداد - الدورة",
-    farmType: "broiler" as FarmType,
-    capacity: "10000",
-    currentPopulation: "8500",
-    establishedDate: "2020-01-15",
-    licenseNumber: "LIC-2024-001",
-    contactPerson: "أحمد محمد",
-    phone: "07701234567",
-    email: "farm.alnoor@gmail.com",
-    facilities: "عنبر تسمين, مخزن أعلاف, نظام تهوية, نظام سقي أوتوماتيكي",
-    healthStatus: "healthy" as HealthStatus,
-    lastInspection: "2024-03-10",
-    description: "حقل دواجن متخصص في إنتاج دجاج اللحم بطاقة استيعابية عالية",
-    address: "بغداد، منطقة الدورة، شارع الصناعة",
+    name: "",
+    location: "",
+    farmType: "" as FarmType,
+    capacity: "",
+    currentPopulation: "",
+    establishedDate: "",
+    licenseNumber: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    facilities: "",
+    healthStatus: "" as HealthStatus,
+    lastInspection: "",
+    description: "",
+    address: "",
     licenseImage: "",
     images: [] as string[],
   });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Create farm mutation
@@ -607,23 +608,23 @@ export default function AddPoultryFarmScreen() {
             <Text style={styles.noteText}>سيتم مراجعة الحقل من قبل الإدارة قبل التفعيل</Text>
           </View>
         </View>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <Button
-          title="إنشاء حقل الدواجن"
-          onPress={handleSubmit}
-          type="primary"
-          size="large"
-          loading={createFarmMutation.isPending}
-          disabled={createFarmMutation.isPending}
-          style={styles.submitButton}
-          icon={<Feather size={20} color={COLORS.white} />}
-        />
-        <View style={styles.freeTrialBadge}>
-          <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
+        <View style={styles.footer}>
+          <Button
+            title="إنشاء حقل الدواجن"
+            onPress={handleSubmit}
+            type="primary"
+            size="large"
+            loading={createFarmMutation.isPending}
+            disabled={createFarmMutation.isPending}
+            style={styles.submitButton}
+            icon={<Feather size={20} color={COLORS.white} />}
+          />
+          <View style={styles.freeTrialBadge}>
+            <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

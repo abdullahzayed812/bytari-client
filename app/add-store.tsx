@@ -31,21 +31,21 @@ interface StoreFormData {
 }
 
 const initialFormData: StoreFormData = {
-  name: "Fresh Market Alexandria",
-  description: "Local grocery store providing fresh vegetables, fruits, and daily essentials.",
-  address: "25 El Horreya Road, Alexandria, Egypt",
-  phone: "+201234567890",
-  email: "contact@freshmarket.com",
-  category: "Supermarket",
-  licenseNumber: "SM-2026-45821",
-  licenseImages: ["https://via.placeholder.com/400x300?text=License+1", "https://via.placeholder.com/400x300?text=License+2"],
-  identityImages: ["https://via.placeholder.com/400x300?text=ID+1", "https://via.placeholder.com/400x300?text=ID+2"],
-  images: ["https://via.placeholder.com/400x300?text=Store+1", "https://via.placeholder.com/400x300?text=Store+2"],
-  workingHours: "Daily from 9:00 AM to 11:00 PM",
-  facebook: "https://facebook.com/freshmarket",
-  instagram: "https://instagram.com/freshmarket",
-  whatsapp: "https://wa.me/201234567890",
-  website: "https://freshmarket.com",
+  name: "",
+  description: "",
+  address: "",
+  phone: "",
+  email: "",
+  category: "",
+  licenseNumber: "",
+  licenseImages: [],
+  identityImages: [],
+  images: [],
+  workingHours: "",
+  facebook: "",
+  instagram: "",
+  whatsapp: "",
+  website: "",
 };
 
 export default function AddStoreScreen() {

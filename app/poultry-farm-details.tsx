@@ -675,50 +675,54 @@ export default function PoultryFarmDetailsScreen() {
             <Text style={styles.statLabel}>متوسط الوزن</Text>
           </View>
 
-          <View style={styles.statItem}>
-            <DollarSign size={24} color={COLORS.success} />
-            <Text style={styles.statValue}>{currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(0)}</Text>
-            <Text style={styles.statLabel}>الربح المقدر</Text>
+          {!isWorkerMode ? (
+            <View style={styles.statItem}>
+              <DollarSign size={24} color={COLORS.success} />
+              <Text style={styles.statValue}>{currentDays.reduce((sum, day) => sum + day.estimatedProfit, 0).toFixed(0)}</Text>
+              <Text style={styles.statLabel}>الربح المقدر</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {!isWorkerMode ? (
+          <View style={styles.batchActions}>
+            <Button
+              title="إدخال دفعة جديدة"
+              onPress={() => setShowAddBatchModal(true)}
+              type="primary"
+              size="small"
+              icon={<Plus size={16} color={COLORS.white} />}
+              style={styles.actionButton}
+            />
+
+            <Button
+              title="إضافة بيانات يومية"
+              onPress={() => setShowAddDailyDataModal(true)}
+              type="secondary"
+              size="small"
+              icon={<Plus size={16} color={COLORS.primary} />}
+              style={styles.actionButton}
+            />
+
+            <Button
+              title="التقرير الأسبوعي"
+              onPress={() => setShowWeeklyReportModal(true)}
+              type="secondary"
+              size="small"
+              icon={<Activity size={16} color={COLORS.primary} />}
+              style={styles.actionButton}
+            />
+
+            <Button
+              title="بيع الدفعة"
+              onPress={handleSellBatch}
+              type="primary"
+              size="small"
+              icon={<ShoppingCart size={16} color={COLORS.white} />}
+              style={styles.actionButton}
+            />
           </View>
-        </View>
-
-        <View style={styles.batchActions}>
-          <Button
-            title="إدخال دفعة جديدة"
-            onPress={() => setShowAddBatchModal(true)}
-            type="primary"
-            size="small"
-            icon={<Plus size={16} color={COLORS.white} />}
-            style={styles.actionButton}
-          />
-
-          <Button
-            title="إضافة بيانات يومية"
-            onPress={() => setShowAddDailyDataModal(true)}
-            type="secondary"
-            size="small"
-            icon={<Plus size={16} color={COLORS.primary} />}
-            style={styles.actionButton}
-          />
-
-          <Button
-            title="التقرير الأسبوعي"
-            onPress={() => setShowWeeklyReportModal(true)}
-            type="secondary"
-            size="small"
-            icon={<Activity size={16} color={COLORS.primary} />}
-            style={styles.actionButton}
-          />
-
-          <Button
-            title="بيع الدفعة"
-            onPress={handleSellBatch}
-            type="primary"
-            size="small"
-            icon={<ShoppingCart size={16} color={COLORS.white} />}
-            style={styles.actionButton}
-          />
-        </View>
+        ) : null}
       </View>
     );
   };
