@@ -8,8 +8,8 @@
         "foregroundImage": "./assets/appicon.png",
         "backgroundColor": "#ffffff"
       },
-      "usesCleartextTraffic": true,
-      "allowBackup": true,
+      "usesCleartextTraffic": false,
+      "allowBackup": false,
       "supportsRtl": true,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
@@ -17,13 +17,9 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "INTERNET",
-        "READ_EXTERNAL_STORAGE",
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO",
-        "RECORD_AUDIO",
-        "SYSTEM_ALERT_WINDOW",
-        "VIBRATE",
-        "WRITE_EXTERNAL_STORAGE"
+        "VIBRATE"
       ],
       "config": {
         "googleMaps": {
@@ -47,10 +43,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
-          "recordAudioAndroid": true,
-          "barcodeScannerEnabled": true
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ]
     ],

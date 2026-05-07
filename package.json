@@ -65,7 +65,8 @@
     "react-native-web": "^0.20.0",
     "superjson": "^2.2.2",
     "zod": "^4.0.14",
-    "zustand": "^5.0.2"
+    "zustand": "^5.0.2",
+    "metro": "0.82.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -75,5 +76,20 @@
     "patch-package": "^8.0.1",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "metro": "0.82.5",
+    "metro-cache": "0.82.5",
+    "metro-cache-key": "0.82.5",
+    "metro-config": "0.82.5",
+    "metro-core": "0.82.5",
+    "metro-file-map": "0.82.5",
+    "metro-resolver": "0.82.5",
+    "metro-runtime": "0.82.5",
+    "metro-source-map": "0.82.5",
+    "metro-transform-plugins": "0.82.5",
+    "metro-transform-worker": "0.82.5",
+    "metro-babel-transformer": "0.82.5",
+    "metro-minify-terser": "0.82.5"
+  }
 }
