@@ -17,8 +17,6 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "INTERNET",
-        "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO",
         "VIBRATE"
       ],
       "config": {
