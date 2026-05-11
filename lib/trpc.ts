@@ -13,24 +13,13 @@ export const API_URL = __DEV__ ? "http://192.168.0.128:3001" : "https://bytari.v
 
 export const queryClient = new QueryClient();
 
-const customFetch: typeof fetch = async (input, init) => {
-  const resp = await fetch(input, init);
-  const text = await resp.clone().text();
-  console.log("RAW RESPONSE TEXT:", text);
-  // Return original response to downstream
-  return resp;
-};
-
 const trpcClient = createTRPCClient<AppRouter>({
-  // transformer: superjson,
   links: [
     httpBatchLink({
       url: `${API_URL}/trpc`,
       transformer: superjson,
-      fetch: customFetch,
       async headers() {
         const token = await AsyncStorage.getItem("accessToken");
-        console.log("Fetched token in trpc client-------------------", token);
         return {
           "Content-Type": "application/json",
           ...(token ? { authorization: `Bearer ${token}` } : {}),
