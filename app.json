@@ -50,6 +50,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "web": {
+      "output": "single",
+      "bundler": "metro"
+    },
     "extra": {
       "eas": {
         "projectId": "5185c05a-d1ea-4044-ad23-463e435e08d4"
