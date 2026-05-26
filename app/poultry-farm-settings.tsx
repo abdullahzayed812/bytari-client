@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Modal, Clipboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { Settings, Users, UserPlus, Trash2, ChevronDown, Check, Mail } from "lucide-react-native";
+import { Settings, Users, UserPlus, Trash2, ChevronDown, Check, Mail, Stethoscope, Copy } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -34,7 +34,7 @@ export default function PoultryFarmSettingsScreen() {
   const { showToast } = useToastContext();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"info" | "staff">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "staff" | "doctors">("info");
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [emailInput, setEmailInput] = useState("");
   const [newWorkerPermission, setNewWorkerPermission] = useState<"add_daily_data" | "view_only">("add_daily_data");
@@ -80,6 +80,11 @@ export default function PoultryFarmSettingsScreen() {
 
   // Workers query
   const workersQuery = useQuery(trpc.poultryFarms.getWorkers.queryOptions({ farmId: Number(id) }));
+
+  // Farm doctors queries
+  const farmIdentifierQuery = useQuery(trpc.poultry.farmDoctor.getIdentifier.queryOptions({ farmId: Number(id) }));
+  const farmDoctorsQuery = useQuery(trpc.poultry.farmDoctor.getFarmDoctors.queryOptions({ farmId: Number(id) }));
+  const removeDoctorMutation = useMutation(trpc.poultry.farmDoctor.removeDoctor.mutationOptions());
 
   const updateMutation = useMutation(trpc.poultryFarms.update.mutationOptions());
   const deleteFarmMutation = useMutation(trpc.poultryFarms.delete.mutationOptions());
@@ -244,6 +249,10 @@ export default function PoultryFarmSettingsScreen() {
           <Users size={16} color={activeTab === "staff" ? "#F59E0B" : "#888"} />
           <Text style={[styles.tabText, activeTab === "staff" && styles.tabTextActive]}>الموظفون ({workers.length})</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === "doctors" && styles.tabActive]} onPress={() => setActiveTab("doctors")}>
+          <Stethoscope size={16} color={activeTab === "doctors" ? "#F59E0B" : "#888"} />
+          <Text style={[styles.tabText, activeTab === "doctors" && styles.tabTextActive]}>الأطباء ({farmDoctorsQuery.data?.doctors?.length ?? 0})</Text>
+        </TouchableOpacity>
       </View>
 
       {activeTab === "info" ? (
@@ -290,7 +299,7 @@ export default function PoultryFarmSettingsScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      ) : (
+      ) : activeTab === "staff" ? (
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Add worker */}
           <View style={styles.addWorkerCard}>
@@ -378,7 +387,82 @@ export default function PoultryFarmSettingsScreen() {
             ))
           )}
         </ScrollView>
-      )}
+      ) : activeTab === "doctors" ? (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Farm identifier card */}
+          <View style={styles.identifierCard}>
+            <Text style={styles.sectionTitle}>كود ربط الطبيب البيطري</Text>
+            <Text style={styles.identifierHint}>شارك هذا الكود مع الطبيب البيطري ليتمكن من الربط بحقلك</Text>
+            {farmIdentifierQuery.isLoading ? (
+              <ActivityIndicator color="#F59E0B" style={{ marginVertical: 12 }} />
+            ) : (
+              <TouchableOpacity
+                style={styles.identifierRow}
+                onPress={() => {
+                  const code = farmIdentifierQuery.data?.farmIdentifier;
+                  if (code) {
+                    Clipboard.setString(code);
+                    showToast({ type: "success", message: "تم نسخ الكود" });
+                  }
+                }}
+              >
+                <Text style={styles.identifierCode}>{farmIdentifierQuery.data?.farmIdentifier || "—"}</Text>
+                <View style={styles.copyBtn}>
+                  <Copy size={16} color="#F59E0B" />
+                  <Text style={styles.copyBtnText}>نسخ</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Linked doctors list */}
+          <Text style={styles.sectionTitle}>الأطباء المرتبطون ({farmDoctorsQuery.data?.doctors?.length ?? 0})</Text>
+
+          {farmDoctorsQuery.isLoading ? (
+            <ActivityIndicator color="#F59E0B" style={{ marginTop: 20 }} />
+          ) : !farmDoctorsQuery.data?.doctors?.length ? (
+            <View style={styles.emptyWorkers}>
+              <Stethoscope size={40} color="#ddd" />
+              <Text style={styles.emptyText}>لا يوجد أطباء مرتبطون حتى الآن</Text>
+            </View>
+          ) : (
+            farmDoctorsQuery.data.doctors.map((doc: any) => (
+              <View key={doc.linkId} style={styles.workerCard}>
+                <View style={styles.workerInfo}>
+                  <Text style={styles.workerName}>{doc.doctorName || "طبيب بيطري"}</Text>
+                  <Text style={styles.workerEmail}>{doc.doctorEmail}</Text>
+                  {doc.doctorPhone && <Text style={styles.workerEmail}>{doc.doctorPhone}</Text>}
+                </View>
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() =>
+                    Alert.alert("إزالة الطبيب", `هل تريد إزالة "${doc.doctorName}" من الحقل؟`, [
+                      { text: "إلغاء", style: "cancel" },
+                      {
+                        text: "إزالة",
+                        style: "destructive",
+                        onPress: () =>
+                          removeDoctorMutation.mutate(
+                            { linkId: doc.linkId, farmId: Number(id) },
+                            {
+                              onSuccess: () => {
+                                showToast({ type: "success", message: "تمت الإزالة" });
+                                farmDoctorsQuery.refetch();
+                              },
+                              onError: (e) => showToast({ type: "error", message: e.message }),
+                            },
+                          ),
+                      },
+                    ])
+                  }
+                >
+                  <Trash2 size={16} color="#E74C3C" />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </ScrollView>
+      ) : null}
 
       {/* Delete Confirmation Modal */}
       <Modal visible={showDeleteConfirmModal} transparent animationType="fade">
@@ -408,14 +492,14 @@ export default function PoultryFarmSettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa" },
   tabs: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
   tab: {
     flex: 1,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
@@ -430,7 +514,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, padding: 16 },
 
   fieldGroup: { marginBottom: 14 },
-  fieldLabel: { fontSize: 13, color: "#555", textAlign: "right", marginBottom: 6, fontWeight: "500" },
+  fieldLabel: { fontSize: 13, color: "#555", marginBottom: 6, fontWeight: "500" },
   input: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -443,7 +527,7 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 80, textAlignVertical: "top" },
 
-  selectRow: { flexDirection: "row-reverse", flexWrap: "wrap", gap: 8 },
+  selectRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   selectChip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
@@ -479,9 +563,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  sectionTitle: { fontSize: 15, fontWeight: "bold", color: "#333", textAlign: "right", marginBottom: 12 },
+  sectionTitle: { fontSize: 15, fontWeight: "bold", color: "#333", marginBottom: 12 },
   emailRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#ddd",
@@ -493,12 +577,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   emailInput: { flex: 1, fontSize: 14, color: "#333", paddingVertical: 8 },
-  permLabel: { fontSize: 13, color: "#555", textAlign: "right", marginBottom: 8 },
+  permLabel: { fontSize: 13, color: "#555", marginBottom: 8 },
   addBtn: {
     backgroundColor: "#F59E0B",
     borderRadius: 10,
     paddingVertical: 12,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -521,11 +605,11 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   workerInfo: { marginBottom: 10 },
-  workerName: { fontSize: 15, fontWeight: "bold", color: "#333", textAlign: "right" },
-  workerEmail: { fontSize: 12, color: "#888", textAlign: "right", marginTop: 2 },
-  workerType: { fontSize: 11, color: "#F59E0B", textAlign: "right", marginTop: 2 },
-  workerActions: { flexDirection: "row-reverse", alignItems: "center", gap: 8 },
-  permRow: { flex: 1, flexDirection: "row-reverse", gap: 6 },
+  workerName: { fontSize: 15, fontWeight: "bold", color: "#333" },
+  workerEmail: { fontSize: 12, color: "#888", marginTop: 2 },
+  workerType: { fontSize: 11, color: "#F59E0B", marginTop: 2 },
+  workerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  permRow: { flex: 1, flexDirection: "row", gap: 6 },
   permChip: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -563,7 +647,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#DC2626",
     borderRadius: 10,
     paddingVertical: 13,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -598,7 +682,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   confirmActions: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     gap: 10,
     justifyContent: "center",
   },
@@ -612,4 +696,41 @@ const styles = StyleSheet.create({
   confirmBtnCancelText: { fontSize: 15, color: "#555", fontWeight: "600" },
   confirmBtnDelete: { backgroundColor: "#DC2626" },
   confirmBtnDeleteText: { fontSize: 15, color: "#fff", fontWeight: "bold" },
+
+  // Doctors tab
+  identifierCard: {
+    backgroundColor: "#FFFBEB",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+  identifierHint: { fontSize: 12, color: "#92400E", marginBottom: 12 },
+  identifierRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  identifierCode: {
+    flex: 1,
+    fontSize: 28,
+    fontWeight: "900",
+    color: "#F59E0B",
+    textAlign: "center",
+    letterSpacing: 8,
+  },
+  copyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+  },
+  copyBtnText: { fontSize: 12, color: "#F59E0B", fontWeight: "600" },
 });

@@ -39,22 +39,24 @@ export default function AddPoultryFarmScreen() {
   const { showToast } = useToastContext();
   const queryClient = useQueryClient();
 
+  const today = new Date().toISOString().split("T")[0];
+
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
-    farmType: "" as FarmType,
-    capacity: "",
-    currentPopulation: "",
-    establishedDate: "",
-    licenseNumber: "",
-    contactPerson: "",
-    phone: "",
-    email: "",
-    facilities: "",
-    healthStatus: "" as HealthStatus,
-    lastInspection: "",
-    description: "",
-    address: "",
+    name: "مزرعة النور للدواجن",
+    location: "بغداد - الدورة",
+    farmType: "broiler" as FarmType,
+    capacity: "10000",
+    currentPopulation: "8500",
+    establishedDate: today,
+    licenseNumber: "LIC-2024-001",
+    contactPerson: user?.name || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
+    facilities: "عنبر تسمين, مخزن أعلاف, نظام تهوية, نظام سقي أوتوماتيكي",
+    healthStatus: "healthy" as HealthStatus,
+    lastInspection: today,
+    description: "مزرعة دواجن متكاملة تعمل منذ سنوات في مجال تربية دجاج اللحم",
+    address: "بغداد - منطقة الدورة - شارع المزارع - رقم 15",
     licenseImage: "",
     images: [] as string[],
   });

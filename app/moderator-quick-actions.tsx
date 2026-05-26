@@ -508,6 +508,60 @@ export default function ModeratorQuickActionsScreen() {
               />
             )}
 
+            {hasPermission("manage_poultry_section") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="قسم الدواجن"
+                onPress={() => router.push("/poultry-section")}
+                color="#064E3B"
+              />
+            )}
+
+            {hasPermission("manage_poultry_traders") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="إدارة تجار الدواجن"
+                onPress={() => router.push("/admin-poultry-traders-management")}
+                color="#B45309"
+              />
+            )}
+
+            {hasPermission("manage_poultry_market") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="مراجعة سوق الدواجن"
+                onPress={() => router.push("/admin-poultry-market-moderation")}
+                color="#0284C7"
+              />
+            )}
+
+            {hasPermission("manage_egg_market") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="مراجعة سوق البيض"
+                onPress={() => router.push("/admin-poultry-market-moderation")}
+                color="#7C3AED"
+              />
+            )}
+
+            {hasPermission("manage_poultry_exchange") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="بورصة الدواجن"
+                onPress={() => router.push("/manage-poultry-exchange")}
+                color="#059669"
+              />
+            )}
+
+            {hasPermission("manage_egg_exchange") && (
+              <ActionCard
+                icon={<Bird size={24} />}
+                label="بورصة البيض"
+                onPress={() => router.push("/manage-egg-exchange")}
+                color="#DC2626"
+              />
+            )}
+
             {hasPermission("manage_field_assignments") && (
               <ActionCard
                 icon={<UserCog size={24} />}

@@ -220,8 +220,13 @@ export default function AdminDashboard() {
     return labels[category] || category;
   };
 
-  const StatCard = ({ icon, color, value, label, onPress }: any) => (
+  const StatCard = ({ icon, color, value, label, onPress, badge }: any) => (
     <TouchableOpacity style={styles.statCard} onPress={onPress}>
+      {badge != null && badge > 0 && (
+        <View style={styles.statBadge}>
+          <Text style={styles.statBadgeText}>{badge}</Text>
+        </View>
+      )}
       {icon}
       <Text style={styles.statNumber}>{value || 0}</Text>
       <Text style={styles.statLabel}>{label}</Text>
@@ -247,7 +252,6 @@ export default function AdminDashboard() {
     permissionsLoading ||
     approvalCountsLoading ||
     allUsersLoading ||
-    detailedStatsLoading ||
     supervisorsLoading
   ) {
     return (
@@ -362,6 +366,37 @@ export default function AdminDashboard() {
         <StatCard icon={<BookOpen size={24} color="#6BCF7F" />} value={systemStats?.totalStats?.books} label="الكتب" />
       </View>
 
+      {/* Poultry Statistics */}
+      <View style={styles.statsContainer}>
+        <StatCard
+          icon={<Egg size={24} color="#F59E0B" />}
+          value={(systemStats?.totalStats as any)?.poultryFarms}
+          label="حقول الدواجن"
+          badge={(approvalCounts as any)?.pendingPoultryFarms}
+          onPress={() => router.push("/admin-poultry-farms-management")}
+        />
+        <StatCard
+          icon={<Briefcase size={24} color="#D97706" />}
+          value={(systemStats?.totalStats as any)?.poultryTraders}
+          label="تجار الدواجن"
+          badge={(approvalCounts as any)?.pendingPoultryTraders}
+          onPress={() => router.push("/admin-poultry-traders-management")}
+        />
+        <StatCard
+          icon={<ShoppingCart size={24} color="#059669" />}
+          value={(systemStats?.totalStats as any)?.poultryMarketAds}
+          label="إعلانات الدواجن"
+          badge={(approvalCounts as any)?.pendingPoultryAds}
+          onPress={() => router.push("/admin-poultry-market-moderation")}
+        />
+        <StatCard
+          icon={<Egg size={24} color="#10B981" />}
+          value={(systemStats?.totalStats as any)?.eggMarketAds}
+          label="إعلانات البيض"
+          onPress={() => router.push("/admin-poultry-market-moderation")}
+        />
+      </View>
+
       {/* Pending Approvals */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>الموافقات المعلقة</Text>
@@ -413,6 +448,24 @@ export default function AdminDashboard() {
             <Text style={styles.statLabel}>أطباء معلقين</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity
+            style={[styles.statCard, styles.pendingCard]}
+            onPress={() => router.push("/admin-poultry-traders-management")}
+          >
+            <Briefcase size={24} color="#D97706" />
+            <Text style={styles.statNumber}>{(approvalCounts as any)?.pendingPoultryTraders || 0}</Text>
+            <Text style={styles.statLabel}>تجار معلقين</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.statCard, styles.pendingCard]}
+            onPress={() => router.push("/admin-poultry-market-moderation")}
+          >
+            <ShoppingCart size={24} color="#059669" />
+            <Text style={styles.statNumber}>{(approvalCounts as any)?.pendingPoultryAds || 0}</Text>
+            <Text style={styles.statLabel}>إعلانات دواجن معلقة</Text>
+          </TouchableOpacity>
+
           <View style={[styles.statCard, styles.totalPendingCard]}>
             <CheckCircle size={24} color="#27AE60" />
             <Text style={styles.statNumber}>
@@ -420,7 +473,9 @@ export default function AdminDashboard() {
                 ((systemStats?.totalStats as any)?.pendingStores || 0) +
                 ((systemStats?.totalStats as any)?.pendingLostPets || 0) +
                 ((systemStats?.totalStats as any)?.pendingBreedingPets || 0) +
-                ((systemStats?.totalStats as any)?.pendingVetRegistrations || 0)}
+                ((systemStats?.totalStats as any)?.pendingVetRegistrations || 0) +
+                ((approvalCounts as any)?.pendingPoultryTraders || 0) +
+                ((approvalCounts as any)?.pendingPoultryAds || 0)}
             </Text>
             <Text style={styles.statLabel}>إجمالي المعلق</Text>
           </View>
@@ -648,6 +703,37 @@ export default function AdminDashboard() {
                   <Text style={styles.badgeText}>{approvalCounts?.pendingPoultryFarms}</Text>
                 </View>
               )}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-poultry-traders-management")}>
+            <View style={styles.actionCardContent}>
+              <Briefcase size={24} color="#D97706" />
+              <Text style={styles.actionText}>تجار الدواجن</Text>
+              {(approvalCounts?.pendingPoultryTraders || 0) > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{approvalCounts?.pendingPoultryTraders}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-poultry-market-moderation")}>
+            <View style={styles.actionCardContent}>
+              <ShoppingCart size={24} color="#059669" />
+              <Text style={styles.actionText}>إعلانات سوق الدواجن</Text>
+              {(approvalCounts?.pendingPoultryAds || 0) > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{approvalCounts?.pendingPoultryAds}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/poultry-doctors-management")}>
+            <View style={styles.actionCardContent}>
+              <Stethoscope size={24} color="#0EA5E9" />
+              <Text style={styles.actionText}>طلبات ربط أطباء الدواجن</Text>
             </View>
           </TouchableOpacity>
 
@@ -1233,6 +1319,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    position: "relative",
+  },
+  statBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  statBadgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
   },
   statNumber: {
     fontSize: 24,

@@ -58,9 +58,9 @@ export const useImageUpload = (options: UseImageUploadOptions = {}) => {
       // Use configured API URL or fallback to dev machine IP
       // Note: In a real app, this should come from a config file
 
-      console.log("📤 Uploading to:", `${API_URL}/upload`);
+      console.log("📤 Uploading to:", `${"https://bytari.vet"}/upload`);
 
-      const response = await fetch(`${API_URL}/upload`, {
+      const response = await fetch(`${"https://bytari.vet"}/upload`, {
         method: "POST",
         body: formData,
         // Don't set Content-Type header - let the browser set it with boundary
@@ -128,7 +128,7 @@ export const useImageUpload = (options: UseImageUploadOptions = {}) => {
       // @ts-ignore - React Native FormData
       formData.append("file", { uri: asset.uri, name: filename, type });
 
-      const response = await fetch(`${API_URL}/upload`, { method: "POST", body: formData });
+      const response = await fetch(`${"https://bytari.vet"}/upload`, { method: "POST", body: formData });
       if (!response.ok) throw new Error(`Upload failed with status ${response.status}`);
 
       const data = await response.json();

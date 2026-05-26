@@ -28,8 +28,8 @@ export default function AuthScreen() {
   const { login } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   // zuhairalrawi0@gmail.com, zuh000123000321zuh
-  const [usernameOrEmail, setUsernameOrEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("zuhairalrawi0@gmail.com");
+  const [password, setPassword] = useState("zuh000123000321zuh");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);

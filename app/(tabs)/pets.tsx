@@ -711,6 +711,11 @@ export default function PetsScreen() {
               style={[styles.actionButton, styles.storeButton]}
             />
           </View>
+
+          <TouchableOpacity style={styles.linkFarmButton} onPress={() => router.push("/link-farm-to-doctor")} activeOpacity={0.8}>
+            <Feather size={18} color="#064E3B" />
+            <Text style={styles.linkFarmButtonText}>ربط حقل دواجن — للأطباء البيطريين</Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     );
@@ -790,6 +795,11 @@ export default function PetsScreen() {
               <Text style={styles.transferRequestsText}>طلبات نقل الملكية</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.poultrySectionButton} onPress={() => router.push("/poultry-section")} activeOpacity={0.8}>
+              <Text style={styles.poultrySectionIcon}>🐔</Text>
+              <Text style={styles.poultrySectionText}>قسم الدواجن — السوق والبورصة والإحصائيات</Text>
+            </TouchableOpacity>
+
             {/* Pets Section Title */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>الحيوانات الأليفة ({displayPets.length})</Text>
@@ -798,19 +808,15 @@ export default function PetsScreen() {
         }
         ListFooterComponent={
           <View>
-            {/* Farms Section */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>حقول الدواجن ({displayFarms.length})</Text>
             </View>
 
             {displayFarms.length > 0 ? (
               displayFarms.map((farm: any) => {
-                // Expired subscription → renewal card
                 if (farm.needsRenewal) {
                   return renderSubscriptionCard({ type: "farm", data: farm });
                 }
-
-                // Pending admin approval → non-clickable card
                 if (!farm.isActive) {
                   return (
                     <View key={farm.id} style={[styles.poultryFarmCard, styles.farmPendingCard]}>
@@ -818,73 +824,33 @@ export default function PetsScreen() {
                         <Clock size={14} color="#F59E0B" />
                         <Text style={styles.farmPendingText}>في انتظار موافقة الإدارة</Text>
                       </View>
-                      <View style={styles.farmHeader}>
-                        {farm.images?.[0] ? (
-                          <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
-                        ) : (
-                          <View style={[styles.farmIconContainer, { backgroundColor: "#D1D5DB" }]}>
-                            <Feather size={32} color={COLORS.white} />
-                          </View>
-                        )}
-                        <View style={styles.farmInfo}>
-                          <Text style={styles.farmName}>{farm.name}</Text>
-                          <View style={styles.farmLocationRow}>
-                            <MapPin size={14} color={COLORS.darkGray} />
-                            <Text style={styles.farmLocation}>{farm.location}</Text>
-                          </View>
-                          <View style={styles.farmBadges}>
-                            <View style={[styles.typeBadge, { backgroundColor: "#9CA3AF" }]}>
-                              <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                      <View style={styles.farmDetails}>
-                        <View style={styles.detailItem}>
-                          <Users size={16} color={COLORS.primary} />
-                          <Text style={styles.detailLabel}>السعة:</Text>
-                          <Text style={styles.detailValue}>{farm.capacity || 0} طائر</Text>
-                        </View>
-                      </View>
                     </View>
                   );
                 }
-
-                // Active farm → normal clickable card
                 return (
                   <TouchableOpacity key={farm.id} style={styles.poultryFarmCard} onPress={() => handleFarmPress(farm)} activeOpacity={0.8}>
                     <View style={styles.farmHeader}>
-                      {farm.images?.[0] ? (
-                        <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
-                      ) : (
-                        <View style={styles.farmIconContainer}>
-                          <Feather size={32} color={COLORS.white} />
-                        </View>
-                      )}
+                      <View style={styles.farmIconContainer}>
+                        <Feather size={32} color={COLORS.white} />
+                      </View>
                       <View style={styles.farmInfo}>
                         <Text style={styles.farmName}>{farm.name}</Text>
-                        <View style={styles.farmLocationRow}>
-                          <MapPin size={14} color={COLORS.darkGray} />
-                          <Text style={styles.farmLocation}>{farm.location}</Text>
-                        </View>
-
-                        {(hasAdminAccess || isSuperAdmin || isModerator) && farm.owner?.name && (
-                          <View style={styles.ownerInfo}>
-                            <Users size={14} color={COLORS.primary} />
-                            <Text style={styles.ownerText}>المالك: {farm.owner.name}</Text>
+                        {farm.governorate && (
+                          <View style={styles.farmLocationRow}>
+                            <MapPin size={14} color={COLORS.darkGray} />
+                            <Text style={styles.farmLocation}>{farm.governorate}</Text>
                           </View>
                         )}
-
                         <View style={styles.farmBadges}>
-                          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(farm.healthStatus || "healthy") }]}>
-                            <Text style={styles.statusText}>{getHealthStatusLabel(farm.healthStatus || "healthy")}</Text>
+                          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(farm.status) }]}>
+                            <Text style={styles.statusText}>{farm.status === "active" ? "نشط" : farm.status === "inactive" ? "غير نشط" : farm.status}</Text>
                           </View>
                           <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
                             <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
                           </View>
                           {farm.isVerified && (
                             <View style={[styles.verifiedBadge, { backgroundColor: COLORS.success }]}>
-                              <CheckCircle size={12} color={COLORS.white} />
+                              <CheckCircle size={10} color={COLORS.white} />
                               <Text style={styles.verifiedBadgeText}>موثق</Text>
                             </View>
                           )}
@@ -894,14 +860,16 @@ export default function PetsScreen() {
 
                     <View style={styles.farmDetails}>
                       <View style={styles.detailItem}>
-                        <Users size={16} color={COLORS.primary} />
-                        <Text style={styles.detailLabel}>السعة:</Text>
-                        <Text style={styles.detailValue}>{farm.capacity || 0} طائر</Text>
+                        <Text style={styles.detailLabel}>الطاقة:</Text>
+                        <Text style={styles.detailValue}>{(farm.capacity ?? 0).toLocaleString()}</Text>
                       </View>
                       <View style={styles.detailItem}>
-                        <Activity size={16} color={COLORS.success} />
                         <Text style={styles.detailLabel}>الحالي:</Text>
-                        <Text style={styles.detailValue}>{farm.currentPopulation || 0} طائر</Text>
+                        <Text style={styles.detailValue}>{(farm.currentPopulation ?? 0).toLocaleString()}</Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>الصحة:</Text>
+                        <Text style={styles.detailValue}>{getHealthStatusLabel(farm.healthStatus)}</Text>
                       </View>
                     </View>
 
@@ -920,51 +888,11 @@ export default function PetsScreen() {
               </View>
             )}
 
-            {/* Worker Farms Section */}
             {workerFarms.length > 0 && (
               <View style={{ marginTop: 8 }}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>أعمل فيها ({workerFarms.length})</Text>
                 </View>
-                {workerFarms.map((farm: any) => (
-                  <TouchableOpacity
-                    key={`worker-${farm.id}`}
-                    style={[styles.poultryFarmCard, { borderWidth: 1, borderColor: "#D1FAE5" }]}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/poultry-farm-details",
-                        params: {
-                          id: farm.id,
-                          workerMode: "1",
-                          workerPermissions: farm.permissions || "view_only",
-                        },
-                      })
-                    }
-                    activeOpacity={0.8}
-                  >
-                    <View style={[styles.farmPendingBanner, { backgroundColor: "#D1FAE5" }]}>
-                      <Users size={14} color="#059669" />
-                      <Text style={[styles.farmPendingText, { color: "#059669" }]}>
-                        موظف • {farm.permissions === "add_daily_data" ? "إضافة بيانات يومية" : "عرض فقط"}
-                      </Text>
-                    </View>
-                    <View style={styles.farmHeader}>
-                      <View style={[styles.farmIconContainer, { backgroundColor: "#059669" }]}>
-                        <Feather size={32} color="#fff" />
-                      </View>
-                      <View style={styles.farmInfo}>
-                        <Text style={styles.farmName}>{farm.name}</Text>
-                        <View style={styles.farmLocationRow}>
-                          <MapPin size={14} color={COLORS.darkGray} />
-                          <Text style={styles.farmLocation}>{farm.location}</Text>
-                        </View>
-                        <Text style={{ fontSize: 12, color: "#888", textAlign: "right", marginTop: 2 }}>
-                          المالك: {farm.owner?.name || farm.ownerName || "—"}
-                        </Text>
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
               </View>
             )}
           </View>
@@ -1049,6 +977,25 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.primary,
     textAlign: "left",
+  },
+  poultrySectionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#064E3B40",
+  },
+  poultrySectionIcon: { fontSize: 20 },
+  poultrySectionText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#064E3B",
   },
   sectionHeader: {
     marginBottom: 12,
@@ -1540,13 +1487,32 @@ const styles = StyleSheet.create({
   clinicActions: {
     gap: 12,
     marginTop: 16,
-    marginBottom: 120,
   },
   actionButton: {
     width: "100%",
   },
   storeButton: {
     backgroundColor: "#8B5CF6",
+  },
+  linkFarmButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginTop: 12,
+    marginBottom: 120,
+    borderWidth: 1,
+    borderColor: "#064E3B40",
+  },
+  linkFarmButtonText: {
+    // flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#064E3B",
   },
 
   // Subscription Card Styles
