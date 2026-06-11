@@ -44,6 +44,12 @@ export default function PetsScreen() {
   // Fetch user's own farms
   const userFarmsQuery = useQuery(trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) }));
 
+  // Check if user has a trader account
+  const traderQuery = useQuery({
+    ...trpc.poultry.traders.getMyProfile.queryOptions(),
+    enabled: !!user?.id,
+  });
+
   // Fetch farms where user is a worker
   const workerFarmsQuery = useQuery({
     ...trpc.poultryFarms.getWorkerFarms.queryOptions({ userId: Number(user?.id) }),
@@ -105,6 +111,7 @@ export default function PetsScreen() {
   const requestClinicRenewalMutation = useMutation(trpc.clinics.settings.requestRenewal.mutationOptions());
   const requestStoreRenewalMutation = useMutation(trpc.stores.settings.requestRenewal.mutationOptions());
   const requestFarmRenewalMutation = useMutation(trpc.poultryFarms.requestRenewal.mutationOptions());
+  const requestTraderRenewalMutation = useMutation(trpc.poultry.traders.requestRenewal.mutationOptions());
 
   // Scroll to top when tab is focused
   useFocusEffect(
@@ -128,7 +135,6 @@ export default function PetsScreen() {
   }, [workerFarmsQuery.data]);
 
   const handlePetPress = (pet: any) => {
-    console.log(pet);
     router.push({
       pathname: "/pet-details",
       params: { petId: pet?.id },
@@ -163,8 +169,6 @@ export default function PetsScreen() {
     const types: Record<string, string> = {
       broiler: "تسمين",
       layer: "بياض",
-      breeder: "أمهات",
-      mixed: "مختلط",
     };
     return types[type] || type;
   };
@@ -200,6 +204,36 @@ export default function PetsScreen() {
 
   const handleAddPet = () => {
     router.push("/add-pet");
+  };
+
+  const handlePoultrySection = () => {
+    const trader = traderQuery.data?.trader;
+    const hasTrader = trader?.status === "active" || trader?.status === "pending";
+    const hasFarm = displayFarms.length > 0;
+    if (hasFarm || hasTrader) {
+      router.push("/poultry-dashboard");
+    } else {
+      router.push("/poultry-section");
+    }
+  };
+
+  const handleRenewTraderSubscription = (traderId: number, hasRenewal: boolean) => {
+    if (hasRenewal) {
+      showToast({ type: "warning", message: "يوجد طلب تجديد قيد المراجعة بالفعل. سيتم إشعارك عند الموافقة عليه." });
+      return;
+    }
+    requestTraderRenewalMutation.mutate(
+      { traderId },
+      {
+        onSuccess: () => {
+          traderQuery.refetch();
+          showToast({ type: "success", message: "تم إرسال طلب التجديد بنجاح. سيتم مراجعته من قبل الإدارة." });
+        },
+        onError: (error: any) => {
+          showToast({ type: "error", message: error.message || "حدث خطأ أثناء إرسال طلب التجديد" });
+        },
+      },
+    );
   };
 
   const handleRenewFarmSubscription = (farmId: number, ownerId: number, hasRenewal: boolean) => {
@@ -288,15 +322,16 @@ export default function PetsScreen() {
   };
 
   // Render subscription renewal card
-  const renderSubscriptionCard = (item: { type: "clinic" | "store" | "farm"; data: any }) => {
+  const renderSubscriptionCard = (item: { type: "clinic" | "store" | "farm" | "trader"; data: any }) => {
     const { type, data } = item;
     const isClinic = type === "clinic";
     const isFarm = type === "farm";
+    const isTrader = type === "trader";
     const resourceName = data.name;
     const startDate = data.activationStartDate ? new Date(data.activationStartDate) : null;
     const endDate = data.activationEndDate ? new Date(data.activationEndDate) : null;
-    // farms don't have pre-computed daysRemaining — compute client-side
-    const daysRemaining = isFarm ? (endDate ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0) : data.daysRemaining || 0;
+    // farms and traders don't have pre-computed daysRemaining — compute client-side
+    const daysRemaining = isFarm || isTrader ? (endDate ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0) : data.daysRemaining || 0;
     const needsRenewal = data.needsRenewal || false;
     const reviewingRenewalRequest = data.reviewingRenewalRequest || false;
     const isExpired = daysRemaining < 1;
@@ -320,9 +355,11 @@ export default function PetsScreen() {
     const statusInfo = getStatusInfo();
     const isLoading = isFarm
       ? requestFarmRenewalMutation.isPending
-      : type === "clinic"
-        ? requestClinicRenewalMutation.isPending
-        : requestStoreRenewalMutation.isPending;
+      : isTrader
+        ? requestTraderRenewalMutation.isPending
+        : type === "clinic"
+          ? requestClinicRenewalMutation.isPending
+          : requestStoreRenewalMutation.isPending;
 
     return (
       <View key={`${type}-${data.id}`} style={styles.subscriptionCard}>
@@ -332,12 +369,16 @@ export default function PetsScreen() {
               <Stethoscope size={20} color={COLORS.primary} />
             ) : isFarm ? (
               <Feather size={20} color="#F59E0B" />
+            ) : isTrader ? (
+              <Briefcase size={20} color="#D97706" />
             ) : (
               <Package size={20} color={COLORS.primary} />
             )}
           </View>
           <View style={styles.subscriptionHeaderText}>
-            <Text style={styles.subscriptionTitle}>{isClinic ? "اشتراك العيادة" : isFarm ? "اشتراك حقل الدواجن" : "اشتراك المذخر"}</Text>
+            <Text style={styles.subscriptionTitle}>
+              {isClinic ? "اشتراك العيادة" : isFarm ? "اشتراك حقل الدواجن" : isTrader ? "اشتراك حساب التاجر" : "اشتراك المذخر"}
+            </Text>
             <Text style={styles.subscriptionResourceName} numberOfLines={1}>
               {resourceName}
             </Text>
@@ -386,8 +427,10 @@ export default function PetsScreen() {
               style={[styles.renewButton, (isLoading || reviewingRenewalRequest) && { opacity: 0.6 }]}
               onPress={() =>
                 isFarm
-                  ? handleRenewFarmSubscription(data.id, data.ownerId ?? Number(user?.id), reviewingRenewalRequest)
-                  : handleRenewSubscription(type as "clinic" | "store", data.id, reviewingRenewalRequest)
+                  ? handleRenewFarmSubscription(data.id, Number(user?.id), reviewingRenewalRequest)
+                  : isTrader
+                    ? handleRenewTraderSubscription(data.id, reviewingRenewalRequest)
+                    : handleRenewSubscription(type as "clinic" | "store", data.id, reviewingRenewalRequest)
               }
               disabled={isLoading || reviewingRenewalRequest}
             >
@@ -416,7 +459,9 @@ export default function PetsScreen() {
               <View style={styles.expiredIcon}>
                 <AlertCircle size={16} color={COLORS.error} />
               </View>
-              <Text style={styles.expiredText}>الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : "المذخر"}</Text>
+              <Text style={styles.expiredText}>
+                الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : isTrader ? "حساب التاجر" : "المذخر"}
+              </Text>
             </View>
           )}
         </View>
@@ -795,10 +840,24 @@ export default function PetsScreen() {
               <Text style={styles.transferRequestsText}>طلبات نقل الملكية</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.poultrySectionButton} onPress={() => router.push("/poultry-section")} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.poultrySectionButton} onPress={handlePoultrySection} activeOpacity={0.8}>
               <Text style={styles.poultrySectionIcon}>🐔</Text>
               <Text style={styles.poultrySectionText}>قسم الدواجن — السوق والبورصة والإحصائيات</Text>
             </TouchableOpacity>
+
+            {/* Trader subscription renewal card */}
+            {(() => {
+              const trader = traderQuery.data?.trader;
+              if (!trader) return null;
+              const endDate = trader.activationEndDate ? new Date(trader.activationEndDate as any) : null;
+              const days = endDate ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+              const show = trader.needsRenewal || (trader.status === "active" && days < 30);
+              if (!show) return null;
+              return renderSubscriptionCard({
+                type: "trader",
+                data: { ...trader, name: trader.businessName },
+              });
+            })()}
 
             {/* Pets Section Title */}
             <View style={styles.sectionHeader}>
@@ -830,9 +889,13 @@ export default function PetsScreen() {
                 return (
                   <TouchableOpacity key={farm.id} style={styles.poultryFarmCard} onPress={() => handleFarmPress(farm)} activeOpacity={0.8}>
                     <View style={styles.farmHeader}>
-                      <View style={styles.farmIconContainer}>
-                        <Feather size={32} color={COLORS.white} />
-                      </View>
+                      {farm.images?.[0] ? (
+                        <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
+                      ) : (
+                        <View style={styles.farmIconContainer}>
+                          <Feather size={32} color={COLORS.white} />
+                        </View>
+                      )}
                       <View style={styles.farmInfo}>
                         <Text style={styles.farmName}>{farm.name}</Text>
                         {farm.governorate && (
@@ -860,7 +923,7 @@ export default function PetsScreen() {
 
                     <View style={styles.farmDetails}>
                       <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>الطاقة:</Text>
+                        <Text style={styles.detailLabel}>الطبقة:</Text>
                         <Text style={styles.detailValue}>{(farm.capacity ?? 0).toLocaleString()}</Text>
                       </View>
                       <View style={styles.detailItem}>
@@ -876,6 +939,25 @@ export default function PetsScreen() {
                     {farm.licenseNumber && (
                       <View style={styles.licenseInfo}>
                         <Text style={styles.licenseText}>رقم الترخيص: {farm.licenseNumber}</Text>
+                      </View>
+                    )}
+
+                    {(farm.activationStartDate || farm.activationEndDate) && (
+                      <View style={styles.activationInfo}>
+                        {farm.activationStartDate && (
+                          <View style={styles.activationRow}>
+                            <Calendar size={13} color={COLORS.primary} />
+                            <Text style={styles.activationLabel}>بداية الاشتراك:</Text>
+                            <Text style={styles.activationValue}>{new Date(farm.activationStartDate).toLocaleDateString("ar-SA")}</Text>
+                          </View>
+                        )}
+                        {farm.activationEndDate && (
+                          <View style={styles.activationRow}>
+                            <Calendar size={13} color={COLORS.warning} />
+                            <Text style={styles.activationLabel}>نهاية الاشتراك:</Text>
+                            <Text style={styles.activationValue}>{new Date(farm.activationEndDate).toLocaleDateString("ar-SA")}</Text>
+                          </View>
+                        )}
                       </View>
                     )}
                   </TouchableOpacity>
@@ -1169,6 +1251,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.primary,
     fontWeight: "600",
+  },
+  activationInfo: {
+    backgroundColor: "#F0FDF4",
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    gap: 4,
+  },
+  activationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  activationLabel: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    flex: 1,
+  },
+  activationValue: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.black,
   },
   farmPendingCard: {
     opacity: 0.75,

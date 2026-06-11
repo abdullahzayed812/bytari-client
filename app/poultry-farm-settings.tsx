@@ -12,8 +12,6 @@ import { COLORS } from "@/constants/colors";
 const FARM_TYPE_OPTIONS = [
   { value: "broiler", label: "تسمين (دجاج لحم)" },
   { value: "layer", label: "بياض (دجاج بيض)" },
-  { value: "breeder", label: "أمهات" },
-  { value: "mixed", label: "مختلط" },
 ];
 
 const HEALTH_STATUS_OPTIONS = [
@@ -261,7 +259,7 @@ export default function PoultryFarmSettingsScreen() {
           {renderField("الموقع", "location")}
           {renderField("العنوان التفصيلي", "address")}
           {renderSelect("نوع الإنتاج", "farmType", FARM_TYPE_OPTIONS)}
-          {renderField("الطاقة الاستيعابية (طير)", "capacity", true)}
+          {renderField("الطبقة الاستيعابية (طير)", "capacity", true)}
           {renderField("العدد الحالي", "currentPopulation", true)}
           {renderField("رقم الهاتف", "phone")}
           {renderField("البريد الإلكتروني", "email")}

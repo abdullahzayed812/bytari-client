@@ -2,18 +2,18 @@
  * egg-exchange.tsx
  * Daily egg exchange prices viewer.
  */
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Calendar, Settings } from "lucide-react-native";
+import { Settings } from "lucide-react-native";
 import { COLORS } from "../constants/colors";
 import { useApp } from "../providers/AppProvider";
 import { useEggExchange } from "../hooks/usePoultryExchange";
 import { ExchangeTable } from "../components/poultry/ExchangeTable";
 
-function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+function todayStr(): string {
+  return new Date().toISOString().split("T")[0];
 }
 
 function formatArabicDate(dateStr: string): string {
@@ -24,25 +24,11 @@ function formatArabicDate(dateStr: string): string {
 export default function EggExchangeScreen() {
   const router = useRouter();
   const { hasAdminAccess, isModerator } = useApp();
-  const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
+  const today = todayStr();
 
-  const { data, isLoading } = useEggExchange(selectedDate);
+  const { data, isLoading } = useEggExchange(today);
 
   const canManage = hasAdminAccess || isModerator;
-
-  const goToPrevDay = () => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() - 1);
-    setSelectedDate(formatDate(d));
-  };
-
-  const goToNextDay = () => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + 1);
-    if (d <= new Date()) setSelectedDate(formatDate(d));
-  };
-
-  const isToday = selectedDate === formatDate(new Date());
 
   const rows = (data?.rows || []).map((r: any) => ({
     governorate: r.governorate,
@@ -70,18 +56,9 @@ export default function EggExchangeScreen() {
         }}
       />
       <SafeAreaView style={styles.container} edges={["bottom"]}>
-        {/* Date Navigation */}
-        <View style={styles.dateNav}>
-          <TouchableOpacity style={styles.dateArrow} onPress={goToPrevDay}>
-            <Text style={styles.dateArrowText}>›</Text>
-          </TouchableOpacity>
-          <View style={styles.dateCenter}>
-            <Calendar size={14} color="#064E3B" />
-            <Text style={styles.dateText}>{formatArabicDate(selectedDate)}</Text>
-          </View>
-          <TouchableOpacity style={[styles.dateArrow, isToday && styles.dateArrowDisabled]} onPress={goToNextDay} disabled={isToday}>
-            <Text style={[styles.dateArrowText, isToday && { color: COLORS.lightGray }]}>‹</Text>
-          </TouchableOpacity>
+        {/* Date header */}
+        <View style={styles.dateHeader}>
+          <Text style={styles.dateText}>{formatArabicDate(today)}</Text>
         </View>
 
         {/* Legend */}
@@ -119,7 +96,7 @@ export default function EggExchangeScreen() {
 
           {rows.length > 0 && (
             <View style={styles.note}>
-              <Text style={styles.noteText}>* الأسعار بالدينار العراقي. سعر الطاقة (30 بيضة).</Text>
+              <Text style={styles.noteText}>* الأسعار بالدينار العراقي. سعر الطبقة (30 بيضة).</Text>
             </View>
           )}
         </ScrollView>
@@ -131,20 +108,14 @@ export default function EggExchangeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F9FAFB" },
   manageBtn: { marginLeft: 12, padding: 4 },
-  dateNav: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  dateHeader: {
     backgroundColor: COLORS.white,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
+    alignItems: "center",
   },
-  dateArrow: { padding: 8 },
-  dateArrowDisabled: { opacity: 0.3 },
-  dateArrowText: { fontSize: 24, color: "#064E3B", fontWeight: "700" },
-  dateCenter: { flexDirection: "row", alignItems: "center", gap: 6 },
   dateText: { fontSize: 14, fontWeight: "600", color: COLORS.black },
   legend: {
     flexDirection: "row",

@@ -25,18 +25,26 @@ const EGG_TYPES = [
 
 export default function EggMarketScreen() {
   const router = useRouter();
-  const { hasAdminAccess, isModerator } = useApp();
+  const { hasAdminAccess, isModerator, user } = useApp();
 
   const [selectedType, setSelectedType] = useState("");
   const [selectedGov, setSelectedGov] = useState("");
   const [showGovFilter, setShowGovFilter] = useState(false);
 
-  const { ads, isLoading, refetch, adminDelete } = useEggMarket({
+  const { ads, isLoading, refetch, adminDelete, deleteMyAd } = useEggMarket({
     eggType: selectedType || undefined,
     governorate: selectedGov || undefined,
   });
 
   const canModerate = hasAdminAccess || isModerator;
+
+  const handleDelete = (adId: number, isOwner: boolean) => {
+    if (canModerate) {
+      adminDelete({ adId });
+    } else if (isOwner) {
+      deleteMyAd({ adId });
+    }
+  };
 
   return (
     <>
@@ -107,9 +115,17 @@ export default function EggMarketScreen() {
           <FlatList
             data={ads}
             keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <EggMarketCard ad={item as any} isAdmin={canModerate} onDelete={() => adminDelete({ adId: item.id })} onPress={() => {}} />
-            )}
+            renderItem={({ item }) => {
+                const isOwner = user?.id != null && Number(user.id) === (item as any).sellerId;
+                const canDelete = canModerate || isOwner;
+                return (
+                  <EggMarketCard
+                    ad={item as any}
+                    currentUserId={user?.id ? Number(user.id) : null}
+                    onDelete={canDelete ? () => handleDelete(item.id, isOwner) : undefined}
+                  />
+                );
+              }}
             contentContainerStyle={styles.list}
             onRefresh={refetch}
             refreshing={isLoading}

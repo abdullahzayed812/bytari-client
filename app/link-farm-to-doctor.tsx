@@ -13,7 +13,7 @@ import { trpc } from "../lib/trpc";
 import { useToastContext } from "../providers/ToastProvider";
 
 const getFarmTypeLabel = (type: string) => {
-  const types: Record<string, string> = { broiler: "تسمين", layer: "بياض", breeder: "أمهات", mixed: "مختلط" };
+  const types: Record<string, string> = { broiler: "تسمين", layer: "بياض" };
   return types[type] || type;
 };
 
@@ -24,10 +24,14 @@ const getHealthStatusLabel = (status: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "active": return COLORS.success;
-    case "inactive": return COLORS.warning;
-    case "sick": return COLORS.error;
-    default: return COLORS.darkGray;
+    case "active":
+      return COLORS.success;
+    case "inactive":
+      return COLORS.warning;
+    case "sick":
+      return COLORS.error;
+    default:
+      return COLORS.darkGray;
   }
 };
 
@@ -85,7 +89,6 @@ export default function LinkFarmToDoctorScreen() {
       />
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-
           {/* How it works */}
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>🔗 كيفية الربط بحقل دواجن</Text>
@@ -182,7 +185,7 @@ export default function LinkFarmToDoctorScreen() {
                 {/* Details row */}
                 <View style={styles.farmDetails}>
                   <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>الطاقة</Text>
+                    <Text style={styles.detailLabel}>الطبقة</Text>
                     <Text style={styles.detailValue}>{(link.capacity ?? 0).toLocaleString()}</Text>
                   </View>
                   <View style={styles.detailItem}>
@@ -209,10 +212,7 @@ export default function LinkFarmToDoctorScreen() {
                 )}
 
                 {/* Unlink */}
-                <TouchableOpacity
-                  style={styles.unlinkBtn}
-                  onPress={() => unlinkMutation.mutate({ linkId: link.linkId })}
-                >
+                <TouchableOpacity style={styles.unlinkBtn} onPress={() => unlinkMutation.mutate({ linkId: link.linkId })}>
                   <Trash2 size={14} color={COLORS.error} />
                   <Text style={styles.unlinkBtnText}>إلغاء الربط</Text>
                 </TouchableOpacity>

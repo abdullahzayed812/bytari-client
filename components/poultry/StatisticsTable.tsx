@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
   headerRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     backgroundColor: "#064E3B",
     paddingVertical: 10,
   },
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   row: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     paddingVertical: 10,
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,

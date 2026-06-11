@@ -37,8 +37,6 @@ interface PoultryFarm {
 const FARM_TYPE_MAP: Record<string, string> = {
   broiler: "تسمين",
   layer: "بياض",
-  breeder: "أمهات",
-  mixed: "مختلط",
 };
 
 export default function AdminPoultryFarmsManagement() {
@@ -52,8 +50,8 @@ export default function AdminPoultryFarmsManagement() {
 
   // Activate modal state
   const [showActivateModal, setShowActivateModal] = useState(false);
-  const [activationStartDate, setActivationStartDate] = useState("");
-  const [activationEndDate, setActivationEndDate] = useState("");
+  const [activationStartDate, setActivationStartDate] = useState("1/1/2026");
+  const [activationEndDate, setActivationEndDate] = useState("1/1/2027");
 
   // Reject modal state
   const [showRejectModal, setShowRejectModal] = useState(false);

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Modal, FlatList } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,14 +23,38 @@ import {
   Calendar,
   ShieldCheck,
   User,
+  ChevronDown,
+  Check,
+  CheckSquare,
+  Square,
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
 import { ImageGalleryUploader } from "../components/ImageGalleryUploader";
+import TermsAndConditions from "../components/TermsAndConditions";
 
-type FarmType = "broiler" | "layer" | "breeder" | "mixed";
+type FarmType = "broiler" | "layer";
 type HealthStatus = "healthy" | "quarantine" | "sick";
+
+const IRAQ_GOVERNORATES = [
+  "بغداد",
+  "نينوى",
+  "البصرة",
+  "النجف",
+  "كربلاء",
+  "ديالى",
+  "واسط",
+  "صلاح الدين",
+  "الأنبار",
+  "بابل",
+  "ذي قار",
+  "المثنى",
+  "ميسان",
+  "القادسية",
+  "كركوك",
+  "إقليم كردستان",
+];
 
 export default function AddPoultryFarmScreen() {
   const { t, isRTL } = useI18n();
@@ -45,6 +69,7 @@ export default function AddPoultryFarmScreen() {
     name: "مزرعة النور للدواجن",
     location: "بغداد - الدورة",
     farmType: "broiler" as FarmType,
+    governorate: "",
     capacity: "10000",
     currentPopulation: "8500",
     establishedDate: today,
@@ -62,16 +87,25 @@ export default function AddPoultryFarmScreen() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showGovernorateModal, setShowGovernorateModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsError, setTermsError] = useState("");
 
   // Create farm mutation
   const createFarmMutation = useMutation(trpc.poultryFarms.create.mutationOptions());
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
+  };
+
+  const handleAcceptTerms = () => {
+    setTermsAccepted(true);
+    setTermsError("");
+    setShowTermsModal(false);
   };
 
   const validateForm = () => {
@@ -88,6 +122,10 @@ export default function AddPoultryFarmScreen() {
 
     if (!formData.farmType) {
       newErrors.farmType = "نوع المزرعة مطلوب";
+    }
+
+    if (!formData.governorate) {
+      newErrors.governorate = "المحافظة مطلوبة";
     }
 
     // Optional validations
@@ -116,6 +154,11 @@ export default function AddPoultryFarmScreen() {
       return;
     }
 
+    if (!termsAccepted) {
+      setTermsError("يجب الموافقة على الشروط والأحكام للمتابعة");
+      return;
+    }
+
     if (!user?.id) {
       showToast({
         type: "error",
@@ -139,6 +182,7 @@ export default function AddPoultryFarmScreen() {
         name: formData.name.trim(),
         location: formData.location.trim(),
         farmType: formData.farmType,
+        governorate: formData.governorate,
         capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
         currentPopulation: formData.currentPopulation ? parseInt(formData.currentPopulation) : undefined,
         establishedDate: formData.establishedDate || undefined,
@@ -182,18 +226,6 @@ export default function AddPoultryFarmScreen() {
   const farmTypes = [
     { value: "broiler", label: "تسمين", icon: "🐔", description: "دجاج اللحم" },
     { value: "layer", label: "بياض", icon: "🥚", description: "إنتاج البيض" },
-    {
-      value: "breeder",
-      label: "أمهات",
-      icon: "🐣",
-      description: "إنتاج الصيصان",
-    },
-    {
-      value: "mixed",
-      label: "مختلط",
-      icon: "🏭",
-      description: "متعدد الأغراض",
-    },
   ];
 
   const healthStatuses = [
@@ -251,6 +283,23 @@ export default function AddPoultryFarmScreen() {
                 textAlign={isRTL ? "right" : "left"}
               />
               {errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
+            </View>
+
+            {/* Governorate picker */}
+            <View style={styles.inputGroup}>
+              <View style={styles.inputHeader}>
+                <MapPin size={20} color={COLORS.primary} />
+                <Text style={styles.inputLabel}>المحافظة *</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.pickerButton, errors.governorate && styles.inputError]}
+                onPress={() => setShowGovernorateModal(true)}
+                activeOpacity={0.7}
+              >
+                <ChevronDown size={18} color={COLORS.darkGray} />
+                <Text style={[styles.pickerButtonText, !formData.governorate && styles.pickerPlaceholder]}>{formData.governorate || "اختر المحافظة"}</Text>
+              </TouchableOpacity>
+              {errors.governorate && <Text style={styles.errorText}>{errors.governorate}</Text>}
             </View>
 
             <View style={styles.inputGroup}>
@@ -606,12 +655,42 @@ export default function AddPoultryFarmScreen() {
           </View>
 
           <View style={styles.noteContainer}>
-            <Text style={styles.noteText}>* الحقول المطلوبة: اسم الحقل، الموقع، ونوع الإنتاج</Text>
+            <Text style={styles.noteText}>* الحقول المطلوبة: اسم الحقل، الموقع، المحافظة، ونوع الإنتاج</Text>
             <Text style={styles.noteText}>سيتم مراجعة الحقل من قبل الإدارة قبل التفعيل</Text>
           </View>
         </View>
 
         <View style={styles.footer}>
+          {/* Terms & Conditions checkbox */}
+          <TouchableOpacity
+            style={[styles.termsContainer, !!termsError && styles.termsContainerError]}
+            onPress={() => setShowTermsModal(true)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.termsCheckboxContainer}>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  if (!termsAccepted) setShowTermsModal(true);
+                  else { setTermsAccepted(false); setTermsError(""); }
+                }}
+                style={styles.checkbox}
+              >
+                {termsAccepted
+                  ? <CheckSquare size={24} color={COLORS.primary} />
+                  : <Square size={24} color={COLORS.darkGray} />}
+              </TouchableOpacity>
+              <View style={styles.termsTextContainer}>
+                <Text style={styles.termsText}>
+                  أوافق على{" "}
+                  <Text style={styles.termsLink}>شروط وأحكام قسم الدواجن</Text>
+                </Text>
+                <Text style={styles.termsHint}>(اضغط للقراءة والموافقة)</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+          {!!termsError && <Text style={styles.termsErrorText}>{termsError}</Text>}
+
           <Button
             title="إنشاء حقل الدواجن"
             onPress={handleSubmit}
@@ -627,6 +706,44 @@ export default function AddPoultryFarmScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <TermsAndConditions
+        visible={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleAcceptTerms}
+        accountType="poultry"
+      />
+
+      {/* Governorate picker modal */}
+      <Modal visible={showGovernorateModal} transparent animationType="slide" onRequestClose={() => setShowGovernorateModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>اختر المحافظة</Text>
+              <TouchableOpacity onPress={() => setShowGovernorateModal(false)}>
+                <X size={22} color={COLORS.darkGray} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={IRAQ_GOVERNORATES}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.governorateItem, formData.governorate === item && styles.governorateItemSelected]}
+                  onPress={() => {
+                    handleInputChange("governorate", item);
+                    setShowGovernorateModal(false);
+                  }}
+                >
+                  <Text style={[styles.governorateItemText, formData.governorate === item && styles.governorateItemTextSelected]}>{item}</Text>
+                  {formData.governorate === item && <Check size={18} color={COLORS.primary} />}
+                </TouchableOpacity>
+              )}
+              ItemSeparatorComponent={() => <View style={styles.governorateSeparator} />}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -931,5 +1048,115 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontStyle: "italic",
     fontWeight: "700",
+  },
+  pickerButton: {
+    backgroundColor: COLORS.gray,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  pickerButtonText: {
+    flex: 1,
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  pickerPlaceholder: {
+    color: COLORS.darkGray,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: "70%",
+    paddingBottom: 24,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: COLORS.black,
+  },
+  governorateItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  governorateItemSelected: {
+    backgroundColor: "#EFF6FF",
+  },
+  governorateItemText: {
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  governorateItemTextSelected: {
+    color: COLORS.primary,
+    fontWeight: "600",
+  },
+  governorateSeparator: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginHorizontal: 16,
+  },
+  termsContainer: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    padding: 12,
+    backgroundColor: COLORS.white,
+    marginBottom: 8,
+  },
+  termsContainerError: {
+    borderColor: "#f44336",
+    backgroundColor: "#ffebee",
+  },
+  termsCheckboxContainer: {
+    flexDirection: "row-reverse",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  checkbox: {},
+  termsTextContainer: { flex: 1 },
+  termsText: {
+    fontSize: 14,
+    color: COLORS.black,
+    textAlign: "right",
+    lineHeight: 21,
+  },
+  termsLink: {
+    color: COLORS.primary,
+    fontWeight: "700",
+    textDecorationLine: "underline",
+  },
+  termsHint: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    textAlign: "right",
+    marginTop: 3,
+    fontStyle: "italic",
+  },
+  termsErrorText: {
+    fontSize: 12,
+    color: "#f44336",
+    textAlign: "right",
+    marginBottom: 8,
   },
 });

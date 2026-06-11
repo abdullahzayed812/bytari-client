@@ -31,8 +31,8 @@ export function ExchangeTable({ rows, mode = "poultry" }: ExchangeTableProps) {
       {/* Header */}
       <View style={styles.headerRow}>
         <Text style={[styles.headerCell, styles.govCell]}>المحافظة</Text>
-        <Text style={styles.headerCell}>{mode === "poultry" ? "سعر دجاج اللحم\n(د.ع/الكيلو)" : "سعر البيض\n(د.ع/الطاقة)"}</Text>
-        {mode === "poultry" && <Text style={styles.headerCell}>سعر الدجاج البياض{"\n"}(د.ع/الطاقة)</Text>}
+        <Text style={styles.headerCell}>{mode === "poultry" ? "سعر دجاج اللحم\n(د.ع/الكيلو)" : "سعر البيض\n(د.ع/الطبقة)"}</Text>
+        {mode === "poultry" && <Text style={styles.headerCell}>سعر الدجاج البياض{"\n"}(د.ع/الطبقة)</Text>}
       </View>
 
       {rows.map((row, index) => (

@@ -9,7 +9,85 @@ interface TermsAndConditionsProps {
   visible: boolean;
   onClose: () => void;
   onAccept: () => void;
-  accountType?: "pet_owner" | "veterinarian";
+  accountType?: "pet_owner" | "veterinarian" | "poultry";
+}
+
+// ─── Poultry-specific terms ────────────────────────────────────
+function PoultryTermsContent() {
+  return (
+    <>
+      <Text style={styles.introText}>
+        يرجى قراءة هذه الشروط والأحكام بعناية قبل إنشاء حساب تاجر أو تسجيل حقل دواجن. باستخدامك لقسم الدواجن في التطبيق فإنك توافق على جميع البنود الواردة أدناه.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>1. صحة البيانات</Text>
+      <Text style={styles.listItem}>
+        يقر المستخدم بأن جميع المعلومات المدخلة صحيحة، ويتحمل مسؤولية أي معلومات غير صحيحة أو مضللة.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>2. الإعلانات</Text>
+      <Text style={styles.listItem}>
+        يمنع نشر إعلانات وهمية أو مكررة أو تحتوي على معلومات غير صحيحة عن الدواجن أو البيض أو الأسعار.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>3. التواصل بين الأطراف</Text>
+      <Text style={styles.listItem}>
+        التطبيق يوفر وسيلة للتواصل بين البائع والمشتري ولا يتحمل مسؤولية أي اتفاق أو عملية بيع أو شراء بين العملاء.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>4. أسعار البورصة</Text>
+      <Text style={styles.listItem}>
+        الأسعار المعروضة في بورصة الدواجن وبورصة البيض هي أسعار استرشادية وقد تختلف حسب المنطقة والجودة والكمية، ويجب التأكد منها قبل أي اتفاق.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>5. الحقول المسجلة</Text>
+      <Text style={styles.listItem}>
+        يتحمل صاحب الحقل مسؤولية جميع البيانات والأعداد والإحصائيات المدخلة داخل الحقل.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>6. الأطباء والموظفون</Text>
+      <Text style={styles.listItem}>
+        صاحب الحقل مسؤول عن منح الصلاحيات للأطباء البيطريين والموظفين وإدارة حساباتهم.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>7. المحتوى المخالف</Text>
+      <Text style={styles.warningText}>
+        يحق لإدارة التطبيق حذف أي إعلان أو حساب أو حقل يخالف الشروط دون إشعار مسبق.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>8. الخصوصية</Text>
+      <Text style={styles.listItem}>
+        يوافق المستخدم على استخدام البيانات المدخلة لأغراض تشغيل خدمات التطبيق وتحسينها.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>9. الاشتراكات</Text>
+      <Text style={styles.listItem}>
+        الاشتراكات والرسوم المدفوعة غير قابلة للاسترداد بعد تفعيل الخدمة إلا في الحالات التي تحددها إدارة التطبيق.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>10. الملكية الفكرية</Text>
+      <Text style={styles.listItem}>
+        جميع حقوق التطبيق والتصميم والبرمجيات والأنظمة التابعة له محفوظة لإدارة التطبيق، ولا يجوز نسخها أو إعادة بيعها أو استغلالها دون إذن رسمي.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>11. فقدان البيانات</Text>
+      <Text style={styles.listItem}>
+        لا يتحمل التطبيق أي مسؤولية في حالة فقدان البيانات دون قصد أو خلل برمجي.
+      </Text>
+
+      <Text style={styles.subSectionTitle}>12. الموافقة</Text>
+      <Text style={styles.listItem}>
+        باستخدام قسم الدواجن أو إنشاء حساب تاجر أو حقل دواجن فإن المستخدم يوافق على جميع الشروط والأحكام، ويحق للتطبيق تعديل الشروط في أي وقت، واستمرار الاستخدام يعني الموافقة على التحديثات.
+      </Text>
+
+      <View style={styles.contactSection}>
+        <Text style={styles.contactTitle}>معلومات التواصل:</Text>
+        <Text style={styles.contactText}>اسم التطبيق: بيطري</Text>
+        <Text style={styles.contactText}>البريد الرسمي: baytariapp@gmail.com</Text>
+        <Text style={styles.contactText}>رقم التواصل: 009647777564666</Text>
+      </View>
+    </>
+  );
 }
 
 export default function TermsAndConditions({
@@ -23,7 +101,11 @@ export default function TermsAndConditions({
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>اتفاقية الاستخدام وشروط التسجيل</Text>
+            <Text style={styles.headerTitle}>
+              {accountType === "poultry"
+                ? "شروط وأحكام قسم الدواجن"
+                : "اتفاقية الاستخدام وشروط التسجيل"}
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
@@ -31,6 +113,10 @@ export default function TermsAndConditions({
 
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={true}>
             <View style={styles.content}>
+              {accountType === "poultry" ? (
+                <PoultryTermsContent />
+              ) : (
+              <>
               <Text style={styles.introText}>
                 يرجى قراءة هذه الاتفاقية بعناية قبل التسجيل أو استخدام التطبيق. إن قيامك بإنشاء حساب أو استخدام أي من
                 خدمات التطبيق يُعد موافقة صريحة وملزمة قانونيًا على جميع الشروط والأحكام الواردة أدناه.
@@ -218,6 +304,8 @@ export default function TermsAndConditions({
                 <Text style={styles.contactText}>البريد الرسمي: baytariapp@gmail.com</Text>
                 <Text style={styles.contactText}>رقم التواصل: 009647777564666</Text>
               </View>
+              </>
+              )}
             </View>
           </ScrollView>
 

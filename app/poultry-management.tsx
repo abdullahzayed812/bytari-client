@@ -350,7 +350,6 @@ export default function PoultryManagementScreen() {
     switch (type) {
       case 'broiler': return COLORS.primary;
       case 'layer': return COLORS.warning;
-      case 'mixed': return COLORS.success;
       default: return COLORS.darkGray;
     }
   };
@@ -359,7 +358,6 @@ export default function PoultryManagementScreen() {
     switch (type) {
       case 'broiler': return 'لحم';
       case 'layer': return 'بيض';
-      case 'mixed': return 'مختلط';
       default: return type;
     }
   };

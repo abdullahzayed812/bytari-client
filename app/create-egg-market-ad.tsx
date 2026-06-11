@@ -42,7 +42,7 @@ const EGG_TYPES = [
 ];
 
 const EGG_UNITS = [
-  { key: "tray", label: "طاقة (30 بيضة)" },
+  { key: "tray", label: "طبقة (30 بيضة)" },
   { key: "carton", label: "كرتون (360 بيضة)" },
   { key: "piece", label: "حبة" },
 ];

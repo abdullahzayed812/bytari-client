@@ -25,7 +25,6 @@ import {
   Building,
   Egg,
   Beef,
-  Layers,
 } from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
@@ -33,7 +32,7 @@ const { width } = Dimensions.get("window");
 interface FarmFormData {
   name: string;
   location: string;
-  farmType: "broiler" | "layer" | "mixed" | "";
+  farmType: "broiler" | "layer" | "";
   capacity: string;
   establishedDate: string;
   description: string;
@@ -70,13 +69,6 @@ export default function CreatePoultryFarmScreen() {
       icon: <Egg size={24} color={COLORS.warning} />,
       color: COLORS.warning,
     },
-    {
-      id: "mixed",
-      title: "مختلط",
-      description: "تربية مختلطة للحم والبيض",
-      icon: <Layers size={24} color={COLORS.success} />,
-      color: COLORS.success,
-    },
   ];
 
   const handleInputChange = (field: keyof FarmFormData, value: string) => {
@@ -86,7 +78,7 @@ export default function CreatePoultryFarmScreen() {
     }));
   };
 
-  const handleFarmTypeSelect = (type: "broiler" | "layer" | "mixed") => {
+  const handleFarmTypeSelect = (type: "broiler" | "layer") => {
     setFormData((prev) => ({
       ...prev,
       farmType: type,
@@ -175,7 +167,7 @@ export default function CreatePoultryFarmScreen() {
           backgroundColor: farmType.color + "10",
         },
       ]}
-      onPress={() => handleFarmTypeSelect(farmType.id as "broiler" | "layer" | "mixed")}
+      onPress={() => handleFarmTypeSelect(farmType.id as "broiler" | "layer")}
       activeOpacity={0.7}
     >
       <View style={[styles.farmTypeIcon, { backgroundColor: farmType.color + "20" }]}>{farmType.icon}</View>

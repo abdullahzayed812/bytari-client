@@ -472,8 +472,6 @@ const en: Record<string, string> = {
   "poultry.deleteSuccess": "Poultry farm deleted successfully",
   "poultry.farmType.fattening": "Fattening",
   "poultry.farmType.laying": "Laying",
-  "poultry.farmType.breeders": "Breeders",
-  "poultry.farmType.mixed": "Mixed",
   "poultry.status.active": "Active",
   "poultry.status.inactive": "Inactive",
   "poultry.status.completed": "Completed",

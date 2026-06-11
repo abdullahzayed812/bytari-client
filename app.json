@@ -12,13 +12,7 @@
       "allowBackup": false,
       "supportsRtl": true,
       "softwareKeyboardLayoutMode": "resize",
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "CAMERA",
-        "INTERNET",
-        "VIBRATE"
-      ],
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "CAMERA", "INTERNET", "VIBRATE"],
       "config": {
         "googleMaps": {
           "apiKey": ""
@@ -56,7 +50,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "5185c05a-d1ea-4044-ad23-463e435e08d4"
+        "projectId": "b9476a58-769b-4731-ac3e-20264c28449e"
       }
     }
   }

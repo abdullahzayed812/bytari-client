@@ -109,10 +109,13 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
+            def storeFileProp = keystoreProperties['storeFile']
+            if (storeFileProp != null) {
+                storeFile file(storeFileProp)
+            }
+            storePassword keystoreProperties['storePassword'] ?: ""
+            keyAlias keystoreProperties['keyAlias'] ?: ""
+            keyPassword keystoreProperties['keyPassword'] ?: ""
         }
     }
     buildTypes {

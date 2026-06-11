@@ -472,8 +472,6 @@ const ku: Record<string, string> = {
   "poultry.deleteSuccess": "کێڵگەی مریشک بە سەرکەوتوویی سڕایەوە",
   "poultry.farmType.fattening": "قەڵەوکردن",
   "poultry.farmType.laying": "هێلکەدان",
-  "poultry.farmType.breeders": "دایکان",
-  "poultry.farmType.mixed": "تێکەڵ",
   "poultry.status.active": "چالاک",
   "poultry.status.inactive": "ناچالاک",
   "poultry.status.completed": "تەواوبوو",

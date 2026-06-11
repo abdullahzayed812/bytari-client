@@ -14,10 +14,10 @@ import { useSavePoultryExchange, usePoultryExchange } from "../hooks/usePoultryE
 import { useApp } from "../providers/AppProvider";
 
 const IRAQ_GOVERNORATES = [
-  "بغداد", "نينوى", "البصرة", "النجف", "أربيل",
-  "السليمانية", "كربلاء", "ديالى", "واسط", "صلاح الدين",
-  "الأنبار", "بابل", "ذي قار", "ميسان", "المثنى",
-  "القادسية", "دهوك", "حلبجة",
+  "بغداد", "نينوى", "البصرة", "النجف", "كربلاء",
+  "ديالى", "واسط", "صلاح الدين", "الأنبار", "بابل",
+  "ذي قار", "ميسان", "المثنى", "القادسية", "كركوك",
+  "إقليم كردستان",
 ];
 
 type PriceRow = { broilerPricePerKg: string; layerPricePerBird: string };

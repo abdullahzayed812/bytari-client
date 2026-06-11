@@ -3,10 +3,7 @@
  * Admin screen to input daily egg exchange prices per governorate.
  */
 import React, { useState, useEffect } from "react";
-import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS } from "../constants/colors";
@@ -14,10 +11,22 @@ import { useSaveEggExchange, useEggExchange } from "../hooks/usePoultryExchange"
 import { useApp } from "../providers/AppProvider";
 
 const IRAQ_GOVERNORATES = [
-  "بغداد", "نينوى", "البصرة", "النجف", "أربيل",
-  "السليمانية", "كربلاء", "ديالى", "واسط", "صلاح الدين",
-  "الأنبار", "بابل", "ذي قار", "ميسان", "المثنى",
-  "القادسية", "دهوك", "حلبجة",
+  "بغداد",
+  "نينوى",
+  "البصرة",
+  "النجف",
+  "كربلاء",
+  "ديالى",
+  "واسط",
+  "صلاح الدين",
+  "الأنبار",
+  "بابل",
+  "ذي قار",
+  "ميسان",
+  "المثنى",
+  "القادسية",
+  "كركوك",
+  "إقليم كردستان",
 ];
 
 function todayStr() {
@@ -34,14 +43,18 @@ export default function ManageEggExchangeScreen() {
 
   const [prices, setPrices] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
-    IRAQ_GOVERNORATES.forEach((gov) => { init[gov] = ""; });
+    IRAQ_GOVERNORATES.forEach((gov) => {
+      init[gov] = "";
+    });
     return init;
   });
 
   useEffect(() => {
     if (data?.rows?.length) {
       const loaded: Record<string, string> = {};
-      IRAQ_GOVERNORATES.forEach((gov) => { loaded[gov] = ""; });
+      IRAQ_GOVERNORATES.forEach((gov) => {
+        loaded[gov] = "";
+      });
       data.rows.forEach((r: any) => {
         if (r.pricePerTray != null) {
           loaded[r.governorate] = String(r.pricePerTray);
@@ -52,16 +65,17 @@ export default function ManageEggExchangeScreen() {
   }, [data]);
 
   const handleSave = () => {
-    const rows = IRAQ_GOVERNORATES
-      .filter((gov) => prices[gov])
-      .map((gov) => ({
-        governorate: gov,
-        pricePerTray: Number(prices[gov]),
-      }));
+    const rows = IRAQ_GOVERNORATES.filter((gov) => prices[gov]).map((gov) => ({
+      governorate: gov,
+      pricePerTray: Number(prices[gov]),
+    }));
 
-    savePrices({ date: today, prices: rows as any }, {
-      onSuccess: () => router.back(),
-    });
+    savePrices(
+      { date: today, prices: rows as any },
+      {
+        onSuccess: () => router.back(),
+      },
+    );
   };
 
   return (
@@ -81,13 +95,13 @@ export default function ManageEggExchangeScreen() {
           <>
             <View style={styles.header}>
               <Text style={styles.headerText}>أسعار البيض — {today}</Text>
-              <Text style={styles.headerSub}>أدخل سعر الطاقة (30 بيضة) بالدينار العراقي</Text>
+              <Text style={styles.headerSub}>أدخل سعر الطبقة (30 بيضة) بالدينار العراقي</Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
               <View style={styles.colHeader}>
                 <Text style={[styles.colHeaderText, { flex: 1.5 }]}>المحافظة</Text>
-                <Text style={styles.colHeaderText}>سعر الطاقة (د.ع)</Text>
+                <Text style={styles.colHeaderText}>سعر الطبقة (د.ع)</Text>
               </View>
 
               {IRAQ_GOVERNORATES.map((gov) => (
@@ -109,16 +123,8 @@ export default function ManageEggExchangeScreen() {
               ))}
 
               {canEdit && (
-                <TouchableOpacity
-                  style={[styles.saveBtn, isPending && styles.saveBtnDisabled]}
-                  onPress={handleSave}
-                  disabled={isPending}
-                >
-                  {isPending ? (
-                    <ActivityIndicator color={COLORS.white} />
-                  ) : (
-                    <Text style={styles.saveBtnText}>حفظ الأسعار</Text>
-                  )}
+                <TouchableOpacity style={[styles.saveBtn, isPending && styles.saveBtnDisabled]} onPress={handleSave} disabled={isPending}>
+                  {isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.saveBtnText}>حفظ الأسعار</Text>}
                 </TouchableOpacity>
               )}
             </ScrollView>
