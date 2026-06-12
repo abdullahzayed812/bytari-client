@@ -25,7 +25,7 @@ const EGG_TYPES = [
 
 export default function EggMarketScreen() {
   const router = useRouter();
-  const { hasAdminAccess, isModerator, user } = useApp();
+  const { hasAdminAccess, isModerator, isSuperAdmin, user } = useApp();
 
   const [selectedType, setSelectedType] = useState("");
   const [selectedGov, setSelectedGov] = useState("");
@@ -36,7 +36,7 @@ export default function EggMarketScreen() {
     governorate: selectedGov || undefined,
   });
 
-  const canModerate = hasAdminAccess || isModerator;
+  const canModerate = hasAdminAccess || isModerator || isSuperAdmin;
 
   const handleDelete = (adId: number, isOwner: boolean) => {
     if (canModerate) {
@@ -116,7 +116,7 @@ export default function EggMarketScreen() {
             data={ads}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => {
-                const isOwner = user?.id != null && Number(user.id) === (item as any).sellerId;
+                const isOwner = user != null && user.id != null && Number(user.id) === Number((item as any).sellerId);
                 const canDelete = canModerate || isOwner;
                 return (
                   <EggMarketCard

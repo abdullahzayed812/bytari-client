@@ -197,6 +197,27 @@ export default function PoultryFarmSettingsScreen() {
 
   const workers = workersQuery.data?.workers || [];
 
+  const isOwner = farmQuery.data?.farm
+    ? Number((farmQuery.data.farm as any).ownerId) === Number(user?.id)
+    : null;
+
+  if (farmQuery.data && isOwner === false) {
+    return (
+      <SafeAreaView style={styles.container} edges={["bottom"]}>
+        <Stack.Screen
+          options={{
+            title: "إعدادات الحقل",
+            headerStyle: { backgroundColor: "#F59E0B" },
+            headerTintColor: "#fff",
+          }}
+        />
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
+          <Text style={{ fontSize: 16, color: "#555", textAlign: "center" }}>ليس لديك صلاحية الوصول إلى إعدادات هذا الحقل</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const renderField = (label: string, key: keyof typeof form, numeric = false) => (
     <View style={styles.fieldGroup} key={key}>
       <Text style={styles.fieldLabel}>{label}</Text>

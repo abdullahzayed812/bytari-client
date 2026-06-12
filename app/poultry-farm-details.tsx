@@ -626,14 +626,16 @@ export default function PoultryFarmDetailsScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>الدفعة الحالية</Text>
           <Text style={styles.emptyText}>لا توجد دفعة نشطة حالياً</Text>
-          <Button
-            title="إدخال دفعة جديدة"
-            onPress={() => setShowAddBatchModal(true)}
-            type="primary"
-            size="medium"
-            icon={<Plus size={16} color={COLORS.white} />}
-            style={styles.addButton}
-          />
+          {!isWorkerMode && (
+            <Button
+              title="إدخال دفعة جديدة"
+              onPress={() => setShowAddBatchModal(true)}
+              type="primary"
+              size="medium"
+              icon={<Plus size={16} color={COLORS.white} />}
+              style={styles.addButton}
+            />
+          )}
         </View>
       );
     }

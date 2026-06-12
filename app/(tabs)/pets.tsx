@@ -975,6 +975,68 @@ export default function PetsScreen() {
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>أعمل فيها ({workerFarms.length})</Text>
                 </View>
+                {workerFarms.map((farm: any) => {
+                  const permLabel = farm.permissions === "add_daily_data" ? "إضافة بيانات يومية" : "عرض فقط";
+                  return (
+                    <TouchableOpacity
+                      key={farm.id}
+                      style={[styles.poultryFarmCard, { borderLeftWidth: 4, borderLeftColor: "#F59E0B" }]}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/poultry-farm-details",
+                          params: { id: farm.id, workerMode: "1", workerPermissions: farm.permissions },
+                        })
+                      }
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.farmHeader}>
+                        {farm.images?.[0] ? (
+                          <Image source={{ uri: farm.images[0] }} style={styles.farmImage} />
+                        ) : (
+                          <View style={styles.farmIconContainer}>
+                            <Feather size={32} color={COLORS.white} />
+                          </View>
+                        )}
+                        <View style={styles.farmInfo}>
+                          <Text style={styles.farmName}>{farm.name}</Text>
+                          {farm.governorate && (
+                            <View style={styles.farmLocationRow}>
+                              <MapPin size={14} color={COLORS.darkGray} />
+                              <Text style={styles.farmLocation}>{farm.governorate}</Text>
+                            </View>
+                          )}
+                          <View style={styles.farmBadges}>
+                            <View style={[styles.statusBadge, { backgroundColor: "#F59E0B" }]}>
+                              <Text style={styles.statusText}>موظف</Text>
+                            </View>
+                            <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
+                              <Text style={styles.typeBadgeText}>{getFarmTypeLabel(farm.farmType)}</Text>
+                            </View>
+                          </View>
+                          <View style={[styles.roleContainer, { marginTop: 6, alignSelf: "flex-start" }]}>
+                            <Text style={styles.roleLabel}>الصلاحية:</Text>
+                            <Text style={styles.roleValue}>{permLabel}</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      <View style={styles.farmDetails}>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>الطبقة:</Text>
+                          <Text style={styles.detailValue}>{(farm.capacity ?? 0).toLocaleString()}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>الحالي:</Text>
+                          <Text style={styles.detailValue}>{(farm.currentPopulation ?? 0).toLocaleString()}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                          <Text style={styles.detailLabel}>الصحة:</Text>
+                          <Text style={styles.detailValue}>{getHealthStatusLabel(farm.healthStatus)}</Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             )}
           </View>

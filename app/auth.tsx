@@ -77,25 +77,25 @@ export default function AuthScreen() {
     { label: "مدير محتوى", email: "content.manager@petapp.com", password: "admin123" },
   ];
 
-  // const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
-  //   if (isLoading) return;
-  //   setActiveTab("login");
-  //   setUsernameOrEmail(account.email);
-  //   setPassword(account.password);
-  //   setErrors({});
-  //   loginMutation.mutate(
-  //     { email: account.email, password: account.password },
-  //     {
-  //       onSuccess: async (data) => {
-  //         await login(data.user, data.tokens.accessToken);
-  //         router.replace("/(tabs)");
-  //       },
-  //       onError: (error) => {
-  //         setErrors({ general: error.message || t("auth.loginError") });
-  //       },
-  //     },
-  //   );
-  // };
+  const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
+    if (isLoading) return;
+    setActiveTab("login");
+    setUsernameOrEmail(account.email);
+    setPassword(account.password);
+    setErrors({});
+    loginMutation.mutate(
+      { email: account.email, password: account.password },
+      {
+        onSuccess: async (data) => {
+          await login(data.user, data.tokens.accessToken);
+          router.replace("/(tabs)");
+        },
+        onError: (error) => {
+          setErrors({ general: error.message || t("auth.loginError") });
+        },
+      },
+    );
+  };
 
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
@@ -691,12 +691,8 @@ export default function AuthScreen() {
                     <TouchableOpacity
                       onPress={(e) => {
                         e.stopPropagation();
-                        // if (termsAccepted) {
-                        //   setTermsAccepted(false);
-                        // } else {
-                        setTermsAccepted(true);
-                        // setShowTermsModal(true);
-                        // }
+                        setTermsAccepted((prev) => !prev);
+                        if (errors.terms) setErrors((prev) => ({ ...prev, terms: "" }));
                       }}
                       style={styles.checkbox}
                     >
@@ -739,24 +735,19 @@ export default function AuthScreen() {
             </View>
 
             {/* Fake login buttons for seeded admin accounts */}
-            {/* {activeTab === "login" && (
+            {activeTab === "login" && (
               <View style={styles.fakeLoginContainer}>
                 <Text style={styles.fakeLoginTitle}>دخول سريع (حسابات تجريبية)</Text>
                 <View style={styles.fakeLoginButtons}>
                   {SEED_ACCOUNTS.map((account) => (
-                    <TouchableOpacity
-                      key={account.email}
-                      style={styles.fakeLoginButton}
-                      onPress={() => handleFakeLogin(account)}
-                      disabled={isLoading}
-                    >
+                    <TouchableOpacity key={account.email} style={styles.fakeLoginButton} onPress={() => handleFakeLogin(account)} disabled={isLoading}>
                       <Text style={styles.fakeLoginButtonText}>{account.label}</Text>
                       <Text style={styles.fakeLoginEmail}>{account.email}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               </View>
-            )} */}
+            )}
           </ScrollView>
         </View>
       </View>

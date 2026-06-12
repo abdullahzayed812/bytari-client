@@ -671,8 +671,13 @@ export default function AddPoultryFarmScreen() {
               <TouchableOpacity
                 onPress={(e) => {
                   e.stopPropagation();
-                  if (!termsAccepted) setShowTermsModal(true);
-                  else { setTermsAccepted(false); setTermsError(""); }
+                  if (termsAccepted) {
+                    setTermsAccepted(false);
+                    setTermsError("");
+                  } else {
+                    setTermsAccepted(true);
+                    setTermsError("");
+                  }
                 }}
                 style={styles.checkbox}
               >
