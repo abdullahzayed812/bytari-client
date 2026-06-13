@@ -238,7 +238,7 @@ export default function RegisterPoultryTraderScreen() {
 
             {/* Form */}
             <View style={styles.section}>
-              <Text style={styles.label}>اسم الشركة / المنشأة التجارية *</Text>
+              <Text style={styles.label}>اسم الشركة / المنشأة التجارية / الاسم الشخصي *</Text>
               <TextInput
                 style={styles.input}
                 value={formData.businessName}
@@ -360,14 +360,11 @@ export default function RegisterPoultryTraderScreen() {
                   }}
                   style={styles.checkbox}
                 >
-                  {termsAccepted
-                    ? <CheckSquare size={24} color={COLORS.primary} />
-                    : <Square size={24} color={COLORS.darkGray} />}
+                  {termsAccepted ? <CheckSquare size={24} color={COLORS.primary} /> : <Square size={24} color={COLORS.darkGray} />}
                 </TouchableOpacity>
                 <View style={styles.termsTextContainer}>
                   <Text style={styles.termsText}>
-                    أوافق على{" "}
-                    <Text style={styles.termsLink}>شروط وأحكام قسم الدواجن</Text>
+                    أوافق على <Text style={styles.termsLink}>شروط وأحكام قسم الدواجن</Text>
                   </Text>
                   <Text style={styles.termsHint}>(اضغط للقراءة والموافقة)</Text>
                 </View>
@@ -388,12 +385,7 @@ export default function RegisterPoultryTraderScreen() {
         {/* Loading state */}
         {traderQuery.isLoading && <ActivityIndicator style={{ flex: 1, marginTop: 60 }} color={COLORS.primary} size="large" />}
 
-        <TermsAndConditions
-          visible={showTermsModal}
-          onClose={() => setShowTermsModal(false)}
-          onAccept={handleAcceptTerms}
-          accountType="poultry"
-        />
+        <TermsAndConditions visible={showTermsModal} onClose={() => setShowTermsModal(false)} onAccept={handleAcceptTerms} accountType="poultry" />
       </SafeAreaView>
     </>
   );

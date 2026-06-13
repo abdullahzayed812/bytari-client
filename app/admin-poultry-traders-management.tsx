@@ -16,6 +16,7 @@ const STATUS_TABS = [
   { key: "pending", label: "معلق" },
   { key: "active", label: "نشط" },
   { key: "suspended", label: "موقوف" },
+  { key: "expired", label: "منتهي" },
 ];
 
 function InfoRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
@@ -52,7 +53,9 @@ export default function AdminPoultryTradersManagementScreen() {
     onConfirm: () => void;
   } | null>(null);
 
-  const { data, isLoading, refetch } = useQuery(trpc.poultry.traders.list.queryOptions({ status: statusFilter as any }));
+  const { data, isLoading, refetch } = useQuery(trpc.poultry.traders.list.queryOptions({ status: (statusFilter === "expired" ? "active" : statusFilter) as any }));
+
+  // console.log(data);
 
   const activateMutation = useMutation(trpc.poultry.traders.activate.mutationOptions());
 
@@ -119,7 +122,10 @@ export default function AdminPoultryTradersManagementScreen() {
     );
   }, [selectedTraderId, activationStartDate, activationEndDate]);
 
-  const traders = data?.traders || [];
+  const allTraders = data?.traders || [];
+  const traders = statusFilter === "expired"
+    ? allTraders.filter((t: any) => t.activationEndDate && new Date(t.activationEndDate).getTime() < Date.now())
+    : allTraders;
 
   const renderDetailModal = () => {
     if (!selectedTrader) return null;
@@ -161,14 +167,17 @@ export default function AdminPoultryTradersManagementScreen() {
               <View style={styles.detailSection}>
                 <View style={styles.detailSectionHeader}>
                   <Text style={styles.detailSectionTitle}>معلومات التاجر</Text>
-                  <View style={[
-                    styles.statusBadge,
-                    selectedTrader.status === "active" ? styles.statusActive :
-                    selectedTrader.status === "pending" ? styles.statusPending : styles.statusSuspended,
-                  ]}>
-                    <Text style={styles.statusText}>
-                      {selectedTrader.status === "active" ? "نشط" : selectedTrader.status === "pending" ? "معلق" : "موقوف"}
-                    </Text>
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      selectedTrader.status === "active"
+                        ? styles.statusActive
+                        : selectedTrader.status === "pending"
+                          ? styles.statusPending
+                          : styles.statusSuspended,
+                    ]}
+                  >
+                    <Text style={styles.statusText}>{selectedTrader.status === "active" ? "نشط" : selectedTrader.status === "pending" ? "معلق" : "موقوف"}</Text>
                   </View>
                 </View>
                 <InfoRow label="اسم النشاط" value={selectedTrader.businessName || "—"} />
@@ -191,9 +200,7 @@ export default function AdminPoultryTradersManagementScreen() {
 
               <View style={styles.detailSection}>
                 <Text style={styles.detailSectionTitle}>الاشتراك</Text>
-                {selectedTrader.activationStartDate && (
-                  <InfoRow label="تاريخ البدء" value={formatDate(selectedTrader.activationStartDate)} />
-                )}
+                {selectedTrader.activationStartDate && <InfoRow label="تاريخ البدء" value={formatDate(selectedTrader.activationStartDate)} />}
                 {selectedTrader.activationEndDate && (
                   <InfoRow
                     label="تاريخ الانتهاء"
@@ -228,13 +235,15 @@ export default function AdminPoultryTradersManagementScreen() {
               {selectedTrader.status === "active" && (
                 <TouchableOpacity
                   style={[styles.detailActionBtn, { backgroundColor: "#D97706" }]}
-                  onPress={() => requestConfirm({
-                    title: "تعليق الحساب",
-                    message: `هل تريد تعليق حساب "${selectedTrader.businessName}"؟`,
-                    confirmText: "تعليق",
-                    confirmColor: "#D97706",
-                    onConfirm: () => updateStatusMutation.mutate({ traderId: selectedTrader.id, status: "suspended" }),
-                  })}
+                  onPress={() =>
+                    requestConfirm({
+                      title: "تعليق الحساب",
+                      message: `هل تريد تعليق حساب "${selectedTrader.businessName}"؟`,
+                      confirmText: "تعليق",
+                      confirmColor: "#D97706",
+                      onConfirm: () => updateStatusMutation.mutate({ traderId: selectedTrader.id, status: "suspended" }),
+                    })
+                  }
                 >
                   <X size={15} color="#fff" />
                   <Text style={styles.detailActionText}>تعليق</Text>
@@ -243,27 +252,37 @@ export default function AdminPoultryTradersManagementScreen() {
               {selectedTrader.status === "suspended" && (
                 <TouchableOpacity
                   style={[styles.detailActionBtn, { backgroundColor: "#059669" }]}
-                  onPress={() => requestConfirm({
-                    title: "إعادة تفعيل التاجر",
-                    message: `هل تريد إعادة تفعيل حساب "${selectedTrader.businessName}"؟`,
-                    confirmText: "إعادة التفعيل",
-                    confirmColor: "#059669",
-                    onConfirm: () => updateStatusMutation.mutate({ traderId: selectedTrader.id, status: "active" }),
-                  })}
+                  onPress={() =>
+                    requestConfirm({
+                      title: "إعادة تفعيل التاجر",
+                      message: `هل تريد إعادة تفعيل حساب "${selectedTrader.businessName}"؟`,
+                      confirmText: "إعادة التفعيل",
+                      confirmColor: "#059669",
+                      onConfirm: () => updateStatusMutation.mutate({ traderId: selectedTrader.id, status: "active" }),
+                    })
+                  }
                 >
                   <Check size={15} color="#fff" />
                   <Text style={styles.detailActionText}>إعادة تفعيل</Text>
                 </TouchableOpacity>
               )}
+              {selectedTrader.status === "suspended" && (
+                <TouchableOpacity style={[styles.detailActionBtn, { backgroundColor: "#059669" }]} onPress={() => openActivateModal(selectedTrader.id)}>
+                  <CheckCircle size={15} color="#fff" />
+                  <Text style={styles.detailActionText}>تفعيل من جديد</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity
                 style={[styles.detailActionBtn, { backgroundColor: COLORS.error }]}
-                onPress={() => requestConfirm({
-                  title: "رفض الطلب",
-                  message: `هل تريد رفض حساب "${selectedTrader.businessName}" نهائياً؟`,
-                  confirmText: "رفض",
-                  confirmColor: COLORS.error,
-                  onConfirm: () => updateStatusMutation.mutate({ traderId: selectedTrader.id, status: "cancelled" }),
-                })}
+                onPress={() =>
+                  requestConfirm({
+                    title: "رفض الطلب",
+                    message: `هل تريد رفض حساب "${selectedTrader.businessName}" نهائياً؟`,
+                    confirmText: "رفض",
+                    confirmColor: COLORS.error,
+                    onConfirm: () => updateStatusMutation.mutate({ traderId: selectedTrader.id, status: "suspended" }),
+                  })
+                }
               >
                 <X size={15} color="#fff" />
                 <Text style={styles.detailActionText}>رفض</Text>
@@ -298,7 +317,9 @@ export default function AdminPoultryTradersManagementScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.confirmActionBtn, { backgroundColor: confirmConfig?.confirmColor || COLORS.primary }]}
-                  onPress={() => { confirmConfig?.onConfirm(); }}
+                  onPress={() => {
+                    confirmConfig?.onConfirm();
+                  }}
                   disabled={updateStatusMutation.isPending}
                 >
                   {updateStatusMutation.isPending ? (
@@ -318,7 +339,12 @@ export default function AdminPoultryTradersManagementScreen() {
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>تحديد تواريخ التفعيل</Text>
-                <TouchableOpacity onPress={() => { setShowActivateModal(false); setSelectedTraderId(null); }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowActivateModal(false);
+                    setSelectedTraderId(null);
+                  }}
+                >
                   <XCircle size={24} color="#999" />
                 </TouchableOpacity>
               </View>
@@ -348,15 +374,14 @@ export default function AdminPoultryTradersManagementScreen() {
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   style={[styles.modalBtn, styles.cancelModalBtn]}
-                  onPress={() => { setShowActivateModal(false); setSelectedTraderId(null); }}
+                  onPress={() => {
+                    setShowActivateModal(false);
+                    setSelectedTraderId(null);
+                  }}
                 >
                   <Text style={styles.cancelModalBtnText}>إلغاء</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalBtn, styles.confirmModalBtn]}
-                  onPress={confirmActivate}
-                  disabled={activateMutation.isPending}
-                >
+                <TouchableOpacity style={[styles.modalBtn, styles.confirmModalBtn]} onPress={confirmActivate} disabled={activateMutation.isPending}>
                   {activateMutation.isPending ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
@@ -395,26 +420,26 @@ export default function AdminPoultryTradersManagementScreen() {
             onRefresh={refetch}
             refreshing={isLoading}
             renderItem={({ item }: { item: any }) => {
-              const days = item.activationEndDate
-                ? Math.ceil((new Date(item.activationEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-                : null;
+              const days = item.activationEndDate ? Math.ceil((new Date(item.activationEndDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
 
               return (
                 <TouchableOpacity
                   style={styles.card}
-                  onPress={() => { setSelectedTrader(item); setShowDetailModal(true); }}
+                  onPress={() => {
+                    setSelectedTrader(item);
+                    setShowDetailModal(true);
+                  }}
                   activeOpacity={0.8}
                 >
                   <View style={styles.cardHeader}>
                     <Text style={styles.traderName}>{item.businessName}</Text>
-                    <View style={[
-                      styles.statusBadge,
-                      item.status === "active" ? styles.statusActive :
-                      item.status === "pending" ? styles.statusPending : styles.statusSuspended,
-                    ]}>
-                      <Text style={styles.statusText}>
-                        {item.status === "active" ? "نشط" : item.status === "pending" ? "معلق" : "موقوف"}
-                      </Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        item.status === "active" ? styles.statusActive : item.status === "pending" ? styles.statusPending : styles.statusSuspended,
+                      ]}
+                    >
+                      <Text style={styles.statusText}>{item.status === "active" ? "نشط" : item.status === "pending" ? "معلق" : "موقوف"}</Text>
                     </View>
                   </View>
 
@@ -462,7 +487,10 @@ export default function AdminPoultryTradersManagementScreen() {
 
                   <TouchableOpacity
                     style={styles.detailsBtn}
-                    onPress={() => { setSelectedTrader(item); setShowDetailModal(true); }}
+                    onPress={() => {
+                      setSelectedTrader(item);
+                      setShowDetailModal(true);
+                    }}
                   >
                     <Text style={styles.detailsBtnText}>التفاصيل والإجراءات</Text>
                     <ChevronLeft size={14} color={COLORS.primary} />

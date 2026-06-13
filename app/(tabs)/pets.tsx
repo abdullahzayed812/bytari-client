@@ -56,6 +56,12 @@ export default function PetsScreen() {
     enabled: !!user?.id,
   });
 
+  // Fetch farms linked to vet via farm-doctor link (vet mode only)
+  const linkedFarmsQuery = useQuery({
+    ...trpc.poultry.farmDoctor.getMyFarms.queryOptions(),
+    enabled: !!user?.id && userMode === "veterinarian",
+  });
+
   // Fetch ALL user's clinics (owned + assigned) using the new procedure
   const allUserClinicsQuery = useQuery({
     ...trpc.clinics.getUserApprovedClinics.queryOptions({ userId: Number(user?.id) }),
@@ -134,6 +140,10 @@ export default function PetsScreen() {
     return workerFarmsQuery.data?.farms || [];
   }, [workerFarmsQuery.data]);
 
+  const linkedFarms = useMemo(() => {
+    return linkedFarmsQuery.data?.farms || [];
+  }, [linkedFarmsQuery.data]);
+
   const handlePetPress = (pet: any) => {
     router.push({
       pathname: "/pet-details",
@@ -208,8 +218,11 @@ export default function PetsScreen() {
 
   const handlePoultrySection = () => {
     const trader = traderQuery.data?.trader;
-    const hasTrader = trader?.status === "active" || trader?.status === "pending";
-    const hasFarm = displayFarms.length > 0;
+    const endDate = trader?.activationEndDate ? new Date(trader.activationEndDate as any) : null;
+    const isTraderExpired = endDate ? endDate.getTime() < Date.now() : true;
+    const hasTrader = trader?.status === "active" && !isTraderExpired;
+    const hasFarm = displayFarms.some((farm: any) => farm.status === "active");
+
     if (hasFarm || hasTrader) {
       router.push("/poultry-dashboard");
     } else {
@@ -322,8 +335,8 @@ export default function PetsScreen() {
   };
 
   // Render subscription renewal card
-  const renderSubscriptionCard = (item: { type: "clinic" | "store" | "farm" | "trader"; data: any }) => {
-    const { type, data } = item;
+  const renderSubscriptionCard = (item: { type: "clinic" | "store" | "farm" | "trader"; data: any; readOnly?: boolean }) => {
+    const { type, data, readOnly } = item;
     const isClinic = type === "clinic";
     const isFarm = type === "farm";
     const isTrader = type === "trader";
@@ -422,28 +435,30 @@ export default function PetsScreen() {
             </View>
           </View>
 
-          <View style={styles.subscriptionActions}>
-            <TouchableOpacity
-              style={[styles.renewButton, (isLoading || reviewingRenewalRequest) && { opacity: 0.6 }]}
-              onPress={() =>
-                isFarm
-                  ? handleRenewFarmSubscription(data.id, Number(user?.id), reviewingRenewalRequest)
-                  : isTrader
-                    ? handleRenewTraderSubscription(data.id, reviewingRenewalRequest)
-                    : handleRenewSubscription(type as "clinic" | "store", data.id, reviewingRenewalRequest)
-              }
-              disabled={isLoading || reviewingRenewalRequest}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <>
-                  <RefreshCw size={16} color={COLORS.white} />
-                  <Text style={styles.renewButtonText}>{reviewingRenewalRequest ? "قيد المراجعة" : "تجديد الاشتراك"}</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
+          {!readOnly && (
+            <View style={styles.subscriptionActions}>
+              <TouchableOpacity
+                style={[styles.renewButton, (isLoading || reviewingRenewalRequest) && { opacity: 0.6 }]}
+                onPress={() =>
+                  isFarm
+                    ? handleRenewFarmSubscription(data.id, Number(user?.id), reviewingRenewalRequest)
+                    : isTrader
+                      ? handleRenewTraderSubscription(data.id, reviewingRenewalRequest)
+                      : handleRenewSubscription(type as "clinic" | "store", data.id, reviewingRenewalRequest)
+                }
+                disabled={isLoading || reviewingRenewalRequest}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <>
+                    <RefreshCw size={16} color={COLORS.white} />
+                    <Text style={styles.renewButtonText}>{reviewingRenewalRequest ? "قيد المراجعة" : "تجديد الاشتراك"}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
 
           {reviewingRenewalRequest && (
             <View style={styles.pendingRenewalBanner}>
@@ -460,7 +475,9 @@ export default function PetsScreen() {
                 <AlertCircle size={16} color={COLORS.error} />
               </View>
               <Text style={styles.expiredText}>
-                الاشتراك منتهي. يرجى التجديد للوصول إلى {isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : isTrader ? "حساب التاجر" : "المذخر"}
+                {readOnly
+                  ? `اشتراك ${isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : isTrader ? "حساب التاجر" : "المذخر"} منتهي`
+                  : `الاشتراك منتهي. يرجى التجديد للوصول إلى ${isClinic ? "العيادة" : isFarm ? "حقل الدواجن" : isTrader ? "حساب التاجر" : "المذخر"}`}
               </Text>
             </View>
           )}
@@ -675,9 +692,9 @@ export default function PetsScreen() {
       <View style={styles.container}>
         <ScrollView style={styles.listContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>عيادتي ومخازني</Text>
+            <Text style={styles.title}>عيادتي ومخازني وحقولي</Text>
             <Text style={styles.subtitle}>
-              {ownedClinics.length + assignedClinics.length} عيادة • {ownedStores.length + assignedStores.length} مذخر
+              {ownedClinics.length + assignedClinics.length} عيادة • {ownedStores.length + assignedStores.length} مذخر • {linkedFarms.length} حقل دواجن
             </Text>
           </View>
 
@@ -729,8 +746,88 @@ export default function PetsScreen() {
             </View>
           )}
 
+          {/* Linked Farms Section (vet linked via farm-doctor code) */}
+          {linkedFarms.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <Feather size={20} color="#F59E0B" />
+                <Text style={styles.sectionTitle}>حقول الدواجن المرتبطة ({linkedFarms.length})</Text>
+              </View>
+              <Text style={styles.sectionDescription}>حقول الدواجن المرتبطة بك كطبيب بيطري</Text>
+              {linkedFarms.map((link: any) => {
+                if (link.needsRenewal) {
+                  return renderSubscriptionCard({
+                    type: "farm",
+                    readOnly: true,
+                    data: {
+                      id: link.farmId,
+                      name: link.farmName,
+                      activationStartDate: link.activationStartDate,
+                      activationEndDate: link.activationEndDate,
+                      needsRenewal: link.needsRenewal,
+                      reviewingRenewalRequest: link.reviewingRenewalRequest,
+                    },
+                  });
+                }
+                return (
+                  <TouchableOpacity
+                    key={link.linkId}
+                    style={[styles.poultryFarmCard, { borderLeftWidth: 4, borderLeftColor: "#F59E0B" }]}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/poultry-farm-details",
+                        params: { id: link.farmId, workerMode: "1", workerPermissions: "add_daily_data" },
+                      })
+                    }
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.farmHeader}>
+                      <View style={styles.farmIconContainer}>
+                        <Feather size={32} color={COLORS.white} />
+                      </View>
+                      <View style={styles.farmInfo}>
+                        <Text style={styles.farmName}>{link.farmName}</Text>
+                        {link.farmGovernorate && (
+                          <View style={styles.farmLocationRow}>
+                            <MapPin size={14} color={COLORS.darkGray} />
+                            <Text style={styles.farmLocation}>{link.farmGovernorate}</Text>
+                          </View>
+                        )}
+                        <View style={styles.farmBadges}>
+                          <View style={[styles.statusBadge, { backgroundColor: link.farmStatus === "active" ? COLORS.success : COLORS.warning }]}>
+                            <Text style={styles.statusText}>{link.farmStatus === "active" ? "نشط" : "غير نشط"}</Text>
+                          </View>
+                          {link.farmType && (
+                            <View style={[styles.typeBadge, { backgroundColor: COLORS.primary }]}>
+                              <Text style={styles.typeBadgeText}>{getFarmTypeLabel(link.farmType)}</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.farmDetails}>
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>الطبقة:</Text>
+                        <Text style={styles.detailValue}>{(link.capacity ?? 0).toLocaleString()}</Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>الحالي:</Text>
+                        <Text style={styles.detailValue}>{(link.currentPopulation ?? 0).toLocaleString()}</Text>
+                      </View>
+                      <View style={styles.detailItem}>
+                        <Text style={styles.detailLabel}>الصحة:</Text>
+                        <Text style={styles.detailValue}>{getHealthStatusLabel(link.healthStatus)}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+
           {/* Empty State for No Clinics/Warehouses */}
-          {ownedClinics.length === 0 && assignedClinics.length === 0 && ownedStores.length === 0 && assignedStores.length === 0 && (
+          {ownedClinics.length === 0 && assignedClinics.length === 0 && ownedStores.length === 0 && assignedStores.length === 0 && linkedFarms.length === 0 && (
             <View style={styles.emptyStateContainer}>
               <Stethoscope size={64} color={COLORS.lightGray} />
               <Text style={styles.emptyStateText}>لا توجد عيادات أو مخازن مفعلة</Text>
