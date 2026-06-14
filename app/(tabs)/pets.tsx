@@ -220,7 +220,7 @@ export default function PetsScreen() {
     const trader = traderQuery.data?.trader;
     const endDate = trader?.activationEndDate ? new Date(trader.activationEndDate as any) : null;
     const isTraderExpired = endDate ? endDate.getTime() < Date.now() : true;
-    const hasTrader = trader?.status === "active" && !isTraderExpired;
+    const hasTrader = trader?.status === "active" && !isTraderExpired && !trader?.needsRenewal;
     const hasFarm = displayFarms.some((farm: any) => farm.status === "active");
 
     if (hasFarm || hasTrader) {

@@ -220,7 +220,7 @@ export default function AdminDashboard() {
     return labels[category] || category;
   };
 
-  const StatCard = ({ icon, color, value, label, onPress, badge }: any) => (
+  const StatCard = ({ icon, color, value, label, onPress, badge, subLabel }: any) => (
     <TouchableOpacity style={styles.statCard} onPress={onPress}>
       {badge != null && badge > 0 && (
         <View style={styles.statBadge}>
@@ -230,6 +230,7 @@ export default function AdminDashboard() {
       {icon}
       <Text style={styles.statNumber}>{value || 0}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+      {subLabel ? <Text style={styles.statSubLabel}>{subLabel}</Text> : null}
     </TouchableOpacity>
   );
 
@@ -379,7 +380,12 @@ export default function AdminDashboard() {
           icon={<Briefcase size={24} color="#D97706" />}
           value={(systemStats?.totalStats as any)?.poultryTraders}
           label="تجار الدواجن"
-          badge={(approvalCounts as any)?.pendingPoultryTraders}
+          badge={((approvalCounts as any)?.pendingPoultryTraders || 0) + ((approvalCounts as any)?.tradersNeedingRenewal || 0)}
+          subLabel={
+            ((approvalCounts as any)?.pendingPoultryTraders || 0) > 0 || ((approvalCounts as any)?.tradersNeedingRenewal || 0) > 0
+              ? `${(approvalCounts as any)?.pendingPoultryTraders || 0} معلق • ${(approvalCounts as any)?.tradersNeedingRenewal || 0} تجديد`
+              : undefined
+          }
           onPress={() => router.push("/admin-poultry-traders-management")}
         />
         <StatCard
@@ -453,8 +459,13 @@ export default function AdminDashboard() {
             onPress={() => router.push("/admin-poultry-traders-management")}
           >
             <Briefcase size={24} color="#D97706" />
-            <Text style={styles.statNumber}>{(approvalCounts as any)?.pendingPoultryTraders || 0}</Text>
+            <Text style={styles.statNumber}>
+              {((approvalCounts as any)?.pendingPoultryTraders || 0) + ((approvalCounts as any)?.tradersNeedingRenewal || 0)}
+            </Text>
             <Text style={styles.statLabel}>تجار معلقين</Text>
+            {((approvalCounts as any)?.tradersNeedingRenewal || 0) > 0 && (
+              <Text style={styles.statSubLabel}>{(approvalCounts as any)?.pendingPoultryTraders || 0} معلق • {(approvalCounts as any)?.tradersNeedingRenewal || 0} تجديد</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -1351,6 +1362,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 4,
     fontFamily: "System",
+  },
+  statSubLabel: {
+    fontSize: 10,
+    color: "#D97706",
+    textAlign: "center",
+    marginTop: 3,
+    fontFamily: "System",
+    fontWeight: "600",
   },
   section: {
     margin: 15,

@@ -59,6 +59,18 @@ export default function AdminPoultryTradersManagementScreen() {
 
   const activateMutation = useMutation(trpc.poultry.traders.activate.mutationOptions());
 
+  const deleteMutation = useMutation(
+    trpc.poultry.traders.delete.mutationOptions({
+      onSuccess: () => {
+        showToast({ type: "success", message: "تم حذف حساب التاجر نهائياً" });
+        queryClient.invalidateQueries(trpc.poultry.traders.list.queryKey() as any);
+        setShowDetailModal(false);
+        setShowConfirmModal(false);
+      },
+      onError: (e: any) => showToast({ type: "error", message: e.message }),
+    }),
+  );
+
   const updateStatusMutation = useMutation(
     trpc.poultry.traders.updateStatus.mutationOptions({
       onSuccess: () => {
@@ -287,6 +299,21 @@ export default function AdminPoultryTradersManagementScreen() {
                 <X size={15} color="#fff" />
                 <Text style={styles.detailActionText}>رفض</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.detailActionBtn, { backgroundColor: "#7F1D1D", width: "100%" }]}
+                onPress={() =>
+                  requestConfirm({
+                    title: "حذف الحساب نهائياً",
+                    message: `هل أنت متأكد من حذف حساب "${selectedTrader.businessName}" نهائياً؟ لا يمكن التراجع عن هذا الإجراء.`,
+                    confirmText: "حذف نهائي",
+                    confirmColor: "#7F1D1D",
+                    onConfirm: () => deleteMutation.mutate({ traderId: selectedTrader.id }),
+                  })
+                }
+              >
+                <X size={15} color="#fff" />
+                <Text style={styles.detailActionText}>حذف الحساب نهائياً</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -320,9 +347,9 @@ export default function AdminPoultryTradersManagementScreen() {
                   onPress={() => {
                     confirmConfig?.onConfirm();
                   }}
-                  disabled={updateStatusMutation.isPending}
+                  disabled={updateStatusMutation.isPending || deleteMutation.isPending}
                 >
-                  {updateStatusMutation.isPending ? (
+                  {(updateStatusMutation.isPending || deleteMutation.isPending) ? (
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
                     <Text style={styles.confirmActionText}>{confirmConfig?.confirmText}</Text>
