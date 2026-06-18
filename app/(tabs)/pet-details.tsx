@@ -22,6 +22,17 @@ import {
   Camera,
   ImageIcon,
   ArrowRightLeft,
+  Zap,
+  ClipboardList,
+  Stethoscope,
+  Syringe,
+  FlaskConical,
+  Folder,
+  FileText,
+  Phone,
+  Bell,
+  Heart,
+  ShieldCheck,
 } from "lucide-react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUploader } from "@/components/ImageUploader";
@@ -155,7 +166,13 @@ export default function PetDetailsScreen() {
   const { showToast } = useToastContext();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<"info" | "medical" | "vaccinations" | "reminders" | "requests" | "myRequests">("info");
+  const [activeTab, setActiveTab] = useState<
+    "info" | "medical" | "vaccinations" | "reminders" | "clinics" | "requests" | "myRequests" | "lab" | "files" | "notes"
+  >(() => {
+    const isClinician = (clinicAccess === "true" || fromClinic === "true") && userMode === "veterinarian";
+    if (isClinician && !openSection) return "medical";
+    return "info";
+  });
 
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferEmail, setTransferEmail] = useState("");
@@ -179,6 +196,17 @@ export default function PetDetailsScreen() {
     isLoading: isMedicalImageUploading,
   } = useImageUpload({
     onUploadSuccess: (url) => setMedicalForm((prev) => ({ ...prev, prescriptionImage: url })),
+  });
+
+  const [showLabModal, setShowLabModal] = useState(false);
+  const [showFileModal, setShowFileModal] = useState(false);
+
+  const {
+    pickAndUploadImage: pickFileImage,
+    takeAndUploadFromCamera: takeFileImage,
+    isLoading: isFileImageUploading,
+  } = useImageUpload({
+    onUploadSuccess: (url) => setFileForm((prev) => ({ ...prev, prescriptionImage: url })),
   });
 
   // barcode modal state
@@ -238,6 +266,9 @@ export default function PetDetailsScreen() {
     notes: "",
     urgency: "normal", // يمكن أيضًا استخدام "high" أو "low" حسب الحالة
   });
+
+  const [labForm, setLabForm] = useState({ labNotes: "", notes: "" });
+  const [fileForm, setFileForm] = useState({ description: "", prescriptionImage: "" });
 
   const [accessRequestForm, setAccessRequestForm] = useState<AccessRequestForm>({
     reason: "",
@@ -314,10 +345,11 @@ export default function PetDetailsScreen() {
   const deletePetOwnerMutation = useMutation(trpc.pets.delete.mutationOptions({}));
   // const deletePetOwnerMutation = useMutation(trpc.pets.delete.mutationOptions({}));
 
-  // Update mutations
-  const requestMedicalRecordMutation = useMutation(trpc.pets.requestAddMedicalRecord.mutationOptions({}));
-  const requestVaccinationMutation = useMutation(trpc.pets.requestAddVaccination.mutationOptions({}));
-  const requestReminderMutation = useMutation(trpc.pets.requestAddReminder.mutationOptions({}));
+  // Direct add mutations (no approval flow)
+  const createQuickReviewMutation = useMutation(trpc.clinics.quickReview.createQuickReview.mutationOptions());
+  const createFullExamMutation = useMutation(trpc.clinics.quickReview.createFullExam.mutationOptions());
+  const addVaccinationDirectMutation = useMutation(trpc.clinics.quickReview.addVaccination.mutationOptions());
+  const addReminderDirectMutation = useMutation(trpc.clinics.quickReview.addReminder.mutationOptions());
 
   // Approval mutations for owners
   const approveMedicalActionMutation = useMutation(trpc.pets.approveMedicalAction.mutationOptions({}));
@@ -373,6 +405,13 @@ export default function PetDetailsScreen() {
       },
     );
   };
+
+  // Refetch pet data when returning from quick-review / full-exam screens
+  useFocusEffect(
+    useCallback(() => {
+      petQuery.refetch();
+    }, [])
+  );
 
   // Initialize edit form when pet data is loaded
   useEffect(() => {
@@ -450,34 +489,16 @@ export default function PetDetailsScreen() {
 
   const handleAddMedicalRecord = () => {
     if (!isClinicAccess || !pet || !user) return;
-
-    if (!hasAccess) {
-      setShowAccessRequestModal(true);
-      return;
-    }
-
     setShowMedicalModal(true);
   };
 
   const handleAddVaccination = () => {
     if (!isClinicAccess || !pet || !user) return;
-
-    if (!hasAccess) {
-      setShowAccessRequestModal(true);
-      return;
-    }
-
     setShowVaccinationModal(true);
   };
 
   const handleAddReminder = () => {
     if (!isClinicAccess || !pet || !user) return;
-
-    if (!hasAccess) {
-      setShowAccessRequestModal(true);
-      return;
-    }
-
     setShowReminderModal(true);
   };
 
@@ -488,12 +509,6 @@ export default function PetDetailsScreen() {
 
   const handleAddTreatmentCard = () => {
     if (!isClinicAccess || !pet || !user) return;
-
-    if (!hasAccess) {
-      setShowAccessRequestModal(true);
-      return;
-    }
-
     setShowTreatmentModal(true);
   };
 
@@ -698,35 +713,26 @@ export default function PetDetailsScreen() {
     ]);
   };
 
-  // Updated medical procedures with access check
   const submitMedicalRecord = async () => {
     if (!medicalForm.diagnosis || !medicalForm.treatment) {
       Alert.alert("خطأ", "يرجى ملء الحقول المطلوبة");
       return;
     }
-
     if (!pet || !user) return;
-
     try {
-      await requestMedicalRecordMutation.mutateAsync({
+      await createQuickReviewMutation.mutateAsync({
         petId: pet.id,
         clinicId: Number(clinicId!),
         diagnosis: medicalForm.diagnosis,
         treatment: medicalForm.treatment,
         notes: medicalForm.notes,
-        prescriptionImage: medicalForm.prescriptionImage,
-        requestReason: "إضافة سجل طبي بعد الفحص",
-      } as any);
-
+      });
       setShowMedicalModal(false);
       setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" });
-
-      showToast({
-        message: "تم إرسال طلب إضافة السجل الطبي إلى المالك",
-        type: "success",
-      });
+      showToast({ message: "تم إضافة السجل الطبي بنجاح", type: "success" });
+      petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إرسال الطلب");
+      Alert.alert("خطأ", error.message || "فشل في إضافة السجل الطبي");
     }
   };
 
@@ -735,28 +741,21 @@ export default function PetDetailsScreen() {
       Alert.alert("خطأ", "يرجى إدخال اسم التطعيم");
       return;
     }
-
     if (!pet || !user) return;
-
     try {
-      await requestVaccinationMutation.mutateAsync({
+      await addVaccinationDirectMutation.mutateAsync({
         petId: pet.id,
         clinicId: Number(clinicId!),
         name: vaccinationForm.name,
-        nextDate: vaccinationForm.nextDate,
-        notes: vaccinationForm.notes,
-        requestReason: "إضافة تطعيم جديد", // Add reason field
-      } as any);
-
+        nextDate: vaccinationForm.nextDate || undefined,
+        notes: vaccinationForm.notes || undefined,
+      });
       setShowVaccinationModal(false);
       setVaccinationForm({ name: "", nextDate: "", notes: "" });
-
-      showToast({
-        message: "تم إرسال طلب إضافة التطعيم إلى المالك",
-        type: "success",
-      });
+      showToast({ message: "تم إضافة التطعيم بنجاح", type: "success" });
+      petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إرسال الطلب");
+      Alert.alert("خطأ", error.message || "فشل في إضافة التطعيم");
     }
   };
 
@@ -765,29 +764,71 @@ export default function PetDetailsScreen() {
       Alert.alert("خطأ", "يرجى ملء الحقول المطلوبة");
       return;
     }
-
     if (!pet || !user) return;
-
     try {
-      await requestReminderMutation.mutateAsync({
+      await addReminderDirectMutation.mutateAsync({
         petId: pet.id,
         clinicId: Number(clinicId!),
         title: reminderForm.title,
-        description: reminderForm.description,
+        description: reminderForm.description || undefined,
         reminderDate: reminderForm.date,
         reminderType: "checkup",
-        requestReason: "إضافة تذكير للمتابعة", // Add reason field
-      } as any);
-
+      });
       setShowReminderModal(false);
       setReminderForm({ title: "", description: "", date: "" });
-
-      showToast({
-        message: "تم إرسال طلب إضافة التذكير إلى المالك",
-        type: "success",
-      });
+      showToast({ message: "تم إضافة التذكير بنجاح", type: "success" });
+      petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إرسال الطلب");
+      Alert.alert("خطأ", error.message || "فشل في إضافة التذكير");
+    }
+  };
+
+  const submitLabResult = async () => {
+    if (!labForm.labNotes) {
+      Alert.alert("خطأ", "يرجى إدخال نتائج التحليل");
+      return;
+    }
+    if (!pet || !user) return;
+    try {
+      await createFullExamMutation.mutateAsync({
+        petId: pet.id,
+        clinicId: Number(clinicId!),
+        diagnosis: "تحاليل مختبرية",
+        treatment: "—",
+        labNotes: labForm.labNotes,
+        notes: labForm.notes || undefined,
+        recordType: "تحليل",
+      });
+      setShowLabModal(false);
+      setLabForm({ labNotes: "", notes: "" });
+      showToast({ message: "تم إضافة نتيجة التحليل بنجاح", type: "success" });
+      petQuery.refetch();
+    } catch (error: any) {
+      Alert.alert("خطأ", error.message || "فشل في إضافة التحليل");
+    }
+  };
+
+  const submitFile = async () => {
+    if (!fileForm.prescriptionImage) {
+      Alert.alert("خطأ", "يرجى إضافة صورة أو ملف");
+      return;
+    }
+    if (!pet || !user) return;
+    try {
+      await createFullExamMutation.mutateAsync({
+        petId: pet.id,
+        clinicId: Number(clinicId!),
+        diagnosis: fileForm.description || "ملف طبي",
+        treatment: "—",
+        prescriptionImage: fileForm.prescriptionImage || undefined,
+        recordType: "ملف",
+      });
+      setShowFileModal(false);
+      setFileForm({ description: "", prescriptionImage: "" });
+      showToast({ message: "تم إضافة الملف بنجاح", type: "success" });
+      petQuery.refetch();
+    } catch (error: any) {
+      Alert.alert("خطأ", error.message || "فشل في إضافة الملف");
     }
   };
 
@@ -1144,120 +1185,178 @@ export default function PetDetailsScreen() {
         {createApprovalMutation.isPending ? <ActivityIndicator size="large" /> : null}
       </View>
 
-      <View style={styles.header}>
-        <Image source={{ uri: pet.image }} style={styles.petImage} />
-        <View style={styles.petInfo}>
-          <View style={styles.petNameRow}>
-            <Text style={styles.petName}>{pet.name}</Text>
+      {/* ── Pet Identity Card ── */}
+      <View style={styles.petIdentityCard}>
+        {(pet.isLost || isOwner) && (
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            {pet.isLost ? (
+              <View style={styles.heroBanner}>
+                <AlertTriangle size={13} color={COLORS.white} />
+                <Text style={styles.heroBannerText}>مفقود</Text>
+              </View>
+            ) : (
+              <View />
+            )}
+
             {isOwner && (
-              <View style={{ flexDirection: "row-reverse" }}>
-                <TouchableOpacity onPress={handleEditPet} style={styles.editIcon}>
-                  <Edit3 size={20} color={COLORS.primary} />
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TouchableOpacity onPress={handleEditPet} style={styles.heroIconBtn}>
+                  <Edit3 size={16} color={COLORS.white} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleDeletePetForOwner} style={styles.editIcon}>
-                  <Trash2 size={20} color={COLORS.error} />
+                <TouchableOpacity onPress={handleDeletePetForOwner} style={[styles.heroIconBtn, { backgroundColor: "rgba(239,68,68,0.85)" }]}>
+                  <Trash2 size={16} color={COLORS.white} />
                 </TouchableOpacity>
               </View>
             )}
           </View>
-          <Text style={styles.petType}>
-            {PET_TYPE_LABELS[pet.type as keyof typeof PET_TYPE_LABELS] ?? pet.type} {pet.breed ? `- ${pet.breed}` : ""}
-          </Text>
+        )}
 
-          <View style={styles.petDetailsRow}>
-            <View style={styles.petDetailItem}>
-              <Text style={styles.petDetailLabel}>{t("العمر")}</Text>
-              <Text style={styles.petDetailValue}>{pet.age} سنة</Text>
-            </View>
+        <View style={styles.petIdentityRow}>
+          {/* Avatar */}
+          <Image source={{ uri: pet.image }} style={styles.petAvatarImage} resizeMode="cover" />
 
-            <View style={styles.petDetailItem}>
-              <Text style={styles.petDetailLabel}>{t("الجنس")}</Text>
-              <Text style={styles.petDetailValue}>{pet.gender === "male" ? t("ذكر") : t("انثى")}</Text>
-            </View>
+          {/* Name + type + chips */}
+          <View style={styles.petIdentityInfo}>
+            <Text style={styles.petName}>{pet.name}</Text>
+            <Text style={styles.petType}>
+              {PET_TYPE_LABELS[pet.type as keyof typeof PET_TYPE_LABELS] ?? pet.type}
+              {pet.breed ? ` · ${pet.breed}` : ""}
+            </Text>
 
-            {pet.weight && (
-              <View style={styles.petDetailItem}>
-                <Text style={styles.petDetailLabel}>{t("الوزن")}</Text>
-                <Text style={styles.petDetailValue}>{pet.weight} كجم</Text>
+            <View style={styles.heroChipsRow}>
+              {pet.age ? (
+                <View style={styles.heroChip}>
+                  <Text style={styles.heroChipLabel}>العمر</Text>
+                  <Text style={styles.heroChipValue}>{pet.age} سنة</Text>
+                </View>
+              ) : null}
+              <View style={[styles.heroChip, { borderColor: pet.gender === "male" ? "#3B82F6" : "#EC4899" }]}>
+                <Text style={styles.heroChipLabel}>الجنس</Text>
+                <Text style={[styles.heroChipValue, { color: pet.gender === "male" ? "#3B82F6" : "#EC4899" }]}>{pet.gender === "male" ? "ذكر" : "أنثى"}</Text>
               </View>
-            )}
-          </View>
-
-          {/* barcode display (tap to enlarge) */}
-          {pet.id && (
-            <TouchableOpacity onPress={() => setShowBarcodeModal(true)} style={{ alignItems: "center", marginTop: 12 }}>
-              {/* use external service to render a Code128 barcode as an image */}
-              <RNImage
-                source={{
-                  uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(pet.id.toString())}&code=Code128&translate-esc=true`,
-                }}
-                style={{ width: 200, height: 80 }}
-              />
-              <Text style={{ fontSize: 12, marginTop: 4 }}>{pet.id}</Text>
-            </TouchableOpacity>
-          )}
-
-          {isClinicAccess && (
-            <View style={styles.clinicActions}>
-              {hasAccess ? (
-                <>
-                  <Text style={styles.accessGrantedText}>✓ يمكنك إضافة السجلات الطبية والتطعيمات</Text>
-                  <View style={styles.chatActionsRow}>
-                    <TouchableOpacity style={styles.chatActionButton} onPress={handleOpenChat}>
-                      <MessageCircle size={18} color={COLORS.primary} />
-                      <Text style={styles.chatActionText}>محادثة</Text>
-                    </TouchableOpacity>
-                    {chatData && (
-                      <TouchableOpacity style={styles.chatActionButton} onPress={handleToggleChat}>
-                        {chatData.isActive ? <PauseCircle size={18} color={COLORS.success} /> : <PlayCircle size={18} color={COLORS.darkGray} />}
-                        <Text style={styles.chatActionText}>{chatData.isActive ? "إيقاف" : "تفعيل"}</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </>
-              ) : (
-                <Button
-                  title={"طلب متابعة الحيوان"}
-                  onPress={handleFollowUp}
-                  type={hasAccess ? "outline" : "primary"}
-                  size="medium"
-                  style={styles.followUpButton}
-                />
+              {pet.weight ? (
+                <View style={styles.heroChip}>
+                  <Text style={styles.heroChipLabel}>الوزن</Text>
+                  <Text style={styles.heroChipValue}>{pet.weight} كجم</Text>
+                </View>
+              ) : null}
+              {pet.color ? (
+                <View style={styles.heroChip}>
+                  <Text style={styles.heroChipLabel}>اللون</Text>
+                  <Text style={styles.heroChipValue}>{pet.color}</Text>
+                </View>
+              ) : null}
+              {(pet as any).isNeutered !== undefined && (
+                <View style={[styles.heroChip, { borderColor: (pet as any).isNeutered ? COLORS.success : "#CBD5E1" }]}>
+                  <ShieldCheck size={11} color={(pet as any).isNeutered ? COLORS.success : COLORS.darkGray} />
+                  <Text style={[styles.heroChipValue, { color: (pet as any).isNeutered ? COLORS.success : COLORS.darkGray }]}>
+                    {(pet as any).isNeutered ? "عقيم" : "غير عقيم"}
+                  </Text>
+                </View>
               )}
             </View>
-          )}
+          </View>
         </View>
       </View>
 
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity style={[styles.tab, activeTab === "info" && styles.activeTab]} onPress={() => setActiveTab("info")}>
-          <Text style={[styles.tabText, activeTab === "info" && styles.activeTabText]}>معلومات</Text>
-        </TouchableOpacity>
+      {/* ── Clinic Info Card ── */}
+      {isClinicAccess && (
+        <View style={styles.clinicInfoCard}>
+          <View style={styles.ownerContactRow}>
+            <View style={styles.ownerContactItem}>
+              <View style={styles.ownerContactIcon}>
+                <ClipboardList size={14} color={COLORS.primary} />
+              </View>
+              <Text style={styles.ownerContactLabel}>صاحب الحيوان</Text>
+              <Text style={styles.ownerContactValue}>{pet.ownerName}</Text>
+            </View>
+            {(pet as any).ownerPhone && (
+              <View style={styles.ownerContactItem}>
+                <View style={[styles.ownerContactIcon, { backgroundColor: "#E8F5E9" }]}>
+                  <Phone size={14} color={COLORS.success} />
+                </View>
+                <Text style={styles.ownerContactValue}>{(pet as any).ownerPhone}</Text>
+              </View>
+            )}
+          </View>
 
-        <TouchableOpacity style={[styles.tab, activeTab === "medical" && styles.activeTab]} onPress={() => setActiveTab("medical")}>
-          <Text style={[styles.tabText, activeTab === "medical" && styles.activeTabText]}>السجل الطبي</Text>
-        </TouchableOpacity>
+          <View style={styles.clinicActionButtons}>
+            <TouchableOpacity
+              style={styles.quickReviewBtn}
+              onPress={() => router.push({ pathname: "/clinic-quick-review", params: { clinicId: clinicId!, petId: petId! } })}
+            >
+              <Zap size={18} color={COLORS.white} />
+              <Text style={styles.clinicActionBtnText}>مراجعة سريعة</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.fullExamBtn}
+              onPress={() => router.push({ pathname: "/clinic-full-exam", params: { clinicId: clinicId!, petId: petId! } })}
+            >
+              <ClipboardList size={18} color={COLORS.white} />
+              <Text style={styles.clinicActionBtnText}>فحص كامل</Text>
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]} onPress={() => setActiveTab("vaccinations")}>
-          <Text style={[styles.tabText, activeTab === "vaccinations" && styles.activeTabText]}>التطعيمات</Text>
-        </TouchableOpacity>
+          <View style={styles.clinicStatsRow}>
+            <View style={styles.clinicStatItem}>
+              <Text style={styles.clinicStatValue}>{pet.vaccinations?.length ?? 0}</Text>
+              <Text style={styles.clinicStatLabel}>اللقاحات</Text>
+            </View>
+            <View style={styles.clinicStatDivider} />
+            <View style={styles.clinicStatItem}>
+              <Text style={styles.clinicStatValue}>{pet.medicalRecords?.length ?? 0}</Text>
+              <Text style={styles.clinicStatLabel}>إجمالي الزيارات</Text>
+            </View>
+            <View style={styles.clinicStatDivider} />
+            <View style={styles.clinicStatItem}>
+              <Text style={styles.clinicStatValue}>
+                {pet.medicalRecords?.[0]?.date ? new Date(pet.medicalRecords[0].date).toLocaleDateString("ar-SA") : "—"}
+              </Text>
+              <Text style={styles.clinicStatLabel}>آخر زيارة</Text>
+            </View>
+          </View>
+        </View>
+      )}
 
-        <TouchableOpacity style={[styles.tab, activeTab === "reminders" && styles.activeTab]} onPress={() => setActiveTab("reminders")}>
-          <Text style={[styles.tabText, activeTab === "reminders" && styles.activeTabText]}>التذكيرات</Text>
-        </TouchableOpacity>
-
-        {isOwner && (
-          <TouchableOpacity style={[styles.tab, activeTab === "requests" && styles.activeTab]} onPress={() => setActiveTab("requests")}>
-            <Text style={[styles.tabText, activeTab === "requests" && styles.activeTabText]}>طلبات العيادات</Text>
+      {/* ── Clinic icon tabs ── */}
+      {isClinicAccess ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.clinicTabsBar} contentContainerStyle={styles.clinicTabsContent}>
+          {(
+            [
+              { key: "medical", label: "السجلات الطبية", Icon: ClipboardList },
+              { key: "vaccinations", label: "اللقاحات", Icon: Syringe },
+              { key: "lab", label: "التحاليل", Icon: FlaskConical },
+              { key: "files", label: "الملفات", Icon: Folder },
+              { key: "notes", label: "الملاحظات", Icon: FileText },
+            ] as const
+          ).map(({ key, label, Icon }) => {
+            const isActive = activeTab === key;
+            return (
+              <TouchableOpacity key={key} style={[styles.clinicIconTab, isActive && styles.clinicIconTabActive]} onPress={() => setActiveTab(key)}>
+                <Icon size={20} color={isActive ? COLORS.success : COLORS.darkGray} />
+                <Text style={[styles.clinicIconTabText, isActive && styles.clinicIconTabTextActive]}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScrollWrapper} contentContainerStyle={styles.tabsContainer}>
+          <TouchableOpacity style={[styles.tab, activeTab === "info" && styles.activeTab]} onPress={() => setActiveTab("info")}>
+            <Text style={[styles.tabText, activeTab === "info" && styles.activeTabText]}>معلومات</Text>
           </TouchableOpacity>
-        )}
-
-        {isClinicAccess && (
-          <TouchableOpacity style={[styles.tab, activeTab === "myRequests" && styles.activeTab]} onPress={() => setActiveTab("myRequests")}>
-            <Text style={[styles.tabText, activeTab === "myRequests" && styles.activeTabText]}>طلباتي</Text>
+          <TouchableOpacity style={[styles.tab, activeTab === "vaccinations" && styles.activeTab]} onPress={() => setActiveTab("vaccinations")}>
+            <Text style={[styles.tabText, activeTab === "vaccinations" && styles.activeTabText]}>التطعيمات</Text>
           </TouchableOpacity>
-        )}
-      </View>
+          <TouchableOpacity style={[styles.tab, activeTab === "reminders" && styles.activeTab]} onPress={() => setActiveTab("reminders")}>
+            <Text style={[styles.tabText, activeTab === "reminders" && styles.activeTabText]}>التذكيرات</Text>
+          </TouchableOpacity>
+          {isOwner && (
+            <TouchableOpacity style={[styles.tab, activeTab === "clinics" && styles.activeTab]} onPress={() => setActiveTab("clinics")}>
+              <Text style={[styles.tabText, activeTab === "clinics" && styles.activeTabText]}>العيادات</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      )}
 
       <View style={styles.content}>
         {activeTab === "info" && (
@@ -1288,6 +1387,16 @@ export default function PetDetailsScreen() {
                   <Text style={[styles.infoValue, { textDecorationLine: "underline" }]}>{pet.id}</Text>
                 </TouchableOpacity>
               </View>
+
+              {pet.id && (
+                <TouchableOpacity onPress={() => setShowBarcodeModal(true)} style={styles.barcodeRow}>
+                  <RNImage
+                    source={{ uri: `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(pet.id.toString())}&code=Code128&translate-esc=true` }}
+                    style={styles.barcodeThumbnail}
+                  />
+                  <Text style={styles.barcodeTapHint}>اضغط للتكبير</Text>
+                </TouchableOpacity>
+              )}
 
               {pet.isLost && (
                 <View style={styles.lostBanner}>
@@ -1419,37 +1528,30 @@ export default function PetDetailsScreen() {
           </View>
         )}
 
-        {activeTab === "medical" && (
+        {activeTab === "medical" && isClinicAccess && (
           <View>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t("السجل الطبي")}</Text>
-              {isClinicAccess && userMode === "veterinarian" && (
-                <TouchableOpacity
-                  style={[styles.addSectionButton, !hasAccess && styles.disabledButton]}
-                  onPress={hasAccess ? handleAddMedicalRecord : () => setShowAccessRequestModal(true)}
-                  disabled={!hasAccess}
-                >
-                  <Plus size={16} color={hasAccess ? COLORS.primary : COLORS.darkGray} />
-                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>إضافة سجل</Text>
-                </TouchableOpacity>
-              )}
+              <Text style={styles.sectionTitle}>السجلات الطبية</Text>
             </View>
 
-            {!pet.medicalRecords || pet.medicalRecords.length === 0 ? (
+            {!pet.medicalRecords || pet.medicalRecords.filter((r: any) => r.recordType !== "تحليل" && r.recordType !== "ملف").length === 0 ? (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyStateText}>لا يوجد سجلات طبية</Text>
+                <Stethoscope size={36} color="#CBD5E1" />
+                <Text style={styles.emptyStateText}>لا توجد سجلات طبية</Text>
               </View>
             ) : (
-              <>
-                {pet.medicalRecords.map((record: any) => (
+              pet.medicalRecords.filter((r: any) => r.recordType !== "تحليل" && r.recordType !== "ملف").slice().reverse().map((record: any) => {
+                const isQuick = record.recordType === "مراجعة_سريعة";
+                const typeLabel = isQuick ? "مراجعة سريعة" : record.recordType === "فحص_شامل" ? "فحص شامل" : "سجل طبي";
+                const typeColor = isQuick ? COLORS.warning : COLORS.primary;
+                return (
                   <View key={record.id} style={styles.recordCard}>
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{record.diagnosis}</Text>
-                      {isOwner && (
-                        <TouchableOpacity onPress={() => handleDeleteMedicalRecord(record.id)} style={styles.deleteButton}>
-                          <Trash2 size={16} color={COLORS.error} />
-                        </TouchableOpacity>
-                      )}
+                      <View style={[styles.recordTypeBadge, { backgroundColor: typeColor + "22", borderColor: typeColor }]}>
+                        {isQuick ? <Zap size={11} color={typeColor} /> : <ClipboardList size={11} color={typeColor} />}
+                        <Text style={[styles.recordTypeText, { color: typeColor }]}>{typeLabel}</Text>
+                      </View>
                     </View>
 
                     <View style={styles.recordItem}>
@@ -1457,10 +1559,20 @@ export default function PetDetailsScreen() {
                       <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
                     </View>
 
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>العيادة</Text>
-                      <Text style={styles.recordValue}>{record.clinicName || "غير محدد"}</Text>
-                    </View>
+                    {record.clinicName && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>العيادة</Text>
+                        <Text style={styles.recordValue}>{record.clinicName}</Text>
+                      </View>
+                    )}
+
+                    {record.doctorName && (
+                      <View style={styles.recordItem}>
+                        <Stethoscope size={13} color={COLORS.darkGray} />
+                        <Text style={styles.recordLabel}>الطبيب</Text>
+                        <Text style={styles.recordValue}>{record.doctorName}</Text>
+                      </View>
+                    )}
 
                     <View style={styles.recordItem}>
                       <Text style={styles.recordLabel}>العلاج</Text>
@@ -1488,8 +1600,8 @@ export default function PetDetailsScreen() {
                       </View>
                     )}
                   </View>
-                ))}
-              </>
+                );
+              })
             )}
           </View>
         )}
@@ -1535,25 +1647,22 @@ export default function PetDetailsScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t("التطعيمات")}</Text>
               {isClinicAccess && userMode === "veterinarian" && (
-                <TouchableOpacity
-                  style={[styles.addSectionButton, !hasAccess && styles.disabledButton]}
-                  onPress={hasAccess ? handleAddVaccination : () => setShowAccessRequestModal(true)}
-                  disabled={!hasAccess}
-                >
-                  <Plus size={16} color={hasAccess ? COLORS.primary : COLORS.darkGray} />
-                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>إضافة تطعيم</Text>
+                <TouchableOpacity style={styles.addSectionButton} onPress={handleAddVaccination}>
+                  <Plus size={16} color={COLORS.primary} />
+                  <Text style={styles.addSectionButtonText}>إضافة تطعيم</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {!pet.vaccinations || pet.vaccinations.length === 0 ? (
               <View style={styles.emptyState}>
+                <Syringe size={36} color="#CBD5E1" />
                 <Text style={styles.emptyStateText}>لا يوجد تطعيمات</Text>
               </View>
             ) : (
               <>
-                {pet.vaccinations.map((vaccination: any) => (
-                  <View key={vaccination.id} style={styles.recordCard}>
+                {pet.vaccinations.slice().reverse().map((vaccination: any) => (
+                  <View key={vaccination.id} style={[styles.recordCard, { borderLeftColor: COLORS.success }]}>
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{vaccination.name}</Text>
                       {isOwner && (
@@ -1590,7 +1699,7 @@ export default function PetDetailsScreen() {
                     )}
                   </View>
                 ))}
-                {isClinicAccess && hasAccess && (
+                {isClinicAccess && (
                   <TouchableOpacity style={styles.addMoreButton} onPress={handleAddVaccination}>
                     <Plus size={20} color={COLORS.primary} />
                     <Text style={styles.addMoreButtonText}>إضافة تطعيم جديد</Text>
@@ -1606,28 +1715,27 @@ export default function PetDetailsScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t("التذكيرات")}</Text>
               {isClinicAccess && userMode === "veterinarian" && (
-                <TouchableOpacity
-                  style={[styles.addSectionButton, !hasAccess && styles.disabledButton]}
-                  onPress={hasAccess ? handleAddReminder : () => setShowAccessRequestModal(true)}
-                  disabled={!hasAccess}
-                >
-                  <Plus size={16} color={hasAccess ? COLORS.primary : COLORS.darkGray} />
-                  <Text style={[styles.addSectionButtonText, !hasAccess && styles.disabledButtonText]}>إضافة تذكير</Text>
+                <TouchableOpacity style={styles.addSectionButton} onPress={handleAddReminder}>
+                  <Plus size={16} color={COLORS.primary} />
+                  <Text style={styles.addSectionButtonText}>إضافة تذكير</Text>
                 </TouchableOpacity>
               )}
             </View>
 
             {!pet.reminders || pet.reminders.length === 0 ? (
               <View style={styles.emptyState}>
+                <Bell size={36} color="#CBD5E1" />
                 <Text style={styles.emptyStateText}>لا يوجد تذكيرات</Text>
-                {isClinicAccess && !hasAccess && <Text style={styles.noAccessText}>يجب الحصول على صلاحية الوصول لإضافة تذكيرات</Text>}
               </View>
             ) : (
               pet.reminders
                 .slice()
                 .reverse()
                 .map((reminder: any) => (
-                  <View key={reminder.id} style={[styles.recordCard, reminder.isCompleted && styles.completedReminderCard]}>
+                  <View
+                    key={reminder.id}
+                    style={[styles.recordCard, { borderLeftColor: COLORS.warning }, reminder.isCompleted && styles.completedReminderCard]}
+                  >
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{reminder.title}</Text>
                       {isOwner && (
@@ -1675,6 +1783,194 @@ export default function PetDetailsScreen() {
           </View>
         )}
 
+        {/* ── التحاليل tab ── */}
+        {activeTab === "lab" && isClinicAccess && (
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>التحاليل والفحوصات المخبرية</Text>
+              <TouchableOpacity style={styles.addSectionButton} onPress={() => setShowLabModal(true)}>
+                <Plus size={16} color={COLORS.primary} />
+                <Text style={styles.addSectionButtonText}>إضافة تحليل</Text>
+              </TouchableOpacity>
+            </View>
+            {pet.medicalRecords?.filter((r: any) => r.labNotes)?.length === 0 ? (
+              <View style={styles.emptyState}>
+                <FlaskConical size={36} color="#CBD5E1" />
+                <Text style={styles.emptyStateText}>لا توجد نتائج تحاليل</Text>
+              </View>
+            ) : (
+              pet.medicalRecords
+                ?.filter((r: any) => r.labNotes)
+                .slice().reverse()
+                .map((record: any) => (
+                  <View key={record.id} style={styles.recordCard}>
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>التاريخ</Text>
+                      <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {record.clinicName && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>العيادة</Text>
+                        <Text style={styles.recordValue}>{record.clinicName}</Text>
+                      </View>
+                    )}
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>نتائج التحاليل</Text>
+                      <Text style={styles.recordValue}>{record.labNotes}</Text>
+                    </View>
+                    {record.notes && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>ملاحظات</Text>
+                        <Text style={styles.recordValue}>{record.notes}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))
+            )}
+            {pet.medicalRecords?.filter((r: any) => r.labNotes)?.length > 0 && (
+              <TouchableOpacity style={styles.addMoreButton} onPress={() => setShowLabModal(true)}>
+                <Plus size={20} color={COLORS.primary} />
+                <Text style={styles.addMoreButtonText}>إضافة تحليل جديد</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* ── الملفات tab ── */}
+        {activeTab === "files" && isClinicAccess && (
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>الملفات والصور المرفقة</Text>
+              <TouchableOpacity style={styles.addSectionButton} onPress={() => setShowFileModal(true)}>
+                <Plus size={16} color={COLORS.primary} />
+                <Text style={styles.addSectionButtonText}>إضافة ملف</Text>
+              </TouchableOpacity>
+            </View>
+            {pet.medicalRecords?.filter((r: any) => r.prescriptionImage || r.fileUrls?.length > 0)?.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Folder size={36} color="#CBD5E1" />
+                <Text style={styles.emptyStateText}>لا توجد ملفات مرفقة</Text>
+              </View>
+            ) : (
+              pet.medicalRecords
+                ?.filter((r: any) => r.prescriptionImage || r.fileUrls?.length > 0)
+                .slice().reverse()
+                .map((record: any) => (
+                  <View key={record.id} style={styles.recordCard}>
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>التاريخ</Text>
+                      <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {record.prescriptionImage && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>صورة الوصفة</Text>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSelectedImageUrl(record.prescriptionImage);
+                            setShowImageModal(true);
+                          }}
+                        >
+                          <Image source={{ uri: record.prescriptionImage }} style={styles.prescriptionThumbnail} />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                    {record.fileUrls?.map((url: string, i: number) => (
+                      <TouchableOpacity
+                        key={i}
+                        onPress={() => {
+                          setSelectedImageUrl(url);
+                          setShowImageModal(true);
+                        }}
+                      >
+                        <Image source={{ uri: url }} style={[styles.prescriptionThumbnail, { marginTop: 6 }]} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ))
+            )}
+            {pet.medicalRecords?.filter((r: any) => r.prescriptionImage || r.fileUrls?.length > 0)?.length > 0 && (
+              <TouchableOpacity style={styles.addMoreButton} onPress={() => setShowFileModal(true)}>
+                <Plus size={20} color={COLORS.primary} />
+                <Text style={styles.addMoreButtonText}>إضافة ملف جديد</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* ── الملاحظات tab ── */}
+        {activeTab === "notes" && isClinicAccess && (
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>الملاحظات الطبية</Text>
+            </View>
+            {pet.medicalRecords?.filter((r: any) => r.notes)?.length === 0 ? (
+              <View style={styles.emptyState}>
+                <FileText size={36} color="#CBD5E1" />
+                <Text style={styles.emptyStateText}>لا توجد ملاحظات</Text>
+              </View>
+            ) : (
+              pet.medicalRecords
+                ?.filter((r: any) => r.notes)
+                .slice().reverse()
+                .map((record: any) => (
+                  <View key={record.id} style={styles.recordCard}>
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>التاريخ</Text>
+                      <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {record.clinicName && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>العيادة</Text>
+                        <Text style={styles.recordValue}>{record.clinicName}</Text>
+                      </View>
+                    )}
+                    <View style={styles.recordItem}>
+                      <Text style={styles.recordLabel}>الملاحظات</Text>
+                      <Text style={styles.recordValue}>{record.notes}</Text>
+                    </View>
+                  </View>
+                ))
+            )}
+          </View>
+        )}
+
+        {activeTab === "clinics" && isOwner && (
+          <View>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>العيادات التي زارها الحيوان</Text>
+            </View>
+            {clinicFollowUpsQuery.isLoading ? (
+              <ActivityIndicator size="large" />
+            ) : !clinicFollowUpsQuery.data?.followUps || clinicFollowUpsQuery.data.followUps.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Heart size={36} color="#CBD5E1" />
+                <Text style={styles.emptyStateText}>لم يزر الحيوان أي عيادة بعد</Text>
+              </View>
+            ) : (
+              clinicFollowUpsQuery.data.followUps.map((clinic: any) => (
+                <TouchableOpacity
+                  key={clinic.clinicId}
+                  style={styles.clinicFollowUpCard}
+                  onPress={() => router.push({ pathname: "/clinic-profile", params: { id: clinic.clinicId } })}
+                >
+                  <View style={styles.clinicInfo}>
+                    <View style={styles.clinicNameRow}>
+                      {clinic.clinicLogo ? (
+                        <Image source={{ uri: clinic.clinicLogo }} style={{ width: 36, height: 36, borderRadius: 18, marginLeft: 8 }} />
+                      ) : null}
+                      <Text style={styles.clinicName}>{clinic.clinicName}</Text>
+                    </View>
+                    <ClinicChatButton petId={petId as string} clinicId={clinic.clinicId} petName={pet?.name ?? ""} />
+                    <Text style={styles.followUpDetails}>
+                      {clinic.medicalRecordsCount} سجلات طبية • {clinic.vaccinationsCount} تطعيمات • {clinic.remindersCount} تذكيرات
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        )}
+
         {activeTab === "myRequests" && isClinicAccess && (
           <View>
             <View style={styles.sectionHeader}>
@@ -1713,10 +2009,10 @@ export default function PetDetailsScreen() {
           </View>
         )}
 
-        {activeTab === "requests" && isOwner && (
-          <View>
-            {/* --- Section 1: Clinic Access Requests --- */}
-            <View style={styles.sectionHeader}>
+        {/* {activeTab === "requests" && isOwner && (
+          <View> */}
+        {/* --- Section 1: Clinic Access Requests --- */}
+        {/* <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>طلبات صلاحية العيادات</Text>
             </View>
 
@@ -1749,10 +2045,10 @@ export default function PetDetailsScreen() {
                   </View>
                 </View>
               ))
-            )}
+            )} */}
 
-            {/* --- Section 2: Medical Data Requests --- */}
-            <View style={styles.sectionHeader}>
+        {/* --- Section 2: Medical Data Requests --- */}
+        {/* <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>طلبات البيانات الطبية</Text>
             </View>
 
@@ -1814,8 +2110,104 @@ export default function PetDetailsScreen() {
               ))
             )}
           </View>
-        )}
+        )} */}
       </View>
+
+      {/* Lab Result Modal */}
+      <Modal visible={showLabModal} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>إضافة نتيجة تحليل</Text>
+            <TouchableOpacity onPress={() => setShowLabModal(false)}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.modalSectionTitle}>نتائج التحليل *</Text>
+            <TextInput
+              style={[styles.modalInput, styles.textArea]}
+              placeholder="أدخل نتائج التحاليل المخبرية"
+              value={labForm.labNotes}
+              onChangeText={(value) => setLabForm((prev) => ({ ...prev, labNotes: value }))}
+              multiline
+              numberOfLines={5}
+            />
+            <Text style={styles.modalSectionTitle}>ملاحظات إضافية</Text>
+            <TextInput
+              style={[styles.modalInput, styles.textArea]}
+              placeholder="ملاحظات إضافية (اختياري)"
+              value={labForm.notes}
+              onChangeText={(value) => setLabForm((prev) => ({ ...prev, notes: value }))}
+              multiline
+              numberOfLines={3}
+            />
+          </ScrollView>
+          <View style={styles.modalFooter}>
+            <Button title="إلغاء" onPress={() => setShowLabModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="حفظ" onPress={submitLabResult} type="primary" size="medium" style={styles.modalButton} />
+          </View>
+        </View>
+      </Modal>
+
+      {/* File Upload Modal */}
+      <Modal visible={showFileModal} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>إضافة ملف</Text>
+            <TouchableOpacity onPress={() => setShowFileModal(false)}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <Text style={styles.modalSectionTitle}>وصف الملف (اختياري)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="وصف الملف أو الصورة"
+              value={fileForm.description}
+              onChangeText={(value) => setFileForm((prev) => ({ ...prev, description: value }))}
+            />
+            <Text style={styles.modalSectionTitle}>الصورة أو الملف *</Text>
+            {fileForm.prescriptionImage ? (
+              <View style={styles.prescriptionImageContainer}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedImageUrl(fileForm.prescriptionImage);
+                    setShowImageModal(true);
+                  }}
+                  activeOpacity={0.85}
+                >
+                  <RNImage source={{ uri: fileForm.prescriptionImage }} style={styles.prescriptionImageThumb} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.prescriptionImageRemove} onPress={() => setFileForm((prev) => ({ ...prev, prescriptionImage: "" }))}>
+                  <X size={14} color={COLORS.white} />
+                </TouchableOpacity>
+              </View>
+            ) : null}
+            <View style={styles.prescriptionButtonsRow}>
+              <TouchableOpacity
+                style={[styles.prescriptionPickBtn, isFileImageUploading && { opacity: 0.6 }]}
+                onPress={() => takeFileImage([4, 3])}
+                disabled={isFileImageUploading}
+              >
+                {isFileImageUploading ? <ActivityIndicator size="small" color={COLORS.white} /> : <Camera size={18} color={COLORS.white} />}
+                <Text style={styles.prescriptionPickBtnText}>التقاط صورة</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.prescriptionPickBtn, { backgroundColor: COLORS.darkGray }, isFileImageUploading && { opacity: 0.6 }]}
+                onPress={() => pickFileImage([4, 3])}
+                disabled={isFileImageUploading}
+              >
+                <ImageIcon size={18} color={COLORS.white} />
+                <Text style={styles.prescriptionPickBtnText}>من المعرض</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+          <View style={styles.modalFooter}>
+            <Button title="إلغاء" onPress={() => setShowFileModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="حفظ" onPress={submitFile} type="primary" size="medium" style={styles.modalButton} />
+          </View>
+        </View>
+      </Modal>
 
       {/* Follow Up Modal - Now used for access requests */}
       <Modal visible={showFollowUpModal} animationType="slide" presentationStyle="pageSheet">
@@ -2461,7 +2853,7 @@ export default function PetDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: "#F5F7FA",
   },
   loadingText: {
     fontSize: 16,
@@ -2469,58 +2861,128 @@ const styles = StyleSheet.create({
     marginTop: 24,
     color: COLORS.darkGray,
   },
-  header: {
+  heroIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heroBanner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    padding: 16,
+    gap: 5,
+    backgroundColor: COLORS.error,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  heroBannerText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  petIdentityCard: {
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
+    borderBottomColor: "#EFEFEF",
   },
-  petImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  petInfo: {
-    flex: 1,
-    marginRight: 16,
-  },
-  petNameRow: {
+  petIdentityRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
+    alignItems: "flex-start",
+    gap: 14,
+  },
+  petAvatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: COLORS.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  petIdentityInfo: {
+    flex: 1,
   },
   petName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: COLORS.black,
+    marginBottom: 3,
   },
   editIcon: {
     padding: 4,
   },
   petType: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.darkGray,
     marginBottom: 12,
   },
-  petDetailsRow: {
+  heroChipsRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
   },
-  petDetailItem: {
+  heroChip: {
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     alignItems: "center",
+    backgroundColor: "#FAFBFC",
+    flexDirection: "row",
+    gap: 4,
   },
-  petDetailLabel: {
-    fontSize: 12,
+  heroChipLabel: {
+    fontSize: 10,
     color: COLORS.darkGray,
-    marginBottom: 4,
   },
-  petDetailValue: {
-    fontSize: 14,
+  heroChipValue: {
+    fontSize: 13,
     fontWeight: "600",
     color: COLORS.black,
+  },
+  clinicInfoCard: {
+    backgroundColor: COLORS.white,
+    marginHorizontal: 16,
+    marginVertical: 12,
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  petInfo: {},
+  petNameRow: {},
+  petDetailsRow: {},
+  petDetailItem: {},
+  petDetailLabel: {},
+  petDetailValue: {},
+  barcodeRow: {
+    alignItems: "center",
+    paddingVertical: 12,
+    backgroundColor: "#FAFBFC",
+    borderRadius: 10,
+    marginTop: 8,
+  },
+  barcodeThumbnail: {
+    width: 200,
+    height: 70,
+  },
+  barcodeTapHint: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    marginTop: 4,
   },
   neuteredBadge: {
     marginTop: 4,
@@ -2530,46 +2992,65 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#374151",
   },
+  tabsScrollWrapper: {
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EBEBEB",
+  },
   tabsContainer: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
   },
   tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#F0F2F5",
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
   tabText: {
     fontSize: 14,
     color: COLORS.darkGray,
+    fontWeight: "500",
   },
   activeTabText: {
-    color: COLORS.primary,
-    fontWeight: "600",
+    color: COLORS.white,
+    fontWeight: "700",
   },
   content: {
     padding: 16,
   },
   infoSection: {
-    marginBottom: 24,
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "bold",
     color: COLORS.black,
-    marginBottom: 16,
+    marginBottom: 14,
+    borderRightWidth: 3,
+    borderRightColor: COLORS.primary,
+    paddingRight: 10,
   },
   infoItem: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 12,
+    alignItems: "center",
+    paddingVertical: 13,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGray,
+    borderBottomColor: "#F3F4F6",
   },
   infoLabel: {
     fontSize: 16,
@@ -2615,21 +3096,33 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   emptyState: {
-    padding: 24,
+    padding: 32,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS.gray,
-    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E8ECF0",
+    borderStyle: "dashed",
+    gap: 8,
   },
   emptyStateText: {
-    fontSize: 16,
-    color: COLORS.darkGray,
+    fontSize: 15,
+    color: "#94A3B8",
+    textAlign: "center",
   },
   recordCard: {
-    backgroundColor: COLORS.gray,
-    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
+    elevation: 2,
   },
   completedReminderCard: {
     opacity: 0.7,
@@ -2660,20 +3153,24 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
   },
   recordItem: {
-    // flexDirection: "row",
-    // justifyContent: "space-between",
-    // alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 8,
+    gap: 8,
   },
   recordLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.darkGray,
+    fontWeight: "500",
+    minWidth: 80,
   },
   recordValue: {
-    fontSize: 14,
+    fontSize: 13,
     color: COLORS.black,
     flex: 1,
     textAlign: "left",
+    lineHeight: 18,
   },
   completedStatus: {
     color: COLORS.success,
@@ -2689,8 +3186,146 @@ const styles = StyleSheet.create({
   },
   clinicActions: {
     marginTop: 16,
-    alignItems: "center",
     width: "100%",
+  },
+  ownerContactRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 10,
+    flexWrap: "wrap",
+  },
+  ownerContactItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#F5F7FA",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  ownerContactIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#EEF2FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ownerContactLabel: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+  },
+  ownerContactValue: {
+    fontSize: 13,
+    color: COLORS.black,
+    fontWeight: "600",
+  },
+  clinicStatsRow: {
+    flexDirection: "row",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    marginTop: 12,
+    padding: 14,
+    justifyContent: "space-around",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#EEF2F7",
+  },
+  clinicStatItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  clinicStatValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: COLORS.primary,
+  },
+  clinicStatLabel: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    marginTop: 2,
+    textAlign: "center",
+  },
+  clinicStatDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: "#E0E0E0",
+  },
+  clinicTabsBar: {
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EBEBEB",
+    maxHeight: 72,
+  },
+  clinicTabsContent: {
+    flexDirection: "row",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  clinicIconTab: {
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    gap: 3,
+    borderRadius: 20,
+    backgroundColor: "#F0F2F5",
+  },
+  clinicIconTabActive: {
+    backgroundColor: COLORS.success + "20",
+  },
+  clinicIconTabText: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+  },
+  clinicIconTabTextActive: {
+    color: COLORS.success,
+    fontWeight: "700",
+  },
+  clinicActionButtons: {
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+  },
+  quickReviewBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#FF8C00",
+    paddingVertical: 11,
+    borderRadius: 10,
+  },
+  fullExamBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 11,
+    borderRadius: 10,
+  },
+  clinicActionBtnText: {
+    color: COLORS.white,
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+  recordTypeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  recordTypeText: {
+    fontSize: 11,
+    fontWeight: "bold",
   },
   chatActionsRow: {
     flexDirection: "row-reverse",
@@ -3268,14 +3903,21 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   clinicFollowUpCard: {
-    backgroundColor: COLORS.gray,
-    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     flexDirection: "row-reverse",
     justifyContent: "space-between",
     alignItems: "center",
     gap: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.primary,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 5,
+    elevation: 2,
   },
   clinicInfo: {
     flex: 1,

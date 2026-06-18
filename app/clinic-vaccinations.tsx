@@ -498,6 +498,9 @@ export default function ClinicVaccinations() {
   };
 
   // Rest of your existing component JSX remains the same...
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayVaccinations = vaccinations.filter((v: any) => v.scheduledDate === todayStr && v.status !== "cancelled");
+
   const filterButtons = [
     { key: "all", label: "الكل", count: vaccinations.length },
     { key: "scheduled", label: "مجدول", count: vaccinations.filter((v: any) => v.status === "scheduled").length },
@@ -532,22 +535,43 @@ export default function ClinicVaccinations() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Due Today Banner */}
+          {todayVaccinations.length > 0 && (
+            <View style={styles.todayBanner}>
+              <View style={styles.todayBannerLeft}>
+                <Syringe size={22} color={COLORS.white} />
+                <Text style={styles.todayBannerCount}>{todayVaccinations.length}</Text>
+              </View>
+              <View style={styles.todayBannerRight}>
+                <Text style={styles.todayBannerTitle}>تطعيمات اليوم</Text>
+                <Text style={styles.todayBannerSub}>
+                  {todayVaccinations.map((v: any) => v.petName).join(" · ")}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Stats Cards */}
           <View style={styles.statsContainer}>
+            <View style={[styles.statCard, { backgroundColor: "#FFF3E0" }]}>
+              <Syringe size={24} color="#FF9800" />
+              <Text style={[styles.statNumber, { color: "#FF9800" }]}>{todayVaccinations.length}</Text>
+              <Text style={styles.statLabel}>اليوم</Text>
+            </View>
             <View style={[styles.statCard, { backgroundColor: COLORS.primary + "20" }]}>
               <Syringe size={24} color={COLORS.primary} />
               <Text style={styles.statNumber}>{vaccinations.filter((v: any) => v.status === "scheduled").length}</Text>
-              <Text style={styles.statLabel}>تطعيمات مجدولة</Text>
+              <Text style={styles.statLabel}>مجدولة</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: COLORS.success + "20" }]}>
               <CheckCircle size={24} color={COLORS.success} />
               <Text style={styles.statNumber}>{vaccinations.filter((v: any) => v.status === "completed").length}</Text>
-              <Text style={styles.statLabel}>تطعيمات مكتملة</Text>
+              <Text style={styles.statLabel}>مكتملة</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: COLORS.error + "20" }]}>
               <AlertCircle size={24} color={COLORS.error} />
               <Text style={styles.statNumber}>{vaccinations.filter((v: any) => v.status === "overdue").length}</Text>
-              <Text style={styles.statLabel}>تطعيمات متأخرة</Text>
+              <Text style={styles.statLabel}>متأخرة</Text>
             </View>
           </View>
 
@@ -652,8 +676,39 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  todayBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF9800",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+  },
+  todayBannerLeft: {
+    alignItems: "center",
+    gap: 2,
+  },
+  todayBannerCount: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: COLORS.white,
+  },
+  todayBannerRight: {
+    flex: 1,
+  },
+  todayBannerTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: COLORS.white,
+  },
+  todayBannerSub: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.85)",
+    marginTop: 2,
+  },
   statsContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
     gap: 8,

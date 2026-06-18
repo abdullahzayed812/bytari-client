@@ -46,8 +46,10 @@ export default function PoultrySectionScreen() {
   });
 
   const trader = traderQuery.data?.trader;
-  const hasActiveTrader = trader?.status === "active";
-  const hasPendingTrader = trader?.status === "pending";
+  const traderEndDate = trader?.activationEndDate ? new Date(trader.activationEndDate as any) : null;
+  const isTraderExpired = traderEndDate ? traderEndDate.getTime() < Date.now() : true;
+  const hasActiveTrader = trader?.status === "active" && !isTraderExpired && !trader?.needsRenewal;
+  const hasPendingTrader = trader?.status === "pending" || !!trader?.reviewingRenewalRequest;
 
   const handleFarmOwner = () => router.push("/add-poultry-farm");
   const handleTrader = () => {

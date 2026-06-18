@@ -22,6 +22,13 @@ import {
   MessageCircle,
   ChevronDown,
   ChevronUp,
+  Calendar,
+  ClipboardList,
+  Zap,
+  UserCircle,
+  BarChart2,
+  Package,
+  UserCog,
 } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -69,8 +76,10 @@ export default function ClinicDashboard() {
   const [messageBody, setMessageBody] = useState("");
   const [messageImage, setMessageImage] = useState("");
   const [messageLinkUrl, setMessageLinkUrl] = useState("");
+  const [messageModalType, setMessageModalType] = useState<"followers" | "visitors">("followers");
 
-  const sendMessageMutation = useMutation(trpc.clinics.sendMessageToFollowers.mutationOptions());
+  const sendToFollowersMutation = useMutation(trpc.clinics.sendMessageToFollowers.mutationOptions());
+  const sendToVisitorsMutation = useMutation(trpc.clinics.sendMessageToVisitors.mutationOptions());
 
   const handleSendMessage = async () => {
     if (!messageTitle.trim() || !messageBody.trim()) {
@@ -78,14 +87,16 @@ export default function ClinicDashboard() {
       return;
     }
     try {
-      const result = await sendMessageMutation.mutateAsync({
+      const payload = {
         clinicId: Number(clinicId),
         title: messageTitle.trim(),
         message: messageBody.trim(),
         ...(messageImage ? { imageUrl: messageImage } : {}),
         ...(messageLinkUrl.trim() ? { linkUrl: messageLinkUrl.trim() } : {}),
-      });
-      showToast({ type: "success", message: `تم إرسال الرسالة إلى ${result.count} متابع` });
+      };
+      const result = messageModalType === "visitors" ? await sendToVisitorsMutation.mutateAsync(payload) : await sendToFollowersMutation.mutateAsync(payload);
+      const audienceLabel = messageModalType === "visitors" ? "مراجع" : "متابع";
+      showToast({ type: "success", message: `تم إرسال الرسالة إلى ${result.count} ${audienceLabel}` });
       setShowMessageModal(false);
       setMessageTitle("");
       setMessageBody("");
@@ -112,9 +123,11 @@ export default function ClinicDashboard() {
   });
   const chatUnreadCount = (unreadData as any)?.count ?? 0;
 
-  useFocusEffect(useCallback(() => {
-    refetchUnread();
-  }, [refetchUnread]));
+  useFocusEffect(
+    useCallback(() => {
+      refetchUnread();
+    }, [refetchUnread]),
+  );
 
   const { data: allPets, isLoading: isAllPetsLoading } = useQuery(trpc.pets.getAllPets.queryOptions({}));
 
@@ -242,7 +255,7 @@ export default function ClinicDashboard() {
       params: {
         petId: animal.id,
         clinicId: clinic.id,
-        clinicAccess: permissions?.canEditPets || access?.isOwner ? "true" : "false",
+        fromClinic: "true",
       },
     });
   };
@@ -429,78 +442,226 @@ export default function ClinicDashboard() {
               </View>
             </Modal>
           </View>
-          {/* Quick Actions */}
-          <View style={styles.actionsSection}>
-            <Text style={styles.sectionTitle}>الإجراءات السريعة</Text>
-            <View style={styles.actionsGrid}>
-              <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-followups", params: { clinicId: clinic?.id } })}>
-                <Heart size={20} color={COLORS.error} />
-                <Text style={styles.settingText}>المتابعات</Text>
+          {/* Today's Stats */}
+          <View style={styles.todayStatsSection}>
+            <Text style={styles.sectionTitle}>إحصائيات اليوم</Text>
+            <View style={styles.todayStatsGrid}>
+              <View style={[styles.todayStatCard, { backgroundColor: "#FFF3E0" }]}>
+                <Bell size={20} color={COLORS.warning} />
+                <Text style={[styles.todayStatNumber, { color: COLORS.warning }]}>{stats?.todayReminders ?? 0}</Text>
+                <Text style={styles.todayStatLabel}>تذكيرات اليوم</Text>
+              </View>
+              <View style={[styles.todayStatCard, { backgroundColor: "#E8F5E9" }]}>
+                <Syringe size={20} color={COLORS.success} />
+                <Text style={[styles.todayStatNumber, { color: COLORS.success }]}>{stats?.todayVaccinations ?? 0}</Text>
+                <Text style={styles.todayStatLabel}>تطعيمات اليوم</Text>
+              </View>
+              <View style={[styles.todayStatCard, { backgroundColor: "#E3F2FD" }]}>
+                <Calendar size={20} color={COLORS.primary} />
+                <Text style={[styles.todayStatNumber, { color: COLORS.primary }]}>{stats?.todayAppointments ?? 0}</Text>
+                <Text style={styles.todayStatLabel}>مواعيد اليوم</Text>
+              </View>
+              <View style={[styles.todayStatCard, { backgroundColor: "#FCE4EC" }]}>
+                <UserCircle size={20} color={COLORS.error} />
+                <Text style={[styles.todayStatNumber, { color: COLORS.error }]}>{stats?.todayVisitors ?? 0}</Text>
+                <Text style={styles.todayStatLabel}>المراجعين اليوم</Text>
+              </View>
+              <View style={[styles.todayStatCard, { backgroundColor: "#F3E5F5" }]}>
+                <Users size={20} color="#9C27B0" />
+                <Text style={[styles.todayStatNumber, { color: "#9C27B0" }]}>{stats?.totalDistinctAnimals ?? 0}</Text>
+                <Text style={styles.todayStatLabel}>إجمالي الحيوانات</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Today's Tasks Panel */}
+          <View style={styles.todayTasksSection}>
+            <View style={styles.todayTasksHeader}>
+              <Text style={styles.sectionTitle}>مهام اليوم</Text>
+              <TouchableOpacity onPress={() => router.push({ pathname: "/clinic-appointments", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}>
+                <Text style={styles.viewAllText}>عرض الكل</Text>
               </TouchableOpacity>
-              {/* <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/clinic-today-cases")}>
-                <ClipboardList size={24} color={COLORS.primary} />
-                <Text style={styles.actionText}>حالات اليوم</Text>
-              </TouchableOpacity> */}
-              <TouchableOpacity style={styles.actionCard} onPress={() => handleAllAnimals()}>
-                <Users size={24} color={COLORS.success} />
-                <Text style={styles.actionText}>جميع الحيوانات</Text>
-              </TouchableOpacity>
+            </View>
+            <View style={styles.todayTasksList}>
               <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() =>
-                  router.push({
-                    pathname: "/clinic-reminders",
-                    params: {
-                      clinicId: clinic.id,
-                      clinicName: clinic?.name,
-                    },
-                  })
-                }
+                style={styles.todayTaskRow}
+                onPress={() => router.push({ pathname: "/clinic-appointments", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}
               >
-                <Bell size={24} color={COLORS.warning} />
-                <Text style={styles.actionText}>تذكيرات الحيوانات</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() =>
-                  router.push({
-                    pathname: "/clinic-vaccinations",
-                    params: {
-                      clinicId: clinic.id,
-                      clinicName: clinic?.name,
-                    },
-                  })
-                }
-              >
-                <Syringe size={24} color={COLORS.error} />
-                <Text style={styles.actionText}>التطعيمات</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionCard} onPress={() => router.push({ pathname: "/clinic-chats", params: { clinicId: clinic?.id } })}>
-                <View style={{ position: "relative" }}>
-                  <MessageCircle size={24} color={COLORS.primary} />
-                  {chatUnreadCount > 0 && (
-                    <View style={styles.unreadBadge}>
-                      <Text style={styles.unreadBadgeText}>{chatUnreadCount > 99 ? "99+" : chatUnreadCount}</Text>
-                    </View>
-                  )}
+                <View style={[styles.todayTaskDot, { backgroundColor: COLORS.primary }]} />
+                <Text style={styles.todayTaskLabel}>مواعيد اليوم</Text>
+                <View style={styles.todayTaskRight}>
+                  <View style={[styles.todayTaskBadge, { backgroundColor: (stats?.todayAppointments ?? 0) > 0 ? "#E3F2FD" : COLORS.lightGray }]}>
+                    <Text style={[styles.todayTaskBadgeText, { color: (stats?.todayAppointments ?? 0) > 0 ? COLORS.primary : COLORS.darkGray }]}>
+                      {stats?.todayAppointments ?? 0}
+                    </Text>
+                  </View>
+                  <ChevronDown size={16} color={COLORS.darkGray} style={{ transform: [{ rotate: "-90deg" }] }} />
                 </View>
-                <Text style={styles.actionText}>المحادثات</Text>
+              </TouchableOpacity>
+
+              <View style={styles.todayTaskDivider} />
+
+              <TouchableOpacity
+                style={styles.todayTaskRow}
+                onPress={() => router.push({ pathname: "/clinic-vaccinations", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}
+              >
+                <View style={[styles.todayTaskDot, { backgroundColor: COLORS.success }]} />
+                <Text style={styles.todayTaskLabel}>تطعيمات اليوم</Text>
+                <View style={styles.todayTaskRight}>
+                  <View style={[styles.todayTaskBadge, { backgroundColor: (stats?.todayVaccinations ?? 0) > 0 ? "#E8F5E9" : COLORS.lightGray }]}>
+                    <Text style={[styles.todayTaskBadgeText, { color: (stats?.todayVaccinations ?? 0) > 0 ? COLORS.success : COLORS.darkGray }]}>
+                      {stats?.todayVaccinations ?? 0}
+                    </Text>
+                  </View>
+                  <ChevronDown size={16} color={COLORS.darkGray} style={{ transform: [{ rotate: "-90deg" }] }} />
+                </View>
+              </TouchableOpacity>
+
+              <View style={styles.todayTaskDivider} />
+
+              <TouchableOpacity
+                style={styles.todayTaskRow}
+                onPress={() => router.push({ pathname: "/clinic-reminders", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}
+              >
+                <View style={[styles.todayTaskDot, { backgroundColor: COLORS.warning }]} />
+                <Text style={styles.todayTaskLabel}>تذكيرات اليوم</Text>
+                <View style={styles.todayTaskRight}>
+                  <View style={[styles.todayTaskBadge, { backgroundColor: (stats?.todayReminders ?? 0) > 0 ? "#FFF3E0" : COLORS.lightGray }]}>
+                    <Text style={[styles.todayTaskBadgeText, { color: (stats?.todayReminders ?? 0) > 0 ? COLORS.warning : COLORS.darkGray }]}>
+                      {stats?.todayReminders ?? 0}
+                    </Text>
+                  </View>
+                  <ChevronDown size={16} color={COLORS.darkGray} style={{ transform: [{ rotate: "-90deg" }] }} />
+                </View>
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Settings Section */}
+          {/* Quick Access Grid */}
+          <View style={styles.carouselSection}>
+            <Text style={styles.sectionTitle}>الوصول السريع</Text>
+            <View style={styles.quickGrid}>
+              <TouchableOpacity
+                style={[styles.quickCard, { backgroundColor: "#E3F2FD" }]}
+                onPress={() => router.push({ pathname: "/clinic-quick-review", params: { clinicId: clinic?.id } })}
+              >
+                <Zap size={30} color={COLORS.primary} />
+                <Text style={styles.quickLabel}>مراجعة سريعة</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickCard, { backgroundColor: "#E8F5E9" }]}
+                onPress={() => router.push({ pathname: "/clinic-full-exam", params: { clinicId: clinic?.id } })}
+              >
+                <ClipboardList size={30} color={COLORS.success} />
+                <Text style={styles.quickLabel}>فحص كامل</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.quickCard, { backgroundColor: "#FFF8E1" }]} onPress={handleAllAnimals}>
+                <Users size={30} color="#FF9800" />
+                <Text style={styles.quickLabel}>جميع الحيوانات</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickCard, { backgroundColor: "#FCE4EC" }]}
+                onPress={() => router.push({ pathname: "/clinic-appointments", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}
+              >
+                <View style={{ position: "relative" }}>
+                  <Calendar size={30} color={COLORS.error} />
+                  {(stats?.todayAppointments ?? 0) > 0 && (
+                    <View style={styles.carouselBadge}>
+                      <Text style={styles.carouselBadgeText}>{stats?.todayAppointments}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.quickLabel}>المواعيد</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickCard, { backgroundColor: "#E8F5E9" }]}
+                onPress={() => router.push({ pathname: "/clinic-vaccinations", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}
+              >
+                <View style={{ position: "relative" }}>
+                  <Syringe size={30} color={COLORS.success} />
+                  {(stats?.todayVaccinations ?? 0) > 0 && (
+                    <View style={styles.carouselBadge}>
+                      <Text style={styles.carouselBadgeText}>{stats?.todayVaccinations}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.quickLabel}>التطعيمات</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.quickCard, { backgroundColor: "#FFF3E0" }]}
+                onPress={() => router.push({ pathname: "/clinic-reminders", params: { clinicId: clinic?.id, clinicName: clinic?.name } })}
+              >
+                <View style={{ position: "relative" }}>
+                  <Bell size={30} color={COLORS.warning} />
+                  {(stats?.todayReminders ?? 0) > 0 && (
+                    <View style={styles.carouselBadge}>
+                      <Text style={styles.carouselBadgeText}>{stats?.todayReminders}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.quickLabel}>التذكيرات</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Quick Settings (owner only) */}
           {access?.isOwner ? (
             <View style={styles.settingsSection}>
-              <Text style={styles.sectionTitle}>إعدادات العيادة</Text>
+              <Text style={styles.sectionTitle}>الإعدادات السريعة</Text>
               <View style={styles.settingsGrid}>
-                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}>
-                  <Settings size={20} color={COLORS.primary} />
-                  <Text style={styles.settingText}>إعدادات عامة</Text>
+                <TouchableOpacity
+                  style={styles.settingCard}
+                  onPress={() => router.push({ pathname: "/clinic-quick-review-settings", params: { clinicId: clinic?.id } })}
+                >
+                  <Zap size={20} color={COLORS.primary} />
+                  <Text style={styles.settingText}>إعدادات المراجعة السريعة</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.settingCard} onPress={() => setShowMessageModal(true)}>
+                <TouchableOpacity
+                  style={styles.settingCard}
+                  onPress={() => {
+                    setMessageModalType("visitors");
+                    setShowMessageModal(true);
+                  }}
+                >
+                  <Send size={20} color="#FF9800" />
+                  <Text style={styles.settingText}>إرسال رسالة للمراجعين</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.settingCard}
+                  onPress={() => {
+                    setMessageModalType("followers");
+                    setShowMessageModal(true);
+                  }}
+                >
                   <Send size={20} color={COLORS.primary} />
                   <Text style={styles.settingText}>إرسال رسالة للمتابعين</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-chats", params: { clinicId: clinic?.id } })}>
+                  <View style={{ position: "relative" }}>
+                    <MessageCircle size={20} color={COLORS.primary} />
+                    {chatUnreadCount > 0 && (
+                      <View style={styles.unreadBadge}>
+                        <Text style={styles.unreadBadgeText}>{chatUnreadCount > 99 ? "99+" : chatUnreadCount}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.settingText}>المحادثات</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingCard} onPress={() => Alert.alert("إدارة المخزون", "هذه الميزة قيد التطوير وستكون متاحة قريباً")}>
+                  <Package size={20} color={COLORS.darkGray} />
+                  <Text style={styles.settingText}>إدارة المخزون</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-staff", params: { clinicId: clinic?.id } })}>
+                  <UserCog size={20} color={COLORS.success} />
+                  <Text style={styles.settingText}>إدارة المستخدمين والأطباء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingCard} onPress={() => Alert.alert("التقارير والإحصائيات", "هذه الميزة قيد التطوير وستكون متاحة قريباً")}>
+                  <BarChart2 size={20} color={COLORS.warning} />
+                  <Text style={styles.settingText}>التقارير والإحصائيات</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}>
+                  <Settings size={20} color={COLORS.primary} />
+                  <Text style={styles.settingText}>إعدادات العيادة</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -510,7 +671,7 @@ export default function ClinicDashboard() {
         <Modal visible={showMessageModal} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>إرسال رسالة للمتابعين</Text>
+              <Text style={styles.modalTitle}>{messageModalType === "visitors" ? "إرسال رسالة للمراجعين" : "إرسال رسالة للمتابعين"}</Text>
               <TextInput style={styles.modalInput} placeholder="عنوان الرسالة" value={messageTitle} onChangeText={setMessageTitle} textAlign="right" />
               <TextInput
                 style={[styles.modalInput, { height: 100, textAlignVertical: "top" }]}
@@ -534,9 +695,13 @@ export default function ClinicDashboard() {
                 <TouchableOpacity
                   style={[styles.modalButton, { backgroundColor: COLORS.primary }]}
                   onPress={handleSendMessage}
-                  disabled={sendMessageMutation.isPending}
+                  disabled={sendToFollowersMutation.isPending || sendToVisitorsMutation.isPending}
                 >
-                  {sendMessageMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.modalButtonText}>إرسال</Text>}
+                  {sendToFollowersMutation.isPending || sendToVisitorsMutation.isPending ? (
+                    <ActivityIndicator color={COLORS.white} />
+                  ) : (
+                    <Text style={styles.modalButtonText}>إرسال</Text>
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.modalButton, { backgroundColor: COLORS.darkGray }]} onPress={() => setShowMessageModal(false)}>
                   <Text style={styles.modalButtonText}>إلغاء</Text>
@@ -799,14 +964,148 @@ const styles = StyleSheet.create({
     color: COLORS.darkGray,
     textAlign: "center",
   },
-  actionsSection: {
+  todayStatsSection: {
     marginBottom: 24,
+  },
+  todayStatsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  todayStatCard: {
+    width: "30%",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    marginBottom: 4,
+    minHeight: 88,
+    justifyContent: "center",
+  },
+  todayStatNumber: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  todayStatLabel: {
+    fontSize: 10,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  todayTasksSection: {
+    marginBottom: 24,
+  },
+  todayTasksHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: "600",
+  },
+  todayTasksList: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  todayTaskRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    gap: 12,
+  },
+  todayTaskDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  todayTaskLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.black,
+    fontWeight: "500",
+  },
+  todayTaskRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  todayTaskBadge: {
+    minWidth: 28,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  todayTaskBadgeText: {
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+  todayTaskDivider: {
+    height: 1,
+    backgroundColor: COLORS.lightGray,
+  },
+  carouselSection: {
+    marginBottom: 24,
+  },
+  quickGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  quickCard: {
+    width: "30.5%",
+    padding: 8,
+    // aspectRatio: 1,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quickLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.black,
+    marginTop: 8,
+    textAlign: "center",
+    paddingHorizontal: 4,
+  },
+  carouselBadge: {
+    position: "absolute",
+    top: -6,
+    right: -6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 4,
+  },
+  carouselBadgeText: {
+    color: COLORS.white,
+    fontSize: 9,
+    fontWeight: "bold",
   },
   settingsSection: {
     marginBottom: 24,
   },
   settingsGrid: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
@@ -830,31 +1129,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.black,
     marginTop: 6,
-    textAlign: "center",
-  },
-  actionsGrid: {
-    flexDirection: "row-reverse",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  actionCard: {
-    width: "48%",
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 12,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.black,
-    marginTop: 8,
     textAlign: "center",
   },
   unreadBadge: {

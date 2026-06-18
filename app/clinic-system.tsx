@@ -96,21 +96,21 @@ export default function ClinicSystemScreen() {
   const { hasAdminAccess, isSuperAdmin } = useApp();
   const [activeTab, setActiveTab] = useState<"overview" | "register" | "subscription">("overview");
   const [registrationData, setRegistrationData] = useState<ClinicRegistration>({
-    name: "",
-    description: "",
-    address: "",
-    phone: "",
-    email: "",
-    workingHours: "",
-    services: "",
-    licenseNumber: "",
-    licenseImages: [],
-    images: [],
-    doctors: "",
-    facebook: "",
-    instagram: "",
-    whatsapp: "",
-    website: "",
+    name: "Healthy Life Clinic",
+    description: "A modern healthcare clinic providing general medicine, pediatrics, and dental services.",
+    address: "123 Main Street, Alexandria, Egypt",
+    phone: "+20 10 1234 5678",
+    email: "info@healthylifeclinic.com",
+    workingHours: "Saturday - Thursday, 9:00 AM - 9:00 PM",
+    services: "General Medicine, Pediatrics, Dentistry, Laboratory",
+    licenseNumber: "CLN-2025-001",
+    licenseImages: [""],
+    images: [""],
+    doctors: "15",
+    facebook: "https://facebook.com/healthylifeclinic",
+    instagram: "https://instagram.com/healthylifeclinic",
+    whatsapp: "+201012345678",
+    website: "https://healthylifeclinic.com",
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);

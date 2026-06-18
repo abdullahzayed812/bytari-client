@@ -517,6 +517,9 @@ export default function ClinicReminders() {
     );
   };
 
+  const todayStr = new Date().toISOString().split("T")[0];
+  const todayReminders = reminders.filter((r: any) => r.reminderDate === todayStr && r.status !== "cancelled" && r.status !== "completed");
+
   const filterButtons = [
     { key: "all", label: "الكل", count: reminders.length },
     { key: "pending", label: "معلق", count: reminders.filter((r: any) => r.status === "pending").length },
@@ -551,22 +554,43 @@ export default function ClinicReminders() {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Due Today Banner */}
+          {todayReminders.length > 0 && (
+            <View style={styles.todayBanner}>
+              <View style={styles.todayBannerLeft}>
+                <Bell size={22} color={COLORS.white} />
+                <Text style={styles.todayBannerCount}>{todayReminders.length}</Text>
+              </View>
+              <View style={styles.todayBannerRight}>
+                <Text style={styles.todayBannerTitle}>تذكيرات اليوم</Text>
+                <Text style={styles.todayBannerSub}>
+                  {todayReminders.map((r: any) => r.petName || r.title).join(" · ")}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Stats Cards */}
           <View style={styles.statsContainer}>
+            <View style={[styles.statCard, { backgroundColor: "#FFF3E0" }]}>
+              <Bell size={24} color="#FF9800" />
+              <Text style={[styles.statNumber, { color: "#FF9800" }]}>{todayReminders.length}</Text>
+              <Text style={styles.statLabel}>اليوم</Text>
+            </View>
             <View style={[styles.statCard, { backgroundColor: COLORS.warning + "20" }]}>
               <Bell size={24} color={COLORS.warning} />
               <Text style={styles.statNumber}>{reminders.filter((r: any) => r.status === "pending").length}</Text>
-              <Text style={styles.statLabel}>تذكيرات معلقة</Text>
+              <Text style={styles.statLabel}>معلقة</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: COLORS.error + "20" }]}>
               <AlertTriangle size={24} color={COLORS.error} />
               <Text style={styles.statNumber}>{reminders.filter((r: any) => r.status === "overdue").length}</Text>
-              <Text style={styles.statLabel}>تذكيرات متأخرة</Text>
+              <Text style={styles.statLabel}>متأخرة</Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: COLORS.success + "20" }]}>
               <CheckCircle size={24} color={COLORS.success} />
               <Text style={styles.statNumber}>{reminders.filter((r: any) => r.status === "completed").length}</Text>
-              <Text style={styles.statLabel}>تذكيرات مكتملة</Text>
+              <Text style={styles.statLabel}>مكتملة</Text>
             </View>
           </View>
 
@@ -692,8 +716,39 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
+  todayBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.warning,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+  },
+  todayBannerLeft: {
+    alignItems: "center",
+    gap: 2,
+  },
+  todayBannerCount: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: COLORS.white,
+  },
+  todayBannerRight: {
+    flex: 1,
+  },
+  todayBannerTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: COLORS.white,
+  },
+  todayBannerSub: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.85)",
+    marginTop: 2,
+  },
   statsContainer: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
     gap: 8,

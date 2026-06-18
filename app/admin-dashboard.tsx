@@ -212,6 +212,7 @@ export default function AdminDashboard() {
       students: "الطلاب",
       clinics: "أصحاب العيادات",
       stores: "أصحاب المذاخر",
+      poultry: "قسم الدواجن",
       poultry_owners: "أصحاب الدواجن",
       poultry_vets: "أطباء الدواجن",
       union_officials: "مسؤولين النقابة",
@@ -1144,6 +1145,7 @@ export default function AdminDashboard() {
                   { key: "users", label: "أصحاب الحيوانات" },
                   { key: "vets", label: "الأطباء" },
                   { key: "students", label: "الطلاب" },
+                  { key: "poultry", label: "قسم الدواجن" },
                   { key: "multiple", label: "فئات متعددة" },
                 ].map((audience) => (
                   <TouchableOpacity
@@ -1174,7 +1176,7 @@ export default function AdminDashboard() {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>اختر الفئات *</Text>
                 <View style={styles.categoriesContainer}>
-                  {["users", "vets", "students", "clinics", "stores"].map((category) => (
+                  {["users", "vets", "students", "clinics", "stores", "poultry"].map((category) => (
                     <TouchableOpacity
                       key={category}
                       style={styles.categoryItem}

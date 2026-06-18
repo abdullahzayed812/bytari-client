@@ -1,13 +1,14 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Linking, Alert, ActivityIndicator, Platform, Share } from "react-native";
-import React from "react";
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Linking, Alert, ActivityIndicator, Platform, Share, Modal, TextInput } from "react-native";
+import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, MapPin, Phone, Clock, Star, Navigation, MessageSquare, Earth, Facebook, Instagram, Bell, BellOff, Share2 } from "lucide-react-native";
+import { ArrowLeft, MapPin, Phone, Clock, Star, Navigation, MessageSquare, Earth, Facebook, Instagram, Bell, BellOff, Share2, Calendar, X } from "lucide-react-native";
 import Button from "../components/Button";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const { width } = Dimensions.get("window");
 
@@ -18,6 +19,42 @@ export default function ClinicProfileScreen() {
   const queryClient = useQueryClient();
   const clinicId = parseInt(id as string);
   const userId = Number(user?.id);
+
+  // Book appointment state
+  const [showBookModal, setShowBookModal] = useState(false);
+  const [bookDate, setBookDate] = useState(new Date(Date.now() + 24 * 60 * 60 * 1000));
+  const [showBookDatePicker, setShowBookDatePicker] = useState(false);
+  const [bookNotes, setBookNotes] = useState("");
+  const [bookType, setBookType] = useState("مراجعة");
+
+  const requestAppointmentMutation = useMutation(trpc.clinics.appointments.requestAppointment.mutationOptions());
+
+  const { data: myPetsData } = useQuery({
+    ...trpc.pets.getUserPets.queryOptions({ userId }),
+    enabled: !!user && showBookModal,
+  });
+  const [selectedPetId, setSelectedPetId] = useState<string>("");
+
+  const handleBookAppointment = async () => {
+    if (!user) { showToast({ type: "error", message: "يجب تسجيل الدخول أولاً" }); return; }
+    if (!selectedPetId) { showToast({ type: "error", message: "يرجى اختيار الحيوان" }); return; }
+    try {
+      await requestAppointmentMutation.mutateAsync({
+        clinicId,
+        petId: selectedPetId,
+        ownerId: userId,
+        appointmentDate: bookDate.toISOString(),
+        type: bookType,
+        notes: bookNotes.trim() || undefined,
+      });
+      showToast({ type: "success", message: "تم إرسال طلب الموعد للعيادة" });
+      setShowBookModal(false);
+      setBookNotes("");
+      setSelectedPetId("");
+    } catch (e: any) {
+      showToast({ type: "error", message: e.message || "حدث خطأ أثناء إرسال الطلب" });
+    }
+  };
 
   // Follow queries
   const { data: isFollowingData } = useQuery(trpc.clinics.isFollowing.queryOptions({ clinicId, userId }, { enabled: !!user }));
@@ -378,6 +415,17 @@ export default function ClinicProfileScreen() {
             />
           </View>
 
+          {/* Book Appointment Button (pet owners only) */}
+          {user && (
+            <TouchableOpacity
+              style={styles.bookButton}
+              onPress={() => setShowBookModal(true)}
+            >
+              <Calendar size={20} color={COLORS.white} />
+              <Text style={styles.bookButtonText}>حجز موعد</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Rating Button */}
           <TouchableOpacity
             style={styles.ratingButton}
@@ -388,6 +436,81 @@ export default function ClinicProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Book Appointment Modal */}
+      <Modal visible={showBookModal} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>حجز موعد — {clinic?.name}</Text>
+            <TouchableOpacity onPress={() => setShowBookModal(false)}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.modalBody}>
+            <Text style={styles.modalLabel}>اختر حيوانك</Text>
+            {(myPetsData as any)?.pets?.length > 0 ? (
+              (myPetsData as any).pets.map((p: any) => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[styles.petOption, selectedPetId === p.id && styles.petOptionSelected]}
+                  onPress={() => setSelectedPetId(p.id)}
+                >
+                  <Text style={[styles.petOptionText, selectedPetId === p.id && { color: COLORS.white }]}>{p.name} ({p.type})</Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={{ color: COLORS.darkGray, marginBottom: 12 }}>لا توجد حيوانات مسجلة</Text>
+            )}
+
+            <Text style={styles.modalLabel}>نوع الزيارة</Text>
+            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+              {["مراجعة", "تطعيم", "فحص", "جراحة"].map((t) => (
+                <TouchableOpacity
+                  key={t}
+                  style={[styles.typeChip, bookType === t && styles.typeChipActive]}
+                  onPress={() => setBookType(t)}
+                >
+                  <Text style={[styles.typeChipText, bookType === t && styles.typeChipTextActive]}>{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.modalLabel}>التاريخ والوقت المقترح</Text>
+            <TouchableOpacity style={styles.datePickerBtn} onPress={() => setShowBookDatePicker(true)}>
+              <Calendar size={16} color={COLORS.primary} />
+              <Text style={styles.datePickerBtnText}>{bookDate.toLocaleString("ar-EG")}</Text>
+            </TouchableOpacity>
+            {showBookDatePicker && (
+              <DateTimePicker
+                value={bookDate}
+                mode="datetime"
+                onChange={(_, d) => { setShowBookDatePicker(false); if (d) setBookDate(d); }}
+                minimumDate={new Date()}
+              />
+            )}
+
+            <Text style={styles.modalLabel}>ملاحظة (اختياري)</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="أي تفاصيل إضافية للعيادة..."
+              value={bookNotes}
+              onChangeText={setBookNotes}
+              multiline
+              numberOfLines={3}
+            />
+          </ScrollView>
+          <View style={styles.modalFooter}>
+            <Button title="إلغاء" onPress={() => setShowBookModal(false)} type="outline" size="medium" style={{ flex: 1 }} />
+            <Button
+              title="إرسال الطلب"
+              onPress={handleBookAppointment}
+              type="primary"
+              size="medium"
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -756,5 +879,76 @@ const styles = StyleSheet.create({
   },
   unfollowButton: {
     borderColor: COLORS.error,
+  },
+  bookButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: COLORS.success,
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginBottom: 16,
+  },
+  bookButtonText: { color: COLORS.white, fontSize: 16, fontWeight: "bold" },
+  modalContainer: { flex: 1, backgroundColor: COLORS.white },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  modalTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.black },
+  modalBody: { flex: 1, padding: 16 },
+  modalLabel: { fontSize: 13, fontWeight: "600", color: COLORS.black, marginTop: 12, marginBottom: 6 },
+  petOption: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  petOptionSelected: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  petOptionText: { fontSize: 14, color: COLORS.black },
+  typeChip: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  typeChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  typeChipText: { fontSize: 13, color: COLORS.darkGray },
+  typeChipTextActive: { color: COLORS.white, fontWeight: "bold" },
+  datePickerBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 4,
+  },
+  datePickerBtnText: { fontSize: 14, color: COLORS.primary },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: COLORS.black,
+    marginBottom: 12,
+    textAlignVertical: "top",
+  },
+  modalFooter: {
+    flexDirection: "row",
+    gap: 10,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
   },
 });

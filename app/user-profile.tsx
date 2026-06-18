@@ -54,7 +54,7 @@ export default function UserProfileScreen() {
         name: userData.name || "N/A",
         email: userData.email || "N/A",
         phone: userData.phone || null,
-        location: userData.province || t("common.unknown"),
+        location: [userData.country, userData.province].filter(Boolean).join(" - ") || t("common.unknown"),
         joinDate: new Date(userData.createdAt).toLocaleDateString("ar-SA"),
         profession:
           userData.userType === "vet" ? t("auth.vetDoctor") : userData.userType === "admin" ? t("userProfile.supervisor") : t("userProfile.regularUser"),
