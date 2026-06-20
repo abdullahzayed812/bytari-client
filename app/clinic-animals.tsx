@@ -11,47 +11,56 @@ const PAGE_SIZE = 20;
 
 const FILTER_CHIPS = [
   { key: "all", label: "الكل" },
-  { key: "vaccines", label: "لقاحات" },
   { key: "treatments", label: "علاجات" },
+  { key: "vaccines", label: "لقاحات" },
   { key: "reminders", label: "تذكيرات" },
 ] as const;
 
-const STATUS_COLORS: Record<string, string> = {
-  مريض: COLORS.error,
-  متعافي: COLORS.success,
-  قريب: COLORS.warning,
-  متابع: COLORS.primary,
-};
+type FilterKey = (typeof FILTER_CHIPS)[number]["key"];
 
 export default function ClinicAnimals() {
   const router = useRouter();
   const { clinicId, clinicName } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<FilterKey>("all");
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isFetching } = useQuery({
-    ...trpc.pets.getAllPets.queryOptions({
+    ...trpc.clinics.getLatestPets.queryOptions({
+      clinicId: Number(clinicId),
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
     }),
+    enabled: !!clinicId,
   });
 
   const allPets = data?.pets ?? [];
 
   const filteredData = useMemo(() => {
     return allPets.filter((pet: any) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        pet.id?.toLowerCase().includes(q) ||
-        pet.name?.toLowerCase().includes(q) ||
-        pet.ownerName?.toLowerCase().includes(q) ||
-        pet.type?.toLowerCase().includes(q) ||
-        pet.breed?.toLowerCase().includes(q)
-      );
+      const matchesSearch = (() => {
+        if (!searchQuery) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          pet.id?.toLowerCase().includes(q) ||
+          pet.name?.toLowerCase().includes(q) ||
+          pet.ownerName?.toLowerCase().includes(q) ||
+          pet.type?.toLowerCase().includes(q) ||
+          pet.breed?.toLowerCase().includes(q)
+        );
+      })();
+
+      const matchesFilter = (() => {
+        if (filterStatus === "all") return true;
+        if (filterStatus === "treatments") return !!pet.hasMedical;
+        if (filterStatus === "vaccines") return !!pet.hasVaccination;
+        if (filterStatus === "reminders") return !!pet.hasReminder;
+        return true;
+      })();
+
+      return matchesSearch && matchesFilter;
     });
-  }, [allPets, searchQuery]);
+  }, [allPets, searchQuery, filterStatus]);
 
   const handleAnimalPress = (pet: any) => {
     router.push({
@@ -102,7 +111,7 @@ export default function ClinicAnimals() {
         <View style={styles.petInfo}>
           <View style={styles.petNameRow}>
             <Text style={styles.petName}>{pet.name}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[pet.status ?? ""] ?? COLORS.darkGray }]}>
+            <View style={[styles.statusBadge, { backgroundColor: pet.hasMedical ? COLORS.warning : pet.hasVaccination ? COLORS.success : COLORS.primary }]}>
               <Text style={styles.statusText}>{pet.status ?? "مسجل"}</Text>
             </View>
           </View>
@@ -120,9 +129,31 @@ export default function ClinicAnimals() {
               <Text style={styles.ownerPhone}>{pet.ownerPhone}</Text>
             </View>
           )}
-          {pet.createdAt && (
-            <Text style={styles.dateAdded}>تاريخ التسجيل: {formatDate(pet.createdAt)}</Text>
+          {pet.lastVisit && (
+            <Text style={styles.dateAdded}>آخر زيارة: {pet.lastVisit}</Text>
           )}
+
+          {/* Activity badges */}
+          <View style={styles.activityRow}>
+            {pet.hasMedical && (
+              <View style={[styles.activityBadge, { backgroundColor: "#FCE4EC" }]}>
+                <Stethoscope size={11} color={COLORS.error} />
+                <Text style={[styles.activityBadgeText, { color: COLORS.error }]}>علاج</Text>
+              </View>
+            )}
+            {pet.hasVaccination && (
+              <View style={[styles.activityBadge, { backgroundColor: "#E8F5E9" }]}>
+                <Syringe size={11} color={COLORS.success} />
+                <Text style={[styles.activityBadgeText, { color: COLORS.success }]}>لقاح</Text>
+              </View>
+            )}
+            {pet.hasReminder && (
+              <View style={[styles.activityBadge, { backgroundColor: "#FFF3E0" }]}>
+                <Bell size={11} color={COLORS.warning} />
+                <Text style={[styles.activityBadgeText, { color: COLORS.warning }]}>تذكير</Text>
+              </View>
+            )}
+          </View>
 
           {/* Action chips */}
           <View style={styles.actionRow}>
@@ -163,7 +194,7 @@ export default function ClinicAnimals() {
             <ArrowLeft size={24} color={COLORS.black} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <Text style={styles.headerTitle}>جميع الحيوانات</Text>
+            <Text style={styles.headerTitle}>حيوانات العيادة</Text>
             {clinicName ? <Text style={styles.clinicNameText}>{clinicName}</Text> : null}
           </View>
           <TouchableOpacity
@@ -183,7 +214,7 @@ export default function ClinicAnimals() {
               placeholder="ابحث عن اسم الحيوان، المالك، النوع..."
               placeholderTextColor={COLORS.darkGray}
               value={searchQuery}
-              onChangeText={setSearchQuery}
+              onChangeText={(v) => { setSearchQuery(v); setPage(0); }}
             />
           </View>
 
@@ -193,7 +224,7 @@ export default function ClinicAnimals() {
               <TouchableOpacity
                 key={chip.key}
                 style={[styles.filterChip, filterStatus === chip.key && styles.filterChipActive]}
-                onPress={() => setFilterStatus(chip.key)}
+                onPress={() => { setFilterStatus(chip.key); setPage(0); }}
               >
                 <Text style={[styles.filterChipText, filterStatus === chip.key && styles.filterChipTextActive]}>
                   {chip.label}
@@ -217,7 +248,7 @@ export default function ClinicAnimals() {
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={
               <Text style={styles.resultsCount}>
-                {filteredData.length} حيوان{searchQuery ? " (نتائج البحث)" : ""}
+                {filteredData.length} حيوان{searchQuery || filterStatus !== "all" ? " (مفلترة)" : ""}
               </Text>
             }
             ListFooterComponent={
@@ -240,7 +271,9 @@ export default function ClinicAnimals() {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>لا توجد نتائج</Text>
+                <Text style={styles.emptyText}>
+                  {searchQuery || filterStatus !== "all" ? "لا توجد نتائج مطابقة" : "لم تتم إضافة أي حيوانات بعد"}
+                </Text>
               </View>
             }
           />
@@ -329,8 +362,18 @@ const styles = StyleSheet.create({
   ownerRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 2 },
   ownerName: { fontSize: 12, color: COLORS.darkGray },
   ownerPhone: { fontSize: 12, color: COLORS.primary },
-  dateAdded: { fontSize: 11, color: COLORS.darkGray, marginTop: 2, marginBottom: 6 },
-  actionRow: { flexDirection: "row", gap: 6, marginTop: 4 },
+  dateAdded: { fontSize: 11, color: COLORS.darkGray, marginTop: 2, marginBottom: 4 },
+  activityRow: { flexDirection: "row", gap: 4, marginBottom: 6 },
+  activityBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  activityBadgeText: { fontSize: 10, fontWeight: "600" },
+  actionRow: { flexDirection: "row", gap: 6 },
   actionChip: {
     flexDirection: "row",
     alignItems: "center",

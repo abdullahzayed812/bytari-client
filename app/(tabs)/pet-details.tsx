@@ -168,11 +168,7 @@ export default function PetDetailsScreen() {
 
   const [activeTab, setActiveTab] = useState<
     "info" | "medical" | "vaccinations" | "reminders" | "clinics" | "requests" | "myRequests" | "lab" | "files" | "notes"
-  >(() => {
-    const isClinician = (clinicAccess === "true" || fromClinic === "true") && userMode === "veterinarian";
-    if (isClinician && !openSection) return "medical";
-    return "info";
-  });
+  >("info");
 
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [transferEmail, setTransferEmail] = useState("");
@@ -184,6 +180,10 @@ export default function PetDetailsScreen() {
   const [showMedicalModal, setShowMedicalModal] = useState(false);
   const [showVaccinationModal, setShowVaccinationModal] = useState(false);
   const [showReminderModal, setShowReminderModal] = useState(false);
+
+  const [editingMedicalRecord, setEditingMedicalRecord] = useState<any>(null);
+  const [editingVaccination, setEditingVaccination] = useState<any>(null);
+  const [editingReminder, setEditingReminder] = useState<any>(null);
   const [showFollowUpModal, setShowFollowUpModal] = useState(false);
   const [showAccessRequestModal, setShowAccessRequestModal] = useState(false);
 
@@ -350,6 +350,9 @@ export default function PetDetailsScreen() {
   const createFullExamMutation = useMutation(trpc.clinics.quickReview.createFullExam.mutationOptions());
   const addVaccinationDirectMutation = useMutation(trpc.clinics.quickReview.addVaccination.mutationOptions());
   const addReminderDirectMutation = useMutation(trpc.clinics.quickReview.addReminder.mutationOptions());
+  const updateVaccinationMutation = useMutation(trpc.clinics.quickReview.updateVaccination.mutationOptions());
+  const updateReminderMutation = useMutation(trpc.clinics.quickReview.updateReminder.mutationOptions());
+  const updateMedicalRecordMutation = useMutation(trpc.clinics.quickReview.updateMedicalRecord.mutationOptions());
 
   // Approval mutations for owners
   const approveMedicalActionMutation = useMutation(trpc.pets.approveMedicalAction.mutationOptions({}));
@@ -410,7 +413,7 @@ export default function PetDetailsScreen() {
   useFocusEffect(
     useCallback(() => {
       petQuery.refetch();
-    }, [])
+    }, []),
   );
 
   // Initialize edit form when pet data is loaded
@@ -432,6 +435,14 @@ export default function PetDetailsScreen() {
       });
     }
   }, [pet]);
+
+  // Set initial tab once userMode is known
+  useEffect(() => {
+    if (!userMode) return;
+    if (openSection) return; // openSection effect handles this case
+    const isClinician = (clinicAccess === "true" || fromClinic === "true") && userMode === "veterinarian";
+    setActiveTab(isClinician ? "medical" : "info");
+  }, [userMode]);
 
   // Handle opening specific section when navigating from clinic pages
   useEffect(() => {
@@ -720,19 +731,30 @@ export default function PetDetailsScreen() {
     }
     if (!pet || !user) return;
     try {
-      await createQuickReviewMutation.mutateAsync({
-        petId: pet.id,
-        clinicId: Number(clinicId!),
-        diagnosis: medicalForm.diagnosis,
-        treatment: medicalForm.treatment,
-        notes: medicalForm.notes,
-      });
+      if (editingMedicalRecord) {
+        await updateMedicalRecordMutation.mutateAsync({
+          recordId: Number(editingMedicalRecord.id),
+          diagnosis: medicalForm.diagnosis,
+          treatment: medicalForm.treatment,
+          notes: medicalForm.notes || undefined,
+        });
+        showToast({ message: "تم تحديث السجل الطبي", type: "success" });
+      } else {
+        await createQuickReviewMutation.mutateAsync({
+          petId: pet.id,
+          clinicId: Number(clinicId!),
+          diagnosis: medicalForm.diagnosis,
+          treatment: medicalForm.treatment,
+          notes: medicalForm.notes,
+        });
+        showToast({ message: "تم إضافة السجل الطبي بنجاح", type: "success" });
+      }
       setShowMedicalModal(false);
+      setEditingMedicalRecord(null);
       setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" });
-      showToast({ message: "تم إضافة السجل الطبي بنجاح", type: "success" });
       petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إضافة السجل الطبي");
+      Alert.alert("خطأ", error.message || "فشل في حفظ السجل الطبي");
     }
   };
 
@@ -743,19 +765,30 @@ export default function PetDetailsScreen() {
     }
     if (!pet || !user) return;
     try {
-      await addVaccinationDirectMutation.mutateAsync({
-        petId: pet.id,
-        clinicId: Number(clinicId!),
-        name: vaccinationForm.name,
-        nextDate: vaccinationForm.nextDate || undefined,
-        notes: vaccinationForm.notes || undefined,
-      });
+      if (editingVaccination) {
+        await updateVaccinationMutation.mutateAsync({
+          vaccinationId: Number(editingVaccination.id),
+          name: vaccinationForm.name,
+          nextDate: vaccinationForm.nextDate || undefined,
+          notes: vaccinationForm.notes || undefined,
+        });
+        showToast({ message: "تم تحديث التطعيم", type: "success" });
+      } else {
+        await addVaccinationDirectMutation.mutateAsync({
+          petId: pet.id,
+          clinicId: Number(clinicId!),
+          name: vaccinationForm.name,
+          nextDate: vaccinationForm.nextDate || undefined,
+          notes: vaccinationForm.notes || undefined,
+        });
+        showToast({ message: "تم إضافة التطعيم بنجاح", type: "success" });
+      }
       setShowVaccinationModal(false);
+      setEditingVaccination(null);
       setVaccinationForm({ name: "", nextDate: "", notes: "" });
-      showToast({ message: "تم إضافة التطعيم بنجاح", type: "success" });
       petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إضافة التطعيم");
+      Alert.alert("خطأ", error.message || "فشل في حفظ التطعيم");
     }
   };
 
@@ -766,20 +799,31 @@ export default function PetDetailsScreen() {
     }
     if (!pet || !user) return;
     try {
-      await addReminderDirectMutation.mutateAsync({
-        petId: pet.id,
-        clinicId: Number(clinicId!),
-        title: reminderForm.title,
-        description: reminderForm.description || undefined,
-        reminderDate: reminderForm.date,
-        reminderType: "checkup",
-      });
+      if (editingReminder) {
+        await updateReminderMutation.mutateAsync({
+          reminderId: Number(editingReminder.id),
+          title: reminderForm.title,
+          description: reminderForm.description || undefined,
+          reminderDate: reminderForm.date,
+        });
+        showToast({ message: "تم تحديث التذكير", type: "success" });
+      } else {
+        await addReminderDirectMutation.mutateAsync({
+          petId: pet.id,
+          clinicId: Number(clinicId!),
+          title: reminderForm.title,
+          description: reminderForm.description || undefined,
+          reminderDate: reminderForm.date,
+          reminderType: "checkup",
+        });
+        showToast({ message: "تم إضافة التذكير بنجاح", type: "success" });
+      }
       setShowReminderModal(false);
+      setEditingReminder(null);
       setReminderForm({ title: "", description: "", date: "" });
-      showToast({ message: "تم إضافة التذكير بنجاح", type: "success" });
       petQuery.refetch();
     } catch (error: any) {
-      Alert.alert("خطأ", error.message || "فشل في إضافة التذكير");
+      Alert.alert("خطأ", error.message || "فشل في حفظ التذكير");
     }
   };
 
@@ -986,8 +1030,35 @@ export default function PetDetailsScreen() {
     ]);
   };
 
+  const handleEditMedicalRecord = (record: any) => {
+    setEditingMedicalRecord(record);
+    setMedicalForm({ diagnosis: record.diagnosis, treatment: record.treatment, notes: record.notes || "", prescriptionImage: record.prescriptionImage || "" });
+    setShowMedicalModal(true);
+  };
+
+  const handleEditVaccination = (vaccination: any) => {
+    setEditingVaccination(vaccination);
+    setVaccinationForm({
+      name: vaccination.name,
+      nextDate: vaccination.nextDate ? new Date(vaccination.nextDate).toISOString().split("T")[0] : "",
+      notes: vaccination.notes || "",
+    });
+    setShowVaccinationModal(true);
+  };
+
+  const handleEditReminder = (reminder: any) => {
+    setEditingReminder(reminder);
+    setReminderForm({
+      title: reminder.title,
+      description: reminder.description || "",
+      date: reminder.date ? new Date(reminder.date).toISOString().split("T")[0] : reminder.reminderDate || "",
+    });
+    setShowReminderModal(true);
+  };
+
   const handleDeleteMedicalRecord = (recordId: string) => {
-    if (!isOwner || !pet) return;
+    if (!isClinicAccess) return;
+    if (!pet) return;
 
     Alert.alert("حذف السجل الطبي", "هل أنت متأكد من حذف هذا السجل الطبي؟", [
       { text: "إلغاء", style: "cancel" },
@@ -1004,7 +1075,8 @@ export default function PetDetailsScreen() {
   };
 
   const handleDeleteVaccination = (vaccinationId: string) => {
-    if (!isOwner || !pet) return;
+    if (!isClinicAccess) return;
+    if (!pet) return;
 
     Alert.alert("حذف التطعيم", "هل أنت متأكد من حذف هذا التطعيم؟", [
       { text: "إلغاء", style: "cancel" },
@@ -1021,7 +1093,8 @@ export default function PetDetailsScreen() {
   };
 
   const handleDeleteReminder = (reminderId: string) => {
-    if (!isOwner || !pet) return;
+    if (!isClinicAccess) return;
+    if (!pet) return;
 
     Alert.alert("حذف التذكير", "هل أنت متأكد من حذف هذا التذكير؟", [
       { text: "إلغاء", style: "cancel" },
@@ -1187,27 +1260,12 @@ export default function PetDetailsScreen() {
 
       {/* ── Pet Identity Card ── */}
       <View style={styles.petIdentityCard}>
-        {(pet.isLost || isOwner) && (
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            {pet.isLost ? (
-              <View style={styles.heroBanner}>
-                <AlertTriangle size={13} color={COLORS.white} />
-                <Text style={styles.heroBannerText}>مفقود</Text>
-              </View>
-            ) : (
-              <View />
-            )}
-
-            {isOwner && (
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <TouchableOpacity onPress={handleEditPet} style={styles.heroIconBtn}>
-                  <Edit3 size={16} color={COLORS.white} />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={handleDeletePetForOwner} style={[styles.heroIconBtn, { backgroundColor: "rgba(239,68,68,0.85)" }]}>
-                  <Trash2 size={16} color={COLORS.white} />
-                </TouchableOpacity>
-              </View>
-            )}
+        {pet.isLost && (
+          <View style={{ marginBottom: 10 }}>
+            <View style={styles.heroBanner}>
+              <AlertTriangle size={13} color={COLORS.white} />
+              <Text style={styles.heroBannerText}>مفقود</Text>
+            </View>
           </View>
         )}
 
@@ -1256,6 +1314,18 @@ export default function PetDetailsScreen() {
               )}
             </View>
           </View>
+
+          {/* Edit / Delete — aligned with avatar and name */}
+          {isOwner && (
+            <View style={{ gap: 8 }}>
+              <TouchableOpacity onPress={handleEditPet} style={styles.heroIconBtn}>
+                <Edit3 size={16} color={COLORS.white} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDeletePetForOwner} style={[styles.heroIconBtn, { backgroundColor: "rgba(239,68,68,0.85)" }]}>
+                <Trash2 size={16} color={COLORS.white} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
 
@@ -1297,6 +1367,30 @@ export default function PetDetailsScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Chat with owner */}
+          {chatData && (
+            <View style={styles.clinicChatRow}>
+              <TouchableOpacity style={styles.chatOpenBtn} onPress={handleOpenChat}>
+                <MessageCircle size={18} color={COLORS.white} />
+                <Text style={styles.clinicActionBtnText}>محادثة المالك</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.chatToggleBtn, { backgroundColor: chatData.isActive ? "#FFF3E0" : "#E8F5E9" }]}
+                onPress={handleToggleChat}
+                disabled={toggleChatMutation.isPending}
+              >
+                {chatData.isActive ? (
+                  <PauseCircle size={18} color={COLORS.warning} />
+                ) : (
+                  <PlayCircle size={18} color={COLORS.success} />
+                )}
+                <Text style={[styles.chatToggleBtnText, { color: chatData.isActive ? COLORS.warning : COLORS.success }]}>
+                  {chatData.isActive ? "إيقاف المحادثة" : "تفعيل المحادثة"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           <View style={styles.clinicStatsRow}>
             <View style={styles.clinicStatItem}>
               <Text style={styles.clinicStatValue}>{pet.vaccinations?.length ?? 0}</Text>
@@ -1325,9 +1419,9 @@ export default function PetDetailsScreen() {
             [
               { key: "medical", label: "السجلات الطبية", Icon: ClipboardList },
               { key: "vaccinations", label: "اللقاحات", Icon: Syringe },
+              { key: "reminders", label: "التذكيرات", Icon: Bell },
               { key: "lab", label: "التحاليل", Icon: FlaskConical },
               { key: "files", label: "الملفات", Icon: Folder },
-              { key: "notes", label: "الملاحظات", Icon: FileText },
             ] as const
           ).map(({ key, label, Icon }) => {
             const isActive = activeTab === key;
@@ -1434,7 +1528,7 @@ export default function PetDetailsScreen() {
             {/* Owner Actions */}
             {isOwner && (
               <View style={styles.ownerActions}>
-                {clinicFollowUpsQuery.data?.followUps && clinicFollowUpsQuery.data.followUps.length > 0 && (
+                {/* {clinicFollowUpsQuery.data?.followUps && clinicFollowUpsQuery.data.followUps.length > 0 && (
                   <View style={styles.clinicFollowUpsSection}>
                     <Text style={styles.sectionTitle}>المتابعات مع العيادات</Text>
                     {clinicFollowUpsQuery.data.followUps.map((clinic) => (
@@ -1472,7 +1566,7 @@ export default function PetDetailsScreen() {
                       </View>
                     ))}
                   </View>
-                )}
+                )} */}
 
                 <Button
                   title={t("بلغ عن حيوان مفقود")}
@@ -1540,68 +1634,82 @@ export default function PetDetailsScreen() {
                 <Text style={styles.emptyStateText}>لا توجد سجلات طبية</Text>
               </View>
             ) : (
-              pet.medicalRecords.filter((r: any) => r.recordType !== "تحليل" && r.recordType !== "ملف").slice().reverse().map((record: any) => {
-                const isQuick = record.recordType === "مراجعة_سريعة";
-                const typeLabel = isQuick ? "مراجعة سريعة" : record.recordType === "فحص_شامل" ? "فحص شامل" : "سجل طبي";
-                const typeColor = isQuick ? COLORS.warning : COLORS.primary;
-                return (
-                  <View key={record.id} style={styles.recordCard}>
-                    <View style={styles.recordTitleRow}>
-                      <Text style={styles.recordTitle}>{record.diagnosis}</Text>
-                      <View style={[styles.recordTypeBadge, { backgroundColor: typeColor + "22", borderColor: typeColor }]}>
-                        {isQuick ? <Zap size={11} color={typeColor} /> : <ClipboardList size={11} color={typeColor} />}
-                        <Text style={[styles.recordTypeText, { color: typeColor }]}>{typeLabel}</Text>
+              pet.medicalRecords
+                .filter((r: any) => r.recordType !== "تحليل" && r.recordType !== "ملف")
+                .slice()
+                .reverse()
+                .map((record: any) => {
+                  const isQuick = record.recordType === "مراجعة_سريعة";
+                  const typeLabel = isQuick ? "مراجعة سريعة" : record.recordType === "فحص_شامل" ? "فحص شامل" : "سجل طبي";
+                  const typeColor = isQuick ? COLORS.warning : COLORS.primary;
+                  return (
+                    <View key={record.id} style={styles.recordCard}>
+                      <View style={styles.recordTitleRow}>
+                        <Text style={[styles.recordTitle, { flex: 1 }]}>{record.diagnosis}</Text>
+                        <View style={[styles.recordTypeBadge, { backgroundColor: typeColor + "22", borderColor: typeColor }]}>
+                          {isQuick ? <Zap size={11} color={typeColor} /> : <ClipboardList size={11} color={typeColor} />}
+                          <Text style={[styles.recordTypeText, { color: typeColor }]}>{typeLabel}</Text>
+                        </View>
+                        {isClinicAccess && (
+                          <View style={{ flexDirection: "row", gap: 6 }}>
+                            <TouchableOpacity onPress={() => handleEditMedicalRecord(record)} style={styles.deleteButton}>
+                              <Edit3 size={16} color={COLORS.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDeleteMedicalRecord(record.id)} style={styles.deleteButton}>
+                              <Trash2 size={16} color={COLORS.error} />
+                            </TouchableOpacity>
+                          </View>
+                        )}
                       </View>
+
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>التاريخ</Text>
+                        <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
+                      </View>
+
+                      {record.clinicName && (
+                        <View style={styles.recordItem}>
+                          <Text style={styles.recordLabel}>العيادة</Text>
+                          <Text style={styles.recordValue}>{record.clinicName}</Text>
+                        </View>
+                      )}
+
+                      {record.doctorName && (
+                        <View style={styles.recordItem}>
+                          <Stethoscope size={13} color={COLORS.darkGray} />
+                          <Text style={styles.recordLabel}>الطبيب</Text>
+                          <Text style={styles.recordValue}>{record.doctorName}</Text>
+                        </View>
+                      )}
+
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>العلاج</Text>
+                        <Text style={styles.recordValue}>{record.treatment}</Text>
+                      </View>
+
+                      {record.notes && (
+                        <View style={styles.recordItem}>
+                          <Text style={styles.recordLabel}>ملاحظات</Text>
+                          <Text style={styles.recordValue}>{record.notes}</Text>
+                        </View>
+                      )}
+
+                      {record.prescriptionImage && (
+                        <View style={styles.recordItem}>
+                          <Text style={styles.recordLabel}>صورة الوصفة</Text>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setSelectedImageUrl(record.prescriptionImage);
+                              setShowImageModal(true);
+                            }}
+                          >
+                            <Image source={{ uri: record.prescriptionImage }} style={styles.prescriptionThumbnail} />
+                          </TouchableOpacity>
+                        </View>
+                      )}
                     </View>
-
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>التاريخ</Text>
-                      <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
-                    </View>
-
-                    {record.clinicName && (
-                      <View style={styles.recordItem}>
-                        <Text style={styles.recordLabel}>العيادة</Text>
-                        <Text style={styles.recordValue}>{record.clinicName}</Text>
-                      </View>
-                    )}
-
-                    {record.doctorName && (
-                      <View style={styles.recordItem}>
-                        <Stethoscope size={13} color={COLORS.darkGray} />
-                        <Text style={styles.recordLabel}>الطبيب</Text>
-                        <Text style={styles.recordValue}>{record.doctorName}</Text>
-                      </View>
-                    )}
-
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>العلاج</Text>
-                      <Text style={styles.recordValue}>{record.treatment}</Text>
-                    </View>
-
-                    {record.notes && (
-                      <View style={styles.recordItem}>
-                        <Text style={styles.recordLabel}>ملاحظات</Text>
-                        <Text style={styles.recordValue}>{record.notes}</Text>
-                      </View>
-                    )}
-
-                    {record.prescriptionImage && (
-                      <View style={styles.recordItem}>
-                        <Text style={styles.recordLabel}>صورة الوصفة</Text>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setSelectedImageUrl(record.prescriptionImage);
-                            setShowImageModal(true);
-                          }}
-                        >
-                          <Image source={{ uri: record.prescriptionImage }} style={styles.prescriptionThumbnail} />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
-                );
-              })
+                  );
+                })
             )}
           </View>
         )}
@@ -1661,44 +1769,58 @@ export default function PetDetailsScreen() {
               </View>
             ) : (
               <>
-                {pet.vaccinations.slice().reverse().map((vaccination: any) => (
-                  <View key={vaccination.id} style={[styles.recordCard, { borderLeftColor: COLORS.success }]}>
-                    <View style={styles.recordTitleRow}>
-                      <Text style={styles.recordTitle}>{vaccination.name}</Text>
-                      {isOwner && (
-                        <TouchableOpacity onPress={() => handleDeleteVaccination(vaccination.id)} style={styles.deleteButton}>
-                          <Trash2 size={16} color={COLORS.error} />
-                        </TouchableOpacity>
+                {pet.vaccinations
+                  .slice()
+                  .reverse()
+                  .map((vaccination: any) => (
+                    <View key={vaccination.id} style={[styles.recordCard, { borderLeftColor: COLORS.success }]}>
+                      <View style={styles.recordTitleRow}>
+                        <Text style={styles.recordTitle}>{vaccination.name}</Text>
+                        {isClinicAccess && (
+                          <View style={{ flexDirection: "row", gap: 6 }}>
+                            <TouchableOpacity onPress={() => handleEditVaccination(vaccination)} style={styles.deleteButton}>
+                              <Edit3 size={16} color={COLORS.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDeleteVaccination(vaccination.id)} style={styles.deleteButton}>
+                              <Trash2 size={16} color={COLORS.error} />
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>التاريخ</Text>
+                        <Text style={styles.recordValue}>{new Date(vaccination.date).toLocaleDateString("ar-SA")}</Text>
+                      </View>
+
+                      {vaccination.nextDate && (
+                        <View style={styles.recordItem}>
+                          <Text style={styles.recordLabel}>الموعد القادم</Text>
+                          <Text style={styles.recordValue}>{new Date(vaccination.nextDate).toLocaleDateString("ar-SA")}</Text>
+                        </View>
                       )}
+
+                      {vaccination.notes && (
+                        <View style={styles.recordItem}>
+                          <Text style={styles.recordLabel}>ملاحظات</Text>
+                          <Text style={styles.recordValue}>{vaccination.notes}</Text>
+                        </View>
+                      )}
+
+                      {isClinicAccess && vaccination.doctorName ? (
+                        <View style={styles.recordItem}>
+                          <Stethoscope size={13} color={COLORS.darkGray} />
+                          <Text style={styles.recordLabel}>الطبيب</Text>
+                          <Text style={styles.recordValue}>{vaccination.doctorName}</Text>
+                        </View>
+                      ) : !isClinicAccess && vaccination.clinicName ? (
+                        <View style={styles.recordItem}>
+                          <Text style={styles.recordLabel}>العيادة</Text>
+                          <Text style={styles.recordValue}>{vaccination.clinicName}</Text>
+                        </View>
+                      ) : null}
                     </View>
-
-                    <View style={styles.recordItem}>
-                      <Text style={styles.recordLabel}>التاريخ</Text>
-                      <Text style={styles.recordValue}>{new Date(vaccination.date).toLocaleDateString("ar-SA")}</Text>
-                    </View>
-
-                    {vaccination.clinicName && (
-                      <View style={styles.recordItem}>
-                        <Text style={styles.recordLabel}>العيادة</Text>
-                        <Text style={styles.recordValue}>{vaccination.clinicName}</Text>
-                      </View>
-                    )}
-
-                    {vaccination.nextDate && (
-                      <View style={styles.recordItem}>
-                        <Text style={styles.recordLabel}>الموعد القادم</Text>
-                        <Text style={styles.recordValue}>{new Date(vaccination.nextDate).toLocaleDateString("ar-SA")}</Text>
-                      </View>
-                    )}
-
-                    {vaccination.notes && (
-                      <View style={styles.recordItem}>
-                        <Text style={styles.recordLabel}>ملاحظات</Text>
-                        <Text style={styles.recordValue}>{vaccination.notes}</Text>
-                      </View>
-                    )}
-                  </View>
-                ))}
+                  ))}
                 {isClinicAccess && (
                   <TouchableOpacity style={styles.addMoreButton} onPress={handleAddVaccination}>
                     <Plus size={20} color={COLORS.primary} />
@@ -1738,10 +1860,15 @@ export default function PetDetailsScreen() {
                   >
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{reminder.title}</Text>
-                      {isOwner && (
-                        <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
-                          <Trash2 size={16} color={COLORS.error} />
-                        </TouchableOpacity>
+                      {isClinicAccess && (
+                        <View style={{ flexDirection: "row", gap: 6 }}>
+                          <TouchableOpacity onPress={() => handleEditReminder(reminder)} style={styles.deleteButton}>
+                            <Edit3 size={16} color={COLORS.primary} />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
+                            <Trash2 size={16} color={COLORS.error} />
+                          </TouchableOpacity>
+                        </View>
                       )}
                     </View>
 
@@ -1771,12 +1898,18 @@ export default function PetDetailsScreen() {
                       </Text>
                     </View>
 
-                    {reminder.clinicName && (
+                    {isClinicAccess && reminder.doctorName ? (
+                      <View style={styles.recordItem}>
+                        <Stethoscope size={13} color={COLORS.darkGray} />
+                        <Text style={styles.recordLabel}>الطبيب</Text>
+                        <Text style={styles.recordValue}>{reminder.doctorName}</Text>
+                      </View>
+                    ) : !isClinicAccess && reminder.clinicName ? (
                       <View style={styles.recordItem}>
                         <Text style={styles.recordLabel}>العيادة</Text>
                         <Text style={styles.recordValue}>{reminder.clinicName}</Text>
                       </View>
-                    )}
+                    ) : null}
                   </View>
                 ))
             )}
@@ -1801,7 +1934,8 @@ export default function PetDetailsScreen() {
             ) : (
               pet.medicalRecords
                 ?.filter((r: any) => r.labNotes)
-                .slice().reverse()
+                .slice()
+                .reverse()
                 .map((record: any) => (
                   <View key={record.id} style={styles.recordCard}>
                     <View style={styles.recordItem}>
@@ -1854,7 +1988,8 @@ export default function PetDetailsScreen() {
             ) : (
               pet.medicalRecords
                 ?.filter((r: any) => r.prescriptionImage || r.fileUrls?.length > 0)
-                .slice().reverse()
+                .slice()
+                .reverse()
                 .map((record: any) => (
                   <View key={record.id} style={styles.recordCard}>
                     <View style={styles.recordItem}>
@@ -1911,7 +2046,8 @@ export default function PetDetailsScreen() {
             ) : (
               pet.medicalRecords
                 ?.filter((r: any) => r.notes)
-                .slice().reverse()
+                .slice()
+                .reverse()
                 .map((record: any) => (
                   <View key={record.id} style={styles.recordCard}>
                     <View style={styles.recordItem}>
@@ -2371,8 +2507,8 @@ export default function PetDetailsScreen() {
       <Modal visible={showMedicalModal} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>إضافة سجل طبي</Text>
-            <TouchableOpacity onPress={() => setShowMedicalModal(false)}>
+            <Text style={styles.modalTitle}>{editingMedicalRecord ? "تعديل السجل الطبي" : "إضافة سجل طبي"}</Text>
+            <TouchableOpacity onPress={() => { setShowMedicalModal(false); setEditingMedicalRecord(null); setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" }); }}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
           </View>
@@ -2445,7 +2581,7 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button title="إلغاء" onPress={() => setShowMedicalModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إلغاء" onPress={() => { setShowMedicalModal(false); setEditingMedicalRecord(null); setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" }); }} type="outline" size="medium" style={styles.modalButton} />
             <Button title="حفظ" onPress={submitMedicalRecord} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2455,8 +2591,8 @@ export default function PetDetailsScreen() {
       <Modal visible={showVaccinationModal} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>إضافة تطعيم</Text>
-            <TouchableOpacity onPress={() => setShowVaccinationModal(false)}>
+            <Text style={styles.modalTitle}>{editingVaccination ? "تعديل التطعيم" : "إضافة تطعيم"}</Text>
+            <TouchableOpacity onPress={() => { setShowVaccinationModal(false); setEditingVaccination(null); setVaccinationForm({ name: "", nextDate: "", notes: "" }); }}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
           </View>
@@ -2490,7 +2626,7 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button title="إلغاء" onPress={() => setShowVaccinationModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إلغاء" onPress={() => { setShowVaccinationModal(false); setEditingVaccination(null); setVaccinationForm({ name: "", nextDate: "", notes: "" }); }} type="outline" size="medium" style={styles.modalButton} />
             <Button title="حفظ" onPress={submitVaccination} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2500,8 +2636,8 @@ export default function PetDetailsScreen() {
       <Modal visible={showReminderModal} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>إضافة تذكير</Text>
-            <TouchableOpacity onPress={() => setShowReminderModal(false)}>
+            <Text style={styles.modalTitle}>{editingReminder ? "تعديل التذكير" : "إضافة تذكير"}</Text>
+            <TouchableOpacity onPress={() => { setShowReminderModal(false); setEditingReminder(null); setReminderForm({ title: "", description: "", date: "" }); }}>
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
           </View>
@@ -2535,7 +2671,7 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button title="إلغاء" onPress={() => setShowReminderModal(false)} type="outline" size="medium" style={styles.modalButton} />
+            <Button title="إلغاء" onPress={() => { setShowReminderModal(false); setEditingReminder(null); setReminderForm({ title: "", description: "", date: "" }); }} type="outline" size="medium" style={styles.modalButton} />
             <Button title="حفظ" onPress={submitReminder} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2865,7 +3001,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -3311,6 +3447,37 @@ const styles = StyleSheet.create({
   },
   clinicActionBtnText: {
     color: COLORS.white,
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+  clinicChatRow: {
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+    marginTop: 10,
+  },
+  chatOpenBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: COLORS.success,
+    paddingVertical: 11,
+    borderRadius: 10,
+  },
+  chatToggleBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 11,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  chatToggleBtnText: {
     fontSize: 13,
     fontWeight: "bold",
   },

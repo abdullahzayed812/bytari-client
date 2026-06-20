@@ -281,6 +281,33 @@ export default function ClinicDashboard() {
     </TouchableOpacity>
   );
 
+  const renderHorizontalPetCard = ({ item }: { item: any }) => (
+    <TouchableOpacity style={styles.horizontalPetCard} activeOpacity={0.8} onPress={() => handleAnimalPress(item)}>
+      <Image source={{ uri: item.image }} style={styles.horizontalPetImage} />
+      <Text style={styles.horizontalPetName} numberOfLines={1}>{item.name}</Text>
+      <Text style={styles.horizontalPetType} numberOfLines={1}>{item.type}</Text>
+      <Text style={styles.horizontalPetOwner} numberOfLines={1}>{item.owner}</Text>
+      <Text style={styles.horizontalPetDate} numberOfLines={1}>{item.lastVisit}</Text>
+      <View style={styles.horizontalPetBadges}>
+        {item.hasMedical && (
+          <View style={[styles.activityBadge, { backgroundColor: "#E8F5E9" }]}>
+            <ClipboardList size={11} color={COLORS.success} />
+          </View>
+        )}
+        {item.hasVaccination && (
+          <View style={[styles.activityBadge, { backgroundColor: "#E3F2FD" }]}>
+            <Syringe size={11} color={COLORS.primary} />
+          </View>
+        )}
+        {item.hasReminder && (
+          <View style={[styles.activityBadge, { backgroundColor: "#FFF3E0" }]}>
+            <Bell size={11} color={COLORS.warning} />
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -383,24 +410,33 @@ export default function ClinicDashboard() {
               </View>
             </View>
 
-            {(showPetsList || isSearching) && (
+            {isSearching && (
               <FlatList
-                data={isSearching ? filteredAnimals : clinicPets?.pets?.slice(0, 3)}
+                data={filteredAnimals}
                 renderItem={renderAnimalItem}
                 keyExtractor={(item) => item.id.toString()}
                 scrollEnabled={false}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                  isSearching ? (
-                    <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>لا توجد نتائج للبحث</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>لا توجد حيوانات متاحة للعيادة</Text>
-                      <Text style={styles.emptySubtext}>يجب طلب صلاحية الوصول من مالكي الحيوانات أولاً</Text>
-                    </View>
-                  )
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>لا توجد نتائج للبحث</Text>
+                  </View>
+                }
+              />
+            )}
+
+            {!isSearching && showPetsList && (
+              <FlatList
+                data={clinicPets?.pets?.slice(0, 5)}
+                renderItem={renderHorizontalPetCard}
+                keyExtractor={(item) => item.id.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalPetList}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>لا توجد حيوانات سجلت بيانات في هذه العيادة</Text>
+                  </View>
                 }
               />
             )}
@@ -950,6 +986,65 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 2,
   },
+  horizontalPetList: {
+    paddingBottom: 4,
+    gap: 10,
+  },
+  horizontalPetCard: {
+    width: 130,
+    backgroundColor: COLORS.white,
+    borderRadius: 14,
+    padding: 10,
+    alignItems: "center",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  horizontalPetImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginBottom: 8,
+  },
+  horizontalPetName: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "center",
+    marginBottom: 2,
+  },
+  horizontalPetType: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    marginBottom: 2,
+  },
+  horizontalPetOwner: {
+    fontSize: 10,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    marginBottom: 2,
+  },
+  horizontalPetDate: {
+    fontSize: 10,
+    color: COLORS.primary,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  horizontalPetBadges: {
+    flexDirection: "row",
+    gap: 4,
+    justifyContent: "center",
+  },
+  activityBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   clearSearchText: {
     fontSize: 14,
     color: COLORS.error,
@@ -1002,11 +1097,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
-  },
-  viewAllText: {
-    fontSize: 14,
-    color: COLORS.primary,
-    fontWeight: "600",
   },
   todayTasksList: {
     backgroundColor: COLORS.white,

@@ -323,8 +323,15 @@ export default function ClinicReminders() {
 
   // Handler functions
   const handleReminderPress = (reminder: any) => {
-    setSelectedReminder(reminder);
-    setDetailsModalVisible(true);
+    router.push({
+      pathname: "/(tabs)/pet-details",
+      params: {
+        petId: reminder.petId,
+        clinicId: clinicId as string,
+        fromClinic: "true",
+        openSection: "reminders",
+      },
+    });
   };
 
   const handleReschedule = () => {

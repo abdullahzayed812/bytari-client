@@ -9,12 +9,13 @@ import {
   Modal,
   Alert,
   Image,
+  FlatList,
 } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, UserCog, Plus, Trash2, Shield, Check } from "lucide-react-native";
+import { ArrowLeft, UserCog, Plus, Trash2, Shield, Check, PawPrint, Syringe, ClipboardList, Bell } from "lucide-react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
@@ -51,37 +52,43 @@ const ROLE_OPTIONS = [
   { key: "appointments_only", label: "المواعيد فقط" },
 ];
 
-
 export default function ClinicStaff() {
   const router = useRouter();
   const { clinicId } = useLocalSearchParams();
   const { showToast } = useToastContext();
   const queryClient = useQueryClient();
 
+  const [activeTab, setActiveTab] = useState<"staff" | "pets">("staff");
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
 
-  // Add form
   const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState<"all" | "view_edit_pets" | "view_only" | "appointments_only">("view_edit_pets");
-
-  // Role editing
   const [editRole, setEditRole] = useState<"all" | "view_edit_pets" | "view_only" | "appointments_only">("view_edit_pets");
 
   const queryKey = { clinicId: Number(clinicId) };
 
-  const { data, isLoading, refetch } = useQuery(
+  const { data: staffData, isLoading: isStaffLoading } = useQuery(
     trpc.clinics.settings.staff.getStaff.queryOptions(queryKey)
   );
+
+  const { data: petsData, isLoading: isPetsLoading, refetch: refetchPets } = useQuery({
+    ...trpc.clinics.getLatestPets.queryOptions({ clinicId: Number(clinicId), limit: 100 }),
+    enabled: activeTab === "pets",
+  });
 
   const addMutation = useMutation(trpc.clinics.settings.staff.addStaff.mutationOptions());
   const removeMutation = useMutation(trpc.clinics.settings.staff.removeStaff.mutationOptions());
   const updatePermsMutation = useMutation(trpc.clinics.settings.staff.updatePermissions.mutationOptions());
+  const removeClinicPetMutation = useMutation(trpc.clinics.removeClinicPetData.mutationOptions());
 
-  const staff: StaffMember[] = (data as any)?.staff ?? [];
+  const staff: StaffMember[] = (staffData as any)?.staff ?? [];
+  const clinicPets: any[] = (petsData as any)?.pets ?? [];
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: trpc.clinics.settings.staff.getStaff.queryKey(queryKey) });
+  const invalidateStaff = () =>
+    queryClient.invalidateQueries({ queryKey: trpc.clinics.settings.staff.getStaff.queryKey(queryKey) });
 
   const handleAdd = async () => {
     if (!addEmail.trim()) {
@@ -97,7 +104,7 @@ export default function ClinicStaff() {
       showToast({ message: "تم إضافة الموظف بنجاح", type: "success" });
       setShowAddModal(false);
       setAddEmail("");
-      invalidate();
+      invalidateStaff();
     } catch (e: any) {
       showToast({ message: e.message || "حدث خطأ", type: "error" });
     }
@@ -113,13 +120,39 @@ export default function ClinicStaff() {
           try {
             await removeMutation.mutateAsync({ clinicId: Number(clinicId), veterinarianId: s.id });
             showToast({ message: "تم إزالة الموظف", type: "success" });
-            invalidate();
+            invalidateStaff();
           } catch (e: any) {
             showToast({ message: e.message || "حدث خطأ", type: "error" });
           }
         },
       },
     ]);
+  };
+
+  const handleRemovePet = (pet: any) => {
+    Alert.alert(
+      "إزالة الحيوان من العيادة",
+      `هل تريد إزالة ${pet.name} من سجلات العيادة؟\nسيتم حذف جميع السجلات الطبية والتطعيمات والتذكيرات الخاصة بهذه العيادة.`,
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "إزالة",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await removeClinicPetMutation.mutateAsync({
+                clinicId: Number(clinicId),
+                petId: pet.id,
+              });
+              showToast({ message: `تم إزالة ${pet.name} من سجلات العيادة`, type: "success" });
+              refetchPets();
+            } catch (e: any) {
+              showToast({ message: e.message || "حدث خطأ", type: "error" });
+            }
+          },
+        },
+      ]
+    );
   };
 
   const openPermissions = (s: StaffMember) => {
@@ -137,7 +170,7 @@ export default function ClinicStaff() {
       });
       showToast({ message: "تم تحديث الصلاحيات", type: "success" });
       setShowPermissionsModal(false);
-      invalidate();
+      invalidateStaff();
     } catch (e: any) {
       showToast({ message: e.message || "حدث خطأ", type: "error" });
     }
@@ -147,71 +180,165 @@ export default function ClinicStaff() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <ArrowLeft size={24} color={COLORS.black} />
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <UserCog size={20} color={COLORS.success} />
-            <Text style={styles.headerTitle}>إدارة الموظفين والأطباء</Text>
+            <Text style={styles.headerTitle}>إدارة العيادة</Text>
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
-            <Plus size={22} color={COLORS.white} />
+          {activeTab === "staff" ? (
+            <TouchableOpacity style={styles.addButton} onPress={() => setShowAddModal(true)}>
+              <Plus size={22} color={COLORS.white} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 40 }} />
+          )}
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabRow}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "staff" && styles.activeTab]}
+            onPress={() => setActiveTab("staff")}
+          >
+            <UserCog size={16} color={activeTab === "staff" ? COLORS.primary : COLORS.darkGray} />
+            <Text style={[styles.tabText, activeTab === "staff" && styles.activeTabText]}>إدارة المستخدمين</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "pets" && styles.activeTab]}
+            onPress={() => setActiveTab("pets")}
+          >
+            <PawPrint size={16} color={activeTab === "pets" ? COLORS.primary : COLORS.darkGray} />
+            <Text style={[styles.tabText, activeTab === "pets" && styles.activeTabText]}>إدارة الحيوانات</Text>
           </TouchableOpacity>
         </View>
 
-        {isLoading ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-          </View>
-        ) : staff.length === 0 ? (
-          <View style={styles.center}>
-            <UserCog size={48} color={COLORS.lightGray} />
-            <Text style={styles.emptyTitle}>لا يوجد موظفون بعد</Text>
-            <Text style={styles.emptySubtext}>أضف طبيباً أو موظفاً بريده الإلكتروني</Text>
-            <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowAddModal(true)}>
-              <Plus size={16} color={COLORS.white} />
-              <Text style={styles.emptyBtnText}>إضافة موظف</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-            {staff.map((s) => (
-              <View key={s.staffId} style={styles.card}>
-                <View style={styles.cardTop}>
-                  {s.avatar ? (
-                    <Image source={{ uri: s.avatar }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarInitial}>{s.name?.[0] ?? "؟"}</Text>
+        {/* ── Staff Tab ── */}
+        {activeTab === "staff" && (
+          isStaffLoading ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+          ) : staff.length === 0 ? (
+            <View style={styles.center}>
+              <UserCog size={48} color={COLORS.lightGray} />
+              <Text style={styles.emptyTitle}>لا يوجد موظفون بعد</Text>
+              <Text style={styles.emptySubtext}>أضف طبيباً أو موظفاً بريده الإلكتروني</Text>
+              <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowAddModal(true)}>
+                <Plus size={16} color={COLORS.white} />
+                <Text style={styles.emptyBtnText}>إضافة موظف</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+              {staff.map((s) => (
+                <View key={s.staffId} style={styles.card}>
+                  <View style={styles.cardTop}>
+                    {s.avatar ? (
+                      <Image source={{ uri: s.avatar }} style={styles.avatar} />
+                    ) : (
+                      <View style={styles.avatarPlaceholder}>
+                        <Text style={styles.avatarInitial}>{s.name?.[0] ?? "؟"}</Text>
+                      </View>
+                    )}
+                    <View style={styles.cardInfo}>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <Text style={styles.staffName}>{s.name}</Text>
+                        {s.isVerified && <Shield size={14} color={COLORS.success} />}
+                      </View>
+                      {s.email && <Text style={styles.staffEmail}>{s.email}</Text>}
+                      {s.specialization && <Text style={styles.staffSpec}>{s.specialization}</Text>}
+                      <View style={styles.roleChip}>
+                        <Text style={styles.roleChipText}>
+                          {ROLE_OPTIONS.find((r) => r.key === s.permissions.role)?.label ?? s.permissions.role}
+                        </Text>
+                      </View>
                     </View>
-                  )}
-                  <View style={styles.cardInfo}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Text style={styles.staffName}>{s.name}</Text>
-                      {s.isVerified && <Shield size={14} color={COLORS.success} />}
-                    </View>
-                    {s.email && <Text style={styles.staffEmail}>{s.email}</Text>}
-                    {s.specialization && <Text style={styles.staffSpec}>{s.specialization}</Text>}
-                    <View style={styles.roleChip}>
-                      <Text style={styles.roleChipText}>
-                        {ROLE_OPTIONS.find((r) => r.key === s.permissions.role)?.label ?? s.permissions.role}
-                      </Text>
-                    </View>
+                    <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemove(s)}>
+                      <Trash2 size={18} color={COLORS.error} />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity style={styles.removeBtn} onPress={() => handleRemove(s)}>
-                    <Trash2 size={18} color={COLORS.error} />
-                  </TouchableOpacity>
+                  <View style={styles.cardActions}>
+                    <TouchableOpacity style={styles.permsBtn} onPress={() => openPermissions(s)}>
+                      <Shield size={15} color={COLORS.primary} />
+                      <Text style={styles.permsBtnText}>إدارة الصلاحيات</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-                <View style={styles.cardActions}>
-                  <TouchableOpacity style={styles.permsBtn} onPress={() => openPermissions(s)}>
-                    <Shield size={15} color={COLORS.primary} />
-                    <Text style={styles.permsBtnText}>إدارة الصلاحيات</Text>
-                  </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )
+        )}
+
+        {/* ── Pets Tab ── */}
+        {activeTab === "pets" && (
+          isPetsLoading ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="large" color={COLORS.primary} />
+            </View>
+          ) : clinicPets.length === 0 ? (
+            <View style={styles.center}>
+              <PawPrint size={48} color={COLORS.lightGray} />
+              <Text style={styles.emptyTitle}>لا توجد حيوانات</Text>
+              <Text style={styles.emptySubtext}>لم يتم إضافة أي سجلات لحيوانات في هذه العيادة</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={clinicPets}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <View style={styles.petCard}>
+                  <View style={styles.petCardTop}>
+                    {item.image ? (
+                      <Image source={{ uri: item.image }} style={styles.petAvatar} />
+                    ) : (
+                      <View style={[styles.petAvatarPlaceholder]}>
+                        <PawPrint size={22} color={COLORS.white} />
+                      </View>
+                    )}
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.petName}>{item.name}</Text>
+                      <Text style={styles.petType}>{item.type}{item.breed ? ` · ${item.breed}` : ""}</Text>
+                      <Text style={styles.petOwner}>المالك: {item.owner ?? item.ownerName}</Text>
+                      <Text style={styles.petLastVisit}>آخر زيارة: {item.lastVisit}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.petDeleteBtn}
+                      onPress={() => handleRemovePet(item)}
+                      disabled={removeClinicPetMutation.isPending}
+                    >
+                      <Trash2 size={18} color={COLORS.error} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.petBadges}>
+                    {item.hasMedical && (
+                      <View style={styles.petBadge}>
+                        <ClipboardList size={12} color={COLORS.primary} />
+                        <Text style={styles.petBadgeText}>سجلات طبية</Text>
+                      </View>
+                    )}
+                    {item.hasVaccination && (
+                      <View style={[styles.petBadge, { backgroundColor: "#E8F5E9" }]}>
+                        <Syringe size={12} color={COLORS.success} />
+                        <Text style={[styles.petBadgeText, { color: COLORS.success }]}>تطعيمات</Text>
+                      </View>
+                    )}
+                    {item.hasReminder && (
+                      <View style={[styles.petBadge, { backgroundColor: "#FFF3E0" }]}>
+                        <Bell size={12} color={COLORS.warning} />
+                        <Text style={[styles.petBadgeText, { color: COLORS.warning }]}>تذكيرات</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))}
-          </ScrollView>
+              )}
+            />
+          )
         )}
 
         {/* Add Staff Modal */}
@@ -298,6 +425,25 @@ const styles = StyleSheet.create({
   backButton: { padding: 8 },
   headerTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.black },
   addButton: { backgroundColor: COLORS.primary, borderRadius: 8, padding: 8 },
+  tabRow: {
+    flexDirection: "row",
+    backgroundColor: COLORS.white,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  activeTab: { borderBottomColor: COLORS.primary },
+  tabText: { fontSize: 13, fontWeight: "600", color: COLORS.darkGray },
+  activeTabText: { color: COLORS.primary },
   center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
   emptyTitle: { fontSize: 16, fontWeight: "bold", color: COLORS.black, marginTop: 14 },
   emptySubtext: { fontSize: 13, color: COLORS.darkGray, textAlign: "center", marginTop: 6 },
@@ -313,6 +459,7 @@ const styles = StyleSheet.create({
   },
   emptyBtnText: { color: COLORS.white, fontSize: 14, fontWeight: "bold" },
   listContent: { padding: 14, paddingBottom: 40 },
+  // Staff cards
   card: {
     backgroundColor: COLORS.white,
     borderRadius: 12,
@@ -356,13 +503,47 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.lightGray,
     flexDirection: "row",
   },
-  permsBtn: {
+  permsBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6 },
+  permsBtnText: { fontSize: 13, color: COLORS.primary, fontWeight: "600" },
+  // Pet cards
+  petCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  petCardTop: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 10 },
+  petAvatar: { width: 52, height: 52, borderRadius: 26 },
+  petAvatarPlaceholder: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: COLORS.primary,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  petName: { fontSize: 15, fontWeight: "bold", color: COLORS.black },
+  petType: { fontSize: 12, color: COLORS.darkGray, marginTop: 2 },
+  petOwner: { fontSize: 12, color: COLORS.darkGray, marginTop: 2 },
+  petLastVisit: { fontSize: 11, color: COLORS.primary, marginTop: 2 },
+  petDeleteBtn: { padding: 6, marginTop: 2 },
+  petBadges: { flexDirection: "row", gap: 6, flexWrap: "wrap" },
+  petBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingVertical: 6,
+    gap: 4,
+    backgroundColor: "#E3F2FD",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  permsBtnText: { fontSize: 13, color: COLORS.primary, fontWeight: "600" },
+  petBadgeText: { fontSize: 11, color: COLORS.primary, fontWeight: "600" },
+  // Modals
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
   modalBox: {
     backgroundColor: COLORS.white,

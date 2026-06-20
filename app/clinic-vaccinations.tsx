@@ -244,8 +244,15 @@ export default function ClinicVaccinations() {
 
   // Handler functions
   const handleVaccinationPress = (vaccination: any) => {
-    setSelectedVaccination(vaccination);
-    setDetailsModalVisible(true);
+    router.push({
+      pathname: "/(tabs)/pet-details",
+      params: {
+        petId: vaccination.petId,
+        clinicId: clinicId as string,
+        fromClinic: "true",
+        openSection: "vaccinations",
+      },
+    });
   };
 
   const handleReschedule = () => {

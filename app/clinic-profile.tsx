@@ -24,6 +24,7 @@ export default function ClinicProfileScreen() {
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookDate, setBookDate] = useState(new Date(Date.now() + 24 * 60 * 60 * 1000));
   const [showBookDatePicker, setShowBookDatePicker] = useState(false);
+  const [showBookTimePicker, setShowBookTimePicker] = useState(false);
   const [bookNotes, setBookNotes] = useState("");
   const [bookType, setBookType] = useState("مراجعة");
 
@@ -476,16 +477,47 @@ export default function ClinicProfileScreen() {
             </View>
 
             <Text style={styles.modalLabel}>التاريخ والوقت المقترح</Text>
-            <TouchableOpacity style={styles.datePickerBtn} onPress={() => setShowBookDatePicker(true)}>
-              <Calendar size={16} color={COLORS.primary} />
-              <Text style={styles.datePickerBtnText}>{bookDate.toLocaleString("ar-EG")}</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 4 }}>
+              <TouchableOpacity style={[styles.datePickerBtn, { flex: 1 }]} onPress={() => setShowBookDatePicker(true)}>
+                <Calendar size={16} color={COLORS.primary} />
+                <Text style={styles.datePickerBtnText}>
+                  {bookDate.toLocaleDateString("ar-EG")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.datePickerBtn, { flex: 1 }]} onPress={() => setShowBookTimePicker(true)}>
+                <Clock size={16} color={COLORS.primary} />
+                <Text style={styles.datePickerBtnText}>
+                  {bookDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
+                </Text>
+              </TouchableOpacity>
+            </View>
             {showBookDatePicker && (
               <DateTimePicker
                 value={bookDate}
-                mode="datetime"
-                onChange={(_, d) => { setShowBookDatePicker(false); if (d) setBookDate(d); }}
+                mode="date"
+                onChange={(_, d) => {
+                  setShowBookDatePicker(false);
+                  if (d) {
+                    const merged = new Date(d);
+                    merged.setHours(bookDate.getHours(), bookDate.getMinutes());
+                    setBookDate(merged);
+                  }
+                }}
                 minimumDate={new Date()}
+              />
+            )}
+            {showBookTimePicker && (
+              <DateTimePicker
+                value={bookDate}
+                mode="time"
+                onChange={(_, d) => {
+                  setShowBookTimePicker(false);
+                  if (d) {
+                    const merged = new Date(bookDate);
+                    merged.setHours(d.getHours(), d.getMinutes());
+                    setBookDate(merged);
+                  }
+                }}
               />
             )}
 

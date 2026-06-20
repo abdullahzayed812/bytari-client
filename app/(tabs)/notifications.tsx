@@ -33,6 +33,12 @@ export default function NotificationsScreen() {
         return <AlertCircle size={20} color={COLORS.warning} />;
       case "medical_action_request":
         return <Syringe size={20} color={COLORS.primary} />;
+      case "new_vaccination":
+      case "vaccination_due":
+        return <Syringe size={20} color={COLORS.success} />;
+      case "new_reminder":
+      case "reminder_due":
+        return <Clock size={20} color={COLORS.warning} />;
       case "system":
       default:
         return <Bell size={20} color={COLORS.darkGray} />;
@@ -126,6 +132,16 @@ export default function NotificationsScreen() {
               clinicId: data?.clinicId,
               petName: "",
             },
+          });
+        } else if (notification?.type === "new_vaccination" || notification?.type === "vaccination_due") {
+          router.push({
+            pathname: "/(tabs)/pet-details",
+            params: { petId: notification?.data?.petId, openSection: "vaccinations" },
+          });
+        } else if (notification?.type === "new_reminder" || notification?.type === "reminder_due") {
+          router.push({
+            pathname: "/(tabs)/pet-details",
+            params: { petId: notification?.data?.petId, openSection: "reminders" },
           });
         }
       },
