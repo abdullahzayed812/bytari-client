@@ -583,6 +583,7 @@ export default function ClinicDashboard() {
               >
                 <Zap size={30} color={COLORS.primary} />
                 <Text style={styles.quickLabel}>مراجعة سريعة</Text>
+                <Text style={styles.quickCount}>{stats?.medicalAnimals ?? 0}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickCard, { backgroundColor: "#E8F5E9" }]}
@@ -590,10 +591,12 @@ export default function ClinicDashboard() {
               >
                 <ClipboardList size={30} color={COLORS.success} />
                 <Text style={styles.quickLabel}>فحص كامل</Text>
+                <Text style={styles.quickCount}>{stats?.medicalAnimals ?? 0}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.quickCard, { backgroundColor: "#FFF8E1" }]} onPress={handleAllAnimals}>
                 <Users size={30} color="#FF9800" />
                 <Text style={styles.quickLabel}>جميع الحيوانات</Text>
+                <Text style={styles.quickCount}>{stats?.totalDistinctAnimals ?? 0}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickCard, { backgroundColor: "#FCE4EC" }]}
@@ -601,13 +604,14 @@ export default function ClinicDashboard() {
               >
                 <View style={{ position: "relative" }}>
                   <Calendar size={30} color={COLORS.error} />
-                  {(stats?.todayAppointments ?? 0) > 0 && (
+                  {(stats?.unreadAppointmentRequests ?? 0) > 0 && (
                     <View style={styles.carouselBadge}>
-                      <Text style={styles.carouselBadgeText}>{stats?.todayAppointments}</Text>
+                      <Text style={styles.carouselBadgeText}>{stats?.unreadAppointmentRequests}</Text>
                     </View>
                   )}
                 </View>
                 <Text style={styles.quickLabel}>المواعيد</Text>
+                <Text style={styles.quickCount}>{stats?.appointmentAnimals ?? 0}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickCard, { backgroundColor: "#E8F5E9" }]}
@@ -622,6 +626,7 @@ export default function ClinicDashboard() {
                   )}
                 </View>
                 <Text style={styles.quickLabel}>التطعيمات</Text>
+                <Text style={styles.quickCount}>{stats?.vaccinationAnimals ?? 0}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.quickCard, { backgroundColor: "#FFF3E0" }]}
@@ -636,6 +641,7 @@ export default function ClinicDashboard() {
                   )}
                 </View>
                 <Text style={styles.quickLabel}>التذكيرات</Text>
+                <Text style={styles.quickCount}>{stats?.reminderAnimals ?? 0}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1173,6 +1179,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: "center",
     paddingHorizontal: 4,
+  },
+  quickCount: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: COLORS.darkGray,
+    marginTop: 2,
+    textAlign: "center",
   },
   carouselBadge: {
     position: "absolute",

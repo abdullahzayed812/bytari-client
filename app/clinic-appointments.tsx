@@ -1,13 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator, FlatList, Alert } from "react-native";
-import React, { useState } from "react";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Modal, TextInput, ActivityIndicator, FlatList, Alert, Platform } from "react-native";
+import React, { useState, useEffect } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, Calendar, Clock, Plus, Check, X, RefreshCw, ChevronDown, ChevronUp } from "lucide-react-native";
+import { ArrowLeft, Calendar, Clock, Plus, Check, X, RefreshCw, ChevronDown, ChevronUp, Bell } from "lucide-react-native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 
 type Appointment = {
   id: number;
@@ -45,6 +45,7 @@ export default function ClinicAppointments() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [apptNotifConfirmTarget, setApptNotifConfirmTarget] = useState<null | { type: "single"; appointmentId: number; petName: string } | { type: "bulk" }>(null);
 
   // Create form state
   const [createPetId, setCreatePetId] = useState("");
@@ -52,12 +53,55 @@ export default function ClinicAppointments() {
   const [createType, setCreateType] = useState("مراجعة");
   const [createNotes, setCreateNotes] = useState("");
   const [createDate, setCreateDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false); // iOS only
 
   // Counter-propose form state
+  const [showCounterForm, setShowCounterForm] = useState(false);
   const [counterDate, setCounterDate] = useState(new Date());
+  const [showCounterDatePicker, setShowCounterDatePicker] = useState(false); // iOS only
   const [counterNotes, setCounterNotes] = useState("");
-  const [showCounterDatePicker, setShowCounterDatePicker] = useState(false);
+
+  const openCreateDatePicker = () => {
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value: createDate,
+        minimumDate: new Date(),
+        mode: "date",
+        onChange: (e, date) => {
+          if (e.type === "set" && date) {
+            DateTimePickerAndroid.open({
+              value: date,
+              mode: "time",
+              onChange: (te, time) => { if (te.type === "set" && time) setCreateDate(time); },
+            });
+          }
+        },
+      });
+    } else {
+      setShowDatePicker(true);
+    }
+  };
+
+  const openCounterDatePicker = () => {
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value: counterDate,
+        minimumDate: new Date(),
+        mode: "date",
+        onChange: (e, date) => {
+          if (e.type === "set" && date) {
+            DateTimePickerAndroid.open({
+              value: date,
+              mode: "time",
+              onChange: (te, time) => { if (te.type === "set" && time) setCounterDate(time); },
+            });
+          }
+        },
+      });
+    } else {
+      setShowCounterDatePicker(true);
+    }
+  };
 
   const queryKey = { clinicId: Number(clinicId) };
 
@@ -70,6 +114,14 @@ export default function ClinicAppointments() {
   const respondMutation = useMutation(trpc.clinics.appointments.respondToAppointment.mutationOptions());
   const completeMutation = useMutation(trpc.clinics.appointments.completeAppointment.mutationOptions());
   const counterRespondMutation = useMutation(trpc.clinics.appointments.respondToCounterProposal.mutationOptions());
+  const sendNotifMutation = useMutation(trpc.clinics.appointments.sendAppointmentNotification.mutationOptions());
+  const sendTodayNotifMutation = useMutation(trpc.clinics.appointments.sendTodayAppointmentsNotification.mutationOptions());
+
+  const markAsReadMutation = useMutation(trpc.clinics.appointments.markAsRead.mutationOptions());
+
+  useEffect(() => {
+    if (clinicId) markAsReadMutation.mutate({ clinicId: Number(clinicId) });
+  }, [clinicId]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: trpc.clinics.appointments.getAppointments.queryKey(queryKey) });
 
@@ -109,19 +161,33 @@ export default function ClinicAppointments() {
 
   const handleRespond = async (action: "confirm" | "cancel" | "counter_propose") => {
     if (!selectedAppointment) return;
+
+    if (action === "counter_propose") {
+      try {
+        await respondMutation.mutateAsync({
+          appointmentId: selectedAppointment.id,
+          action,
+          counterProposedDate: counterDate.toISOString(),
+          counterProposedNotes: counterNotes || undefined,
+        });
+        showToast({ message: "Counter proposal sent", type: "success" });
+        setShowRespondModal(false);
+        setShowCounterForm(false);
+        setCounterDate(new Date()); setCounterNotes("");
+        invalidate();
+      } catch {
+        showToast({ message: "Error sending counter proposal", type: "error" });
+      }
+      return;
+    }
+
     try {
-      await respondMutation.mutateAsync({
-        appointmentId: selectedAppointment.id,
-        action,
-        counterProposedDate: action === "counter_propose" ? counterDate.toISOString() : undefined,
-        counterProposedNotes: action === "counter_propose" ? counterNotes || undefined : undefined,
-      });
-      showToast({ message: action === "confirm" ? "تم تأكيد الموعد" : action === "cancel" ? "تم إلغاء الموعد" : "تم إرسال الاقتراح البديل", type: "success" });
+      await respondMutation.mutateAsync({ appointmentId: selectedAppointment.id, action });
+      showToast({ message: action === "confirm" ? "Appointment confirmed" : "Appointment cancelled", type: "success" });
       setShowRespondModal(false);
-      setCounterNotes("");
       invalidate();
     } catch {
-      showToast({ message: "حدث خطأ", type: "error" });
+      showToast({ message: "Error", type: "error" });
     }
   };
 
@@ -132,6 +198,36 @@ export default function ClinicAppointments() {
       invalidate();
     } catch {
       showToast({ message: "حدث خطأ", type: "error" });
+    }
+  };
+
+  const handleSendNotif = (appointmentId: number, petName: string) => {
+    setApptNotifConfirmTarget({ type: "single", appointmentId, petName });
+  };
+
+  const handleSendTodayNotifications = () => {
+    if (todayCount === 0) return;
+    setApptNotifConfirmTarget({ type: "bulk" });
+  };
+
+  const handleConfirmApptNotif = () => {
+    if (!apptNotifConfirmTarget) return;
+    if (apptNotifConfirmTarget.type === "single") {
+      sendNotifMutation.mutate(
+        { appointmentId: apptNotifConfirmTarget.appointmentId },
+        {
+          onSuccess: () => { setApptNotifConfirmTarget(null); showToast({ message: "تم إرسال الإشعار", type: "success" }); },
+          onError: () => { setApptNotifConfirmTarget(null); showToast({ message: "حدث خطأ", type: "error" }); },
+        }
+      );
+    } else {
+      sendTodayNotifMutation.mutate(
+        { clinicId: Number(clinicId) },
+        {
+          onSuccess: (d) => { setApptNotifConfirmTarget(null); showToast({ message: `تم إرسال ${(d as any).count} إشعار`, type: "success" }); },
+          onError: () => { setApptNotifConfirmTarget(null); showToast({ message: "حدث خطأ", type: "error" }); },
+        }
+      );
     }
   };
 
@@ -181,6 +277,15 @@ export default function ClinicAppointments() {
             )}
             {item.notes ? <Text style={styles.notesText}>ملاحظات: {item.notes}</Text> : null}
 
+            <TouchableOpacity
+              style={[styles.notifyCardBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
+              onPress={() => handleSendNotif(item.id, item.pet?.name ?? item.petId)}
+              disabled={sendNotifMutation.isPending}
+            >
+              <Bell size={14} color={COLORS.primary} />
+              <Text style={styles.notifyCardBtnText}>إشعار للمالك</Text>
+            </TouchableOpacity>
+
             {item.status === "counter_proposed" && item.counterProposedDate && (
               <View style={styles.counterProposalBox}>
                 <Text style={styles.counterTitle}>موعد مقترح من العيادة:</Text>
@@ -227,6 +332,7 @@ export default function ClinicAppointments() {
   };
 
   return (
+    <>
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.safeArea}>
@@ -235,9 +341,18 @@ export default function ClinicAppointments() {
             <ArrowLeft size={24} color={COLORS.black} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>المواعيد</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowCreateModal(true)}>
-            <Plus size={22} color={COLORS.white} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: todayCount > 0 ? COLORS.warning : COLORS.lightGray }, sendTodayNotifMutation.isPending && { opacity: 0.5 }]}
+              onPress={handleSendTodayNotifications}
+              disabled={todayCount === 0 || sendTodayNotifMutation.isPending}
+            >
+              <Bell size={20} color={COLORS.white} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addButton} onPress={() => setShowCreateModal(true)}>
+              <Plus size={22} color={COLORS.white} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Summary row */}
@@ -318,18 +433,10 @@ export default function ClinicAppointments() {
                 ))}
               </ScrollView>
 
-              <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
+              <TouchableOpacity style={styles.datePicker} onPress={openCreateDatePicker}>
                 <Calendar size={18} color={COLORS.primary} />
                 <Text style={styles.datePickerText}>{createDate.toLocaleString("ar-EG")}</Text>
               </TouchableOpacity>
-              {showDatePicker && (
-                <DateTimePicker
-                  value={createDate}
-                  mode="datetime"
-                  onChange={(_, d) => { setShowDatePicker(false); if (d) setCreateDate(d); }}
-                  minimumDate={new Date()}
-                />
-              )}
 
               <TextInput
                 style={[styles.input, { height: 80 }]}
@@ -356,56 +463,137 @@ export default function ClinicAppointments() {
         </Modal>
 
         {/* Respond Modal (confirm / cancel / counter-propose) */}
-        <Modal visible={showRespondModal} transparent animationType="slide">
+        <Modal
+          visible={showRespondModal}
+          transparent
+          animationType="slide"
+          onRequestClose={() => { setShowRespondModal(false); setShowCounterForm(false); setCounterDate(new Date()); setCounterNotes(""); }}
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>الرد على طلب الموعد</Text>
               {selectedAppointment && (
-                <Text style={styles.modalSubtitle}>
-                  {selectedAppointment.pet?.name ?? selectedAppointment.petId} · {formatDate(selectedAppointment.appointmentDate)}
-                </Text>
+                <>
+                  <Text style={styles.modalSubtitle}>
+                    {selectedAppointment.pet?.name ?? selectedAppointment.petId}
+                  </Text>
+                  <View style={styles.fixedDateBox}>
+                    <Calendar size={14} color={COLORS.primary} />
+                    <Text style={styles.fixedDateText}>{formatDate(selectedAppointment.appointmentDate)}</Text>
+                  </View>
+                </>
               )}
 
-              <Text style={styles.inputLabel}>تاريخ مقترح بديل (إذا كنت تريد اقتراح موعد آخر)</Text>
-              <TouchableOpacity style={styles.datePicker} onPress={() => setShowCounterDatePicker(true)}>
-                <Calendar size={18} color={COLORS.primary} />
-                <Text style={styles.datePickerText}>{counterDate.toLocaleString("ar-EG")}</Text>
-              </TouchableOpacity>
-              {showCounterDatePicker && (
-                <DateTimePicker
-                  value={counterDate}
-                  mode="datetime"
-                  onChange={(_, d) => { setShowCounterDatePicker(false); if (d) setCounterDate(d); }}
-                  minimumDate={new Date()}
-                />
+              {showCounterForm ? (
+                <>
+                  <Text style={styles.inputLabel}>الموعد البديل المقترح</Text>
+                  <TouchableOpacity style={styles.datePicker} onPress={openCounterDatePicker}>
+                    <Calendar size={18} color={COLORS.primary} />
+                    <Text style={styles.datePickerText}>{counterDate.toLocaleString("ar-EG")}</Text>
+                  </TouchableOpacity>
+                  <TextInput
+                    style={[styles.input, { height: 70 }]}
+                    placeholder="ملاحظة (اختياري)"
+                    value={counterNotes}
+                    onChangeText={setCounterNotes}
+                    multiline
+                  />
+                  <View style={styles.modalButtons}>
+                    <TouchableOpacity
+                      style={[styles.modalBtn, { backgroundColor: "#9C27B0" }]}
+                      onPress={() => handleRespond("counter_propose")}
+                      disabled={respondMutation.isPending}
+                    >
+                      {respondMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.modalBtnText}>إرسال الاقتراح</Text>}
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.modalBtn, { backgroundColor: COLORS.darkGray }]} onPress={() => setShowCounterForm(false)}>
+                      <Text style={styles.modalBtnText}>رجوع</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalBtn, { backgroundColor: COLORS.success }]}
+                    onPress={() => handleRespond("confirm")}
+                    disabled={respondMutation.isPending}
+                  >
+                    {respondMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.modalBtnText}>تأكيد الموعد</Text>}
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalBtn, { backgroundColor: "#9C27B0" }]} onPress={() => setShowCounterForm(true)}>
+                    <Text style={styles.modalBtnText}>اقتراح بديل</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalBtn, { backgroundColor: COLORS.error }]}
+                    onPress={() => handleRespond("cancel")}
+                    disabled={respondMutation.isPending}
+                  >
+                    <Text style={styles.modalBtnText}>رفض</Text>
+                  </TouchableOpacity>
+                </View>
               )}
-              <TextInput
-                style={[styles.input, { height: 70 }]}
-                placeholder="ملاحظة على الموعد المقترح (اختياري)"
-                value={counterNotes}
-                onChangeText={setCounterNotes}
-                multiline
-              />
 
-              <View style={styles.modalButtons}>
-                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: COLORS.success }]} onPress={() => handleRespond("confirm")} disabled={respondMutation.isPending}>
-                  <Text style={styles.modalBtnText}>تأكيد</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: "#9C27B0" }]} onPress={() => handleRespond("counter_propose")} disabled={respondMutation.isPending}>
-                  <Text style={styles.modalBtnText}>اقتراح بديل</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.modalBtn, { backgroundColor: COLORS.error }]} onPress={() => handleRespond("cancel")} disabled={respondMutation.isPending}>
-                  <Text style={styles.modalBtnText}>رفض</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity style={{ marginTop: 8, alignItems: "center" }} onPress={() => setShowRespondModal(false)}>
+              <TouchableOpacity
+                style={{ marginTop: 8, alignItems: "center" }}
+                onPress={() => { setShowRespondModal(false); setShowCounterForm(false); setCounterDate(new Date()); setCounterNotes(""); }}
+              >
                 <Text style={{ color: COLORS.darkGray }}>إلغاء</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Modal>
-      </SafeAreaView>
+
+        {/* Notification confirm modal */}
+        <Modal visible={!!apptNotifConfirmTarget} transparent animationType="fade" onRequestClose={() => setApptNotifConfirmTarget(null)}>
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { paddingTop: 24 }]}>
+              <Bell size={28} color={COLORS.primary} style={{ alignSelf: "center", marginBottom: 12 }} />
+              <Text style={styles.modalTitle}>تأكيد إرسال الإشعار</Text>
+              <Text style={[styles.modalSubtitle, { marginBottom: 20, lineHeight: 22 }]}>
+                {apptNotifConfirmTarget?.type === "single"
+                  ? `هل تريد إرسال إشعار لمالك ${apptNotifConfirmTarget.petName} بخصوص موعده؟`
+                  : `هل تريد إرسال إشعارات لجميع أصحاب المواعيد اليوم (${todayCount} موعد)؟`}
+              </Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, { backgroundColor: COLORS.darkGray }]}
+                  onPress={() => setApptNotifConfirmTarget(null)}
+                  disabled={sendNotifMutation.isPending || sendTodayNotifMutation.isPending}
+                >
+                  <Text style={styles.modalBtnText}>إلغاء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, { backgroundColor: COLORS.primary }, (sendNotifMutation.isPending || sendTodayNotifMutation.isPending) && { opacity: 0.6 }]}
+                  onPress={handleConfirmApptNotif}
+                  disabled={sendNotifMutation.isPending || sendTodayNotifMutation.isPending}
+                >
+                  {(sendNotifMutation.isPending || sendTodayNotifMutation.isPending)
+                    ? <ActivityIndicator size="small" color={COLORS.white} />
+                    : <Text style={styles.modalBtnText}>إرسال</Text>}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+    </SafeAreaView>
     </View>
+    {showDatePicker && (
+      <DateTimePicker
+        value={createDate}
+        mode="datetime"
+        onChange={(_, d) => { setShowDatePicker(false); if (d) setCreateDate(d); }}
+        minimumDate={new Date()}
+      />
+    )}
+    {showCounterDatePicker && (
+      <DateTimePicker
+        value={counterDate}
+        mode="datetime"
+        onChange={(_, d) => { setShowCounterDatePicker(false); if (d) setCounterDate(d); }}
+        minimumDate={new Date()}
+      />
+    )}
+    </>
   );
 }
 
@@ -593,4 +781,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalBtnText: { color: COLORS.white, fontSize: 14, fontWeight: "bold" },
+  notifyCardBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + "18",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+  notifyCardBtnText: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontWeight: "600",
+  },
+  fixedDateBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#E3F2FD",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 14,
+  },
+  fixedDateText: { fontSize: 13, color: COLORS.primary, fontWeight: "500", flex: 1 },
 });

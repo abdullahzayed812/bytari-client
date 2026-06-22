@@ -190,6 +190,8 @@ export default function PetDetailsScreen() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
 
+  const [selectedCard, setSelectedCard] = useState<{ type: "medical" | "vaccination" | "reminder" | "lab" | "file"; data: any } | null>(null);
+
   const {
     pickAndUploadImage,
     takeAndUploadFromCamera,
@@ -278,13 +280,11 @@ export default function PetDetailsScreen() {
   const isOwner = !isClinicAccess && userMode === "pet_owner";
   const isAdmin = userMode === "admin";
 
-  // State to track if clinic has access
-  const [hasAccess, setHasAccess] = useState(false);
-
   // Fetch pet details based on user mode
   const petQuery = useQuery({
     ...trpc.pets.getProfile.queryOptions({
       petId: petId,
+      clinicId: clinicId ? Number(clinicId) : undefined,
     }),
   });
 
@@ -328,13 +328,9 @@ export default function PetDetailsScreen() {
     enabled: isClinicAccess,
   });
 
-  // console.log("--------------------------", checkAccess);
-
-  // Check access when component loads
+  const [hasAccess, setHasAccess] = useState(false);
   useEffect(() => {
-    if (isClinicAccess && pet && clinicId) {
-      setHasAccess(checkAccess?.data?.hasAccess);
-    }
+    if (checkAccess.data?.hasAccess) setHasAccess(true);
   }, [checkAccess.data]);
 
   const createApprovalMutation = useMutation(trpc.pets.createApprovalRequest.mutationOptions({}));
@@ -372,13 +368,13 @@ export default function PetDetailsScreen() {
   // Cancel clinic follow-ups mutation (revoke access)
   const cancelClinicFollowUpsMutation = useMutation(trpc.pets.cancelFollowUps.mutationOptions({}));
 
-  // Clinic chat — vet side: get or create when access is confirmed
+  // Clinic chat — vet side: available to any clinic user viewing this pet
   const clinicChatQuery = useQuery({
     ...trpc.clinics.chat.getOrCreate.queryOptions({
       petId: petId as string,
       clinicId: Number(clinicId),
     }),
-    enabled: isClinicAccess && hasAccess,
+    enabled: isClinicAccess,
   });
   const chatData = (clinicChatQuery.data as any)?.chat as { id: number; isActive: boolean } | undefined;
 
@@ -1075,7 +1071,7 @@ export default function PetDetailsScreen() {
   };
 
   const handleDeleteVaccination = (vaccinationId: string) => {
-    if (!isClinicAccess) return;
+    if (!isClinicAccess && !isOwner) return;
     if (!pet) return;
 
     Alert.alert("حذف التطعيم", "هل أنت متأكد من حذف هذا التطعيم؟", [
@@ -1093,7 +1089,7 @@ export default function PetDetailsScreen() {
   };
 
   const handleDeleteReminder = (reminderId: string) => {
-    if (!isClinicAccess) return;
+    if (!isClinicAccess && !isOwner) return;
     if (!pet) return;
 
     Alert.alert("حذف التذكير", "هل أنت متأكد من حذف هذا التذكير؟", [
@@ -1367,25 +1363,21 @@ export default function PetDetailsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Chat with owner */}
+          {/* Chat with owner — visible to any clinic user */}
           {chatData && (
             <View style={styles.clinicChatRow}>
-              <TouchableOpacity style={styles.chatOpenBtn} onPress={handleOpenChat}>
+              <TouchableOpacity style={styles.chatOpenBtn} onPress={handleOpenChat} disabled={!chatData}>
                 <MessageCircle size={18} color={COLORS.white} />
                 <Text style={styles.clinicActionBtnText}>محادثة المالك</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.chatToggleBtn, { backgroundColor: chatData.isActive ? "#FFF3E0" : "#E8F5E9" }]}
+                style={[styles.chatToggleBtn, { backgroundColor: chatData?.isActive ? "#FFF3E0" : "#E8F5E9" }]}
                 onPress={handleToggleChat}
-                disabled={toggleChatMutation.isPending}
+                disabled={toggleChatMutation.isPending || !chatData}
               >
-                {chatData.isActive ? (
-                  <PauseCircle size={18} color={COLORS.warning} />
-                ) : (
-                  <PlayCircle size={18} color={COLORS.success} />
-                )}
-                <Text style={[styles.chatToggleBtnText, { color: chatData.isActive ? COLORS.warning : COLORS.success }]}>
-                  {chatData.isActive ? "إيقاف المحادثة" : "تفعيل المحادثة"}
+                {chatData?.isActive ? <PauseCircle size={18} color={COLORS.warning} /> : <PlayCircle size={18} color={COLORS.success} />}
+                <Text style={[styles.chatToggleBtnText, { color: chatData?.isActive ? COLORS.warning : COLORS.success }]}>
+                  {chatData?.isActive ? "إيقاف المحادثة" : "تفعيل المحادثة"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1643,7 +1635,12 @@ export default function PetDetailsScreen() {
                   const typeLabel = isQuick ? "مراجعة سريعة" : record.recordType === "فحص_شامل" ? "فحص شامل" : "سجل طبي";
                   const typeColor = isQuick ? COLORS.warning : COLORS.primary;
                   return (
-                    <View key={record.id} style={styles.recordCard}>
+                    <TouchableOpacity
+                      key={record.id}
+                      style={styles.recordCard}
+                      onPress={() => setSelectedCard({ type: "medical", data: record })}
+                      activeOpacity={0.85}
+                    >
                       <View style={styles.recordTitleRow}>
                         <Text style={[styles.recordTitle, { flex: 1 }]}>{record.diagnosis}</Text>
                         <View style={[styles.recordTypeBadge, { backgroundColor: typeColor + "22", borderColor: typeColor }]}>
@@ -1676,7 +1673,6 @@ export default function PetDetailsScreen() {
 
                       {record.doctorName && (
                         <View style={styles.recordItem}>
-                          <Stethoscope size={13} color={COLORS.darkGray} />
                           <Text style={styles.recordLabel}>الطبيب</Text>
                           <Text style={styles.recordValue}>{record.doctorName}</Text>
                         </View>
@@ -1707,7 +1703,7 @@ export default function PetDetailsScreen() {
                           </TouchableOpacity>
                         </View>
                       )}
-                    </View>
+                    </TouchableOpacity>
                   );
                 })
             )}
@@ -1773,10 +1769,15 @@ export default function PetDetailsScreen() {
                   .slice()
                   .reverse()
                   .map((vaccination: any) => (
-                    <View key={vaccination.id} style={[styles.recordCard, { borderLeftColor: COLORS.success }]}>
+                    <TouchableOpacity
+                      key={vaccination.id}
+                      style={[styles.recordCard, { borderLeftColor: COLORS.success }]}
+                      onPress={() => setSelectedCard({ type: "vaccination", data: vaccination })}
+                      activeOpacity={0.85}
+                    >
                       <View style={styles.recordTitleRow}>
                         <Text style={styles.recordTitle}>{vaccination.name}</Text>
-                        {isClinicAccess && (
+                        {isClinicAccess ? (
                           <View style={{ flexDirection: "row", gap: 6 }}>
                             <TouchableOpacity onPress={() => handleEditVaccination(vaccination)} style={styles.deleteButton}>
                               <Edit3 size={16} color={COLORS.primary} />
@@ -1785,7 +1786,11 @@ export default function PetDetailsScreen() {
                               <Trash2 size={16} color={COLORS.error} />
                             </TouchableOpacity>
                           </View>
-                        )}
+                        ) : isOwner ? (
+                          <TouchableOpacity onPress={() => handleDeleteVaccination(vaccination.id)} style={styles.deleteButton}>
+                            <Trash2 size={16} color={COLORS.error} />
+                          </TouchableOpacity>
+                        ) : null}
                       </View>
 
                       <View style={styles.recordItem}>
@@ -1807,19 +1812,20 @@ export default function PetDetailsScreen() {
                         </View>
                       )}
 
-                      {isClinicAccess && vaccination.doctorName ? (
+                      {vaccination.doctorName && (
                         <View style={styles.recordItem}>
                           <Stethoscope size={13} color={COLORS.darkGray} />
                           <Text style={styles.recordLabel}>الطبيب</Text>
                           <Text style={styles.recordValue}>{vaccination.doctorName}</Text>
                         </View>
-                      ) : !isClinicAccess && vaccination.clinicName ? (
+                      )}
+                      {vaccination.clinicName && (
                         <View style={styles.recordItem}>
                           <Text style={styles.recordLabel}>العيادة</Text>
                           <Text style={styles.recordValue}>{vaccination.clinicName}</Text>
                         </View>
-                      ) : null}
-                    </View>
+                      )}
+                    </TouchableOpacity>
                   ))}
                 {isClinicAccess && (
                   <TouchableOpacity style={styles.addMoreButton} onPress={handleAddVaccination}>
@@ -1854,13 +1860,15 @@ export default function PetDetailsScreen() {
                 .slice()
                 .reverse()
                 .map((reminder: any) => (
-                  <View
+                  <TouchableOpacity
                     key={reminder.id}
                     style={[styles.recordCard, { borderLeftColor: COLORS.warning }, reminder.isCompleted && styles.completedReminderCard]}
+                    onPress={() => setSelectedCard({ type: "reminder", data: reminder })}
+                    activeOpacity={0.85}
                   >
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{reminder.title}</Text>
-                      {isClinicAccess && (
+                      {isClinicAccess ? (
                         <View style={{ flexDirection: "row", gap: 6 }}>
                           <TouchableOpacity onPress={() => handleEditReminder(reminder)} style={styles.deleteButton}>
                             <Edit3 size={16} color={COLORS.primary} />
@@ -1869,7 +1877,11 @@ export default function PetDetailsScreen() {
                             <Trash2 size={16} color={COLORS.error} />
                           </TouchableOpacity>
                         </View>
-                      )}
+                      ) : isOwner ? (
+                        <TouchableOpacity onPress={() => handleDeleteReminder(reminder.id)} style={styles.deleteButton}>
+                          <Trash2 size={16} color={COLORS.error} />
+                        </TouchableOpacity>
+                      ) : null}
                     </View>
 
                     <View style={styles.recordItem}>
@@ -1898,19 +1910,20 @@ export default function PetDetailsScreen() {
                       </Text>
                     </View>
 
-                    {isClinicAccess && reminder.doctorName ? (
+                    {reminder.doctorName && (
                       <View style={styles.recordItem}>
                         <Stethoscope size={13} color={COLORS.darkGray} />
                         <Text style={styles.recordLabel}>الطبيب</Text>
                         <Text style={styles.recordValue}>{reminder.doctorName}</Text>
                       </View>
-                    ) : !isClinicAccess && reminder.clinicName ? (
+                    )}
+                    {reminder.clinicName && (
                       <View style={styles.recordItem}>
                         <Text style={styles.recordLabel}>العيادة</Text>
                         <Text style={styles.recordValue}>{reminder.clinicName}</Text>
                       </View>
-                    ) : null}
-                  </View>
+                    )}
+                  </TouchableOpacity>
                 ))
             )}
           </View>
@@ -1937,7 +1950,12 @@ export default function PetDetailsScreen() {
                 .slice()
                 .reverse()
                 .map((record: any) => (
-                  <View key={record.id} style={styles.recordCard}>
+                  <TouchableOpacity
+                    key={record.id}
+                    style={styles.recordCard}
+                    onPress={() => setSelectedCard({ type: "lab", data: record })}
+                    activeOpacity={0.85}
+                  >
                     <View style={styles.recordItem}>
                       <Text style={styles.recordLabel}>التاريخ</Text>
                       <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
@@ -1958,7 +1976,7 @@ export default function PetDetailsScreen() {
                         <Text style={styles.recordValue}>{record.notes}</Text>
                       </View>
                     )}
-                  </View>
+                  </TouchableOpacity>
                 ))
             )}
             {pet.medicalRecords?.filter((r: any) => r.labNotes)?.length > 0 && (
@@ -1991,11 +2009,22 @@ export default function PetDetailsScreen() {
                 .slice()
                 .reverse()
                 .map((record: any) => (
-                  <View key={record.id} style={styles.recordCard}>
+                  <TouchableOpacity
+                    key={record.id}
+                    style={styles.recordCard}
+                    onPress={() => setSelectedCard({ type: "file", data: record })}
+                    activeOpacity={0.85}
+                  >
                     <View style={styles.recordItem}>
                       <Text style={styles.recordLabel}>التاريخ</Text>
                       <Text style={styles.recordValue}>{new Date(record.date).toLocaleDateString("ar-SA")}</Text>
                     </View>
+                    {record.diagnosis && record.diagnosis !== "ملف طبي" && (
+                      <View style={styles.recordItem}>
+                        <Text style={styles.recordLabel}>الوصف</Text>
+                        <Text style={styles.recordValue}>{record.diagnosis}</Text>
+                      </View>
+                    )}
                     {record.prescriptionImage && (
                       <View style={styles.recordItem}>
                         <Text style={styles.recordLabel}>صورة الوصفة</Text>
@@ -2020,7 +2049,7 @@ export default function PetDetailsScreen() {
                         <Image source={{ uri: url }} style={[styles.prescriptionThumbnail, { marginTop: 6 }]} />
                       </TouchableOpacity>
                     ))}
-                  </View>
+                  </TouchableOpacity>
                 ))
             )}
             {pet.medicalRecords?.filter((r: any) => r.prescriptionImage || r.fileUrls?.length > 0)?.length > 0 && (
@@ -2248,6 +2277,375 @@ export default function PetDetailsScreen() {
           </View>
         )} */}
       </View>
+
+      {/* ── Card Detail Modal ── */}
+      <Modal visible={!!selectedCard} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelectedCard(null)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              {selectedCard?.type === "medical"
+                ? selectedCard.data.recordType === "مراجعة_سريعة"
+                  ? "تفاصيل المراجعة السريعة"
+                  : selectedCard.data.recordType === "فحص_شامل"
+                    ? "تفاصيل الفحص الشامل"
+                    : "تفاصيل السجل الطبي"
+                : selectedCard?.type === "vaccination"
+                  ? "تفاصيل التطعيم"
+                  : selectedCard?.type === "reminder"
+                    ? "تفاصيل التذكير"
+                    : selectedCard?.type === "lab"
+                      ? "تفاصيل التحليل"
+                      : "تفاصيل الملف"}
+            </Text>
+            <TouchableOpacity onPress={() => setSelectedCard(null)}>
+              <X size={24} color={COLORS.black} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {selectedCard?.type === "medical" &&
+              (() => {
+                const d = selectedCard.data;
+                const isQuick = d.recordType === "مراجعة_سريعة";
+                const typeLabel = isQuick ? "مراجعة سريعة" : d.recordType === "فحص_شامل" ? "فحص شامل" : "سجل طبي";
+                const typeColor = isQuick ? COLORS.warning : COLORS.primary;
+                return (
+                  <View>
+                    <View style={[detailStyles.typeBadge, { backgroundColor: typeColor + "22", borderColor: typeColor }]}>
+                      {isQuick ? <Zap size={13} color={typeColor} /> : <ClipboardList size={13} color={typeColor} />}
+                      <Text style={[detailStyles.typeBadgeText, { color: typeColor }]}>{typeLabel}</Text>
+                    </View>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>التاريخ</Text>
+                      <Text style={detailStyles.value}>{new Date(d.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {d.clinicName && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>العيادة</Text>
+                        <Text style={detailStyles.value}>{d.clinicName}</Text>
+                      </View>
+                    )}
+                    {d.doctorName && (
+                      <View style={detailStyles.row}>
+                        <Stethoscope size={14} color={COLORS.darkGray} />
+                        <Text style={detailStyles.label}>الطبيب</Text>
+                        <Text style={detailStyles.value}>{d.doctorName}</Text>
+                      </View>
+                    )}
+                    <View style={detailStyles.divider} />
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>التشخيص</Text>
+                      <Text style={[detailStyles.value, { flex: 1 }]}>{d.diagnosis}</Text>
+                    </View>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>العلاج</Text>
+                      <Text style={[detailStyles.value, { flex: 1 }]}>{d.treatment}</Text>
+                    </View>
+                    {d.symptoms && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>الأعراض</Text>
+                        <Text style={[detailStyles.value, { flex: 1 }]}>{d.symptoms}</Text>
+                      </View>
+                    )}
+                    {d.severity && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>الشدة</Text>
+                        <Text style={detailStyles.value}>{d.severity}</Text>
+                      </View>
+                    )}
+                    {d.notes && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>ملاحظات</Text>
+                        <Text style={[detailStyles.value, { flex: 1 }]}>{d.notes}</Text>
+                      </View>
+                    )}
+                    {d.labNotes && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <View style={detailStyles.row}>
+                          <Text style={detailStyles.label}>نتائج التحاليل</Text>
+                          <Text style={[detailStyles.value, { flex: 1 }]}>{d.labNotes}</Text>
+                        </View>
+                      </>
+                    )}
+                    {d.prescriptionImage && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <Text style={detailStyles.label}>صورة الوصفة</Text>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSelectedCard(null);
+                            setSelectedImageUrl(d.prescriptionImage);
+                            setShowImageModal(true);
+                          }}
+                        >
+                          <Image source={{ uri: d.prescriptionImage }} style={detailStyles.image} resizeMode="cover" />
+                        </TouchableOpacity>
+                      </>
+                    )}
+                    {d.fileUrls?.length > 0 && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <Text style={detailStyles.label}>الملفات المرفقة</Text>
+                        {d.fileUrls.map((url: string, i: number) => (
+                          <TouchableOpacity
+                            key={i}
+                            onPress={() => {
+                              setSelectedCard(null);
+                              setSelectedImageUrl(url);
+                              setShowImageModal(true);
+                            }}
+                          >
+                            <Image source={{ uri: url }} style={[detailStyles.image, { marginTop: 8 }]} resizeMode="cover" />
+                          </TouchableOpacity>
+                        ))}
+                      </>
+                    )}
+                  </View>
+                );
+              })()}
+
+            {selectedCard?.type === "vaccination" &&
+              (() => {
+                const d = selectedCard.data;
+                return (
+                  <View>
+                    <Text style={detailStyles.bigTitle}>{d.name}</Text>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>تاريخ التطعيم</Text>
+                      <Text style={detailStyles.value}>{new Date(d.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {d.nextDate && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>الموعد القادم</Text>
+                        <Text style={detailStyles.value}>{new Date(d.nextDate).toLocaleDateString("ar-SA")}</Text>
+                      </View>
+                    )}
+                    {d.status && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>الحالة</Text>
+                        <Text style={[detailStyles.value, { color: COLORS.success }]}>{d.status === "completed" ? "مكتمل" : d.status}</Text>
+                      </View>
+                    )}
+                    {d.doctorName && (
+                      <View style={detailStyles.row}>
+                        <Stethoscope size={14} color={COLORS.darkGray} />
+                        <Text style={detailStyles.label}>الطبيب</Text>
+                        <Text style={detailStyles.value}>{d.doctorName}</Text>
+                      </View>
+                    )}
+                    {d.clinicName && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>العيادة</Text>
+                        <Text style={detailStyles.value}>{d.clinicName}</Text>
+                      </View>
+                    )}
+                    {d.notes && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <View style={detailStyles.row}>
+                          <Text style={detailStyles.label}>ملاحظات</Text>
+                          <Text style={[detailStyles.value, { flex: 1 }]}>{d.notes}</Text>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                );
+              })()}
+
+            {selectedCard?.type === "reminder" &&
+              (() => {
+                const d = selectedCard.data;
+                const typeMap: Record<string, string> = { vaccination: "تطعيم", medication: "دواء", checkup: "فحص", other: "أخرى" };
+                return (
+                  <View>
+                    <Text style={detailStyles.bigTitle}>{d.title}</Text>
+                    <View style={[detailStyles.statusBadge, { backgroundColor: d.isCompleted ? "#E8F5E9" : "#FFF3E0" }]}>
+                      {d.isCompleted ? <Check size={14} color={COLORS.success} /> : <Bell size={14} color={COLORS.warning} />}
+                      <Text style={[detailStyles.statusBadgeText, { color: d.isCompleted ? COLORS.success : COLORS.warning }]}>
+                        {d.isCompleted ? "مكتمل" : "قيد الانتظار"}
+                      </Text>
+                    </View>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>التاريخ</Text>
+                      <Text style={detailStyles.value}>{new Date(d.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>النوع</Text>
+                      <Text style={detailStyles.value}>{typeMap[d.type] ?? d.type}</Text>
+                    </View>
+                    {d.doctorName && (
+                      <View style={detailStyles.row}>
+                        <Stethoscope size={14} color={COLORS.darkGray} />
+                        <Text style={detailStyles.label}>الطبيب</Text>
+                        <Text style={detailStyles.value}>{d.doctorName}</Text>
+                      </View>
+                    )}
+                    {d.clinicName && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>العيادة</Text>
+                        <Text style={detailStyles.value}>{d.clinicName}</Text>
+                      </View>
+                    )}
+                    {d.description && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <View style={detailStyles.row}>
+                          <Text style={detailStyles.label}>الوصف</Text>
+                          <Text style={[detailStyles.value, { flex: 1 }]}>{d.description}</Text>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                );
+              })()}
+
+            {selectedCard?.type === "lab" &&
+              (() => {
+                const d = selectedCard.data;
+                return (
+                  <View>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>التاريخ</Text>
+                      <Text style={detailStyles.value}>{new Date(d.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {d.clinicName && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>العيادة</Text>
+                        <Text style={detailStyles.value}>{d.clinicName}</Text>
+                      </View>
+                    )}
+                    {d.doctorName && (
+                      <View style={detailStyles.row}>
+                        <Stethoscope size={14} color={COLORS.darkGray} />
+                        <Text style={detailStyles.label}>الطبيب</Text>
+                        <Text style={detailStyles.value}>{d.doctorName}</Text>
+                      </View>
+                    )}
+                    <View style={detailStyles.divider} />
+                    <Text style={detailStyles.label}>نتائج التحاليل</Text>
+                    <Text style={detailStyles.multilineValue}>{d.labNotes}</Text>
+                    {d.notes && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <Text style={detailStyles.label}>ملاحظات</Text>
+                        <Text style={detailStyles.multilineValue}>{d.notes}</Text>
+                      </>
+                    )}
+                  </View>
+                );
+              })()}
+
+            {selectedCard?.type === "file" &&
+              (() => {
+                const d = selectedCard.data;
+                return (
+                  <View>
+                    <View style={detailStyles.row}>
+                      <Text style={detailStyles.label}>التاريخ</Text>
+                      <Text style={detailStyles.value}>{new Date(d.date).toLocaleDateString("ar-SA")}</Text>
+                    </View>
+                    {d.diagnosis && d.diagnosis !== "ملف طبي" && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>الوصف</Text>
+                        <Text style={[detailStyles.value, { flex: 1 }]}>{d.diagnosis}</Text>
+                      </View>
+                    )}
+                    {d.clinicName && (
+                      <View style={detailStyles.row}>
+                        <Text style={detailStyles.label}>العيادة</Text>
+                        <Text style={detailStyles.value}>{d.clinicName}</Text>
+                      </View>
+                    )}
+                    {d.doctorName && (
+                      <View style={detailStyles.row}>
+                        <Stethoscope size={14} color={COLORS.darkGray} />
+                        <Text style={detailStyles.label}>الطبيب</Text>
+                        <Text style={detailStyles.value}>{d.doctorName}</Text>
+                      </View>
+                    )}
+                    {d.prescriptionImage && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <Text style={detailStyles.label}>الصورة / الوصفة</Text>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setSelectedCard(null);
+                            setSelectedImageUrl(d.prescriptionImage);
+                            setShowImageModal(true);
+                          }}
+                        >
+                          <Image source={{ uri: d.prescriptionImage }} style={detailStyles.image} resizeMode="cover" />
+                        </TouchableOpacity>
+                      </>
+                    )}
+                    {d.fileUrls?.length > 0 && (
+                      <>
+                        <View style={detailStyles.divider} />
+                        <Text style={detailStyles.label}>الملفات المرفقة</Text>
+                        {d.fileUrls.map((url: string, i: number) => (
+                          <TouchableOpacity
+                            key={i}
+                            onPress={() => {
+                              setSelectedCard(null);
+                              setSelectedImageUrl(url);
+                              setShowImageModal(true);
+                            }}
+                          >
+                            <Image source={{ uri: url }} style={[detailStyles.image, { marginTop: 8 }]} resizeMode="cover" />
+                          </TouchableOpacity>
+                        ))}
+                      </>
+                    )}
+                  </View>
+                );
+              })()}
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            {isClinicAccess && selectedCard?.type === "medical" && (
+              <Button
+                title="تعديل"
+                onPress={() => {
+                  const d = selectedCard.data;
+                  setSelectedCard(null);
+                  handleEditMedicalRecord(d);
+                }}
+                type="primary"
+                size="medium"
+                style={styles.modalButton}
+              />
+            )}
+            {isClinicAccess && selectedCard?.type === "vaccination" && (
+              <Button
+                title="تعديل"
+                onPress={() => {
+                  const d = selectedCard.data;
+                  setSelectedCard(null);
+                  handleEditVaccination(d);
+                }}
+                type="primary"
+                size="medium"
+                style={styles.modalButton}
+              />
+            )}
+            {isClinicAccess && selectedCard?.type === "reminder" && (
+              <Button
+                title="تعديل"
+                onPress={() => {
+                  const d = selectedCard.data;
+                  setSelectedCard(null);
+                  handleEditReminder(d);
+                }}
+                type="primary"
+                size="medium"
+                style={styles.modalButton}
+              />
+            )}
+            <Button title="إغلاق" onPress={() => setSelectedCard(null)} type="outline" size="medium" style={styles.modalButton} />
+          </View>
+        </View>
+      </Modal>
 
       {/* Lab Result Modal */}
       <Modal visible={showLabModal} animationType="slide" presentationStyle="pageSheet">
@@ -2508,7 +2906,13 @@ export default function PetDetailsScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editingMedicalRecord ? "تعديل السجل الطبي" : "إضافة سجل طبي"}</Text>
-            <TouchableOpacity onPress={() => { setShowMedicalModal(false); setEditingMedicalRecord(null); setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" }); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowMedicalModal(false);
+                setEditingMedicalRecord(null);
+                setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" });
+              }}
+            >
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
           </View>
@@ -2581,7 +2985,17 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button title="إلغاء" onPress={() => { setShowMedicalModal(false); setEditingMedicalRecord(null); setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" }); }} type="outline" size="medium" style={styles.modalButton} />
+            <Button
+              title="إلغاء"
+              onPress={() => {
+                setShowMedicalModal(false);
+                setEditingMedicalRecord(null);
+                setMedicalForm({ diagnosis: "", treatment: "", notes: "", prescriptionImage: "" });
+              }}
+              type="outline"
+              size="medium"
+              style={styles.modalButton}
+            />
             <Button title="حفظ" onPress={submitMedicalRecord} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2592,7 +3006,13 @@ export default function PetDetailsScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editingVaccination ? "تعديل التطعيم" : "إضافة تطعيم"}</Text>
-            <TouchableOpacity onPress={() => { setShowVaccinationModal(false); setEditingVaccination(null); setVaccinationForm({ name: "", nextDate: "", notes: "" }); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowVaccinationModal(false);
+                setEditingVaccination(null);
+                setVaccinationForm({ name: "", nextDate: "", notes: "" });
+              }}
+            >
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
           </View>
@@ -2626,7 +3046,17 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button title="إلغاء" onPress={() => { setShowVaccinationModal(false); setEditingVaccination(null); setVaccinationForm({ name: "", nextDate: "", notes: "" }); }} type="outline" size="medium" style={styles.modalButton} />
+            <Button
+              title="إلغاء"
+              onPress={() => {
+                setShowVaccinationModal(false);
+                setEditingVaccination(null);
+                setVaccinationForm({ name: "", nextDate: "", notes: "" });
+              }}
+              type="outline"
+              size="medium"
+              style={styles.modalButton}
+            />
             <Button title="حفظ" onPress={submitVaccination} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -2637,7 +3067,13 @@ export default function PetDetailsScreen() {
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{editingReminder ? "تعديل التذكير" : "إضافة تذكير"}</Text>
-            <TouchableOpacity onPress={() => { setShowReminderModal(false); setEditingReminder(null); setReminderForm({ title: "", description: "", date: "" }); }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowReminderModal(false);
+                setEditingReminder(null);
+                setReminderForm({ title: "", description: "", date: "" });
+              }}
+            >
               <X size={24} color={COLORS.black} />
             </TouchableOpacity>
           </View>
@@ -2671,7 +3107,17 @@ export default function PetDetailsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button title="إلغاء" onPress={() => { setShowReminderModal(false); setEditingReminder(null); setReminderForm({ title: "", description: "", date: "" }); }} type="outline" size="medium" style={styles.modalButton} />
+            <Button
+              title="إلغاء"
+              onPress={() => {
+                setShowReminderModal(false);
+                setEditingReminder(null);
+                setReminderForm({ title: "", description: "", date: "" });
+              }}
+              type="outline"
+              size="medium"
+              style={styles.modalButton}
+            />
             <Button title="حفظ" onPress={submitReminder} type="primary" size="medium" style={styles.modalButton} />
           </View>
         </View>
@@ -4156,5 +4602,79 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginBottom: 8,
     textAlign: "left",
+  },
+});
+
+const detailStyles = StyleSheet.create({
+  bigTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: COLORS.black,
+    marginBottom: 12,
+  },
+  typeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 12,
+  },
+  typeBadgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 12,
+  },
+  statusBadgeText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    marginBottom: 10,
+  },
+  label: {
+    fontSize: 13,
+    color: COLORS.darkGray,
+    fontWeight: "500",
+    minWidth: 90,
+  },
+  value: {
+    fontSize: 14,
+    color: COLORS.black,
+    fontWeight: "400",
+  },
+  multilineValue: {
+    fontSize: 14,
+    color: COLORS.black,
+    lineHeight: 22,
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E2E8F0",
+    marginVertical: 12,
+  },
+  image: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    marginTop: 8,
+    backgroundColor: "#F1F5F9",
   },
 });

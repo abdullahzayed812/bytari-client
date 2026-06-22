@@ -1,471 +1,230 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from "react-native";
 import React, { useMemo, useState } from "react";
 import { COLORS } from "../constants/colors";
-import { useI18n } from "../providers/I18nProvider";
 import { Stack } from "expo-router";
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Phone,
-  Stethoscope,
-  Pill,
-  User,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Building,
-  GraduationCap,
-  BookOpen,
-  Users,
-} from "lucide-react-native";
-
-type AppointmentType =
-  | "clinic"
-  | "vaccination"
-  | "checkup"
-  | "consultation"
-  | "office"
-  | "seminar"
-  | "course"
-  | "lecture";
-type AppointmentStatus = "upcoming" | "completed" | "cancelled" | "pending";
-
-interface Appointment {
-  id: string;
-  type: AppointmentType;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  status: AppointmentStatus;
-  location?: string;
-  doctor?: {
-    name: string;
-    avatar: string;
-    specialty: string;
-  };
-  clinic?: {
-    name: string;
-    address: string;
-    phone: string;
-  };
-  pet?: {
-    name: string;
-    type: string;
-    image: string;
-  };
-}
-
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    type: "clinic",
-    title: "موعد في العيادة",
-    description: "موعد مع مريض في العيادة البيطرية",
-    date: "2024-01-15",
-    time: "10:00",
-    status: "upcoming",
-    clinic: {
-      name: "عيادة الرحمة البيطرية",
-      address: "الرياض، حي النخيل",
-      phone: "+966501234567",
-    },
-    pet: {
-      name: "فلافي",
-      type: "قط",
-      image:
-        "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80",
-    },
-  },
-  {
-    id: "2",
-    type: "office",
-    title: "اجتماع في المكتب",
-    description: "اجتماع مع فريق العمل في المكتب البيطري",
-    date: "2024-01-16",
-    time: "14:00",
-    status: "upcoming",
-    location: "مكتب الطب البيطري - الطابق الثاني",
-  },
-  {
-    id: "3",
-    type: "seminar",
-    title: "ندوة الأمراض المعدية",
-    description: "ندوة حول الأمراض المعدية في الحيوانات الأليفة",
-    date: "2024-01-18",
-    time: "09:00",
-    status: "upcoming",
-    location: "قاعة المؤتمرات - مركز الطب البيطري",
-  },
-  {
-    id: "4",
-    type: "course",
-    title: "دورة الجراحة المتقدمة",
-    description: "دورة تدريبية في تقنيات الجراحة البيطرية المتقدمة",
-    date: "2024-01-20",
-    time: "08:00",
-    status: "upcoming",
-    location: "مركز التدريب البيطري",
-  },
-  {
-    id: "5",
-    type: "lecture",
-    title: "محاضرة التغذية السليمة",
-    description: "محاضرة حول التغذية السليمة للحيوانات الأليفة",
-    date: "2024-01-22",
-    time: "16:00",
-    status: "upcoming",
-    location: "جامعة الملك سعود - كلية الطب البيطري",
-  },
-  {
-    id: "6",
-    type: "clinic",
-    title: "فحص دوري",
-    description: "فحص دوري للكلب ماكس",
-    date: "2024-01-12",
-    time: "11:30",
-    status: "completed",
-    clinic: {
-      name: "عيادة الرحمة البيطرية",
-      address: "الرياض، حي النخيل",
-      phone: "+966501234567",
-    },
-    pet: {
-      name: "ماكس",
-      type: "كلب",
-      image:
-        "https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2062&q=80",
-    },
-  },
-  {
-    id: "7",
-    type: "seminar",
-    title: "ندوة الطب الوقائي",
-    description: "ندوة حول أهمية الطب الوقائي للحيوانات",
-    date: "2024-01-10",
-    time: "10:00",
-    status: "completed",
-    location: "مركز المؤتمرات الطبية",
-  },
-  {
-    id: "8",
-    type: "office",
-    title: "مراجعة الملفات",
-    description: "مراجعة ملفات المرضى والتقارير الطبية",
-    date: "2024-01-25",
-    time: "13:00",
-    status: "pending",
-    location: "مكتب الطب البيطري",
-  },
-  {
-    id: "9",
-    type: "course",
-    title: "دورة التصوير الطبي",
-    description: "دورة في استخدام أجهزة التصوير الطبي البيطري",
-    date: "2024-01-28",
-    time: "09:30",
-    status: "pending",
-    location: "مركز التدريب المتقدم",
-  },
-];
-
+import { Calendar, Clock, MapPin, Phone, CheckCircle, XCircle, AlertCircle, RefreshCcw } from "lucide-react-native";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../lib/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useApp } from "../providers/AppProvider";
 
-const getAppointmentIcon = (type: AppointmentType) => {
-  switch (type) {
-    case "clinic":
-      return Stethoscope;
-    case "vaccination":
-      return Pill;
-    case "checkup":
-      return User;
-    case "consultation":
-      return Phone;
-    case "office":
-      return Building;
-    case "seminar":
-      return Users;
-    case "course":
-      return GraduationCap;
-    case "lecture":
-      return BookOpen;
-    default:
-      return Calendar;
-  }
+type FilterType = "all" | "pending" | "confirmed" | "counter_proposed" | "done";
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "في الانتظار",
+  confirmed: "مؤكد",
+  cancelled: "ملغي",
+  counter_proposed: "اقتراح بديل",
+  completed: "مكتمل",
 };
 
-const getAppointmentColor = (type: AppointmentType) => {
-  switch (type) {
-    case "clinic":
-      return "#2196F3";
-    case "vaccination":
-      return "#FF9800";
-    case "checkup":
-      return "#4CAF50";
-    case "consultation":
-      return "#9C27B0";
-    case "office":
-      return "#795548";
-    case "seminar":
-      return "#E91E63";
-    case "course":
-      return "#3F51B5";
-    case "lecture":
-      return "#009688";
-    default:
-      return "#757575";
-  }
-};
-
-const getStatusIcon = (status: AppointmentStatus) => {
-  switch (status) {
-    case "upcoming":
-      return Clock;
-    case "completed":
-      return CheckCircle;
-    case "cancelled":
-      return XCircle;
-    case "pending":
-      return AlertCircle;
-    default:
-      return Clock;
-  }
-};
-
-const getStatusColor = (status: AppointmentStatus) => {
-  switch (status) {
-    case "upcoming":
-      return "#2196F3";
-    case "completed":
-      return "#4CAF50";
-    case "cancelled":
-      return "#F44336";
-    case "pending":
-      return "#FF9800";
-    default:
-      return "#757575";
-  }
-};
-
-const getStatusText = (status: AppointmentStatus) => {
-  switch (status) {
-    case "upcoming":
-      return "قادم";
-    case "completed":
-      return "مكتمل";
-    case "cancelled":
-      return "ملغي";
-    case "pending":
-      return "في الانتظار";
-    default:
-      return "غير محدد";
-  }
+const STATUS_COLOR: Record<string, string> = {
+  pending: "#FF9800",
+  confirmed: "#4CAF50",
+  cancelled: "#F44336",
+  counter_proposed: "#9C27B0",
+  completed: "#2196F3",
 };
 
 export default function AppointmentsScreen() {
-  const { isRTL } = useI18n();
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "upcoming" | "completed" | "pending">("all");
+  const { user } = useApp();
+  const queryClient = useQueryClient();
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>("all");
 
-  // NOTE: Assumes a `list` procedure exists on the `appointments` router.
-  // This needs to be created on the backend.
-  const { data, isLoading, error } = useQuery(trpc.appointments.list.queryOptions({}));
+  const { data, isLoading, error, refetch } = useQuery({
+    ...trpc.clinics.appointments.getForOwner.queryOptions({ ownerId: Number(user?.id) }),
+    enabled: !!user?.id,
+  });
 
-  const appointments = useMemo(() => (data as any)?.appointments, [data]);
+  const respondMutation = useMutation(trpc.clinics.appointments.respondToCounterProposal.mutationOptions());
 
-  const filteredAppointments =
-    appointments?.filter((appointment) => {
-      if (selectedFilter === "all") return true;
-      return appointment.status === selectedFilter;
-    }) || [];
+  const appointments: any[] = useMemo(() => (data as any)?.appointments ?? [], [data]);
 
-  const renderAppointmentCard = (appointment: Appointment) => {
-    const IconComponent = getAppointmentIcon(appointment.type);
-    const StatusIconComponent = getStatusIcon(appointment.status);
-    const iconColor = getAppointmentColor(appointment.type);
-    const statusColor = getStatusColor(appointment.status);
+  const filtered = useMemo(() => {
+    if (selectedFilter === "all") return appointments;
+    if (selectedFilter === "done") return appointments.filter((a) => a.status === "completed" || a.status === "cancelled");
+    return appointments.filter((a) => a.status === selectedFilter);
+  }, [appointments, selectedFilter]);
 
-    return (
-      <TouchableOpacity
-        key={appointment.id}
-        style={styles.appointmentCard}
-        onPress={() => {
-          console.log(`Appointment ${appointment.id} pressed`);
-          // TODO: Handle appointment press
-        }}
-      >
-        <View style={[styles.appointmentHeader, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-          <View style={[styles.iconContainer, { backgroundColor: iconColor + "20" }]}>
-            <IconComponent size={24} color={iconColor} />
-          </View>
-          <View style={[styles.appointmentInfo, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
-            <View style={[styles.titleRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <Text style={[styles.appointmentTitle, { textAlign: isRTL ? "left" : "right" }]}>
-                {appointment.title}
-              </Text>
-              <View style={[styles.statusContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-                <StatusIconComponent size={16} color={statusColor} />
-                <Text
-                  style={[
-                    styles.statusText,
-                    { color: statusColor, marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 },
-                  ]}
-                >
-                  {getStatusText(appointment.status)}
-                </Text>
-              </View>
-            </View>
-            <Text style={[styles.appointmentDescription, { textAlign: isRTL ? "left" : "right" }]}>
-              {appointment.description}
-            </Text>
-          </View>
-        </View>
-
-        {/* Pet Info */}
-        {appointment.pet && (
-          <View style={[styles.petContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-            <Image source={{ uri: appointment.pet.image }} style={styles.petImage} />
-            <View style={[styles.petInfo, { marginLeft: isRTL ? 0 : 12, marginRight: isRTL ? 12 : 0 }]}>
-              <Text style={[styles.petName, { textAlign: isRTL ? "left" : "right" }]}>{appointment.pet.name}</Text>
-              <Text style={[styles.petType, { textAlign: isRTL ? "left" : "right" }]}>{appointment.pet.type}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Location Info for office, seminar, course, lecture */}
-        {appointment.location && (
-          <View style={styles.locationContainer}>
-            <View style={[styles.locationInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <MapPin size={16} color={COLORS.darkGray} />
-              <Text style={[styles.locationText, { marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
-                {appointment.location}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Clinic Info */}
-        {appointment.clinic && (
-          <View style={styles.clinicContainer}>
-            <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <MapPin size={16} color={COLORS.darkGray} />
-              <Text style={[styles.clinicText, { marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
-                {appointment.clinic.name} - {appointment.clinic.address}
-              </Text>
-            </View>
-            <View style={[styles.clinicInfoRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-              <Phone size={16} color={COLORS.darkGray} />
-              <Text style={[styles.clinicText, { marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
-                {appointment.clinic.phone}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Date and Time */}
-        <View style={[styles.appointmentFooter, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-          <View style={[styles.dateTimeContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-            <Calendar size={16} color={COLORS.primary} />
-            <Text style={[styles.dateTimeText, { marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
-              {new Date(appointment.date).toLocaleDateString("ar-SA")}
-            </Text>
-          </View>
-          <View style={[styles.dateTimeContainer, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
-            <Clock size={16} color={COLORS.primary} />
-            <Text style={[styles.dateTimeText, { marginLeft: isRTL ? 0 : 6, marginRight: isRTL ? 6 : 0 }]}>
-              {appointment.time}
-            </Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+  const handleRespond = (appointmentId: number, accept: boolean) => {
+    Alert.alert(
+      accept ? "قبول الموعد البديل" : "رفض الموعد البديل",
+      accept ? "هل تريد قبول الموعد البديل الذي اقترحته العيادة؟" : "هل تريد رفض الموعد البديل؟",
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: accept ? "قبول" : "رفض",
+          style: accept ? "default" : "destructive",
+          onPress: () => {
+            respondMutation.mutate(
+              { appointmentId, accept },
+              {
+                onSuccess: () => refetch(),
+                onError: (e) => Alert.alert("خطأ", e.message),
+              },
+            );
+          },
+        },
+      ],
     );
   };
+
+  const filters: { key: FilterType; label: string }[] = [
+    { key: "all", label: "الكل" },
+    { key: "pending", label: "في الانتظار" },
+    { key: "confirmed", label: "المؤكدة" },
+    { key: "counter_proposed", label: "اقتراح بديل" },
+    { key: "done", label: "المنتهية" },
+  ];
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "المواعيد",
+          title: "مواعيدي",
           headerStyle: { backgroundColor: COLORS.white },
           headerTitleStyle: { color: COLORS.black },
           headerTintColor: COLORS.black,
         }}
       />
 
+      {/* Filter tabs */}
       <View style={styles.filterContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.filterScrollContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}
-        >
-          <TouchableOpacity
-            style={[styles.filterButton, selectedFilter === "all" && styles.activeFilterButton]}
-            onPress={() => setSelectedFilter("all")}
-          >
-            <Text style={[styles.filterButtonText, selectedFilter === "all" && styles.activeFilterButtonText]}>
-              الكل
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterButton, selectedFilter === "upcoming" && styles.activeFilterButton]}
-            onPress={() => setSelectedFilter("upcoming")}
-          >
-            <Text style={[styles.filterButtonText, selectedFilter === "upcoming" && styles.activeFilterButtonText]}>
-              القادمة
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterButton, selectedFilter === "completed" && styles.activeFilterButton]}
-            onPress={() => setSelectedFilter("completed")}
-          >
-            <Text style={[styles.filterButtonText, selectedFilter === "completed" && styles.activeFilterButtonText]}>
-              المكتملة
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.filterButton, selectedFilter === "pending" && styles.activeFilterButton]}
-            onPress={() => setSelectedFilter("pending")}
-          >
-            <Text style={[styles.filterButtonText, selectedFilter === "pending" && styles.activeFilterButtonText]}>
-              في الانتظار
-            </Text>
-          </TouchableOpacity>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterContent}>
+          {filters.map((f) => (
+            <TouchableOpacity
+              key={f.key}
+              style={[styles.filterBtn, selectedFilter === f.key && styles.filterBtnActive]}
+              onPress={() => setSelectedFilter(f.key)}
+            >
+              <Text style={[styles.filterBtnText, selectedFilter === f.key && styles.filterBtnTextActive]}>{f.label}</Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
 
       {isLoading ? (
-        <View style={styles.emptyContainer}>
+        <View style={styles.center}>
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.emptyTitle}>جاري تحميل المواعيد...</Text>
+          <Text style={styles.emptyTitle}>جاري التحميل...</Text>
         </View>
       ) : error ? (
-        <View style={styles.emptyContainer}>
-          <AlertCircle size={64} color={COLORS.error} />
+        <View style={styles.center}>
+          <AlertCircle size={48} color={COLORS.error} />
           <Text style={styles.emptyTitle}>حدث خطأ</Text>
-          <Text style={styles.emptyDescription}>{error.message}</Text>
+          <Text style={styles.emptyDesc}>{(error as any).message}</Text>
         </View>
       ) : (
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {filteredAppointments.length > 0 ? (
-            filteredAppointments.map(renderAppointmentCard)
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Calendar size={64} color={COLORS.lightGray} />
+        <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
+          {filtered.length === 0 ? (
+            <View style={styles.center}>
+              <Calendar size={56} color={COLORS.lightGray} />
               <Text style={styles.emptyTitle}>لا توجد مواعيد</Text>
-              <Text style={styles.emptyDescription}>
-                {selectedFilter === "upcoming"
-                  ? "لا توجد مواعيد قادمة"
-                  : selectedFilter === "completed"
-                  ? "لا توجد مواعيد مكتملة"
-                  : selectedFilter === "pending"
-                  ? "لا توجد مواعيد في الانتظار"
-                  : "لا توجد مواعيد حالياً"}
-              </Text>
             </View>
+          ) : (
+            filtered.map((appt) => {
+              const statusColor = STATUS_COLOR[appt.status] ?? "#757575";
+              const statusLabel = STATUS_LABEL[appt.status] ?? appt.status;
+              const isCounterProposed = appt.status === "counter_proposed";
+
+              return (
+                <View key={appt.id} style={styles.card}>
+                  {/* Header: clinic + status */}
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.statusBadge, { backgroundColor: statusColor + "22", borderColor: statusColor }]}>
+                      <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+                    </View>
+                    <Text style={styles.clinicName}>{appt.clinic?.name ?? "—"}</Text>
+                  </View>
+
+                  {/* Pet */}
+                  {appt.pet && (
+                    <View style={styles.petRow}>
+                      {appt.pet.image ? (
+                        <Image source={{ uri: appt.pet.image }} style={styles.petImage} />
+                      ) : (
+                        <View style={[styles.petImage, { backgroundColor: COLORS.lightGray }]} />
+                      )}
+                      <View>
+                        <Text style={styles.petName}>{appt.pet.name}</Text>
+                        <Text style={styles.petType}>{appt.pet.type}</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Original date */}
+                  <View style={styles.infoRow}>
+                    <Calendar size={15} color={COLORS.primary} />
+                    <Text style={styles.infoLabel}>الموعد</Text>
+                    <Text style={styles.infoValue}>
+                      {new Date(appt.appointmentDate).toLocaleString("ar-SA", { dateStyle: "medium", timeStyle: "short" })}
+                    </Text>
+                  </View>
+
+                  {/* Counter-proposed date */}
+                  {isCounterProposed && appt.counterProposedDate && (
+                    <View style={[styles.infoRow, styles.counterRow]}>
+                      <RefreshCcw size={15} color="#9C27B0" />
+                      <Text style={[styles.infoLabel, { color: "#9C27B0" }]}>موعد بديل مقترح</Text>
+                      <Text style={[styles.infoValue, { color: "#9C27B0", fontWeight: "700" }]}>
+                        {new Date(appt.counterProposedDate).toLocaleString("ar-SA", { dateStyle: "medium", timeStyle: "short" })}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Counter notes */}
+                  {isCounterProposed && appt.counterProposedNotes && (
+                    <Text style={styles.counterNotes}>{appt.counterProposedNotes}</Text>
+                  )}
+
+                  {/* Clinic contact */}
+                  {appt.clinic?.phone && (
+                    <View style={styles.infoRow}>
+                      <Phone size={15} color={COLORS.darkGray} />
+                      <Text style={styles.infoValue}>{appt.clinic.phone}</Text>
+                    </View>
+                  )}
+
+                  {appt.clinic?.address && (
+                    <View style={styles.infoRow}>
+                      <MapPin size={15} color={COLORS.darkGray} />
+                      <Text style={styles.infoValue}>{appt.clinic.address}</Text>
+                    </View>
+                  )}
+
+                  {/* Notes */}
+                  {appt.notes && (
+                    <Text style={styles.notes}>{appt.notes}</Text>
+                  )}
+
+                  {/* Requested by */}
+                  <Text style={styles.requestedBy}>
+                    {appt.requestedByClinic ? "طلبه: العيادة" : "طلبته: أنت"}
+                  </Text>
+
+                  {/* Accept / Reject counter-proposal */}
+                  {isCounterProposed && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: COLORS.success }]}
+                        onPress={() => handleRespond(appt.id, true)}
+                        disabled={respondMutation.isPending}
+                      >
+                        <CheckCircle size={16} color="#fff" />
+                        <Text style={styles.actionBtnText}>قبول الموعد البديل</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.actionBtn, { backgroundColor: COLORS.error }]}
+                        onPress={() => handleRespond(appt.id, false)}
+                        disabled={respondMutation.isPending}
+                      >
+                        <XCircle size={16} color="#fff" />
+                        <Text style={styles.actionBtnText}>رفض</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              );
+            })
           )}
         </ScrollView>
       )}
@@ -474,181 +233,116 @@ export default function AppointmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.gray,
-  },
+  container: { flex: 1, backgroundColor: COLORS.gray },
   filterContainer: {
     backgroundColor: COLORS.white,
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
-  filterScrollContent: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  filterContent: { paddingHorizontal: 16, gap: 10, flexDirection: "row" },
+  filterBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 20,
     backgroundColor: COLORS.gray,
     borderWidth: 1,
     borderColor: COLORS.lightGray,
   },
-  activeFilterButton: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  filterButtonText: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-    fontWeight: "500",
-  },
-  activeFilterButtonText: {
-    color: COLORS.white,
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  appointmentCard: {
+  filterBtnActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  filterBtnText: { fontSize: 13, color: COLORS.darkGray, fontWeight: "500" },
+  filterBtnTextActive: { color: COLORS.white },
+  list: { flex: 1, padding: 16 },
+  center: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 64 },
+  emptyTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.darkGray, marginTop: 12 },
+  emptyDesc: { fontSize: 14, color: COLORS.darkGray, textAlign: "center", marginTop: 4 },
+  card: {
     backgroundColor: COLORS.white,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 14,
     shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
     elevation: 3,
   },
-  appointmentHeader: {
-    alignItems: "flex-start",
-    marginBottom: 16,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  appointmentInfo: {
-    flex: 1,
-  },
-  titleRow: {
-    alignItems: "center",
+  cardHeader: {
+    flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  appointmentTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: COLORS.black,
-    flex: 1,
-  },
-  statusContainer: {
-    alignItems: "center",
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  appointmentDescription: {
-    fontSize: 14,
-    color: COLORS.darkGray,
-    lineHeight: 20,
-  },
-  petContainer: {
     alignItems: "center",
     marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+  },
+  clinicName: { fontSize: 15, fontWeight: "700", color: COLORS.black },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  statusText: { fontSize: 12, fontWeight: "700" },
+  petRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     backgroundColor: COLORS.gray,
-    borderRadius: 8,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
   },
-  petImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  petInfo: {
-    flex: 1,
-  },
-  petName: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: COLORS.black,
-  },
-  petType: {
-    fontSize: 12,
-    color: COLORS.darkGray,
-  },
-  locationContainer: {
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFF3E0",
-    borderRadius: 8,
-  },
-  locationInfoRow: {
+  petImage: { width: 42, height: 42, borderRadius: 21 },
+  petName: { fontSize: 14, fontWeight: "700", color: COLORS.black },
+  petType: { fontSize: 12, color: COLORS.darkGray },
+  infoRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 4,
+    gap: 6,
+    marginBottom: 6,
   },
-  locationText: {
-    fontSize: 12,
-    color: COLORS.darkGray,
-    flex: 1,
-  },
-  clinicContainer: {
-    marginBottom: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#F3F4F6",
+  infoLabel: { fontSize: 13, color: COLORS.darkGray },
+  infoValue: { fontSize: 13, color: COLORS.black, flex: 1, textAlign: "right" },
+  counterRow: {
+    backgroundColor: "#F3E5F5",
     borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
   },
-  clinicInfoRow: {
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  clinicText: {
+  counterNotes: {
     fontSize: 12,
-    color: COLORS.darkGray,
-    flex: 1,
+    color: "#9C27B0",
+    marginBottom: 8,
+    paddingHorizontal: 4,
   },
-  appointmentFooter: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 12,
+  notes: {
+    fontSize: 13,
+    color: COLORS.darkGray,
+    marginBottom: 8,
+    paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
   },
-  dateTimeContainer: {
-    alignItems: "center",
+  requestedBy: {
+    fontSize: 11,
+    color: COLORS.darkGray,
+    textAlign: "left",
+    marginBottom: 4,
   },
-  dateTimeText: {
-    fontSize: 14,
-    color: COLORS.primary,
-    fontWeight: "600",
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
   },
-  emptyContainer: {
+  actionBtn: {
     flex: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 64,
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: COLORS.darkGray,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptyDescription: {
-    fontSize: 16,
-    color: COLORS.lightGray,
-    textAlign: "center",
-    lineHeight: 24,
-  },
+  actionBtnText: { color: "#fff", fontSize: 13, fontWeight: "700" },
 });

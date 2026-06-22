@@ -116,7 +116,9 @@ export default function ClinicAnimals() {
             </View>
           </View>
           <Text style={styles.petDetails}>
-            {pet.type}{pet.breed ? ` • ${pet.breed}` : ""}{pet.age ? ` • ${pet.age} سنة` : ""}
+            {pet.type}
+            {pet.breed ? ` • ${pet.breed}` : ""}
+            {pet.age ? ` • ${pet.age} سنة` : ""}
           </Text>
 
           <View style={styles.ownerRow}>
@@ -129,9 +131,7 @@ export default function ClinicAnimals() {
               <Text style={styles.ownerPhone}>{pet.ownerPhone}</Text>
             </View>
           )}
-          {pet.lastVisit && (
-            <Text style={styles.dateAdded}>آخر زيارة: {pet.lastVisit}</Text>
-          )}
+          {pet.lastVisit && <Text style={styles.dateAdded}>آخر زيارة: {pet.lastVisit}</Text>}
 
           {/* Activity badges */}
           <View style={styles.activityRow}>
@@ -153,31 +153,6 @@ export default function ClinicAnimals() {
                 <Text style={[styles.activityBadgeText, { color: COLORS.warning }]}>تذكير</Text>
               </View>
             )}
-          </View>
-
-          {/* Action chips */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={[styles.actionChip, { backgroundColor: "#FCE4EC" }]}
-              onPress={(e) => { e.stopPropagation?.(); handleQuickAction(pet, "treatment"); }}
-            >
-              <Stethoscope size={12} color={COLORS.error} />
-              <Text style={[styles.actionChipText, { color: COLORS.error }]}>علاج</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionChip, { backgroundColor: "#FFF3E0" }]}
-              onPress={(e) => { e.stopPropagation?.(); handleQuickAction(pet, "reminder"); }}
-            >
-              <Bell size={12} color={COLORS.warning} />
-              <Text style={[styles.actionChipText, { color: COLORS.warning }]}>تذكير</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionChip, { backgroundColor: "#E8F5E9" }]}
-              onPress={(e) => { e.stopPropagation?.(); handleQuickAction(pet, "vaccine"); }}
-            >
-              <Syringe size={12} color={COLORS.success} />
-              <Text style={[styles.actionChipText, { color: COLORS.success }]}>لقاح</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -214,7 +189,10 @@ export default function ClinicAnimals() {
               placeholder="ابحث عن اسم الحيوان، المالك، النوع..."
               placeholderTextColor={COLORS.darkGray}
               value={searchQuery}
-              onChangeText={(v) => { setSearchQuery(v); setPage(0); }}
+              onChangeText={(v) => {
+                setSearchQuery(v);
+                setPage(0);
+              }}
             />
           </View>
 
@@ -224,11 +202,12 @@ export default function ClinicAnimals() {
               <TouchableOpacity
                 key={chip.key}
                 style={[styles.filterChip, filterStatus === chip.key && styles.filterChipActive]}
-                onPress={() => { setFilterStatus(chip.key); setPage(0); }}
+                onPress={() => {
+                  setFilterStatus(chip.key);
+                  setPage(0);
+                }}
               >
-                <Text style={[styles.filterChipText, filterStatus === chip.key && styles.filterChipTextActive]}>
-                  {chip.label}
-                </Text>
+                <Text style={[styles.filterChipText, filterStatus === chip.key && styles.filterChipTextActive]}>{chip.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -260,20 +239,14 @@ export default function ClinicAnimals() {
                 )}
                 {allPets.length === PAGE_SIZE && (
                   <TouchableOpacity style={styles.pageBtn} onPress={() => setPage((p) => p + 1)} disabled={isFetching}>
-                    {isFetching ? (
-                      <ActivityIndicator size="small" color={COLORS.white} />
-                    ) : (
-                      <Text style={styles.pageBtnText}>التالي</Text>
-                    )}
+                    {isFetching ? <ActivityIndicator size="small" color={COLORS.white} /> : <Text style={styles.pageBtnText}>التالي</Text>}
                   </TouchableOpacity>
                 )}
               </View>
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  {searchQuery || filterStatus !== "all" ? "لا توجد نتائج مطابقة" : "لم تتم إضافة أي حيوانات بعد"}
-                </Text>
+                <Text style={styles.emptyText}>{searchQuery || filterStatus !== "all" ? "لا توجد نتائج مطابقة" : "لم تتم إضافة أي حيوانات بعد"}</Text>
               </View>
             }
           />

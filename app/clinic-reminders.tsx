@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Modal } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Modal, ActivityIndicator } from "react-native";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
@@ -301,6 +301,7 @@ export default function ClinicReminders() {
   const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
   const [completeModalVisible, setCompleteModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [notifConfirmTarget, setNotifConfirmTarget] = useState<null | { type: "single"; reminderId: number; petName: string; title: string } | { type: "bulk" }>(null);
 
   // Fetch reminders using tRPC
   const { data: remindersData, isLoading } = useQuery(
@@ -317,9 +318,17 @@ export default function ClinicReminders() {
 
   const reminders = useMemo(() => (remindersData as any)?.reminders || [], [remindersData]);
 
+  // Hide completed items from "all" view so marking complete removes the card
+  const displayReminders = useMemo(() => {
+    if (selectedFilter !== "all") return reminders;
+    return reminders.filter((r: any) => !r.isCompleted);
+  }, [reminders, selectedFilter]);
+
   const updateStatusMutation = useMutation(trpc.clinics.reminders.updateReminderStatus.mutationOptions());
   const rescheduleMutation = useMutation(trpc.clinics.reminders.rescheduleReminder.mutationOptions());
   const deleteMutation = useMutation(trpc.clinics.reminders.deleteReminder.mutationOptions());
+  const sendNotifMutation = useMutation(trpc.clinics.reminders.sendReminderNotification.mutationOptions());
+  const sendTodayNotifMutation = useMutation(trpc.clinics.reminders.sendTodayRemindersNotification.mutationOptions());
 
   // Handler functions
   const handleReminderPress = (reminder: any) => {
@@ -440,6 +449,27 @@ export default function ClinicReminders() {
     setSelectedReminder(null);
   };
 
+  const handleConfirmNotif = () => {
+    if (!notifConfirmTarget) return;
+    if (notifConfirmTarget.type === "single") {
+      sendNotifMutation.mutate(
+        { reminderId: notifConfirmTarget.reminderId, clinicId: Number(clinicId) },
+        {
+          onSuccess: () => { setNotifConfirmTarget(null); showToast({ type: "success", message: "تم إرسال الإشعار" }); },
+          onError: (e) => { setNotifConfirmTarget(null); showToast({ type: "error", message: e.message }); },
+        }
+      );
+    } else {
+      sendTodayNotifMutation.mutate(
+        { clinicId: Number(clinicId) },
+        {
+          onSuccess: (d) => { setNotifConfirmTarget(null); showToast({ type: "success", message: `تم إرسال ${(d as any).count} إشعار` }); },
+          onError: (e) => { setNotifConfirmTarget(null); showToast({ type: "error", message: e.message }); },
+        }
+      );
+    }
+  };
+
   const renderReminderItem = ({ item }: { item: any }) => {
     const isOverdue = item.status === "overdue";
     const isToday = item.reminderDate === new Date().toISOString().split("T")[0];
@@ -520,6 +550,39 @@ export default function ClinicReminders() {
             <Text style={styles.completedIndicatorText}>مكتمل</Text>
           </View>
         )}
+
+        {/* Card action buttons */}
+        <View style={styles.cardActions}>
+          {!isCompleted && (
+            <TouchableOpacity
+              style={[styles.cardActionBtn, styles.completeActionBtn]}
+              onPress={() =>
+                updateStatusMutation.mutate(
+                  { reminderId: Number(item.id), isCompleted: true } as any,
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
+                      showToast({ type: "success", message: "تم تحديد التذكير كمكتمل" });
+                    },
+                    onError: (e) => showToast({ type: "error", message: e.message }),
+                  }
+                )
+              }
+              disabled={updateStatusMutation.isPending}
+            >
+              <CheckCircle size={14} color={COLORS.success} />
+              <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={[styles.cardActionBtn, styles.notifyActionBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
+            onPress={() => setNotifConfirmTarget({ type: "single", reminderId: Number(item.id), petName: item.petName, title: item.title })}
+            disabled={sendNotifMutation.isPending}
+          >
+            <Bell size={14} color={COLORS.primary} />
+            <Text style={[styles.cardActionBtnText, { color: COLORS.primary }]}>إشعار</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -528,7 +591,7 @@ export default function ClinicReminders() {
   const todayReminders = reminders.filter((r: any) => r.reminderDate === todayStr && r.status !== "cancelled" && r.status !== "completed");
 
   const filterButtons = [
-    { key: "all", label: "الكل", count: reminders.length },
+    { key: "all", label: "الكل", count: reminders.filter((r: any) => !r.isCompleted).length },
     { key: "pending", label: "معلق", count: reminders.filter((r: any) => r.status === "pending").length },
     { key: "overdue", label: "متأخر", count: reminders.filter((r: any) => r.status === "overdue").length },
     { key: "completed", label: "مكتمل", count: reminders.filter((r: any) => r.status === "completed").length },
@@ -574,6 +637,14 @@ export default function ClinicReminders() {
                   {todayReminders.map((r: any) => r.petName || r.title).join(" · ")}
                 </Text>
               </View>
+              <TouchableOpacity
+                style={[styles.todayBannerBtn, sendTodayNotifMutation.isPending && { opacity: 0.5 }]}
+                onPress={() => setNotifConfirmTarget({ type: "bulk" })}
+                disabled={sendTodayNotifMutation.isPending}
+              >
+                <Bell size={16} color={COLORS.warning} />
+                <Text style={styles.todayBannerBtnText}>إشعار للكل</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -631,7 +702,7 @@ export default function ClinicReminders() {
             </Text>
 
             <FlatList
-              data={reminders}
+              data={displayReminders}
               renderItem={renderReminderItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
@@ -676,6 +747,41 @@ export default function ClinicReminders() {
           reminder={selectedReminder}
           onConfirm={handleConfirmDelete}
         />
+
+        {/* Notification confirm modal */}
+        <Modal visible={!!notifConfirmTarget} transparent animationType="fade" onRequestClose={() => setNotifConfirmTarget(null)}>
+          <View style={styles.centeredModal}>
+            <View style={styles.notifConfirmModal}>
+              <Bell size={28} color={COLORS.primary} style={{ alignSelf: "center", marginBottom: 12 }} />
+              <Text style={styles.notifConfirmTitle}>تأكيد إرسال الإشعار</Text>
+              <Text style={styles.notifConfirmMsg}>
+                {notifConfirmTarget?.type === "single"
+                  ? `هل تريد إرسال إشعار لمالك ${notifConfirmTarget.petName} بخصوص التذكير "${notifConfirmTarget.title}"؟`
+                  : `هل تريد إرسال إشعارات لجميع أصحاب التذكيرات اليوم؟`}
+              </Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.secondaryButton]}
+                  onPress={() => setNotifConfirmTarget(null)}
+                  disabled={sendNotifMutation.isPending || sendTodayNotifMutation.isPending}
+                >
+                  <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>إلغاء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.primaryButton, (sendNotifMutation.isPending || sendTodayNotifMutation.isPending) && { opacity: 0.6 }]}
+                  onPress={handleConfirmNotif}
+                  disabled={sendNotifMutation.isPending || sendTodayNotifMutation.isPending}
+                >
+                  {(sendNotifMutation.isPending || sendTodayNotifMutation.isPending) ? (
+                    <ActivityIndicator size="small" color={COLORS.white} />
+                  ) : (
+                    <Text style={[styles.actionButtonText, styles.primaryButtonText]}>إرسال</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -984,6 +1090,48 @@ const styles = StyleSheet.create({
   },
 
   // New styles for completed state
+  cardActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+  },
+  cardActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  completeActionBtn: {
+    borderColor: COLORS.success,
+    backgroundColor: COLORS.success + "18",
+  },
+  notifyActionBtn: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + "18",
+  },
+  cardActionBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  todayBannerBtn: {
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    alignItems: "center",
+    gap: 2,
+  },
+  todayBannerBtnText: {
+    fontSize: 10,
+    color: COLORS.warning,
+    fontWeight: "bold",
+  },
   completedCard: {
     opacity: 0.7,
     backgroundColor: COLORS.lightGray,
@@ -1189,5 +1337,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.darkGray,
     textAlign: "left",
+  },
+  notifConfirmModal: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: "88%",
+    maxWidth: 380,
+  },
+  notifConfirmTitle: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  notifConfirmMsg: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 4,
   },
 });
