@@ -379,6 +379,9 @@ export default function RegisterPoultryTraderScreen() {
             >
               {registerMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.submitBtnText}>إرسال طلب التسجيل</Text>}
             </TouchableOpacity>
+            <View style={styles.freeTrialBadge}>
+              <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
+            </View>
           </ScrollView>
         )}
 
@@ -510,6 +513,16 @@ const styles = StyleSheet.create({
   },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: COLORS.white, fontSize: 16, fontWeight: "700" },
+  freeTrialBadge: {
+    marginTop: 10,
+    backgroundColor: "#ECFDF5",
+    borderRadius: 8,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#6EE7B7",
+  },
+  freeTrialText: { fontSize: 13, fontWeight: "700", color: "#065F46" },
   termsContainer: {
     borderWidth: 1,
     borderColor: "#E5E7EB",

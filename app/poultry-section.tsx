@@ -126,9 +126,6 @@ export default function PoultrySectionScreen() {
                 <TouchableOpacity style={[styles.primaryBtn, styles.traderBtn]} onPress={handleTrader}>
                   <Text style={styles.primaryBtnText}>{hasActiveTrader ? "الذهاب إلى لوحة التحكم" : "تسجيل كتاجر"}</Text>
                 </TouchableOpacity>
-                <View style={styles.freeTrialBadge}>
-                  <Text style={styles.freeTrialText}>⭐ فترة مجانية</Text>
-                </View>
               </>
             )}
           </View>
@@ -192,16 +189,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   pendingText: { color: "#D97706", fontWeight: "600", fontSize: 14 },
-  freeTrialBadge: {
-    marginTop: 10,
-    backgroundColor: "#ECFDF5",
-    borderRadius: 8,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#6EE7B7",
-  },
-  freeTrialText: { fontSize: 13, fontWeight: "700", color: "#065F46" },
   infoBox: {
     backgroundColor: "#E3F2FD",
     borderRadius: 8,
