@@ -646,38 +646,44 @@ export default function ClinicDashboard() {
             </View>
           </View>
 
-          {/* Quick Settings (owner only) */}
-          {access?.isOwner ? (
+          {/* Quick Settings — visible to owners and staff with at least one management permission */}
+          {(access?.isOwner || permissions?.canManageSettings || permissions?.canManageStaff || permissions?.canViewReports) ? (
             <View style={styles.settingsSection}>
               <Text style={styles.sectionTitle}>الإعدادات السريعة</Text>
               <View style={styles.settingsGrid}>
-                <TouchableOpacity
-                  style={styles.settingCard}
-                  onPress={() => router.push({ pathname: "/clinic-quick-review-settings", params: { clinicId: clinic?.id } })}
-                >
-                  <Zap size={20} color={COLORS.primary} />
-                  <Text style={styles.settingText}>إعدادات المراجعة السريعة</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.settingCard}
-                  onPress={() => {
-                    setMessageModalType("visitors");
-                    setShowMessageModal(true);
-                  }}
-                >
-                  <Send size={20} color="#FF9800" />
-                  <Text style={styles.settingText}>إرسال رسالة للمراجعين</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.settingCard}
-                  onPress={() => {
-                    setMessageModalType("followers");
-                    setShowMessageModal(true);
-                  }}
-                >
-                  <Send size={20} color={COLORS.primary} />
-                  <Text style={styles.settingText}>إرسال رسالة للمتابعين</Text>
-                </TouchableOpacity>
+                {(access?.isOwner || permissions?.canManageSettings) && (
+                  <TouchableOpacity
+                    style={styles.settingCard}
+                    onPress={() => router.push({ pathname: "/clinic-quick-review-settings", params: { clinicId: clinic?.id } })}
+                  >
+                    <Zap size={20} color={COLORS.primary} />
+                    <Text style={styles.settingText}>إعدادات المراجعة السريعة</Text>
+                  </TouchableOpacity>
+                )}
+                {(access?.isOwner || permissions?.canManageSettings) && (
+                  <TouchableOpacity
+                    style={styles.settingCard}
+                    onPress={() => {
+                      setMessageModalType("visitors");
+                      setShowMessageModal(true);
+                    }}
+                  >
+                    <Send size={20} color="#FF9800" />
+                    <Text style={styles.settingText}>إرسال رسالة للمراجعين</Text>
+                  </TouchableOpacity>
+                )}
+                {(access?.isOwner || permissions?.canManageSettings) && (
+                  <TouchableOpacity
+                    style={styles.settingCard}
+                    onPress={() => {
+                      setMessageModalType("followers");
+                      setShowMessageModal(true);
+                    }}
+                  >
+                    <Send size={20} color={COLORS.primary} />
+                    <Text style={styles.settingText}>إرسال رسالة للمتابعين</Text>
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-chats", params: { clinicId: clinic?.id } })}>
                   <View style={{ position: "relative" }}>
                     <MessageCircle size={20} color={COLORS.primary} />
@@ -689,22 +695,30 @@ export default function ClinicDashboard() {
                   </View>
                   <Text style={styles.settingText}>المحادثات</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.settingCard} onPress={() => Alert.alert("إدارة المخزون", "هذه الميزة قيد التطوير وستكون متاحة قريباً")}>
-                  <Package size={20} color={COLORS.darkGray} />
-                  <Text style={styles.settingText}>إدارة المخزون</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-staff", params: { clinicId: clinic?.id } })}>
-                  <UserCog size={20} color={COLORS.success} />
-                  <Text style={styles.settingText}>إدارة المستخدمين والأطباء</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.settingCard} onPress={() => Alert.alert("التقارير والإحصائيات", "هذه الميزة قيد التطوير وستكون متاحة قريباً")}>
-                  <BarChart2 size={20} color={COLORS.warning} />
-                  <Text style={styles.settingText}>التقارير والإحصائيات</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}>
-                  <Settings size={20} color={COLORS.primary} />
-                  <Text style={styles.settingText}>إعدادات العيادة</Text>
-                </TouchableOpacity>
+                {(access?.isOwner || permissions?.canManageSettings) && (
+                  <TouchableOpacity style={styles.settingCard} onPress={() => Alert.alert("إدارة المخزون", "هذه الميزة قيد التطوير وستكون متاحة قريباً")}>
+                    <Package size={20} color={COLORS.darkGray} />
+                    <Text style={styles.settingText}>إدارة المخزون</Text>
+                  </TouchableOpacity>
+                )}
+                {(access?.isOwner || permissions?.canManageStaff) && (
+                  <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-staff", params: { clinicId: clinic?.id } })}>
+                    <UserCog size={20} color={COLORS.success} />
+                    <Text style={styles.settingText}>إدارة المستخدمين والأطباء</Text>
+                  </TouchableOpacity>
+                )}
+                {(access?.isOwner || permissions?.canViewReports) && (
+                  <TouchableOpacity style={styles.settingCard} onPress={() => Alert.alert("التقارير والإحصائيات", "هذه الميزة قيد التطوير وستكون متاحة قريباً")}>
+                    <BarChart2 size={20} color={COLORS.warning} />
+                    <Text style={styles.settingText}>التقارير والإحصائيات</Text>
+                  </TouchableOpacity>
+                )}
+                {(access?.isOwner || permissions?.canManageSettings) && (
+                  <TouchableOpacity style={styles.settingCard} onPress={() => router.push({ pathname: "/clinic-settings", params: { clinicId: clinic?.id } })}>
+                    <Settings size={20} color={COLORS.primary} />
+                    <Text style={styles.settingText}>إعدادات العيادة</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           ) : null}

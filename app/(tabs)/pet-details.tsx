@@ -1386,7 +1386,7 @@ export default function PetDetailsScreen() {
           <View style={styles.clinicStatsRow}>
             <View style={styles.clinicStatItem}>
               <Text style={styles.clinicStatValue}>{pet.vaccinations?.length ?? 0}</Text>
-              <Text style={styles.clinicStatLabel}>اللقاحات</Text>
+              <Text style={styles.clinicStatLabel}>التطعيمات</Text>
             </View>
             <View style={styles.clinicStatDivider} />
             <View style={styles.clinicStatItem}>
@@ -1410,7 +1410,7 @@ export default function PetDetailsScreen() {
           {(
             [
               { key: "medical", label: "السجلات الطبية", Icon: ClipboardList },
-              { key: "vaccinations", label: "اللقاحات", Icon: Syringe },
+              { key: "vaccinations", label: "التطعيمات", Icon: Syringe },
               { key: "reminders", label: "التذكيرات", Icon: Bell },
               { key: "lab", label: "التحاليل", Icon: FlaskConical },
               { key: "files", label: "الملفات", Icon: Folder },
@@ -1629,7 +1629,7 @@ export default function PetDetailsScreen() {
               pet.medicalRecords
                 .filter((r: any) => r.recordType !== "تحليل" && r.recordType !== "ملف")
                 .slice()
-                .reverse()
+                .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((record: any) => {
                   const isQuick = record.recordType === "مراجعة_سريعة";
                   const typeLabel = isQuick ? "مراجعة سريعة" : record.recordType === "فحص_شامل" ? "فحص شامل" : "سجل طبي";
@@ -1812,7 +1812,7 @@ export default function PetDetailsScreen() {
                         </View>
                       )}
 
-                      {vaccination.doctorName && (
+                      {isClinicAccess && vaccination.doctorName && (
                         <View style={styles.recordItem}>
                           <Stethoscope size={13} color={COLORS.darkGray} />
                           <Text style={styles.recordLabel}>الطبيب</Text>
@@ -1910,7 +1910,7 @@ export default function PetDetailsScreen() {
                       </Text>
                     </View>
 
-                    {reminder.doctorName && (
+                    {isClinicAccess && reminder.doctorName && (
                       <View style={styles.recordItem}>
                         <Stethoscope size={13} color={COLORS.darkGray} />
                         <Text style={styles.recordLabel}>الطبيب</Text>

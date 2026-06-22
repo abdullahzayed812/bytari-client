@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Modal } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Modal, ActivityIndicator } from "react-native";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
@@ -222,6 +222,7 @@ export default function ClinicVaccinations() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [rescheduleModalVisible, setRescheduleModalVisible] = useState(false);
   const [completeModalVisible, setCompleteModalVisible] = useState(false);
+  const [notifConfirmTarget, setNotifConfirmTarget] = useState<null | { vaccinationId: number; petName: string; vaccineName: string }>(null);
 
   // Fetch vaccinations using tRPC
   const { data: vaccinationsData, isLoading } = useQuery(
@@ -241,6 +242,7 @@ export default function ClinicVaccinations() {
   // tRPC mutations
   const updateStatusMutation = useMutation(trpc.clinics.vaccinations.updateVaccinationStatus.mutationOptions());
   const rescheduleMutation = useMutation(trpc.clinics.vaccinations.rescheduleVaccination.mutationOptions());
+  const sendNotifMutation = useMutation(trpc.clinics.vaccinations.sendVaccinationNotification.mutationOptions());
 
   // Handler functions
   const handleVaccinationPress = (vaccination: any) => {
@@ -349,6 +351,17 @@ export default function ClinicVaccinations() {
     );
 
     setSelectedVaccination(null);
+  };
+
+  const handleConfirmNotif = () => {
+    if (!notifConfirmTarget) return;
+    sendNotifMutation.mutate(
+      { vaccinationId: notifConfirmTarget.vaccinationId, clinicId: Number(clinicId) } as any,
+      {
+        onSuccess: () => { setNotifConfirmTarget(null); showToast({ type: "success", message: "تم إرسال الإشعار" }); },
+        onError: (e) => { setNotifConfirmTarget(null); showToast({ type: "error", message: e.message }); },
+      },
+    );
   };
 
   const closeModals = () => {
@@ -500,6 +513,39 @@ export default function ClinicVaccinations() {
             <Text style={styles.todayIndicatorText}>موعد اليوم</Text>
           </View>
         )}
+
+        {/* Card action buttons */}
+        <View style={styles.cardActions}>
+          {item.status !== "completed" && item.status !== "cancelled" && (
+            <TouchableOpacity
+              style={[styles.cardActionBtn, styles.completeActionBtn]}
+              onPress={() =>
+                updateStatusMutation.mutate(
+                  { vaccinationId: Number(item.id), status: "completed" } as any,
+                  {
+                    onSuccess: () => {
+                      queryClient.invalidateQueries(trpc.clinics.vaccinations.getClinicVaccinations.queryKey);
+                      showToast({ type: "success", message: "تم تحديد التطعيم كمكتمل" });
+                    },
+                    onError: (e) => showToast({ type: "error", message: e.message }),
+                  },
+                )
+              }
+              disabled={updateStatusMutation.isPending}
+            >
+              <CheckCircle size={14} color={COLORS.success} />
+              <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={[styles.cardActionBtn, styles.notifyActionBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
+            onPress={() => setNotifConfirmTarget({ vaccinationId: Number(item.id), petName: item.petName, vaccineName: item.vaccineName })}
+            disabled={sendNotifMutation.isPending}
+          >
+            <Shield size={14} color={COLORS.primary} />
+            <Text style={[styles.cardActionBtnText, { color: COLORS.primary }]}>إشعار</Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -636,6 +682,39 @@ export default function ClinicVaccinations() {
         <RescheduleModal visible={rescheduleModalVisible} onClose={closeModals} vaccination={selectedVaccination} onConfirm={handleConfirmReschedule} />
 
         <CompleteVaccinationModal visible={completeModalVisible} onClose={closeModals} vaccination={selectedVaccination} onConfirm={handleConfirmComplete} />
+
+        {/* Notification confirm modal */}
+        <Modal visible={!!notifConfirmTarget} transparent animationType="fade" onRequestClose={() => setNotifConfirmTarget(null)}>
+          <View style={styles.centeredModal}>
+            <View style={styles.notifConfirmModal}>
+              <Shield size={28} color={COLORS.primary} style={{ alignSelf: "center", marginBottom: 12 }} />
+              <Text style={styles.notifConfirmTitle}>تأكيد إرسال الإشعار</Text>
+              <Text style={styles.notifConfirmMsg}>
+                {`هل تريد إرسال إشعار لمالك ${notifConfirmTarget?.petName} بخصوص تطعيم "${notifConfirmTarget?.vaccineName}"؟`}
+              </Text>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.secondaryButton]}
+                  onPress={() => setNotifConfirmTarget(null)}
+                  disabled={sendNotifMutation.isPending}
+                >
+                  <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>إلغاء</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.primaryButton, sendNotifMutation.isPending && { opacity: 0.6 }]}
+                  onPress={handleConfirmNotif}
+                  disabled={sendNotifMutation.isPending}
+                >
+                  {sendNotifMutation.isPending ? (
+                    <ActivityIndicator size="small" color={COLORS.white} />
+                  ) : (
+                    <Text style={[styles.actionButtonText, styles.primaryButtonText]}>إرسال</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </View>
   );
@@ -1087,6 +1166,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.black,
     fontWeight: "600",
+  },
+  cardActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.lightGray,
+  },
+  cardActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  completeActionBtn: {
+    borderColor: COLORS.success,
+    backgroundColor: COLORS.success + "18",
+  },
+  notifyActionBtn: {
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary + "18",
+  },
+  cardActionBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  notifConfirmModal: {
+    backgroundColor: COLORS.white,
+    borderRadius: 16,
+    padding: 24,
+    width: "88%",
+    maxWidth: 380,
+  },
+  notifConfirmTitle: {
+    fontSize: 17,
+    fontWeight: "bold",
+    color: COLORS.black,
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  notifConfirmMsg: {
+    fontSize: 14,
+    color: COLORS.darkGray,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 4,
   },
   overdueAlert: {
     flexDirection: "row-reverse",
