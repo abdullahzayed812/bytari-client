@@ -53,7 +53,9 @@ const IRAQ_GOVERNORATES = [
   "ميسان",
   "القادسية",
   "كركوك",
-  "إقليم كردستان",
+  "أربيل",
+  "السليمانية",
+  "دهوك",
 ];
 
 export default function AddPoultryFarmScreen() {
