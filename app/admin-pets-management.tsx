@@ -2,19 +2,7 @@ import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput, Alert, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-import {
-  Heart,
-  Trash2,
-  Edit3,
-  Ban,
-  CheckCircle,
-  XCircle,
-  Eye,
-  AlertTriangle,
-  UserCheck,
-  Search,
-  Filter,
-} from "lucide-react-native";
+import { Heart, Trash2, Edit3, Ban, CheckCircle, XCircle, Eye, AlertTriangle, UserCheck, Search, Filter } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
@@ -44,9 +32,7 @@ interface Pet {
 export default function AdminPetsManagement() {
   const router = useRouter();
   const { user } = useApp();
-  const [selectedFilter, setSelectedFilter] = useState<
-    "all" | "active" | "banned" | "reported" | "lost" | "breeding" | "adoption" | "pending_approval"
-  >("all");
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "banned" | "reported" | "lost" | "breeding" | "adoption" | "pending_approval">("all");
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -63,11 +49,9 @@ export default function AdminPetsManagement() {
   } = useQuery(
     trpc.pets.getAllForAdmin.queryOptions({
       adminId: user?.id ? Number(user.id) : 0,
-    })
+    }),
   );
-  const { data: searchResultsData, isLoading: isSearching } = useQuery(
-    trpc.admin.pets.search.queryOptions({ query: searchQuery }, { enabled: !!searchQuery })
-  );
+  const { data: searchResultsData, isLoading: isSearching } = useQuery(trpc.admin.pets.search.queryOptions({ query: searchQuery }, { enabled: !!searchQuery }));
   const allPets = useMemo(() => (allPetsData as any)?.pets, [allPetsData]);
   const searchResults = useMemo(() => (searchResultsData as any)?.pets, [searchResultsData]);
 
@@ -82,7 +66,7 @@ export default function AdminPetsManagement() {
 
     switch (selectedFilter) {
       case "active":
-        return petsSource.filter((pet: Pet) => pet.status === "active" && pet.category === 'owned');
+        return petsSource.filter((pet: Pet) => pet.status === "active" && pet.category === "owned");
       case "banned":
         return petsSource.filter((pet: Pet) => pet.status === "banned");
       case "reported":
@@ -176,9 +160,9 @@ export default function AdminPetsManagement() {
             petId: +selectedPet.id,
             type: selectedPet.category,
             typeStr: selectedPet.type,
-            status: 'banned',
+            status: "banned",
             name: selectedPet.name, // Required field
-            ...(user?.accountType === "admin" && { adminId: user?.id })
+            ...(user?.accountType === "admin" && { adminId: user?.id }),
           },
           {
             onSuccess: () => {
@@ -186,7 +170,7 @@ export default function AdminPetsManagement() {
               Alert.alert("نجح", "تم تحديث حالة الحيوان بنجاح");
             },
             onError: (err) => Alert.alert("خطأ", err.message),
-          }
+          },
         );
         break;
       case "unban":
@@ -195,9 +179,9 @@ export default function AdminPetsManagement() {
             petId: +selectedPet.id,
             type: selectedPet.category,
             typeStr: selectedPet.type,
-            status: 'active',
+            status: "active",
             name: selectedPet.name, // Required field
-            ...(user?.accountType === "admin" && { adminId: user?.id })
+            ...(user?.accountType === "admin" && { adminId: user?.id }),
           },
           {
             onSuccess: () => {
@@ -205,7 +189,7 @@ export default function AdminPetsManagement() {
               Alert.alert("نجح", "تم تحديث حالة الحيوان بنجاح");
             },
             onError: (err) => Alert.alert("خطأ", err.message),
-          }
+          },
         );
         break;
       case "delete":
@@ -213,7 +197,7 @@ export default function AdminPetsManagement() {
           {
             petId: +selectedPet.id,
             type: selectedPet.category,
-            ...(user?.accountType === "admin" && { adminId: user?.id })
+            ...(user?.accountType === "admin" && { adminId: user?.id }),
           },
           {
             onSuccess: () => {
@@ -221,7 +205,7 @@ export default function AdminPetsManagement() {
               Alert.alert("نجح", "تم حذف الحيوان بنجاح");
             },
             onError: (err) => Alert.alert("خطأ", err.message),
-          }
+          },
         );
         break;
     }
@@ -248,6 +232,11 @@ export default function AdminPetsManagement() {
             <ScrollView style={styles.detailModalScroll}>
               <View style={styles.petInfoSection}>
                 <Text style={styles.sectionTitle}>معلومات الحيوان</Text>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>ID:</Text>
+                  <Text style={styles.infoValue}>{selectedPet.id}</Text>
+                </View>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>الاسم:</Text>
@@ -290,10 +279,10 @@ export default function AdminPetsManagement() {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>التصنيف:</Text>
                   <Text style={styles.infoValue}>
-                    {selectedPet.category === 'owned' && 'مملوك'}
-                    {selectedPet.category === 'lost' && 'مفقود'}
-                    {selectedPet.category === 'adoption' && 'تبني'}
-                    {selectedPet.category === 'breeding' && 'تزاوج'}
+                    {selectedPet.category === "owned" && "مملوك"}
+                    {selectedPet.category === "lost" && "مفقود"}
+                    {selectedPet.category === "adoption" && "تبني"}
+                    {selectedPet.category === "breeding" && "تزاوج"}
                   </Text>
                 </View>
               </View>
@@ -323,9 +312,7 @@ export default function AdminPetsManagement() {
                 {selectedPet.lastActivity && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>آخر نشاط:</Text>
-                    <Text style={styles.infoValue}>
-                      {new Date(selectedPet.lastActivity).toLocaleDateString("ar-SA")}
-                    </Text>
+                    <Text style={styles.infoValue}>{new Date(selectedPet.lastActivity).toLocaleDateString("ar-SA")}</Text>
                   </View>
                 )}
 
@@ -343,7 +330,7 @@ export default function AdminPetsManagement() {
                   </Text>
                 </View>
 
-                {selectedPet.category === 'lost' && (
+                {selectedPet.category === "lost" && (
                   <>
                     <View style={styles.specialBadge}>
                       <AlertTriangle size={16} color="#E74C3C" />
@@ -364,7 +351,7 @@ export default function AdminPetsManagement() {
                   </>
                 )}
 
-                {selectedPet.category === 'adoption' && (
+                {selectedPet.category === "adoption" && (
                   <>
                     <View style={styles.specialBadge}>
                       <Heart size={16} color="#3498DB" />
@@ -384,7 +371,7 @@ export default function AdminPetsManagement() {
                   </>
                 )}
 
-                {selectedPet.category === 'breeding' && (
+                {selectedPet.category === "breeding" && (
                   <>
                     <View style={styles.specialBadge}>
                       <Heart size={16} color="#9B59B6" />
@@ -504,22 +491,22 @@ export default function AdminPetsManagement() {
 
       <View style={styles.petFooter}>
         <View style={styles.specialTags}>
-          {item.category === 'lost' && (
+          {item.category === "lost" && (
             <View style={styles.lostTag}>
               <AlertTriangle size={12} color="#E74C3C" />
               <Text style={styles.tagText}>مفقود</Text>
             </View>
           )}
 
-          {item.category === 'breeding' && (
+          {item.category === "breeding" && (
             <View style={styles.breedingTag}>
               <Heart size={12} color="#9B59B6" />
               <Text style={styles.tagText}>تزاوج</Text>
             </View>
           )}
 
-          {item.category === 'adoption' && (
-            <View style={[styles.breedingTag, { backgroundColor: '#E3F2FD' }]}>
+          {item.category === "adoption" && (
+            <View style={[styles.breedingTag, { backgroundColor: "#E3F2FD" }]}>
               <Heart size={12} color="#3498DB" />
               <Text style={styles.tagText}>تبني</Text>
             </View>
@@ -582,72 +569,49 @@ export default function AdminPetsManagement() {
 
       {/* Filter Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterTabs}>
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "all" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("all")}
-        >
-          <Text style={[styles.filterTabText, selectedFilter === "all" && styles.activeFilterTabText]}>
-            الكل ({allPets?.length || 0})
-          </Text>
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "all" && styles.activeFilterTab]} onPress={() => setSelectedFilter("all")}>
+          <Text style={[styles.filterTabText, selectedFilter === "all" && styles.activeFilterTabText]}>الكل ({allPets?.length || 0})</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "active" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("active")}
-        >
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "active" && styles.activeFilterTab]} onPress={() => setSelectedFilter("active")}>
           <CheckCircle size={16} color={selectedFilter === "active" ? "#fff" : "#27AE60"} />
           <Text style={[styles.filterTabText, selectedFilter === "active" && styles.activeFilterTabText]}>
             نشط ({allPets?.filter((p) => p.status === "active").length || 0})
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "reported" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("reported")}
-        >
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "reported" && styles.activeFilterTab]} onPress={() => setSelectedFilter("reported")}>
           <AlertTriangle size={16} color={selectedFilter === "reported" ? "#fff" : "#F39C12"} />
           <Text style={[styles.filterTabText, selectedFilter === "reported" && styles.activeFilterTabText]}>
             مبلغ عنه ({allPets?.filter((p) => p.status === "reported").length || 0})
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "banned" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("banned")}
-        >
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "banned" && styles.activeFilterTab]} onPress={() => setSelectedFilter("banned")}>
           <Ban size={16} color={selectedFilter === "banned" ? "#fff" : "#E74C3C"} />
           <Text style={[styles.filterTabText, selectedFilter === "banned" && styles.activeFilterTabText]}>
             محظور ({allPets?.filter((p) => p.status === "banned").length || 0})
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "lost" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("lost")}
-        >
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "lost" && styles.activeFilterTab]} onPress={() => setSelectedFilter("lost")}>
           <AlertTriangle size={16} color={selectedFilter === "lost" ? "#fff" : "#E74C3C"} />
           <Text style={[styles.filterTabText, selectedFilter === "lost" && styles.activeFilterTabText]}>
-            مفقود ({allPets?.filter((p: Pet) => p.category === 'lost').length || 0})
+            مفقود ({allPets?.filter((p: Pet) => p.category === "lost").length || 0})
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "breeding" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("breeding")}
-        >
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "breeding" && styles.activeFilterTab]} onPress={() => setSelectedFilter("breeding")}>
           <Heart size={16} color={selectedFilter === "breeding" ? "#fff" : "#9B59B6"} />
           <Text style={[styles.filterTabText, selectedFilter === "breeding" && styles.activeFilterTabText]}>
-            تزاوج ({allPets?.filter((p: Pet) => p.category === 'breeding').length || 0})
+            تزاوج ({allPets?.filter((p: Pet) => p.category === "breeding").length || 0})
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.filterTab, selectedFilter === "adoption" && styles.activeFilterTab]}
-          onPress={() => setSelectedFilter("adoption")}
-        >
+        <TouchableOpacity style={[styles.filterTab, selectedFilter === "adoption" && styles.activeFilterTab]} onPress={() => setSelectedFilter("adoption")}>
           <Heart size={16} color={selectedFilter === "adoption" ? "#fff" : "#3498DB"} />
           <Text style={[styles.filterTabText, selectedFilter === "adoption" && styles.activeFilterTabText]}>
-            تبني ({allPets?.filter((p: Pet) => p.category === 'adoption').length || 0})
+            تبني ({allPets?.filter((p: Pet) => p.category === "adoption").length || 0})
           </Text>
         </TouchableOpacity>
 
@@ -656,9 +620,7 @@ export default function AdminPetsManagement() {
           onPress={() => router.push("/admin-pet-approvals")}
         >
           <UserCheck size={16} color={selectedFilter === "pending_approval" ? "#fff" : "#3498DB"} />
-          <Text style={[styles.filterTabText, selectedFilter === "pending_approval" && styles.activeFilterTabText]}>
-            طلبات الموافقة
-          </Text>
+          <Text style={[styles.filterTabText, selectedFilter === "pending_approval" && styles.activeFilterTabText]}>طلبات الموافقة</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -673,9 +635,7 @@ export default function AdminPetsManagement() {
           <View style={styles.emptyContainer}>
             <Heart size={48} color="#ccc" />
             <Text style={styles.emptyText}>لا توجد حيوانات</Text>
-            <Text style={styles.emptySubtext}>
-              {searchQuery ? "لا توجد نتائج للبحث" : "لا توجد حيوانات في هذه الفئة"}
-            </Text>
+            <Text style={styles.emptySubtext}>{searchQuery ? "لا توجد نتائج للبحث" : "لا توجد حيوانات في هذه الفئة"}</Text>
           </View>
         }
       />
