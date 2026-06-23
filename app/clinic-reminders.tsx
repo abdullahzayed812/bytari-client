@@ -155,11 +155,23 @@ const ReminderDetailsModal = ({ visible, onClose, reminder, onReschedule, onComp
 const RescheduleModal = ({ visible, onClose, reminder, onConfirm }: any) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleDateChange = (event, date) => {
     setShowDatePicker(false);
     if (date) {
-      setSelectedDate(date);
+      const merged = new Date(date);
+      merged.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
+      setSelectedDate(merged);
+    }
+  };
+
+  const handleTimeChange = (event, time) => {
+    setShowTimePicker(false);
+    if (time) {
+      const merged = new Date(selectedDate);
+      merged.setHours(time.getHours(), time.getMinutes(), 0, 0);
+      setSelectedDate(merged);
     }
   };
 
@@ -167,6 +179,8 @@ const RescheduleModal = ({ visible, onClose, reminder, onConfirm }: any) => {
     onConfirm(selectedDate);
     onClose();
   };
+
+  const timeStr = selectedDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit", hour12: false });
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onClose}>
@@ -189,6 +203,11 @@ const RescheduleModal = ({ visible, onClose, reminder, onConfirm }: any) => {
               <Text style={styles.datePickerText}>{selectedDate.toLocaleDateString("ar-EG")}</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={[styles.datePickerButton, { marginTop: 10 }]} onPress={() => setShowTimePicker(true)}>
+              <Clock size={20} color={COLORS.primary} />
+              <Text style={styles.datePickerText}>{timeStr}</Text>
+            </TouchableOpacity>
+
             {showDatePicker && (
               <DateTimePicker
                 value={selectedDate}
@@ -196,6 +215,15 @@ const RescheduleModal = ({ visible, onClose, reminder, onConfirm }: any) => {
                 display="default"
                 onChange={handleDateChange}
                 minimumDate={new Date()}
+              />
+            )}
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={selectedDate}
+                mode="time"
+                display="default"
+                onChange={handleTimeChange}
               />
             )}
           </View>
@@ -553,27 +581,25 @@ export default function ClinicReminders() {
 
         {/* Card action buttons */}
         <View style={styles.cardActions}>
-          {!isCompleted && (
-            <TouchableOpacity
-              style={[styles.cardActionBtn, styles.completeActionBtn]}
-              onPress={() =>
-                updateStatusMutation.mutate(
-                  { reminderId: Number(item.id), isCompleted: true } as any,
-                  {
-                    onSuccess: () => {
-                      queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
-                      showToast({ type: "success", message: "تم تحديد التذكير كمكتمل" });
-                    },
-                    onError: (e) => showToast({ type: "error", message: e.message }),
-                  }
-                )
-              }
-              disabled={updateStatusMutation.isPending}
-            >
-              <CheckCircle size={14} color={COLORS.success} />
-              <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={[styles.cardActionBtn, styles.completeActionBtn]}
+            onPress={() =>
+              deleteMutation.mutate(
+                { reminderId: Number(item.id) } as any,
+                {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
+                    showToast({ type: "success", message: "تم حذف التذكير بنجاح" });
+                  },
+                  onError: (e) => showToast({ type: "error", message: e.message }),
+                }
+              )
+            }
+            disabled={deleteMutation.isPending}
+          >
+            <CheckCircle size={14} color={COLORS.success} />
+            <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.cardActionBtn, styles.notifyActionBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
             onPress={() => setNotifConfirmTarget({ type: "single", reminderId: Number(item.id), petName: item.petName, title: item.title })}

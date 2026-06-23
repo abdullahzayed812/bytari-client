@@ -241,6 +241,7 @@ export default function ClinicVaccinations() {
 
   // tRPC mutations
   const updateStatusMutation = useMutation(trpc.clinics.vaccinations.updateVaccinationStatus.mutationOptions());
+  const deleteMutation = useMutation(trpc.clinics.vaccinations.deleteVaccination.mutationOptions());
   const rescheduleMutation = useMutation(trpc.clinics.vaccinations.rescheduleVaccination.mutationOptions());
   const sendNotifMutation = useMutation(trpc.clinics.vaccinations.sendVaccinationNotification.mutationOptions());
 
@@ -516,27 +517,25 @@ export default function ClinicVaccinations() {
 
         {/* Card action buttons */}
         <View style={styles.cardActions}>
-          {item.status !== "completed" && item.status !== "cancelled" && (
-            <TouchableOpacity
-              style={[styles.cardActionBtn, styles.completeActionBtn]}
-              onPress={() =>
-                updateStatusMutation.mutate(
-                  { vaccinationId: Number(item.id), status: "completed" } as any,
-                  {
-                    onSuccess: () => {
-                      queryClient.invalidateQueries(trpc.clinics.vaccinations.getClinicVaccinations.queryKey);
-                      showToast({ type: "success", message: "تم تحديد التطعيم كمكتمل" });
-                    },
-                    onError: (e) => showToast({ type: "error", message: e.message }),
+          <TouchableOpacity
+            style={[styles.cardActionBtn, styles.completeActionBtn]}
+            onPress={() =>
+              deleteMutation.mutate(
+                { vaccinationId: Number(item.id) } as any,
+                {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries(trpc.clinics.vaccinations.getClinicVaccinations.queryKey);
+                    showToast({ type: "success", message: "تم حذف التطعيم بنجاح" });
                   },
-                )
-              }
-              disabled={updateStatusMutation.isPending}
-            >
-              <CheckCircle size={14} color={COLORS.success} />
-              <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
-            </TouchableOpacity>
-          )}
+                  onError: (e) => showToast({ type: "error", message: e.message }),
+                },
+              )
+            }
+            disabled={deleteMutation.isPending}
+          >
+            <CheckCircle size={14} color={COLORS.success} />
+            <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.cardActionBtn, styles.notifyActionBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
             onPress={() => setNotifConfirmTarget({ vaccinationId: Number(item.id), petName: item.petName, vaccineName: item.vaccineName })}

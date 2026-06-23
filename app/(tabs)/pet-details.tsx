@@ -1812,7 +1812,7 @@ export default function PetDetailsScreen() {
                         </View>
                       )}
 
-                      {isClinicAccess && vaccination.doctorName && (
+                      {isClinicAccess && vaccination.clinicId === Number(clinicId) && vaccination.doctorName && (
                         <View style={styles.recordItem}>
                           <Stethoscope size={13} color={COLORS.darkGray} />
                           <Text style={styles.recordLabel}>الطبيب</Text>
@@ -1910,7 +1910,7 @@ export default function PetDetailsScreen() {
                       </Text>
                     </View>
 
-                    {isClinicAccess && reminder.doctorName && (
+                    {isClinicAccess && reminder.clinicId === Number(clinicId) && reminder.doctorName && (
                       <View style={styles.recordItem}>
                         <Stethoscope size={13} color={COLORS.darkGray} />
                         <Text style={styles.recordLabel}>الطبيب</Text>
