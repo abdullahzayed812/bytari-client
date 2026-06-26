@@ -239,6 +239,11 @@ export default function ClinicVaccinations() {
 
   const vaccinations = useMemo(() => (vaccinationsData as any)?.vaccinations || [], [vaccinationsData]);
 
+  const displayVaccinations = useMemo(() => {
+    if (selectedFilter !== "all") return vaccinations;
+    return vaccinations.filter((v: any) => v.status !== "completed");
+  }, [vaccinations, selectedFilter]);
+
   // tRPC mutations
   const updateStatusMutation = useMutation(trpc.clinics.vaccinations.updateVaccinationStatus.mutationOptions());
   const deleteMutation = useMutation(trpc.clinics.vaccinations.deleteVaccination.mutationOptions());
@@ -520,18 +525,18 @@ export default function ClinicVaccinations() {
           <TouchableOpacity
             style={[styles.cardActionBtn, styles.completeActionBtn]}
             onPress={() =>
-              deleteMutation.mutate(
-                { vaccinationId: Number(item.id) } as any,
+              updateStatusMutation.mutate(
+                { vaccinationId: Number(item.id), status: "completed" } as any,
                 {
                   onSuccess: () => {
                     queryClient.invalidateQueries(trpc.clinics.vaccinations.getClinicVaccinations.queryKey);
-                    showToast({ type: "success", message: "تم حذف التطعيم بنجاح" });
+                    showToast({ type: "success", message: "تم إكمال التطعيم" });
                   },
                   onError: (e) => showToast({ type: "error", message: e.message }),
                 },
               )
             }
-            disabled={deleteMutation.isPending}
+            disabled={updateStatusMutation.isPending}
           >
             <CheckCircle size={14} color={COLORS.success} />
             <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
@@ -653,7 +658,7 @@ export default function ClinicVaccinations() {
             </Text>
 
             <FlatList
-              data={vaccinations}
+              data={displayVaccinations}
               renderItem={renderVaccinationItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}

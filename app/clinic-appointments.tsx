@@ -139,7 +139,7 @@ export default function ClinicAppointments() {
   const createMutation = useMutation(trpc.clinics.appointments.createAppointment.mutationOptions());
   const respondMutation = useMutation(trpc.clinics.appointments.respondToAppointment.mutationOptions());
   const completeMutation = useMutation(trpc.clinics.appointments.completeAppointment.mutationOptions());
-  const counterRespondMutation = useMutation(trpc.clinics.appointments.respondToCounterProposal.mutationOptions());
+  const deleteMutation = useMutation(trpc.clinics.appointments.deleteAppointment.mutationOptions());
   const sendNotifMutation = useMutation(trpc.clinics.appointments.sendAppointmentNotification.mutationOptions());
   const sendTodayNotifMutation = useMutation(trpc.clinics.appointments.sendTodayAppointmentsNotification.mutationOptions());
 
@@ -232,6 +232,25 @@ export default function ClinicAppointments() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    Alert.alert("حذف الموعد", "هل تريد حذف هذا الموعد نهائياً؟", [
+      { text: "إلغاء", style: "cancel" },
+      {
+        text: "حذف",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteMutation.mutateAsync({ appointmentId: id });
+            showToast({ message: "تم حذف الموعد", type: "success" });
+            invalidate();
+          } catch {
+            showToast({ message: "حدث خطأ أثناء الحذف", type: "error" });
+          }
+        },
+      },
+    ]);
+  };
+
   const handleSendNotif = (appointmentId: number, petName: string) => {
     setApptNotifConfirmTarget({ type: "single", appointmentId, petName });
   };
@@ -262,17 +281,7 @@ export default function ClinicAppointments() {
     }
   };
 
-  const handleCounterRespond = async (appointment: Appointment, accept: boolean) => {
-    try {
-      await counterRespondMutation.mutateAsync({ appointmentId: appointment.id, accept });
-      showToast({ message: accept ? "تم قبول الموعد المقترح" : "تم رفض الموعد المقترح", type: accept ? "success" : "error" });
-      invalidate();
-    } catch {
-      showToast({ message: "حدث خطأ", type: "error" });
-    }
-  };
-
-  const renderAppointment = ({ item }: { item: Appointment }) => {
+const renderAppointment = ({ item }: { item: Appointment }) => {
     const statusInfo = STATUS_LABELS[item.status] ?? { label: item.status, color: COLORS.darkGray };
     const isExpanded = expandedId === item.id;
 
@@ -299,6 +308,11 @@ export default function ClinicAppointments() {
             <Clock size={14} color={COLORS.darkGray} />
             <Text style={styles.cardMetaText}>{item.type} · {item.requestedByClinic ? "بواسطة العيادة" : "طلب من المالك"}</Text>
           </View>
+          {!item.requestedByClinic && item.notes ? (
+            <View style={styles.ownerNotesBox}>
+              <Text style={styles.ownerNotesText}>{item.notes}</Text>
+            </View>
+          ) : null}
         </TouchableOpacity>
 
         {isExpanded && (
@@ -334,16 +348,7 @@ export default function ClinicAppointments() {
                 <Text style={styles.counterTitle}>موعد مقترح من العيادة:</Text>
                 <Text style={styles.counterDate}>{formatDate(item.counterProposedDate)}</Text>
                 {item.counterProposedNotes ? <Text style={styles.counterNotes}>{item.counterProposedNotes}</Text> : null}
-                <View style={styles.actionRow}>
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: COLORS.success }]} onPress={() => handleCounterRespond(item, true)}>
-                    <Check size={14} color={COLORS.white} />
-                    <Text style={styles.actionBtnText}>قبول</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: COLORS.error }]} onPress={() => handleCounterRespond(item, false)}>
-                    <X size={14} color={COLORS.white} />
-                    <Text style={styles.actionBtnText}>رفض</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.counterWaiting}>بانتظار رد صاحب الحيوان</Text>
               </View>
             )}
 
@@ -365,6 +370,19 @@ export default function ClinicAppointments() {
                 <TouchableOpacity style={[styles.actionBtn, { backgroundColor: COLORS.error }]} onPress={() => respondMutation.mutateAsync({ appointmentId: item.id, action: "cancel" }).then(() => { showToast({ message: "تم إلغاء الموعد", type: "success" }); invalidate(); })}>
                   <X size={14} color={COLORS.white} />
                   <Text style={styles.actionBtnText}>إلغاء</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {item.status === "completed" && (
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: COLORS.error }, deleteMutation.isPending && { opacity: 0.5 }]}
+                  onPress={() => handleDelete(item.id)}
+                  disabled={deleteMutation.isPending}
+                >
+                  <X size={14} color={COLORS.white} />
+                  <Text style={styles.actionBtnText}>حذف الموعد</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -756,6 +774,16 @@ const styles = StyleSheet.create({
   },
   ownerText: { fontSize: 13, color: COLORS.darkGray, marginBottom: 4 },
   notesText: { fontSize: 13, color: COLORS.darkGray, marginBottom: 8 },
+  ownerNotesBox: {
+    marginTop: 6,
+    backgroundColor: "#F0F4FF",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: COLORS.primary,
+  },
+  ownerNotesText: { fontSize: 12, color: COLORS.darkGray },
   counterProposalBox: {
     backgroundColor: "#F3E5F5",
     borderRadius: 8,
@@ -765,6 +793,7 @@ const styles = StyleSheet.create({
   counterTitle: { fontSize: 13, fontWeight: "bold", color: "#9C27B0", marginBottom: 4 },
   counterDate: { fontSize: 14, color: COLORS.black, marginBottom: 2 },
   counterNotes: { fontSize: 12, color: COLORS.darkGray },
+  counterWaiting: { fontSize: 12, color: "#9C27B0", fontStyle: "italic", marginTop: 6 },
   actionRow: {
     flexDirection: "row",
     gap: 8,

@@ -2325,7 +2325,7 @@ export default function PetDetailsScreen() {
                         <Text style={detailStyles.value}>{d.clinicName}</Text>
                       </View>
                     )}
-                    {d.doctorName && (
+                    {d.doctorName && isClinicAccess && d.clinicId === Number(clinicId) && (
                       <View style={detailStyles.row}>
                         <Stethoscope size={14} color={COLORS.darkGray} />
                         <Text style={detailStyles.label}>الطبيب</Text>
@@ -2427,7 +2427,7 @@ export default function PetDetailsScreen() {
                         <Text style={[detailStyles.value, { color: COLORS.success }]}>{d.status === "completed" ? "مكتمل" : d.status}</Text>
                       </View>
                     )}
-                    {d.doctorName && (
+                    {d.doctorName && isClinicAccess && d.clinicId === Number(clinicId) && (
                       <View style={detailStyles.row}>
                         <Stethoscope size={14} color={COLORS.darkGray} />
                         <Text style={detailStyles.label}>الطبيب</Text>
@@ -2474,7 +2474,7 @@ export default function PetDetailsScreen() {
                       <Text style={detailStyles.label}>النوع</Text>
                       <Text style={detailStyles.value}>{typeMap[d.type] ?? d.type}</Text>
                     </View>
-                    {d.doctorName && (
+                    {d.doctorName && isClinicAccess && d.clinicId === Number(clinicId) && (
                       <View style={detailStyles.row}>
                         <Stethoscope size={14} color={COLORS.darkGray} />
                         <Text style={detailStyles.label}>الطبيب</Text>
@@ -2515,7 +2515,7 @@ export default function PetDetailsScreen() {
                         <Text style={detailStyles.value}>{d.clinicName}</Text>
                       </View>
                     )}
-                    {d.doctorName && (
+                    {d.doctorName && isClinicAccess && d.clinicId === Number(clinicId) && (
                       <View style={detailStyles.row}>
                         <Stethoscope size={14} color={COLORS.darkGray} />
                         <Text style={detailStyles.label}>الطبيب</Text>

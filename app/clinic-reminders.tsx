@@ -584,18 +584,18 @@ export default function ClinicReminders() {
           <TouchableOpacity
             style={[styles.cardActionBtn, styles.completeActionBtn]}
             onPress={() =>
-              deleteMutation.mutate(
-                { reminderId: Number(item.id) } as any,
+              updateStatusMutation.mutate(
+                { reminderId: Number(item.id), isCompleted: true } as any,
                 {
-                  onSuccess: () => {
+                  onSuccess: (data) => {
                     queryClient.invalidateQueries(trpc.clinics.reminders.getClinicReminders.queryKey);
-                    showToast({ type: "success", message: "تم حذف التذكير بنجاح" });
+                    showToast({ type: "success", message: (data as any).message ?? "تم إكمال التذكير" });
                   },
                   onError: (e) => showToast({ type: "error", message: e.message }),
                 }
               )
             }
-            disabled={deleteMutation.isPending}
+            disabled={updateStatusMutation.isPending}
           >
             <CheckCircle size={14} color={COLORS.success} />
             <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
