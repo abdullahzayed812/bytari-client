@@ -48,6 +48,7 @@ export default function ClinicQuickReview() {
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   // Detail step fields
@@ -62,6 +63,7 @@ export default function ClinicQuickReview() {
   const { data: templatesData } = useQuery(trpc.clinics.quickReview.getTemplates.queryOptions({ clinicId: Number(clinicId) }));
 
   const createMutation = useMutation(trpc.clinics.quickReview.createQuickReview.mutationOptions());
+  const addVaccinationMutation = useMutation(trpc.clinics.quickReview.addVaccination.mutationOptions());
 
   const pets: Pet[] = (petsData as any)?.pets ?? [];
   const allTemplates: Template[] = (templatesData as any)?.templates ?? [];
@@ -82,6 +84,7 @@ export default function ClinicQuickReview() {
 
   const openTemplate = (t: Template) => {
     setSelectedTemplate(t);
+    setSelectedCategory(activeCategory ?? t.templateType);
     setNotes(t.defaultNotes ?? "");
     if (t.intervalDays) {
       const due = new Date(actionDate);
@@ -97,22 +100,47 @@ export default function ClinicQuickReview() {
 
   const handleSave = async () => {
     if (!resolvedPetId) return;
-    const diagnosis = selectedTemplate?.defaultDiagnosis ?? notes.trim();
-    const treatment = (selectedTemplate?.defaultTreatment ?? notes.trim()) || "—";
-    if (!diagnosis) {
-      showToast({ message: "يجب إدخال ملاحظات أو اختيار قالب", type: "error" });
-      return;
-    }
+
     try {
-      await createMutation.mutateAsync({
-        clinicId: Number(clinicId),
-        petId: resolvedPetId,
-        templateId: selectedTemplate?.id,
-        diagnosis,
-        treatment,
-        notes: notes.trim() || undefined,
-        date: actionDate.toISOString(),
-      });
+      const isVaccineOrTreatment =
+        selectedCategory === "vaccine" ||
+        selectedCategory === "treatment" ||
+        selectedTemplate?.templateType === "vaccine" ||
+        selectedTemplate?.templateType === "treatment";
+
+      if (isVaccineOrTreatment) {
+        const vaccineName = selectedTemplate?.name || notes.trim();
+        if (!vaccineName) {
+          showToast({ message: "يرجى إدخال اسم التطعيم أو العلاج", type: "error" });
+          return;
+        }
+        // Vaccine and treatment templates go to the vaccinations table, not medical records
+        const toNoonISO = (d: Date) =>
+          new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0).toISOString();
+        await addVaccinationMutation.mutateAsync({
+          clinicId: Number(clinicId),
+          petId: resolvedPetId,
+          name: vaccineName,
+          nextDate: nextDueDate ? toNoonISO(nextDueDate) : undefined,
+          notes: notes.trim() || undefined,
+        });
+      } else {
+        const diagnosis = selectedTemplate?.defaultDiagnosis ?? notes.trim();
+        const treatment = (selectedTemplate?.defaultTreatment ?? notes.trim()) || "—";
+        if (!diagnosis) {
+          showToast({ message: "يجب إدخال ملاحظات أو اختيار قالب", type: "error" });
+          return;
+        }
+        await createMutation.mutateAsync({
+          clinicId: Number(clinicId),
+          petId: resolvedPetId,
+          templateId: selectedTemplate?.id,
+          diagnosis,
+          treatment,
+          notes: notes.trim() || undefined,
+          date: actionDate.toISOString(),
+        });
+      }
       showToast({ message: "تم حفظ الإجراء السريع بنجاح", type: "success" });
       router.back();
     } catch {
@@ -331,8 +359,8 @@ export default function ClinicQuickReview() {
               )}
             </View>
 
-            {/* الجرعة (vaccine only) */}
-            {selectedTemplate?.templateType === "vaccine" && (
+            {/* الجرعة (vaccine/treatment only) */}
+            {(selectedCategory === "vaccine" || selectedCategory === "treatment" || selectedTemplate?.templateType === "vaccine" || selectedTemplate?.templateType === "treatment") && (
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>الجرعة</Text>
                 <View style={[styles.fieldRow, { justifyContent: "space-between" }]}>
@@ -343,7 +371,7 @@ export default function ClinicQuickReview() {
             )}
 
             {/* الجرعة القادمة */}
-            {selectedTemplate?.templateType === "vaccine" && nextDueDate && (
+            {(selectedCategory === "vaccine" || selectedCategory === "treatment" || selectedTemplate?.templateType === "vaccine" || selectedTemplate?.templateType === "treatment") && nextDueDate && (
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>الجرعة القادمة</Text>
                 <TouchableOpacity style={styles.fieldRow} onPress={() => setShowNextDuePicker(true)}>
@@ -365,12 +393,24 @@ export default function ClinicQuickReview() {
               </View>
             )}
 
-            {/* For manual entry: notes act as diagnosis */}
+            {/* For manual entry: notes act as name (vaccine) or diagnosis (medical) */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>{selectedTemplate ? "ملاحظات (اختياري)" : "التشخيص / الملاحظات *"}</Text>
+              <Text style={styles.fieldLabel}>
+                {selectedTemplate
+                  ? "ملاحظات (اختياري)"
+                  : (selectedCategory === "vaccine" || selectedCategory === "treatment")
+                  ? "اسم التطعيم / العلاج *"
+                  : "التشخيص / الملاحظات *"}
+              </Text>
               <TextInput
                 style={styles.notesInput}
-                placeholder={selectedTemplate ? "اكتب ملاحظات..." : "اكتب التشخيص أو الملاحظات..."}
+                placeholder={
+                  selectedTemplate
+                    ? "اكتب ملاحظات..."
+                    : (selectedCategory === "vaccine" || selectedCategory === "treatment")
+                    ? "مثال: تطعيم ثلاثي..."
+                    : "اكتب التشخيص أو الملاحظات..."
+                }
                 placeholderTextColor={COLORS.darkGray}
                 value={notes}
                 onChangeText={setNotes}
@@ -393,8 +433,12 @@ export default function ClinicQuickReview() {
                   showToast({ message: "يرجى اختيار الحيوان أولاً", type: "error" });
                   return;
                 }
-                // Manual entry without template
+                // Manual entry without template — preserve activeCategory for routing
                 setSelectedTemplate(null);
+                setSelectedCategory(activeCategory);
+                setNextDueDate(null);
+                setDose("");
+                setNotes("");
                 setStep("detail");
               }}
               activeOpacity={0.85}
@@ -408,12 +452,12 @@ export default function ClinicQuickReview() {
         {step === "detail" && (
           <View style={styles.ctaContainer}>
             <TouchableOpacity
-              style={[styles.ctaBtn, createMutation.isPending && { opacity: 0.6 }]}
+              style={[styles.ctaBtn, (createMutation.isPending || addVaccinationMutation.isPending) && { opacity: 0.6 }]}
               onPress={handleSave}
-              disabled={createMutation.isPending}
+              disabled={createMutation.isPending || addVaccinationMutation.isPending}
               activeOpacity={0.85}
             >
-              {createMutation.isPending ? (
+              {(createMutation.isPending || addVaccinationMutation.isPending) ? (
                 <ActivityIndicator color={COLORS.white} />
               ) : (
                 <>

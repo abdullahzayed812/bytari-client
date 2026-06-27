@@ -229,7 +229,7 @@ export default function ClinicVaccinations() {
     trpc.clinics.vaccinations.getClinicVaccinations.queryOptions(
       {
         clinicId: Number(clinicId),
-        status: selectedFilter as any,
+        status: "all" as any,
       },
       {
         enabled: !!clinicId,
@@ -240,9 +240,19 @@ export default function ClinicVaccinations() {
   const vaccinations = useMemo(() => (vaccinationsData as any)?.vaccinations || [], [vaccinationsData]);
 
   const displayVaccinations = useMemo(() => {
-    if (selectedFilter !== "all") return vaccinations;
-    return vaccinations.filter((v: any) => v.status !== "completed");
+    if (selectedFilter === "all") return vaccinations;
+    return vaccinations.filter((v: any) => v.status === selectedFilter);
   }, [vaccinations, selectedFilter]);
+
+  const activeVaccinations = useMemo(
+    () => displayVaccinations.filter((v: any) => v.status !== "completed"),
+    [displayVaccinations],
+  );
+
+  const completedVaccinations = useMemo(
+    () => displayVaccinations.filter((v: any) => v.status === "completed"),
+    [displayVaccinations],
+  );
 
   // tRPC mutations
   const updateStatusMutation = useMutation(trpc.clinics.vaccinations.updateVaccinationStatus.mutationOptions());
@@ -428,12 +438,15 @@ export default function ClinicVaccinations() {
   // Rest of your existing renderVaccinationItem function remains the same...
   const renderVaccinationItem = ({ item }: { item: any }) => {
     const isOverdue = item.status === "overdue";
-    const isToday = item.scheduledDate === new Date().toISOString().split("T")[0];
+    const isCompleted = item.status === "completed";
+    const nowLocal = new Date();
+    const localDateStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, "0")}-${String(nowLocal.getDate()).padStart(2, "0")}`;
+    const isToday = item.nextDueDate === localDateStr;
     const progressPercentage = (item.doseNumber / item.totalDoses) * 100;
 
     return (
       <TouchableOpacity
-        style={[styles.vaccinationCard, isOverdue && styles.overdueCard, isToday && styles.todayCard]}
+        style={[styles.vaccinationCard, isOverdue && styles.overdueCard, isToday && !isCompleted && styles.todayCard, isCompleted && styles.completedCard]}
         activeOpacity={0.8}
         onPress={() => handleVaccinationPress(item)}
       >
@@ -443,8 +456,8 @@ export default function ClinicVaccinations() {
             <View style={styles.titleRow}>
               <Text style={styles.vaccineIcon}>{getVaccineIcon(item.vaccineType)}</Text>
               <View style={styles.titleContainer}>
-                <Text style={styles.vaccineName}>{item.vaccineName}</Text>
-                <Text style={styles.vaccineType}>({item.vaccineType})</Text>
+                <Text style={[styles.vaccineName, isCompleted && styles.completedText]}>{item.vaccineName}</Text>
+                <Text style={[styles.vaccineType, isCompleted && styles.completedText]}>({item.vaccineType})</Text>
               </View>
             </View>
           </View>
@@ -457,24 +470,24 @@ export default function ClinicVaccinations() {
 
         <View style={styles.petInfo}>
           <View style={styles.petRow}>
-            <Text style={styles.petName}>
+            <Text style={[styles.petName, isCompleted && styles.completedText]}>
               {item.petName} ({item.petType})
             </Text>
           </View>
           <View style={styles.ownerRow}>
             <User size={14} color={COLORS.darkGray} />
-            <Text style={styles.ownerName}>{item.ownerName}</Text>
+            <Text style={[styles.ownerName, isCompleted && styles.completedText]}>{item.ownerName}</Text>
           </View>
         </View>
 
         <View style={styles.dateTimeContainer}>
           <View style={styles.dateRow}>
-            <Calendar size={14} color={isOverdue ? COLORS.error : COLORS.primary} />
-            <Text style={[styles.dateText, isOverdue && styles.overdueText]}>{item.scheduledDate}</Text>
+            <Calendar size={14} color={isOverdue ? COLORS.error : isCompleted ? COLORS.success : COLORS.primary} />
+            <Text style={[styles.dateText, isOverdue && styles.overdueText, isCompleted && styles.completedText]}>{item.scheduledDate}</Text>
           </View>
           <View style={styles.timeRow}>
-            <Clock size={14} color={isOverdue ? COLORS.error : COLORS.primary} />
-            <Text style={[styles.timeText, isOverdue && styles.overdueText]}>{item.scheduledTime}</Text>
+            <Clock size={14} color={isOverdue ? COLORS.error : isCompleted ? COLORS.success : COLORS.primary} />
+            <Text style={[styles.timeText, isOverdue && styles.overdueText, isCompleted && styles.completedText]}>{item.scheduledTime}</Text>
           </View>
         </View>
 
@@ -513,50 +526,52 @@ export default function ClinicVaccinations() {
           </View>
         )}
 
-        {isToday && (
+        {isToday && !isCompleted && (
           <View style={styles.todayIndicator}>
             <Syringe size={16} color={COLORS.warning} />
             <Text style={styles.todayIndicatorText}>موعد اليوم</Text>
           </View>
         )}
 
-        {/* Card action buttons */}
-        <View style={styles.cardActions}>
-          <TouchableOpacity
-            style={[styles.cardActionBtn, styles.completeActionBtn]}
-            onPress={() =>
-              updateStatusMutation.mutate(
-                { vaccinationId: Number(item.id), status: "completed" } as any,
-                {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries(trpc.clinics.vaccinations.getClinicVaccinations.queryKey);
-                    showToast({ type: "success", message: "تم إكمال التطعيم" });
-                  },
-                  onError: (e) => showToast({ type: "error", message: e.message }),
-                },
-              )
-            }
-            disabled={updateStatusMutation.isPending}
-          >
-            <CheckCircle size={14} color={COLORS.success} />
-            <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.cardActionBtn, styles.notifyActionBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
-            onPress={() => setNotifConfirmTarget({ vaccinationId: Number(item.id), petName: item.petName, vaccineName: item.vaccineName })}
-            disabled={sendNotifMutation.isPending}
-          >
-            <Shield size={14} color={COLORS.primary} />
-            <Text style={[styles.cardActionBtnText, { color: COLORS.primary }]}>إشعار</Text>
-          </TouchableOpacity>
-        </View>
+        {isCompleted && (
+          <View style={styles.completedIndicator}>
+            <CheckCircle size={16} color={COLORS.success} />
+            <Text style={styles.completedIndicatorText}>مكتمل</Text>
+          </View>
+        )}
+
+        {/* Card action buttons — hidden for completed/cancelled */}
+        {!isCompleted && item.status !== "cancelled" && (
+          <View style={styles.cardActions}>
+            <TouchableOpacity
+              style={[styles.cardActionBtn, styles.completeActionBtn]}
+              onPress={() => {
+                setSelectedVaccination(item);
+                setCompleteModalVisible(true);
+              }}
+              disabled={updateStatusMutation.isPending}
+            >
+              <CheckCircle size={14} color={COLORS.success} />
+              <Text style={[styles.cardActionBtnText, { color: COLORS.success }]}>اكتمل</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.cardActionBtn, styles.notifyActionBtn, sendNotifMutation.isPending && { opacity: 0.5 }]}
+              onPress={() => setNotifConfirmTarget({ vaccinationId: Number(item.id), petName: item.petName, vaccineName: item.vaccineName })}
+              disabled={sendNotifMutation.isPending}
+            >
+              <Shield size={14} color={COLORS.primary} />
+              <Text style={[styles.cardActionBtnText, { color: COLORS.primary }]}>إشعار</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
 
   // Rest of your existing component JSX remains the same...
-  const todayStr = new Date().toISOString().split("T")[0];
-  const todayVaccinations = vaccinations.filter((v: any) => v.scheduledDate === todayStr && v.status !== "cancelled");
+  const todayLocal = new Date();
+  const todayStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, "0")}-${String(todayLocal.getDate()).padStart(2, "0")}`;
+  const todayVaccinations = vaccinations.filter((v: any) => v.nextDueDate === todayStr && v.status === "scheduled");
 
   const filterButtons = [
     { key: "all", label: "الكل", count: vaccinations.length },
@@ -658,18 +673,33 @@ export default function ClinicVaccinations() {
             </Text>
 
             <FlatList
-              data={displayVaccinations}
+              data={activeVaccinations}
               renderItem={renderVaccinationItem}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
               ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Shield size={48} color={COLORS.darkGray} />
-                  <Text style={styles.emptyText}>لا توجد تطعيمات</Text>
-                </View>
+                completedVaccinations.length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                    <Shield size={48} color={COLORS.darkGray} />
+                    <Text style={styles.emptyText}>لا توجد تطعيمات</Text>
+                  </View>
+                ) : null
               }
             />
+
+            {completedVaccinations.length > 0 && (
+              <View style={styles.completedSection}>
+                <Text style={styles.completedSectionTitle}>مكتملة ({completedVaccinations.length})</Text>
+                <FlatList
+                  data={completedVaccinations}
+                  renderItem={renderVaccinationItem}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
+            )}
           </View>
         </ScrollView>
 
@@ -1271,6 +1301,38 @@ const styles = StyleSheet.create({
   },
   nextDateLabel: {
     fontSize: 14,
+    color: COLORS.darkGray,
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  completedCard: {
+    opacity: 0.7,
+    backgroundColor: COLORS.lightGray,
+  },
+  completedText: {
+    textDecorationLine: "line-through",
+    color: COLORS.darkGray,
+  },
+  completedIndicator: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: COLORS.success + "20",
+    padding: 8,
+    borderRadius: 8,
+    gap: 4,
+    marginTop: 8,
+  },
+  completedIndicatorText: {
+    fontSize: 12,
+    color: COLORS.success,
+    fontWeight: "bold",
+  },
+  completedSection: {
+    marginTop: 16,
+  },
+  completedSectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
     color: COLORS.darkGray,
     marginBottom: 8,
     textAlign: "left",

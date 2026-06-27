@@ -1777,7 +1777,7 @@ export default function PetDetailsScreen() {
                     >
                       <View style={styles.recordTitleRow}>
                         <Text style={styles.recordTitle}>{vaccination.name}</Text>
-                        {isClinicAccess ? (
+                        {isClinicAccess && vaccination.clinicId === Number(clinicId) ? (
                           <View style={{ flexDirection: "row", gap: 6 }}>
                             <TouchableOpacity onPress={() => handleEditVaccination(vaccination)} style={styles.deleteButton}>
                               <Edit3 size={16} color={COLORS.primary} />
@@ -1868,7 +1868,7 @@ export default function PetDetailsScreen() {
                   >
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordTitle}>{reminder.title}</Text>
-                      {isClinicAccess ? (
+                      {isClinicAccess && reminder.clinicId === Number(clinicId) ? (
                         <View style={{ flexDirection: "row", gap: 6 }}>
                           <TouchableOpacity onPress={() => handleEditReminder(reminder)} style={styles.deleteButton}>
                             <Edit3 size={16} color={COLORS.primary} />

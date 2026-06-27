@@ -73,7 +73,7 @@ export default function NotificationsScreen() {
       onSuccess: () => {
         // queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
 
-        if (notification?.type === "appointment") {
+        if (notification?.type === "appointment" || notification?.type === "appointment_counter_proposed") {
           router.push("/appointments");
         } else if (notification?.type === "order") {
           router.push("/orders");

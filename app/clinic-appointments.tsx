@@ -285,9 +285,17 @@ const renderAppointment = ({ item }: { item: Appointment }) => {
     const statusInfo = STATUS_LABELS[item.status] ?? { label: item.status, color: COLORS.darkGray };
     const isExpanded = expandedId === item.id;
 
+    const openPetDetails = () => {
+      router.push({
+        pathname: "/(tabs)/pet-details",
+        params: { petId: item.petId, clinicId: clinicId as string, fromClinic: "true" },
+      });
+    };
+
     return (
       <View style={styles.card}>
-        <TouchableOpacity onPress={() => setExpandedId(isExpanded ? null : item.id)} activeOpacity={0.8}>
+        {/* Tapping the card body opens the pet file */}
+        <TouchableOpacity onPress={openPetDetails} activeOpacity={0.8}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderLeft}>
               <Text style={styles.petName}>{item.pet?.name ?? item.petId}</Text>
@@ -297,7 +305,13 @@ const renderAppointment = ({ item }: { item: Appointment }) => {
               <View style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}>
                 <Text style={styles.statusText}>{statusInfo.label}</Text>
               </View>
-              {isExpanded ? <ChevronUp size={16} color={COLORS.darkGray} /> : <ChevronDown size={16} color={COLORS.darkGray} />}
+              {/* Chevron is a separate button so it doesn't trigger navigation */}
+              <TouchableOpacity
+                onPress={() => setExpandedId(isExpanded ? null : item.id)}
+                style={styles.expandBtn}
+              >
+                {isExpanded ? <ChevronUp size={18} color={COLORS.primary} /> : <ChevronDown size={18} color={COLORS.primary} />}
+              </TouchableOpacity>
             </View>
           </View>
           <View style={styles.cardMeta}>
@@ -880,6 +894,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalBtnText: { color: COLORS.white, fontSize: 14, fontWeight: "bold" },
+  expandBtn: {
+    backgroundColor: COLORS.primary + "18",
+    borderWidth: 1,
+    borderColor: COLORS.primary + "40",
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 36,
+    minHeight: 36,
+  },
   cardQuickActions: {
     flexDirection: "row",
     gap: 8,
