@@ -2,6 +2,7 @@
   "expo": {
     "name": "بيطري",
     "slug": "bytari",
+    "scheme": "bytari",
     "android": {
       "package": "com.petcare.bytari",
       "adaptiveIcon": {
@@ -12,7 +13,16 @@
       "allowBackup": false,
       "supportsRtl": true,
       "softwareKeyboardLayoutMode": "resize",
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "CAMERA", "INTERNET", "VIBRATE"],
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "INTERNET",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./android/app/google-services.json",
       "config": {
         "googleMaps": {
           "apiKey": ""
@@ -25,6 +35,16 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/appicon.png",
+          "color": "#4CAF50",
+          "iosDisplayInForeground": true,
+          "androidMode": "default",
+          "androidCollapsedTitle": "#{unread_notifications} إشعار جديد"
+        }
+      ],
       [
         "expo-image-picker",
         {

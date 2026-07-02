@@ -13,6 +13,7 @@ import { handleBackNavigation } from "../lib/navigation-utils";
 import { queryClient } from "@/lib/trpc";
 import { CartProvider } from "@/providers/CartProvider";
 import { NotificationProvider } from "@/providers/NotificationProvider";
+import { PushNotificationProvider } from "@/providers/PushNotificationProvider";
 import { FavoritesProvider } from "@/providers/FavoritesProvider";
 import { OrdersProvider } from "@/providers/OrdersProvider";
 import { ToastProvider } from "@/providers/ToastProvider";
@@ -63,6 +64,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
           <AppProvider>
+            <PushNotificationProvider>
             <NotificationProvider>
               <FavoritesProvider>
                 <OrdersProvider>
@@ -329,6 +331,7 @@ export default function RootLayout() {
                 </OrdersProvider>
               </FavoritesProvider>
             </NotificationProvider>
+            </PushNotificationProvider>
           </AppProvider>
         </ToastProvider>
       </QueryClientProvider>

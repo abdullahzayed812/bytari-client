@@ -13,7 +13,7 @@ export const API_URL = __DEV__ ? "http://192.168.0.128:3001" : "https://bytari.v
 
 export const queryClient = new QueryClient();
 
-const trpcClient = createTRPCClient<AppRouter>({
+export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       url: `${API_URL}/trpc`,
