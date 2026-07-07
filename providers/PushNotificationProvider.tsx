@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import Constants from "expo-constants";
 import { trpcClient } from "../lib/trpc";
 import { useApp } from "./AppProvider";
+import { useToastContext } from "./ToastProvider";
 
 // Remote push notifications were removed from Expo Go in SDK 53.
 // appOwnership === "expo" is the only reliable Expo Go identifier —
@@ -14,17 +15,23 @@ const IS_EXPO_GO = Constants.appOwnership === "expo";
 
 const PUSH_TOKEN_KEY = "@bytari/push_token";
 
-async function requestAndGetToken(): Promise<string | null> {
+async function requestAndGetToken(
+  onError: (stage: string, err: unknown) => void
+): Promise<string | null> {
   if (Platform.OS === "web" || IS_EXPO_GO) return null;
 
   const { status } = await Notifications.requestPermissionsAsync();
-  if (status !== "granted") return null;
+  if (status !== "granted") {
+    onError("permission", `status: ${status}`);
+    return null;
+  }
 
   try {
     const result = await Notifications.getDevicePushTokenAsync();
     return result.data;
   } catch (err) {
     console.warn("[Push] getDevicePushTokenAsync failed:", err);
+    onError("getDevicePushTokenAsync", err);
     return null;
   }
 }
@@ -79,6 +86,7 @@ const PushNotificationContext = createContext<PushNotificationContextType>({
 
 export function PushNotificationProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useApp();
+  const { showToast } = useToastContext();
   const [pushToken, setPushToken] = React.useState<string | null>(null);
   const registering = useRef(false);
 
@@ -113,7 +121,9 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
     registering.current = true;
 
     async function register() {
-      const token = await requestAndGetToken();
+      const token = await requestAndGetToken((stage, err) => {
+        showToast({ message: `[Push debug] ${stage}: ${String(err)}`, type: "error", duration: 6000 });
+      });
       if (!token || cancelled) return;
 
       const platform = Platform.OS === "ios" ? "ios" : Platform.OS === "android" ? "android" : "web";
@@ -124,6 +134,7 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
         if (!cancelled) setPushToken(token);
       } catch (err) {
         console.warn("[Push] Token registration failed:", err);
+        showToast({ message: `[Push debug] register: ${String(err)}`, type: "error", duration: 6000 });
       }
     }
 

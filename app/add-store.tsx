@@ -1,16 +1,19 @@
 import { StyleSheet, Text, View, ScrollView, TextInput, TouchableOpacity, Image } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
+import { CITIES } from "../constants/currency";
 import { useI18n } from "../providers/I18nProvider";
 import { useApp } from "../providers/AppProvider";
 import { useToastContext } from "../providers/ToastProvider";
 import Button from "../components/Button";
-import { Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School } from "lucide-react-native";
+import { Upload, MapPin, Phone, Mail, Clock, Eye, EyeOff, Edit, School, ChevronDown } from "lucide-react-native";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { queryClient, trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
+
+const provinces = CITIES;
 
 interface StoreFormData {
   name: string;
@@ -19,6 +22,8 @@ interface StoreFormData {
   phone: string;
   email: string;
   category: string;
+  country: string;
+  province: string;
   licenseNumber: string;
   licenseImages: string[];
   identityImages: string[];
@@ -37,6 +42,8 @@ const initialFormData: StoreFormData = {
   phone: "",
   email: "",
   category: "",
+  country: "",
+  province: "",
   licenseNumber: "",
   licenseImages: [],
   identityImages: [],
@@ -55,8 +62,20 @@ export default function AddStoreScreen() {
 
   const [showSubscription, setShowSubscription] = useState(false);
   const [formData, setFormData] = useState<StoreFormData>(initialFormData);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [showProvincePicker, setShowProvincePicker] = useState(false);
 
   const createStoreMutation = useMutation(trpc.stores.create.mutationOptions({}));
+
+  const handleCountrySelect = (country: string) => {
+    setFormData((prev) => ({ ...prev, country, province: "" }));
+    setShowCountryPicker(false);
+  };
+
+  const handleProvinceSelect = (province: string) => {
+    setFormData((prev) => ({ ...prev, province }));
+    setShowProvincePicker(false);
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -65,6 +84,14 @@ export default function AddStoreScreen() {
     }
     if (!formData.address.trim()) {
       showToast({ type: "error", message: "العنوان مطلوب" });
+      return;
+    }
+    if (!formData.country.trim()) {
+      showToast({ type: "error", message: "الدولة مطلوبة" });
+      return;
+    }
+    if (!formData.province.trim()) {
+      showToast({ type: "error", message: "المحافظة مطلوبة" });
       return;
     }
     if (!formData.category.trim()) {
@@ -92,6 +119,8 @@ export default function AddStoreScreen() {
         phone: formData.phone,
         email: formData.email,
         category: formData.category,
+        country: formData.country,
+        province: formData.province,
         licenseNumber: formData.licenseNumber,
         licenseImage: formData.licenseImages[0],
         // identityImage: formData.identityImages[0],
@@ -175,6 +204,48 @@ export default function AddStoreScreen() {
                 />
               </View>
             </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>الدولة *</Text>
+              <TouchableOpacity style={styles.pickerButton} onPress={() => setShowCountryPicker(!showCountryPicker)}>
+                <Text style={[styles.pickerButtonText, !formData.country && styles.placeholderText]}>{formData.country || "اختر الدولة"}</Text>
+                <ChevronDown size={16} color={COLORS.darkGray} />
+              </TouchableOpacity>
+
+              {showCountryPicker && (
+                <View style={styles.pickerDropdown}>
+                  <ScrollView style={styles.pickerList} nestedScrollEnabled>
+                    {Object.keys(provinces).map((country, index) => (
+                      <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleCountrySelect(country)}>
+                        <Text style={styles.pickerItemText}>{country}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            </View>
+
+            {formData.country && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>المحافظة *</Text>
+                <TouchableOpacity style={styles.pickerButton} onPress={() => setShowProvincePicker(!showProvincePicker)}>
+                  <Text style={[styles.pickerButtonText, !formData.province && styles.placeholderText]}>{formData.province || "اختر المحافظة"}</Text>
+                  <ChevronDown size={16} color={COLORS.darkGray} />
+                </TouchableOpacity>
+
+                {showProvincePicker && (
+                  <View style={styles.pickerDropdown}>
+                    <ScrollView style={styles.pickerList} nestedScrollEnabled>
+                      {provinces[formData.country as keyof typeof provinces]?.map((province, index) => (
+                        <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleProvinceSelect(province)}>
+                          <Text style={styles.pickerItemText}>{province}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
 
           <View style={styles.section}>
@@ -432,6 +503,46 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 0,
     marginRight: 8,
+  },
+  pickerButton: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.white,
+  },
+  pickerButtonText: {
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  placeholderText: {
+    color: COLORS.darkGray,
+  },
+  pickerDropdown: {
+    marginTop: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    maxHeight: 200,
+  },
+  pickerList: {
+    maxHeight: 200,
+  },
+  pickerItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: COLORS.black,
+    textAlign: "left",
   },
   uploadButton: {
     flexDirection: "row-reverse",

@@ -23,6 +23,7 @@ import {
 import { trpc } from "../lib/trpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Picker } from "@react-native-picker/picker";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface UnionBranch {
   id: string;
@@ -62,6 +63,7 @@ export default function UnionBranchDetailsScreen() {
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const [email, setEmail] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const { data: branch, isLoading, error } = useQuery(trpc.union.branch.get.queryOptions(parseInt(id as string)));
 
@@ -292,9 +294,13 @@ export default function UnionBranchDetailsScreen() {
                   ) : null}
 
                   {announcement.image && (
-                    <View style={styles.announcementImageContainer} onPress={() => handleLinkPress(announcement.link)}>
+                    <TouchableOpacity
+                      style={styles.announcementImageContainer}
+                      onPress={() => setSelectedImage(announcement.image)}
+                      activeOpacity={0.8}
+                    >
                       <Image source={{ uri: announcement.image }} style={styles.announcementImage} />
-                    </View>
+                    </TouchableOpacity>
                   )}
 
                   {announcement.link && (
@@ -516,6 +522,8 @@ export default function UnionBranchDetailsScreen() {
           </View>
         )}
       </ScrollView>
+
+      <ImageViewerModal visible={!!selectedImage} imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
     </View>
   );
 }

@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   FileText,
+  ChevronDown,
 } from "lucide-react-native";
 
 import { Stack, useRouter } from "expo-router";
@@ -28,6 +29,9 @@ import { trpc } from "../lib/trpc";
 import { useMutation } from "@tanstack/react-query";
 import { useToastContext } from "@/providers/ToastProvider";
 import { ImageGalleryUploader } from "@/components/ImageGalleryUploader";
+import { CITIES } from "../constants/currency";
+
+const provinces = CITIES;
 
 type ClinicRegistration = {
   name: string;
@@ -35,6 +39,8 @@ type ClinicRegistration = {
   address: string;
   phone: string;
   email: string;
+  country: string;
+  province: string;
   workingHours: string;
   services: string;
   licenseNumber: string;
@@ -101,6 +107,8 @@ export default function ClinicSystemScreen() {
     address: "123 Main Street, Alexandria, Egypt",
     phone: "+20 10 1234 5678",
     email: "info@healthylifeclinic.com",
+    country: "",
+    province: "",
     workingHours: "Saturday - Thursday, 9:00 AM - 9:00 PM",
     services: "General Medicine, Pediatrics, Dentistry, Laboratory",
     licenseNumber: "CLN-2025-001",
@@ -120,6 +128,8 @@ export default function ClinicSystemScreen() {
   const [isSubscriptionVisible, setIsSubscriptionVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [showProvincePicker, setShowProvincePicker] = useState(false);
 
   const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
@@ -188,11 +198,28 @@ export default function ClinicSystemScreen() {
     }));
   };
 
+  const handleCountrySelect = (country: string) => {
+    setRegistrationData((prev) => ({ ...prev, country, province: "" }));
+    setShowCountryPicker(false);
+  };
+
+  const handleProvinceSelect = (province: string) => {
+    setRegistrationData((prev) => ({ ...prev, province }));
+    setShowProvincePicker(false);
+  };
+
   const handleRegisterClinic = async () => {
     if (!registrationData.name || !registrationData.phone || !registrationData.address || !registrationData.licenseNumber) {
       showToast({
         type: "error",
         message: "يرجى ملء جميع الحقول المطلوبة.",
+      });
+      return;
+    }
+    if (!registrationData.country || !registrationData.province) {
+      showToast({
+        type: "error",
+        message: "يرجى اختيار الدولة والمحافظة.",
       });
       return;
     }
@@ -221,6 +248,8 @@ export default function ClinicSystemScreen() {
             address: "",
             phone: "",
             email: "",
+            country: "",
+            province: "",
             workingHours: "",
             services: "",
             licenseNumber: "",
@@ -607,6 +636,50 @@ export default function ClinicSystemScreen() {
             />
           </View>
         </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>الدولة *</Text>
+          <TouchableOpacity style={styles.pickerButton} onPress={() => setShowCountryPicker(!showCountryPicker)}>
+            <Text style={[styles.pickerButtonText, !registrationData.country && styles.placeholderText]}>{registrationData.country || "اختر الدولة"}</Text>
+            <ChevronDown size={16} color={COLORS.darkGray} />
+          </TouchableOpacity>
+
+          {showCountryPicker && (
+            <View style={styles.pickerDropdown}>
+              <ScrollView style={styles.pickerList} nestedScrollEnabled>
+                {Object.keys(provinces).map((country, index) => (
+                  <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleCountrySelect(country)}>
+                    <Text style={styles.pickerItemText}>{country}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+
+        {registrationData.country && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>المحافظة *</Text>
+            <TouchableOpacity style={styles.pickerButton} onPress={() => setShowProvincePicker(!showProvincePicker)}>
+              <Text style={[styles.pickerButtonText, !registrationData.province && styles.placeholderText]}>
+                {registrationData.province || "اختر المحافظة"}
+              </Text>
+              <ChevronDown size={16} color={COLORS.darkGray} />
+            </TouchableOpacity>
+
+            {showProvincePicker && (
+              <View style={styles.pickerDropdown}>
+                <ScrollView style={styles.pickerList} nestedScrollEnabled>
+                  {provinces[registrationData.country as keyof typeof provinces]?.map((province, index) => (
+                    <TouchableOpacity key={index} style={styles.pickerItem} onPress={() => handleProvinceSelect(province)}>
+                      <Text style={styles.pickerItemText}>{province}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        )}
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>رقم الهاتف *</Text>
@@ -1512,6 +1585,46 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     fontSize: 16,
     color: COLORS.black,
+  },
+  pickerButton: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: COLORS.white,
+  },
+  pickerButtonText: {
+    fontSize: 16,
+    color: COLORS.black,
+  },
+  placeholderText: {
+    color: COLORS.darkGray,
+  },
+  pickerDropdown: {
+    marginTop: 8,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.lightGray,
+    maxHeight: 200,
+  },
+  pickerList: {
+    maxHeight: 200,
+  },
+  pickerItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray,
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: COLORS.black,
+    textAlign: "left",
   },
   uploadButton: {
     flexDirection: "row-reverse",

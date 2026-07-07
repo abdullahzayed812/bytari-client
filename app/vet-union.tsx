@@ -32,6 +32,7 @@ import {
 } from "lucide-react-native";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface UnionService {
   id: string;
@@ -440,6 +441,7 @@ export default function VetUnionScreen() {
 // ... inside the component, add this new component
 function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
   const { data: announcements, isLoading } = useQuery(trpc.union.announcement.list.queryOptions({ mainUnionId }));
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   if (isLoading) {
     return <ActivityIndicator />;
@@ -470,12 +472,12 @@ function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
           <View style={styles.announcementContent}>
             <Text style={styles.announcementTitle}>{announcement.title}</Text>
             {announcement?.image ? (
-              <View style={{ height: 150, borderRadius: 20 }}>
+              <TouchableOpacity style={{ height: 150, borderRadius: 20 }} onPress={() => setSelectedImage(announcement.image)} activeOpacity={0.8}>
                 <Image
                   source={{ uri: announcement.image || "" }}
                   style={{ width: "100%", height: 150, resizeMode: "cover", borderRadius: 10 }}
                 />
-              </View>
+              </TouchableOpacity>
             ) : null}
             {announcement?.link ? (
               <TouchableOpacity onPress={() => handleLinkPress(announcement.link)}>
@@ -489,6 +491,8 @@ function AnnouncementsList({ mainUnionId }: { mainUnionId?: number }) {
           </View>
         </View>
       ))}
+
+      <ImageViewerModal visible={!!selectedImage} imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
     </View>
   );
 }

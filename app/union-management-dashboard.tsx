@@ -31,6 +31,7 @@ import { useApp } from "../providers/AppProvider";
 import { usePermissions } from "../lib/permissions";
 import { trpc } from "../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ImageViewerModal from "../components/ImageViewerModal";
 
 interface UnionBranch {
   id: string;
@@ -54,6 +55,7 @@ export default function UnionManagementDashboardScreen() {
   // const { moderatorPermissions, isSuperAdmin, isModerator } = useApp();
   // const { canAccessUnion } = usePermissions();
   const [selectedTab, setSelectedTab] = useState<"overview" | "unions" | "announcements">("overview");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: allUnions, isLoading: isAllUnionsLoading, error } = useQuery(trpc.union.branch.list.queryOptions());
@@ -365,12 +367,16 @@ export default function UnionManagementDashboardScreen() {
                 <Text style={styles.announcementDate}>{new Date(announcement.createdAt).toLocaleDateString()}</Text>
               </View>
 
-              <View style={{ flex: 1, height: 150, borderRadius: 20 }}>
+              <TouchableOpacity
+                style={{ flex: 1, height: 150, borderRadius: 20 }}
+                onPress={() => setSelectedImage(announcement.image)}
+                activeOpacity={0.8}
+              >
                 <Image
                   source={{ uri: announcement.image }}
                   style={{ width: "100%", height: 150, resizeMode: "cover", borderRadius: 10 }}
                 />
-              </View>
+              </TouchableOpacity>
               <Text style={styles.announcementTitle}>{announcement.title}</Text>
               <Text style={styles.announcementUnion}>
                 {announcement.branchId ? allUnions?.find((u) => u.id === announcement.branchId)?.name : "المقر الرئيسي"}
@@ -445,6 +451,8 @@ export default function UnionManagementDashboardScreen() {
           {selectedTab === "announcements" && renderAnnouncementsTab(announcements)}
         </ScrollView>
       </SafeAreaView>
+
+      <ImageViewerModal visible={!!selectedImage} imageUrl={selectedImage} onClose={() => setSelectedImage(null)} />
     </>
   );
 }

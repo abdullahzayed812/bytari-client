@@ -12,6 +12,7 @@ import {
   Edit3,
   Trash2,
   X,
+  ArrowLeft,
   AlertTriangle,
   Plus,
   Check,
@@ -1321,6 +1322,16 @@ export default function PetDetailsScreen() {
                 <Trash2 size={16} color={COLORS.white} />
               </TouchableOpacity>
             </View>
+          )}
+
+          {/* Back to clinic dashboard — aligned with avatar and name */}
+          {!isOwner && fromClinic === "true" && clinicId && (
+            <TouchableOpacity
+              onPress={() => router.replace({ pathname: "/clinic-dashboard", params: { clinicId } })}
+              style={styles.heroIconBtn}
+            >
+              <ArrowLeft size={16} color={COLORS.white} />
+            </TouchableOpacity>
           )}
         </View>
       </View>

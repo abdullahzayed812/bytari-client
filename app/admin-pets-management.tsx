@@ -157,7 +157,7 @@ export default function AdminPetsManagement() {
       case "ban":
         updatePetMutation.mutate(
           {
-            petId: +selectedPet.id,
+            petId: selectedPet.id,
             type: selectedPet.category,
             typeStr: selectedPet.type,
             status: "banned",
@@ -176,7 +176,7 @@ export default function AdminPetsManagement() {
       case "unban":
         updatePetMutation.mutate(
           {
-            petId: +selectedPet.id,
+            petId: selectedPet.id,
             type: selectedPet.category,
             typeStr: selectedPet.type,
             status: "active",
@@ -195,7 +195,7 @@ export default function AdminPetsManagement() {
       case "delete":
         deletePetMutation.mutate(
           {
-            petId: +selectedPet.id,
+            petId: selectedPet.id,
             type: selectedPet.category,
             ...(user?.accountType === "admin" && { adminId: user?.id }),
           },

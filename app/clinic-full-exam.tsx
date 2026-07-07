@@ -1,33 +1,9 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Platform,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, FlatList, Image, Platform } from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { useRouter, Stack, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ArrowLeft,
-  Search,
-  Stethoscope,
-  FlaskConical,
-  Folder,
-  Pill,
-  FileText,
-  Check,
-  Plus,
-  Calendar,
-  ChevronRight,
-  Trash2,
-} from "lucide-react-native";
+import { ArrowLeft, Search, Stethoscope, FlaskConical, Folder, Pill, FileText, Check, Plus, Calendar, ChevronRight, Trash2 } from "lucide-react-native";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { useToastContext } from "@/providers/ToastProvider";
@@ -97,9 +73,7 @@ export default function ClinicFullExam() {
   // Notes
   const [generalNotes, setGeneralNotes] = useState("");
 
-  const { data: petsData, isLoading: petsLoading } = useQuery(
-    trpc.clinics.quickReview.getAccessedPets.queryOptions({ clinicId: Number(clinicId) }),
-  );
+  const { data: petsData, isLoading: petsLoading } = useQuery(trpc.clinics.quickReview.getAccessedPets.queryOptions({ clinicId: Number(clinicId) }));
   const createMutation = useMutation(trpc.clinics.quickReview.createFullExam.mutationOptions());
 
   const pets: Pet[] = (petsData as any)?.pets ?? [];
@@ -112,10 +86,7 @@ export default function ClinicFullExam() {
 
   const addMedication = () => {
     if (!newMedName.trim()) return;
-    setMedications((prev) => [
-      ...prev,
-      { id: Date.now(), name: newMedName.trim(), dosage: newMedDosage.trim(), duration: newMedDuration.trim() },
-    ]);
+    setMedications((prev) => [...prev, { id: Date.now(), name: newMedName.trim(), dosage: newMedDosage.trim(), duration: newMedDuration.trim() }]);
     setNewMedName("");
     setNewMedDosage("");
     setNewMedDuration("");
@@ -134,13 +105,14 @@ export default function ClinicFullExam() {
       setActiveTab("treatment");
       return;
     }
-    const treatmentText = [
-      treatment.trim(),
-      medications.map((m) => `${m.name}${m.dosage ? ` - ${m.dosage}` : ""}${m.duration ? ` - ${m.duration}` : ""}`).join("\n"),
-      additionalInstructions.trim(),
-    ]
-      .filter(Boolean)
-      .join("\n") || "—";
+    const treatmentText =
+      [
+        treatment.trim(),
+        medications.map((m) => `${m.name}${m.dosage ? ` - ${m.dosage}` : ""}${m.duration ? ` - ${m.duration}` : ""}`).join("\n"),
+        additionalInstructions.trim(),
+      ]
+        .filter(Boolean)
+        .join("\n") || "—";
 
     try {
       await createMutation.mutateAsync({
@@ -171,12 +143,17 @@ export default function ClinicFullExam() {
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => { if (step === "pet") router.back(); else if (step === "form" && !paramPetId) setStep("pet"); else router.back(); }} style={styles.headerBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              if (step === "pet") router.back();
+              else if (step === "form" && !paramPetId) setStep("pet");
+              else router.back();
+            }}
+            style={styles.headerBtn}
+          >
             <ArrowLeft size={22} color={COLORS.black} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {step === "pet" ? "اختر الحيوان" : activeTab === "treatment" ? "فحص كامل - العلاج" : "فحص كامل"}
-          </Text>
+          <Text style={styles.headerTitle}>{step === "pet" ? "اختر الحيوان" : activeTab === "treatment" ? "فحص كامل - العلاج" : "فحص كامل"}</Text>
           <View style={styles.headerBtn} />
         </View>
 
@@ -205,7 +182,10 @@ export default function ClinicFullExam() {
                 renderItem={({ item: p }) => (
                   <TouchableOpacity
                     style={styles.petCard}
-                    onPress={() => { setSelectedPet(p); setStep("form"); }}
+                    onPress={() => {
+                      setSelectedPet(p);
+                      setStep("form");
+                    }}
                     activeOpacity={0.8}
                   >
                     {p.image ? (
@@ -217,7 +197,10 @@ export default function ClinicFullExam() {
                     )}
                     <View style={{ flex: 1 }}>
                       <Text style={styles.petName}>{p.name}</Text>
-                      <Text style={styles.petMeta}>{p.type}{p.breed ? ` · ${p.breed}` : ""}</Text>
+                      <Text style={styles.petMeta}>
+                        {p.type}
+                        {p.breed ? ` · ${p.breed}` : ""}
+                      </Text>
                       <Text style={styles.petOwner}>{p.ownerName}</Text>
                     </View>
                     <ChevronRight size={18} color={COLORS.darkGray} />
@@ -239,9 +222,7 @@ export default function ClinicFullExam() {
             {/* Pet context */}
             {(selectedPet || paramPetId) && (
               <View style={styles.petBanner}>
-                <Text style={styles.petBannerText}>
-                  {selectedPet ? `${selectedPet.name} · ${selectedPet.ownerName}` : `الحيوان: ${paramPetId}`}
-                </Text>
+                <Text style={styles.petBannerText}>{selectedPet ? `${selectedPet.name} · ${selectedPet.ownerName}` : `الحيوان: ${paramPetId}`}</Text>
               </View>
             )}
 
@@ -251,11 +232,7 @@ export default function ClinicFullExam() {
                 {TABS.map(({ key, label, Icon }) => {
                   const isActive = activeTab === key;
                   return (
-                    <TouchableOpacity
-                      key={key}
-                      style={[styles.tab, isActive && styles.tabActive]}
-                      onPress={() => setActiveTab(key)}
-                    >
+                    <TouchableOpacity key={key} style={[styles.tab, isActive && styles.tabActive]} onPress={() => setActiveTab(key)}>
                       <Icon size={18} color={isActive ? COLORS.success : COLORS.darkGray} />
                       <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{label}</Text>
                     </TouchableOpacity>
@@ -308,16 +285,10 @@ export default function ClinicFullExam() {
                       return (
                         <TouchableOpacity
                           key={s.label}
-                          style={[
-                            styles.severityPill,
-                            { borderColor: s.color },
-                            isActive && { backgroundColor: s.color },
-                          ]}
+                          style={[styles.severityPill, { borderColor: s.color }, isActive && { backgroundColor: s.color }]}
                           onPress={() => setSeverity(isActive ? "" : s.label)}
                         >
-                          <Text style={[styles.severityText, { color: isActive ? COLORS.white : s.color }]}>
-                            {s.label}
-                          </Text>
+                          <Text style={[styles.severityText, { color: isActive ? COLORS.white : s.color }]}>{s.label}</Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -325,17 +296,10 @@ export default function ClinicFullExam() {
 
                   {/* Diagnosis CTAs */}
                   <View style={styles.diagCtas}>
-                    <TouchableOpacity
-                      style={styles.draftBtn}
-                      onPress={() => handleSave(true)}
-                      disabled={createMutation.isPending}
-                    >
+                    <TouchableOpacity style={styles.draftBtn} onPress={() => handleSave(true)} disabled={createMutation.isPending}>
                       <Text style={styles.draftBtnText}>حفظ كمسودة</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.nextBtn}
-                      onPress={() => setActiveTab("treatment")}
-                    >
+                    <TouchableOpacity style={styles.nextBtn} onPress={() => setActiveTab("treatment")}>
                       <Check size={17} color={COLORS.white} />
                       <Text style={styles.nextBtnText}>حفظ وإضافة علاج</Text>
                     </TouchableOpacity>
@@ -408,7 +372,10 @@ export default function ClinicFullExam() {
                       value={durationDate ?? new Date()}
                       mode="date"
                       display={Platform.OS === "ios" ? "spinner" : "default"}
-                      onChange={(_, d) => { setShowDurationPicker(false); if (d) setDurationDate(d); }}
+                      onChange={(_, d) => {
+                        setShowDurationPicker(false);
+                        if (d) setDurationDate(d);
+                      }}
                       minimumDate={new Date()}
                     />
                   )}
@@ -456,6 +423,13 @@ export default function ClinicFullExam() {
                     multiline
                     textAlignVertical="top"
                   />
+
+                  <View style={styles.diagCtas}>
+                    <TouchableOpacity style={styles.nextBtn} onPress={() => setActiveTab("treatment")}>
+                      <Check size={17} color={COLORS.white} />
+                      <Text style={styles.nextBtnText}>حفظ وإضافة</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
 
@@ -463,12 +437,7 @@ export default function ClinicFullExam() {
               {activeTab === "files" && (
                 <View style={styles.tabContent}>
                   <Text style={styles.fieldLabel}>صورة الوصفة</Text>
-                  <ImageUploader
-                    imageUri={prescriptionImage}
-                    onUploadComplete={setPrescriptionImage}
-                    label="إضافة صورة الوصفة (اختياري)"
-                    aspect={[4, 3]}
-                  />
+                  <ImageUploader imageUri={prescriptionImage} onUploadComplete={setPrescriptionImage} label="إضافة صورة الوصفة (اختياري)" aspect={[4, 3]} />
                   <Text style={[styles.fieldLabel, { marginTop: 16 }]}>ملفات إضافية</Text>
                   <ImageUploader
                     imageUri={fileUrls[0] ?? ""}
@@ -476,9 +445,14 @@ export default function ClinicFullExam() {
                     label="إضافة ملف أو صورة"
                     aspect={[4, 3]}
                   />
-                  {fileUrls.length > 0 && (
-                    <Text style={{ fontSize: 12, color: COLORS.success, marginTop: 6 }}>{fileUrls.length} ملف مرفق</Text>
-                  )}
+                  {fileUrls.length > 0 && <Text style={{ fontSize: 12, color: COLORS.success, marginTop: 6 }}>{fileUrls.length} ملف مرفق</Text>}
+
+                  <View style={styles.diagCtas}>
+                    <TouchableOpacity style={styles.nextBtn} onPress={() => setActiveTab("treatment")}>
+                      <Check size={17} color={COLORS.white} />
+                      <Text style={styles.nextBtnText}>حفظ وإضافة</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
 
@@ -495,6 +469,13 @@ export default function ClinicFullExam() {
                     multiline
                     textAlignVertical="top"
                   />
+
+                  <View style={styles.diagCtas}>
+                    <TouchableOpacity style={styles.nextBtn} onPress={() => setActiveTab("treatment")}>
+                      <Check size={17} color={COLORS.white} />
+                      <Text style={styles.nextBtnText}>حفظ وإضافة </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
 
