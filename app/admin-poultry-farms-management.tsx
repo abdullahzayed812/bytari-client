@@ -163,11 +163,17 @@ export default function AdminPoultryFarmsManagement() {
       showToast({ type: "error", message: "يجب تحديد تواريخ التفعيل (يوم/شهر/سنة)" });
       return;
     }
+    const startDate = parseDate(activationStartDate);
+    const endDate = parseDate(activationEndDate);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      showToast({ type: "error", message: "صيغة التاريخ غير صحيحة، يجب أن تكون بصيغة يوم/شهر/سنة" });
+      return;
+    }
     activateMutation.mutate(
       {
         farmId: selectedFarm.id,
-        activationStartDate: parseDate(activationStartDate),
-        activationEndDate: parseDate(activationEndDate),
+        activationStartDate: startDate,
+        activationEndDate: endDate,
       },
       {
         onSuccess: () => {
@@ -176,8 +182,8 @@ export default function AdminPoultryFarmsManagement() {
           refetch();
           setShowActivateModal(false);
           setShowDetailModal(false);
-          setActivationStartDate("");
-          setActivationEndDate("");
+          setActivationStartDate("1/1/2026");
+          setActivationEndDate("1/1/2027");
         },
         onError: (err) => showToast({ type: "error", message: err.message }),
       },
@@ -287,8 +293,8 @@ export default function AdminPoultryFarmsManagement() {
             <TouchableOpacity
               onPress={() => {
                 setShowActivateModal(false);
-                setActivationStartDate("");
-                setActivationEndDate("");
+                setActivationStartDate("1/1/2026");
+                setActivationEndDate("1/1/2027");
               }}
             >
               <XCircle size={24} color="#999" />
@@ -322,8 +328,8 @@ export default function AdminPoultryFarmsManagement() {
               style={[styles.modalBtn, styles.cancelBtn]}
               onPress={() => {
                 setShowActivateModal(false);
-                setActivationStartDate("");
-                setActivationEndDate("");
+                setActivationStartDate("1/1/2026");
+                setActivationEndDate("1/1/2027");
               }}
             >
               <Text style={styles.cancelBtnText}>إلغاء</Text>

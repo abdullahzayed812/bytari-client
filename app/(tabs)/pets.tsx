@@ -28,6 +28,7 @@ import {
 } from "lucide-react-native";
 import { trpc } from "../../lib/trpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PoultryFarmChatButton } from "../../components/poultry/PoultryFarmChatButton";
 import { PET_TYPE_LABELS } from "../add-adoption-pet";
 
 export default function PetsScreen() {
@@ -1114,8 +1115,23 @@ export default function PetsScreen() {
                             <Text style={styles.roleLabel}>الصلاحية:</Text>
                             <Text style={styles.roleValue}>{permLabel}</Text>
                           </View>
+                          {farm.owner?.name && (
+                            <View style={[styles.roleContainer, { marginTop: 6, alignSelf: "flex-start" }]}>
+                              <Text style={styles.roleLabel}>صاحب الحقل:</Text>
+                              <Text style={styles.roleValue}>{farm.owner.name}</Text>
+                            </View>
+                          )}
                         </View>
                       </View>
+
+                      {user?.id && (
+                        <PoultryFarmChatButton
+                          farmId={farm.id}
+                          counterpartId={Number(user.id)}
+                          counterpartRole="employee"
+                          title={farm.owner?.name ?? farm.name}
+                        />
+                      )}
 
                       <View style={styles.farmDetails}>
                         <View style={styles.detailItem}>

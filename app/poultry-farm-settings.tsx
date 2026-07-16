@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { useApp } from "@/providers/AppProvider";
 import { useToastContext } from "@/providers/ToastProvider";
 import { COLORS } from "@/constants/colors";
+import { PoultryFarmChatButton } from "@/components/poultry/PoultryFarmChatButton";
 
 const FARM_TYPE_OPTIONS = [
   { value: "broiler", label: "تسمين (دجاج لحم)" },
@@ -383,6 +384,7 @@ export default function PoultryFarmSettingsScreen() {
                   <Text style={styles.workerName}>{w.name}</Text>
                   <Text style={styles.workerEmail}>{w.email}</Text>
                   <Text style={styles.workerType}>{w.userType === "vet" ? "طبيب بيطري" : "مستخدم"}</Text>
+                  <PoultryFarmChatButton farmId={Number(id)} counterpartId={w.userId} counterpartRole="employee" title={w.name || "موظف"} />
                 </View>
 
                 {/* Permission toggle */}
@@ -451,6 +453,7 @@ export default function PoultryFarmSettingsScreen() {
                   <Text style={styles.workerName}>{doc.doctorName || "طبيب بيطري"}</Text>
                   <Text style={styles.workerEmail}>{doc.doctorEmail}</Text>
                   {doc.doctorPhone && <Text style={styles.workerEmail}>{doc.doctorPhone}</Text>}
+                  <PoultryFarmChatButton farmId={Number(id)} counterpartId={doc.doctorId} counterpartRole="doctor" title={doc.doctorName || "طبيب بيطري"} />
                 </View>
                 <TouchableOpacity
                   style={styles.removeBtn}

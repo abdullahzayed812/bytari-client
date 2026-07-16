@@ -183,6 +183,19 @@ const en: Record<string, string> = {
   "auth.loginErrorMessage": "An error occurred during login. Please try again.",
 
   // ========================
+  // EMAIL VERIFICATION
+  // ========================
+  "emailVerification.title": "Verify Your Account",
+  "emailVerification.subtitle": "Enter the code sent to",
+  "emailVerification.codePlaceholder": "Enter the 6-digit code",
+  "emailVerification.codeRequired": "Please enter the code",
+  "emailVerification.invalidCode": "Invalid or expired code",
+  "emailVerification.verifyButton": "Verify",
+  "emailVerification.resendButton": "Resend code",
+  "emailVerification.resendCooldown": "Please wait a moment before requesting a new code",
+  "emailVerification.resendFailed": "Failed to resend code",
+
+  // ========================
   // ONBOARDING
   // ========================
   "onboarding.getStarted": "Get Started",

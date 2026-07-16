@@ -73,7 +73,12 @@ export default function NotificationsScreen() {
       onSuccess: () => {
         // queryClient.invalidateQueries(trpc.notifications.list.queryKey as any);
 
-        if (notification?.type === "appointment" || notification?.type === "appointment_counter_proposed") {
+        if (
+          notification?.type === "appointment" ||
+          notification?.type === "appointment_counter_proposed" ||
+          notification?.type === "appointment_confirmed" ||
+          notification?.type === "appointment_reminder"
+        ) {
           router.push("/appointments");
         } else if (notification?.type === "order") {
           router.push("/orders");
@@ -95,7 +100,7 @@ export default function NotificationsScreen() {
               params: { id: data.branchId },
             });
           } else if (data.mainUnionId) {
-            router.push("/vet-unions");
+            router.push("/vet-union");
           }
         } else if (notification?.type === "system") {
           router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
@@ -132,6 +137,12 @@ export default function NotificationsScreen() {
               clinicId: data?.clinicId,
               petName: "",
             },
+          });
+        } else if (notification?.type === "poultry_farm_chat") {
+          const data = notification?.data;
+          router.push({
+            pathname: "/poultry-farm-chat-thread",
+            params: { chatId: data?.chatId },
           });
         } else if (notification?.type === "new_vaccination" || notification?.type === "vaccination_due") {
           router.push({

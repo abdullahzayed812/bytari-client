@@ -36,36 +36,80 @@ async function requestAndGetToken(
   }
 }
 
+// Mirrors the navigation performed by handleNotificationPress in mobile/app/(tabs)/notifications.tsx —
+// keep the two in sync: same notification `type` must land on the same screen with the same params,
+// whether the user tapped it from the in-app list or from a push notification.
 function navigateFromNotificationData(data: Record<string, unknown>) {
   try {
     const type = data?.type as string | undefined;
     switch (type) {
       case "appointment":
-      case "clinic_appointment":
+      case "appointment_counter_proposed":
+      case "appointment_confirmed":
+      case "appointment_reminder":
         router.push("/appointments" as never);
         break;
-      case "consultation":
-        router.push("/consultation-list" as never);
+      case "order":
+        router.push("/orders" as never);
         break;
       case "inquiry":
-        router.push("/inquiries-list" as never);
+        router.push({ pathname: "/inquiry-details", params: { id: String(data?.inquiryId ?? "") } } as never);
         break;
-      case "vaccination_due":
-      case "new_vaccination":
-        router.push("/(tabs)" as never);
-        break;
-      case "reminder_due":
-      case "new_reminder":
-        router.push("/reminders" as never);
-        break;
-      case "clinic_chat":
-        router.push("/clinic-system" as never);
+      case "consultation":
+        router.push({ pathname: "/consultation-details", params: { id: String(data?.consultationId ?? "") } } as never);
         break;
       case "lost_pet_sighting":
-        router.push("/lost-pets-list" as never);
+        router.push({ pathname: "/lost-pet", params: { id: String(data?.lostPetId ?? "") } } as never);
+        break;
+      case "union_supervisor_assignment":
+        router.push({ pathname: "/union-branch-details", params: { id: String(data?.branchId ?? "") } } as never);
+        break;
+      case "announcement":
+        if (data?.branchId) {
+          router.push({ pathname: "/union-branch-details", params: { id: String(data.branchId) } } as never);
+        } else if (data?.mainUnionId) {
+          router.push("/vet-union" as never);
+        }
+        break;
+      case "system":
+        router.push({ pathname: "/messages", params: { id: String(data?.inquiryId ?? "") } } as never);
         break;
       case "new_product":
-        router.push("/(tabs)" as never);
+        router.push({ pathname: "/store-details", params: { id: String(data?.storeId ?? "") } } as never);
+        break;
+      case "vet_added":
+        router.push({ pathname: "/clinic-dashboard", params: { clinicId: String(data?.clinicId ?? "") } } as never);
+        break;
+      case "clinic_access_request":
+        router.push({ pathname: "/pet-details", params: { petId: String(data?.petId ?? "") } } as never);
+        break;
+      case "info":
+        router.push("/(tabs)/messages" as never);
+        break;
+      case "medical_action_request":
+        router.push({ pathname: "/pet-details", params: { petId: String(data?.petId ?? "") } } as never);
+        break;
+      case "clinic_chat":
+        router.push({
+          pathname: "/clinic-chat-thread",
+          params: {
+            chatId: String(data?.chatId ?? ""),
+            senderRole: String(data?.recipientRole ?? ""),
+            clinicId: String(data?.clinicId ?? ""),
+            petName: "",
+          },
+        } as never);
+        break;
+      case "poultry_farm_chat":
+        router.push({ pathname: "/poultry-farm-chat-thread", params: { chatId: String(data?.chatId ?? "") } } as never);
+        break;
+      case "new_vaccination":
+      case "vaccination_due":
+        router.push({ pathname: "/(tabs)/pet-details", params: { petId: String(data?.petId ?? ""), openSection: "vaccinations" } } as never);
+        break;
+      case "new_reminder":
+      case "reminder_due":
+        router.push({ pathname: "/(tabs)/pet-details", params: { petId: String(data?.petId ?? ""), openSection: "reminders" } } as never);
         break;
       default:
         router.push("/notifications" as never);

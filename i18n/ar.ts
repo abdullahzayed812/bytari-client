@@ -184,6 +184,19 @@ const ar: Record<string, string> = {
   "auth.loginErrorMessage": "حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.",
 
   // ========================
+  // EMAIL VERIFICATION
+  // ========================
+  "emailVerification.title": "تفعيل الحساب",
+  "emailVerification.subtitle": "أدخل الرمز المرسل إلى",
+  "emailVerification.codePlaceholder": "أدخل الرمز المكون من 6 أرقام",
+  "emailVerification.codeRequired": "يرجى إدخال الرمز",
+  "emailVerification.invalidCode": "الرمز غير صحيح أو منتهي الصلاحية",
+  "emailVerification.verifyButton": "تفعيل",
+  "emailVerification.resendButton": "إعادة إرسال الرمز",
+  "emailVerification.resendCooldown": "يرجى الانتظار قليلاً قبل طلب رمز جديد",
+  "emailVerification.resendFailed": "تعذر إعادة إرسال الرمز",
+
+  // ========================
   // ONBOARDING
   // ========================
   "onboarding.getStarted": "ابدأ الآن",

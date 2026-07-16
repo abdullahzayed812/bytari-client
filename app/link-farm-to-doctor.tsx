@@ -11,6 +11,8 @@ import { Link2, Trash2, MapPin, CheckCircle, Feather } from "lucide-react-native
 import { COLORS } from "../constants/colors";
 import { trpc } from "../lib/trpc";
 import { useToastContext } from "../providers/ToastProvider";
+import { useApp } from "../providers/AppProvider";
+import { PoultryFarmChatButton } from "../components/poultry/PoultryFarmChatButton";
 
 const getFarmTypeLabel = (type: string) => {
   const types: Record<string, string> = { broiler: "تسمين", layer: "بياض" };
@@ -37,6 +39,7 @@ const getStatusColor = (status: string) => {
 
 export default function LinkFarmToDoctorScreen() {
   const router = useRouter();
+  const { user } = useApp();
   const { showToast } = useToastContext();
   const queryClient = useQueryClient();
   const [farmCode, setFarmCode] = useState("");
@@ -209,6 +212,15 @@ export default function LinkFarmToDoctorScreen() {
                     <Text style={styles.ownerText}>المالك: {link.ownerName}</Text>
                     {link.ownerPhone && <Text style={styles.ownerPhone}>{link.ownerPhone}</Text>}
                   </View>
+                )}
+
+                {user?.id && (
+                  <PoultryFarmChatButton
+                    farmId={link.farmId}
+                    counterpartId={Number(user.id)}
+                    counterpartRole="doctor"
+                    title={link.ownerName ?? link.farmName}
+                  />
                 )}
 
                 {/* Unlink */}

@@ -261,10 +261,12 @@ export default function AuthScreen() {
           avatar: profileImageUrl,
         } as any,
         {
-          onSuccess: async (data) => {
+          onSuccess: async (data: any) => {
+            if (data?.requiresVerification) {
+              router.push({ pathname: "/verify-email-code", params: { userId: String(data.userId), email: data.email } });
+              return;
+            }
             await login(data?.user, data?.tokens?.accessToken);
-
-            console.log("_--------------:", data);
             router.replace("/(tabs)");
           },
           onError: (error) => {

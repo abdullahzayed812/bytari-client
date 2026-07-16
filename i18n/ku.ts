@@ -183,6 +183,19 @@ const ku: Record<string, string> = {
   "auth.loginErrorMessage": "هەڵەیەک ڕوویدا لە کاتی چوونەژوورەوە. تکایە دووبارە هەوڵ بدەوە.",
 
   // ========================
+  // EMAIL VERIFICATION
+  // ========================
+  "emailVerification.title": "چالاککردنی هەژمار",
+  "emailVerification.subtitle": "ئەو کۆدە بنووسە کە نێردراوە بۆ",
+  "emailVerification.codePlaceholder": "کۆدی ٦ ژمارەیی بنووسە",
+  "emailVerification.codeRequired": "تکایە کۆدەکە بنووسە",
+  "emailVerification.invalidCode": "کۆدەکە هەڵەیە یان کاتی بەسەرچووە",
+  "emailVerification.verifyButton": "چالاککردن",
+  "emailVerification.resendButton": "دووبارە ناردنی کۆد",
+  "emailVerification.resendCooldown": "تکایە کەمێک چاوەڕێ بکە پێش داواکردنی کۆدێکی نوێ",
+  "emailVerification.resendFailed": "دووبارە ناردنی کۆد سەرکەوتوو نەبوو",
+
+  // ========================
   // ONBOARDING
   // ========================
   "onboarding.getStarted": "دەستپێکردن",

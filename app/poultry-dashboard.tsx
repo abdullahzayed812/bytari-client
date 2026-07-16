@@ -17,6 +17,21 @@ import { PoultryFeatureCard } from "../components/poultry/PoultryFeatureCard";
 const FARM_TYPE_LABELS: Record<string, string> = { broiler: "تسمين", layer: "بياض" };
 const HEALTH_LABELS: Record<string, string> = { healthy: "سليم", quarantine: "حجر صحي", sick: "مريض" };
 
+// Small component so hooks can be called per farm card without violating rules of hooks
+function FarmChatUnreadBadge({ farmId }: { farmId: number }) {
+  const { data } = useQuery({
+    ...trpc.poultryFarms.chat.getUnreadCount.queryOptions({ farmId }),
+    refetchInterval: 30000,
+  });
+  const count: number = (data as any)?.count ?? 0;
+  if (count === 0) return null;
+  return (
+    <View style={styles.chatUnreadBadge}>
+      <Text style={styles.chatUnreadBadgeText}>{count > 99 ? "99+" : count}</Text>
+    </View>
+  );
+}
+
 const DASHBOARD_FEATURES = [
   {
     icon: "🐔",
@@ -135,6 +150,7 @@ export default function PoultryDashboardScreen() {
                             </View>
                           </View>
                         </View>
+                        {!isPending && <FarmChatUnreadBadge farmId={farm.id} />}
                       </View>
                       {!isPending && (
                         <View style={styles.farmCardStats}>
@@ -222,6 +238,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   farmCardInfo: { flex: 1 },
+  chatUnreadBadge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.error,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 5,
+  },
+  chatUnreadBadgeText: { color: "#fff", fontSize: 11, fontWeight: "bold" },
   farmCardName: { fontSize: 15, fontWeight: "700", color: COLORS.black, marginBottom: 4 },
   farmCardRow: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 6 },
   farmCardSub: { fontSize: 12, color: COLORS.darkGray },
