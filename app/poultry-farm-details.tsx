@@ -29,6 +29,7 @@ import {
 import { PoultryFarm, PoultryBatch, PoultryWeek, PoultryDay } from "../types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useApp } from "@/providers/AppProvider";
+import { PoultryFarmChatButton } from "@/components/poultry/PoultryFarmChatButton";
 
 export default function PoultryFarmDetailsScreen() {
   const { isSuperAdmin, user } = useApp();
@@ -103,6 +104,16 @@ export default function PoultryFarmDetailsScreen() {
       farmId: Number(id),
     }),
   );
+
+  // Linked doctors/employees (owner view only)
+  const farmWorkersQuery = useQuery({
+    ...trpc.poultryFarms.getWorkers.queryOptions({ farmId: Number(id) }),
+    enabled: !isWorkerMode,
+  });
+  const farmDoctorsQuery = useQuery({
+    ...trpc.poultry.farmDoctor.getFarmDoctors.queryOptions({ farmId: Number(id) }),
+    enabled: !isWorkerMode,
+  });
 
   const addBatchMutation = useMutation(trpc.poultryBatches.add.mutationOptions());
   const addDailyDataMutation = useMutation(trpc.poultryBatches.addDailyData.mutationOptions());
@@ -620,6 +631,45 @@ export default function PoultryFarmDetailsScreen() {
     </View>
   );
 
+  const renderFarmContacts = () => {
+    const workers = farmWorkersQuery.data?.workers || [];
+    const doctors = farmDoctorsQuery.data?.doctors || [];
+
+    if (!workers.length && !doctors.length) return null;
+
+    return (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>الأطباء والموظفون</Text>
+
+        {doctors.map((doc: any) => (
+          <View key={`doc-${doc.linkId}`} style={styles.contactRow}>
+            <View style={styles.contactInfo}>
+              <Stethoscope size={18} color={COLORS.success} />
+              <View>
+                <Text style={styles.contactName}>{doc.doctorName || "طبيب بيطري"}</Text>
+                <Text style={styles.contactRole}>طبيب بيطري</Text>
+              </View>
+            </View>
+            <PoultryFarmChatButton farmId={Number(id)} counterpartId={doc.doctorId} counterpartRole="doctor" title={doc.doctorName || "طبيب بيطري"} />
+          </View>
+        ))}
+
+        {workers.map((w: any) => (
+          <View key={`worker-${w.id}`} style={styles.contactRow}>
+            <View style={styles.contactInfo}>
+              <Users size={18} color={COLORS.primary} />
+              <View>
+                <Text style={styles.contactName}>{w.name}</Text>
+                <Text style={styles.contactRole}>{w.userType === "vet" ? "طبيب بيطري" : "موظف"}</Text>
+              </View>
+            </View>
+            <PoultryFarmChatButton farmId={Number(id)} counterpartId={w.userId} counterpartRole="employee" title={w.name || "موظف"} />
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   const renderCurrentBatch = () => {
     if (!currentBatch) {
       return (
@@ -1132,6 +1182,7 @@ export default function PoultryFarmDetailsScreen() {
         ) : (
           // Owner view: full view
           <>
+            {renderFarmContacts()}
             {renderCurrentBatch()}
             {renderDailyData()}
             {renderCompletedBatches()}
@@ -1972,6 +2023,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
     gap: 8,
+  },
+  contactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  contactInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  contactName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.black,
+  },
+  contactRole: {
+    fontSize: 12,
+    color: COLORS.darkGray,
+    marginTop: 2,
   },
   infoLabel: {
     fontSize: 14,

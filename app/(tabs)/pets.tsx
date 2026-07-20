@@ -807,6 +807,15 @@ export default function PetsScreen() {
                       </View>
                     </View>
 
+                    {user?.id && (
+                      <PoultryFarmChatButton
+                        farmId={link.farmId}
+                        counterpartId={Number(user.id)}
+                        counterpartRole="doctor"
+                        title={link.ownerName ?? link.farmName}
+                      />
+                    )}
+
                     <View style={styles.farmDetails}>
                       <View style={styles.detailItem}>
                         <Text style={styles.detailLabel}>الطبقة:</Text>

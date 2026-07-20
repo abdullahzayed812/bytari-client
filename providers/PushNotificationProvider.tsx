@@ -112,7 +112,7 @@ function navigateFromNotificationData(data: Record<string, unknown>) {
         router.push({ pathname: "/(tabs)/pet-details", params: { petId: String(data?.petId ?? ""), openSection: "reminders" } } as never);
         break;
       default:
-        router.push("/notifications" as never);
+        router.push("/(tabs)/notifications" as never);
         break;
     }
   } catch {
@@ -227,13 +227,17 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
     return () => sub.remove();
   }, []);
 
-  // App opened from a killed state via notification tap
+  // App opened from a killed state via notification tap.
+  // getLastNotificationResponseAsync() keeps returning the same response on every
+  // subsequent cold start until it's cleared, so without this the app would
+  // re-navigate to a stale notification's target every time it's relaunched.
   useEffect(() => {
     if (IS_EXPO_GO) return;
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!response) return;
       const data = response.notification.request.content.data as Record<string, unknown>;
       navigateFromNotificationData(data);
+      Notifications.clearLastNotificationResponseAsync().catch(() => {});
     });
   }, []);
 
