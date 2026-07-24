@@ -612,6 +612,20 @@ export default function AdminDashboard() {
             </TouchableOpacity>
           )}
 
+          {hasPermission("assign_roles") && (
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-veterinarians-list")}>
+              <Stethoscope size={24} color="#8E44AD" />
+              <Text style={styles.actionText}>جميع الأطباء البيطريين</Text>
+            </TouchableOpacity>
+          )}
+
+          {hasPermission("assign_roles") && (
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-pet-owners-list")}>
+              <Users size={24} color="#4ECDC4" />
+              <Text style={styles.actionText}>جميع أصحاب الحيوانات</Text>
+            </TouchableOpacity>
+          )}
+
           {hasPermission("manage_approvals") && (
             <TouchableOpacity
               style={[styles.actionCard, styles.actionCardWithBadge]}

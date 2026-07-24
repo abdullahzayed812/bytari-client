@@ -14,6 +14,24 @@ import { useToastContext } from "./ToastProvider";
 const IS_EXPO_GO = Constants.appOwnership === "expo";
 
 const PUSH_TOKEN_KEY = "@bytari/push_token";
+const LAST_HANDLED_NOTIFICATION_KEY = "@bytari/last_handled_notification_id";
+
+// Both addNotificationResponseReceivedListener and getLastNotificationResponseAsync can fire for
+// the SAME response (e.g. a cold start launched by tapping a notification), and
+// getLastNotificationResponseAsync keeps returning that same response on every later cold start
+// if the native clearLastNotificationResponseAsync call ever fails (its failure is swallowed,
+// since it's best-effort). Track the response's own identifier so a replay is a no-op regardless
+// of whether the native clear succeeded.
+async function handleNotificationResponseOnce(response: Notifications.NotificationResponse) {
+  const id = response.notification.request.identifier;
+  if (id) {
+    const lastHandledId = await AsyncStorage.getItem(LAST_HANDLED_NOTIFICATION_KEY);
+    if (id === lastHandledId) return;
+    await AsyncStorage.setItem(LAST_HANDLED_NOTIFICATION_KEY, id);
+  }
+  const data = response.notification.request.content.data as Record<string, unknown>;
+  navigateFromNotificationData(data);
+}
 
 async function requestAndGetToken(
   onError: (stage: string, err: unknown) => void
@@ -78,6 +96,7 @@ function navigateFromNotificationData(data: Record<string, unknown>) {
         router.push({ pathname: "/store-details", params: { id: String(data?.storeId ?? "") } } as never);
         break;
       case "vet_added":
+      case "vet_removed":
         router.push({ pathname: "/clinic-dashboard", params: { clinicId: String(data?.clinicId ?? "") } } as never);
         break;
       case "clinic_access_request":
@@ -112,7 +131,10 @@ function navigateFromNotificationData(data: Record<string, unknown>) {
         router.push({ pathname: "/(tabs)/pet-details", params: { petId: String(data?.petId ?? ""), openSection: "reminders" } } as never);
         break;
       default:
-        router.push("/(tabs)/notifications" as never);
+        // Unrecognized/missing type — mirrors handleNotificationPress in (tabs)/notifications.tsx,
+        // which also does nothing for unmatched types. Do NOT force-navigate here: this runs on
+        // every cold start (see handleNotificationResponseOnce below), so forcing a route would
+        // yank the user away from wherever the app would otherwise land.
         break;
     }
   } catch {
@@ -221,22 +243,19 @@ export function PushNotificationProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (IS_EXPO_GO) return;
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const data = response.notification.request.content.data as Record<string, unknown>;
-      navigateFromNotificationData(data);
+      handleNotificationResponseOnce(response).catch(() => {});
     });
     return () => sub.remove();
   }, []);
 
-  // App opened from a killed state via notification tap.
-  // getLastNotificationResponseAsync() keeps returning the same response on every
-  // subsequent cold start until it's cleared, so without this the app would
-  // re-navigate to a stale notification's target every time it's relaunched.
+  // App opened from a killed state via notification tap. See handleNotificationResponseOnce's
+  // comment above for why this can't just trust clearLastNotificationResponseAsync to prevent
+  // replays on later, unrelated cold starts.
   useEffect(() => {
     if (IS_EXPO_GO) return;
     Notifications.getLastNotificationResponseAsync().then((response) => {
       if (!response) return;
-      const data = response.notification.request.content.data as Record<string, unknown>;
-      navigateFromNotificationData(data);
+      handleNotificationResponseOnce(response).catch(() => {});
       Notifications.clearLastNotificationResponseAsync().catch(() => {});
     });
   }, []);

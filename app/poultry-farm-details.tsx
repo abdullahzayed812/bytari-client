@@ -1182,9 +1182,9 @@ export default function PoultryFarmDetailsScreen() {
         ) : (
           // Owner view: full view
           <>
-            {renderFarmContacts()}
             {renderCurrentBatch()}
             {renderDailyData()}
+            {renderFarmContacts()}
             {renderCompletedBatches()}
             {renderSupervision()}
           </>

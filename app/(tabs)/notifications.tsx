@@ -106,7 +106,7 @@ export default function NotificationsScreen() {
           router.push({ pathname: "/messages", params: { id: notification?.data?.inquiryId } });
         } else if (notification?.type === "new_product") {
           router.push({ pathname: "/store-details", params: { id: notification?.data?.storeId } });
-        } else if (notification?.type === "vet_added") {
+        } else if (notification?.type === "vet_added" || notification?.type === "vet_removed") {
           router.push({
             pathname: "/clinic-dashboard",
             params: { clinicId: notification?.data?.clinicId },

@@ -86,7 +86,15 @@ export default function AuthScreen() {
     loginMutation.mutate(
       { email: account.email, password: account.password },
       {
-        onSuccess: async (data) => {
+        onSuccess: async (data: any) => {
+          if (data?.requiresVerification) {
+            router.push({ pathname: "/verify-email-code", params: { userId: String(data.userId), email: data.email } });
+            return;
+          }
+          if (data?.success === false) {
+            setErrors({ general: data.message || t("auth.loginError") });
+            return;
+          }
           await login(data.user, data.tokens.accessToken);
           router.replace("/(tabs)");
         },
@@ -181,7 +189,15 @@ export default function AuthScreen() {
     loginMutation.mutate(
       { email: usernameOrEmail, password },
       {
-        onSuccess: async (data) => {
+        onSuccess: async (data: any) => {
+          if (data?.requiresVerification) {
+            router.push({ pathname: "/verify-email-code", params: { userId: String(data.userId), email: data.email } });
+            return;
+          }
+          if (data?.success === false) {
+            setErrors({ general: data.message || t("auth.loginError") });
+            return;
+          }
           // Assuming the login function in useApp handles token storage and user state
           await login(data.user, data.tokens.accessToken);
 
