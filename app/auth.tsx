@@ -480,7 +480,10 @@ export default function AuthScreen() {
             )}
 
             <View style={styles.inputGroup}>
-              <Text style={[styles.inputLabel]}>{activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}</Text>
+              <View style={[styles.emailLabelRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+                <Text style={[styles.inputLabel]}>{activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}</Text>
+                {activeTab === "register" && accountType === "pet_owner" && <Text style={styles.emailHintText}>يجب تأكيد البريد الإلكتروني</Text>}
+              </View>
               <TextInput
                 style={[styles.input, errors.usernameOrEmail && styles.inputError]}
                 placeholder={activeTab === "login" ? t("auth.emailUsername") : t("auth.emailLabel")}
@@ -854,6 +857,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 8,
     color: COLORS.black,
+  },
+  emailLabelRow: {
+    alignItems: "center",
+    gap: 8,
+  },
+  emailHintText: {
+    fontSize: 12,
+    marginBottom: 8,
+    color: "rgba(0, 0, 0, 0.35)",
   },
   input: {
     height: 50,

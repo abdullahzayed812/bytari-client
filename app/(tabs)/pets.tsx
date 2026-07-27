@@ -777,7 +777,7 @@ export default function PetsScreen() {
                     onPress={() =>
                       router.push({
                         pathname: "/poultry-farm-details",
-                        params: { id: link.farmId, workerMode: "1", workerPermissions: "add_daily_data" },
+                        params: { id: link.farmId, workerMode: "1", workerPermissions: "add_daily_data", counterpartRole: "doctor" },
                       })
                     }
                     activeOpacity={0.8}
@@ -1091,7 +1091,7 @@ export default function PetsScreen() {
                       onPress={() =>
                         router.push({
                           pathname: "/poultry-farm-details",
-                          params: { id: farm.id, workerMode: "1", workerPermissions: farm.permissions },
+                          params: { id: farm.id, workerMode: "1", workerPermissions: farm.permissions, counterpartRole: "employee" },
                         })
                       }
                       activeOpacity={0.8}

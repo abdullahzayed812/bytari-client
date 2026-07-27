@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, Alert, FlatList, ActivityIndicator, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack } from "expo-router";
-import { Building2, CheckCircle, XCircle, Eye, Ban, Trash2, Search, Phone, Clock, Star, Image as ImageIcon } from "lucide-react-native";
+import { Building2, CheckCircle, XCircle, Eye, Ban, Trash2, Search, Phone, Clock, Star, Image as ImageIcon, Calendar, AlertTriangle } from "lucide-react-native";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
 import { FilterTab, FilterTabs } from "@/components/FilterTabs";
@@ -17,7 +17,7 @@ interface Clinic {
   email?: string;
   ownerName: string;
   ownerEmail: string;
-  status: "active" | "pending" | "banned" | "suspended";
+  status: "active" | "pending" | "banned" | "suspended" | "expired";
   rating: number;
   reviewsCount: number;
   services: string[];
@@ -28,7 +28,21 @@ interface Clinic {
   isPremium: boolean;
   identityImages?: string | string[];
   licenseImages?: string | string[];
+  activationStartDate?: string | null;
+  activationEndDate?: string | null;
+  needsRenewal?: boolean;
+  reviewingRenewalRequest?: boolean;
 }
+
+const formatDate = (d: string | null | undefined) => {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("ar-SA");
+};
+
+const getDaysRemaining = (endDate: string | null | undefined) => {
+  if (!endDate) return null;
+  return Math.ceil((new Date(endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+};
 
 const formatWorkingHours = (workingHours: any) => {
   if (typeof workingHours === "string") {
@@ -64,7 +78,7 @@ const parseImageArray = (images: string | string[] | null | undefined): string[]
 };
 
 export default function AdminClinicsManagement() {
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "pending" | "banned" | "premium">("all");
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "pending" | "banned" | "premium" | "expired">("all");
   const [selectedClinic, setSelectedClinic] = useState<Clinic | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -82,7 +96,7 @@ export default function AdminClinicsManagement() {
   const setClinicActiveMutation = useMutation(trpc.clinics.toggleClinicVisibility.mutationOptions());
 
   // Define getFilteredClinics BEFORE using it in useMemo
-  const getFilteredClinics = useCallback((clinicsList: Clinic[], search: string, filter: "all" | "active" | "pending" | "banned" | "premium") => {
+  const getFilteredClinics = useCallback((clinicsList: Clinic[], search: string, filter: "all" | "active" | "pending" | "banned" | "premium" | "expired") => {
     let filtered = clinicsList;
 
     // Apply search filter
@@ -105,12 +119,14 @@ export default function AdminClinicsManagement() {
         return filtered.filter((clinic) => clinic.status === "banned");
       case "premium":
         return filtered.filter((clinic) => clinic.isPremium);
+      case "expired":
+        return filtered.filter((clinic) => clinic.status === "expired");
       default:
         return filtered;
     }
   }, []);
 
-  const clinicTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = useMemo(
+  const clinicTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium" | "expired">[] = useMemo(
     () => [
       {
         id: "all",
@@ -145,6 +161,13 @@ export default function AdminClinicsManagement() {
         iconColor: "#FFD700",
         count: clinics?.filter((c) => c.isPremium).length || 0,
       },
+      {
+        id: "expired",
+        label: "منتهي الاشتراك",
+        icon: AlertTriangle,
+        iconColor: "#E67E22",
+        count: clinics?.filter((c) => c.status === "expired").length || 0,
+      },
     ],
     [clinics],
   );
@@ -161,6 +184,8 @@ export default function AdminClinicsManagement() {
         return "#E74C3C";
       case "suspended":
         return "#9B59B6";
+      case "expired":
+        return "#E67E22";
       default:
         return "#666";
     }
@@ -176,6 +201,8 @@ export default function AdminClinicsManagement() {
         return "محظور";
       case "suspended":
         return "موقوف";
+      case "expired":
+        return "منتهي الاشتراك";
       default:
         return "غير محدد";
     }
@@ -434,6 +461,32 @@ export default function AdminClinicsManagement() {
                     {selectedClinic.isPremium ? "مفعلة" : "غير مفعلة"}
                   </Text>
                 </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>تاريخ بدء الاشتراك:</Text>
+                  <Text style={styles.infoValue}>{formatDate(selectedClinic.activationStartDate)}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>تاريخ انتهاء الاشتراك:</Text>
+                  <Text
+                    style={[
+                      styles.infoValue,
+                      { color: selectedClinic.status === "expired" ? "#E74C3C" : "#333" },
+                    ]}
+                  >
+                    {formatDate(selectedClinic.activationEndDate)}
+                  </Text>
+                </View>
+
+                {selectedClinic.needsRenewal && (
+                  <View style={styles.renewalCard}>
+                    <AlertTriangle size={15} color="#E74C3C" />
+                    <Text style={styles.renewalCardText}>
+                      {selectedClinic.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "الاشتراك منتهي ويحتاج للتجديد"}
+                    </Text>
+                  </View>
+                )}
               </View>
             </ScrollView>
 
@@ -581,7 +634,25 @@ export default function AdminClinicsManagement() {
           <Clock size={14} color="#666" />
           <Text style={styles.detailText}>{formatWorkingHours(item.workingHours)}</Text>
         </View>
+
+        {item.activationEndDate && (
+          <View style={styles.detailItem}>
+            <Calendar size={14} color={item.status === "expired" ? "#E67E22" : "#666"} />
+            <Text style={[styles.detailText, item.status === "expired" && { color: "#E67E22" }]}>
+              الاشتراك: {formatDate(item.activationStartDate)} - {formatDate(item.activationEndDate)}
+            </Text>
+          </View>
+        )}
       </View>
+
+      {item.needsRenewal && (
+        <View style={styles.renewalCard}>
+          <AlertTriangle size={15} color="#E74C3C" />
+          <Text style={styles.renewalCardText}>
+            {item.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "الاشتراك منتهي ويحتاج للتجديد"}
+          </Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -767,6 +838,21 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 14,
     color: "#666",
+    fontFamily: "System",
+  },
+  renewalCard: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 10,
+  },
+  renewalCardText: {
+    color: "#E74C3C",
+    fontSize: 13,
+    fontWeight: "600",
     fontFamily: "System",
   },
   clinicFooter: {

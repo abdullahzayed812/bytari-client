@@ -16,6 +16,8 @@ import {
   Star,
   Package,
   TrendingUp,
+  Calendar,
+  AlertTriangle,
 } from "lucide-react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -31,9 +33,9 @@ interface StoreData {
   email?: string;
   ownerName: string;
   ownerEmail: string;
-  status: "active" | "pending" | "banned" | "suspended";
+  status: "active" | "pending" | "banned" | "suspended" | "expired";
   rating: number;
-  reviewsCount: number;
+  reviewCount: number;
   category: string;
   productsCount: number;
   totalSales: number;
@@ -42,7 +44,16 @@ interface StoreData {
   reportCount?: number;
   isPremium: boolean;
   businessLicense?: string;
+  activationStartDate?: string | null;
+  activationEndDate?: string | null;
+  needsRenewal?: boolean;
+  reviewingRenewalRequest?: boolean;
 }
+
+const formatDate = (d: string | null | undefined) => {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("ar-SA");
+};
 
 const StoreProducts = ({ storeId }: { storeId: string }) => {
   const {
@@ -87,7 +98,7 @@ const StoreProducts = ({ storeId }: { storeId: string }) => {
 export default function AdminStoresManagement() {
   const queryClient = useQueryClient();
 
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "pending" | "banned" | "premium">("all");
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "pending" | "banned" | "premium" | "expired">("all");
   const [selectedStore, setSelectedStore] = useState<StoreData | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -101,13 +112,13 @@ export default function AdminStoresManagement() {
     data: storesData,
     isLoading: storesLoading,
     error: storesError,
-  } = useQuery(trpc.stores.listActive.queryOptions({}));
+  } = useQuery(trpc.stores.getAdminList.queryOptions({}));
   const stores: StoreData[] = useMemo(() => (storesData as any)?.stores, [storesData]);
 
   const deleteStoreMutation = useMutation(trpc.stores.delete.mutationOptions());
   const setStoreActiveMutation = useMutation(trpc.stores.setActive.mutationOptions());
 
-  const storeTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium">[] = [
+  const storeTabs: FilterTab<"all" | "active" | "pending" | "banned" | "premium" | "expired">[] = [
     {
       id: "all",
       label: "الكل",
@@ -141,6 +152,13 @@ export default function AdminStoresManagement() {
       iconColor: "#FFD700",
       count: stores?.filter((s) => s.isPremium).length || 0,
     },
+    {
+      id: "expired",
+      label: "منتهي الاشتراك",
+      icon: AlertTriangle,
+      iconColor: "#E67E22",
+      count: stores?.filter((s) => s.status === "expired").length || 0,
+    },
   ];
 
   const handleViewImage = (url: string) => {
@@ -172,6 +190,8 @@ export default function AdminStoresManagement() {
         return filtered.filter((store) => store.status === "banned");
       case "premium":
         return filtered.filter((store) => store.isPremium);
+      case "expired":
+        return filtered.filter((store) => store.status === "expired");
       default:
         return filtered;
     }
@@ -203,6 +223,8 @@ export default function AdminStoresManagement() {
         return "#E74C3C";
       case "suspended":
         return "#9B59B6";
+      case "expired":
+        return "#E67E22";
       default:
         return "#666";
     }
@@ -218,6 +240,8 @@ export default function AdminStoresManagement() {
         return "محظور";
       case "suspended":
         return "موقوف";
+      case "expired":
+        return "منتهي الاشتراك";
       default:
         return "غير محدد";
     }
@@ -250,7 +274,7 @@ export default function AdminStoresManagement() {
                 { id: selectedStore.id },
                 {
                   onSuccess: () => {
-                    queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
+                    queryClient.invalidateQueries(trpc.stores.getAdminList.queryKey);
                     Alert.alert("نجاح", "تم حذف المتجر بنجاح.");
                     setShowActionModal(false);
                     setShowDetailModal(false);
@@ -275,7 +299,7 @@ export default function AdminStoresManagement() {
       { storeId: selectedStore.id, isActive },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries(trpc.stores.listActive.queryKey);
+          queryClient.invalidateQueries(trpc.stores.getAdminList.queryKey);
           Alert.alert("نجاح", message);
           setShowActionModal(false);
           setShowDetailModal(false);
@@ -351,7 +375,7 @@ export default function AdminStoresManagement() {
                   <View style={styles.ratingContainer}>
                     <Star size={16} color="#FFD700" />
                     <Text style={styles.ratingText}>{selectedStore.rating.toFixed(1)}</Text>
-                    <Text style={styles.reviewsText}>({selectedStore.reviewsCount} تقييم)</Text>
+                    <Text style={styles.reviewsText}>({selectedStore.reviewCount} تقييم)</Text>
                   </View>
                 </View>
               </View>
@@ -428,6 +452,27 @@ export default function AdminStoresManagement() {
                     {selectedStore.isPremium ? "مفعلة" : "غير مفعلة"}
                   </Text>
                 </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>تاريخ بدء الاشتراك:</Text>
+                  <Text style={styles.infoValue}>{formatDate(selectedStore.activationStartDate)}</Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>تاريخ انتهاء الاشتراك:</Text>
+                  <Text style={[styles.infoValue, { color: selectedStore.status === "expired" ? "#E74C3C" : "#333" }]}>
+                    {formatDate(selectedStore.activationEndDate)}
+                  </Text>
+                </View>
+
+                {selectedStore.needsRenewal && (
+                  <View style={styles.renewalCard}>
+                    <AlertTriangle size={15} color="#E74C3C" />
+                    <Text style={styles.renewalCardText}>
+                      {selectedStore.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "الاشتراك منتهي ويحتاج للتجديد"}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               <StoreProducts storeId={selectedStore.id.toString()} />
@@ -569,7 +614,7 @@ export default function AdminStoresManagement() {
         <View style={styles.detailItem}>
           <Star size={14} color="#FFD700" />
           <Text style={styles.detailText}>
-            {item.rating.toFixed(1)} ({item.reviewsCount} تقييم)
+            {item.rating.toFixed(1)} ({item.reviewCount} تقييم)
           </Text>
         </View>
 
@@ -582,6 +627,15 @@ export default function AdminStoresManagement() {
           <TrendingUp size={14} color="#27AE60" />
           <Text style={styles.detailText}>{item.totalSales.toLocaleString()} دينار</Text>
         </View>
+
+        {item.activationEndDate && (
+          <View style={styles.detailItem}>
+            <Calendar size={14} color={item.status === "expired" ? "#E67E22" : "#666"} />
+            <Text style={[styles.detailText, item.status === "expired" && { color: "#E67E22" }]}>
+              الاشتراك: {formatDate(item.activationStartDate)} - {formatDate(item.activationEndDate)}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.storeFooter}>
@@ -596,6 +650,15 @@ export default function AdminStoresManagement() {
           <Eye size={16} color="#666" />
         </TouchableOpacity>
       </View>
+
+      {item.needsRenewal && (
+        <View style={styles.renewalCard}>
+          <AlertTriangle size={15} color="#E74C3C" />
+          <Text style={styles.renewalCardText}>
+            {item.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "الاشتراك منتهي ويحتاج للتجديد"}
+          </Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 
@@ -790,6 +853,21 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 14,
     color: "#666",
+    fontFamily: "System",
+  },
+  renewalCard: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 10,
+  },
+  renewalCardText: {
+    color: "#E74C3C",
+    fontSize: 13,
+    fontWeight: "600",
     fontFamily: "System",
   },
   storeFooter: {

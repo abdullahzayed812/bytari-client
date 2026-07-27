@@ -37,7 +37,12 @@ export default function PoultryFarmDetailsScreen() {
   const router = useRouter();
   const { showToast } = useToastContext();
 
-  const { id, workerMode, workerPermissions } = useLocalSearchParams<{ id: string; workerMode?: string; workerPermissions?: string }>();
+  const { id, workerMode, workerPermissions, counterpartRole } = useLocalSearchParams<{
+    id: string;
+    workerMode?: string;
+    workerPermissions?: string;
+    counterpartRole?: "employee" | "doctor";
+  }>();
   const isWorkerMode = workerMode === "1";
   const canAddDailyData = !isWorkerMode || workerPermissions === "add_daily_data";
 
@@ -132,6 +137,8 @@ export default function PoultryFarmDetailsScreen() {
       setFarm({
         id: farmData.id.toString(),
         ownerId: farmData.ownerId.toString(),
+        ownerName: farmData.ownerName || "",
+        ownerPhone: farmData.ownerPhone || "",
         name: farmData.name,
         location: farmData.location,
         address: farmData.address || "",
@@ -670,6 +677,33 @@ export default function PoultryFarmDetailsScreen() {
     );
   };
 
+  // Worker view (doctor/employee): chat entry point with the farm owner
+  const renderContactOwner = () => {
+    if (!user?.id) return null;
+
+    return (
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>صاحب الحقل</Text>
+
+        <View style={styles.contactRow}>
+          <View style={styles.contactInfo}>
+            <Home size={18} color={COLORS.primary} />
+            <View>
+              <Text style={styles.contactName}>{farm?.ownerName || "صاحب الحقل"}</Text>
+              <Text style={styles.contactRole}>مالك الحقل</Text>
+            </View>
+          </View>
+          <PoultryFarmChatButton
+            farmId={Number(id)}
+            counterpartId={Number(user.id)}
+            counterpartRole={counterpartRole === "doctor" ? "doctor" : "employee"}
+            title={farm?.ownerName || "صاحب الحقل"}
+          />
+        </View>
+      </View>
+    );
+  };
+
   const renderCurrentBatch = () => {
     if (!currentBatch) {
       return (
@@ -1174,10 +1208,11 @@ export default function PoultryFarmDetailsScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {renderFarmInfo()}
         {isWorkerMode ? (
-          // Worker view: only daily data
+          // Worker view: daily data + chat with the farm owner
           <>
             {renderCurrentBatch()}
             {renderDailyData()}
+            {renderContactOwner()}
           </>
         ) : (
           // Owner view: full view

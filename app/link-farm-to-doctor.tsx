@@ -144,7 +144,12 @@ export default function LinkFarmToDoctorScreen() {
               <TouchableOpacity
                 key={link.linkId}
                 style={styles.farmCard}
-                onPress={() => router.push({ pathname: "/poultry-farm-details", params: { id: link.farmId, workerMode: "1", workerPermissions: "add_daily_data" } })}
+                onPress={() =>
+                  router.push({
+                    pathname: "/poultry-farm-details",
+                    params: { id: link.farmId, workerMode: "1", workerPermissions: "add_daily_data", counterpartRole: "doctor" },
+                  })
+                }
                 activeOpacity={0.8}
               >
                 {/* Header */}
