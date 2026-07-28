@@ -43,12 +43,12 @@ export default function ManagePoultryExchangeScreen() {
   });
 
   useEffect(() => {
-    if (data?.prices?.length) {
+    if (data?.rows?.length) {
       const loaded: Record<string, PriceRow> = {};
       IRAQ_GOVERNORATES.forEach((gov) => {
         loaded[gov] = { broilerPricePerKg: "", layerPricePerBird: "" };
       });
-      data.prices.forEach((p: any) => {
+      data.rows.forEach((p: any) => {
         if (loaded[p.governorate]) {
           loaded[p.governorate] = {
             broilerPricePerKg: p.broilerPricePerKg ? String(p.broilerPricePerKg) : "",
