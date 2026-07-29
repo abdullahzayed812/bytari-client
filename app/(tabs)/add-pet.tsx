@@ -25,15 +25,18 @@ export default function AddPetScreen() {
   const params = useLocalSearchParams<{ editMode?: string; petId?: string }>();
   const isEditMode = params.editMode === "true";
 
+  // Test/dummy data (do not use in production):
+  // name: "Saker", breed: "Sugar", age: "2", gender: "femail" (invalid), weight: "12",
+  // color: "F3333", birthDate: "12/12/2012"
   const [formData, setFormData] = useState({
-    name: "Saker",
+    name: "",
     type: "dog" as Pet["type"],
-    breed: "Sugar",
-    age: "2",
-    gender: "femail" as Pet["gender"],
-    weight: "12",
-    color: "F3333",
-    birthDate: "12/12/2012",
+    breed: "",
+    age: "",
+    gender: "male" as Pet["gender"],
+    weight: "",
+    color: "",
+    birthDate: "",
     image: "",
     medicalHistory: "",
     vaccinations: "",

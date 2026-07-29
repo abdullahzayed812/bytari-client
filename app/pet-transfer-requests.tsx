@@ -164,7 +164,7 @@ export default function PetTransferRequestsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>طلبات نقل الملكية</Text>
+        <Text style={styles.title}>طلبات نقل ملكية حيوان أليف</Text>
       </View>
 
       <View style={styles.tabs}>

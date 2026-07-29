@@ -1,8 +1,39 @@
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, Linking, Alert, ActivityIndicator, Platform, Share, Modal, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  Linking,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  Share,
+  Modal,
+  TextInput,
+} from "react-native";
 import React, { useState } from "react";
 import { COLORS } from "../constants/colors";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { ArrowLeft, MapPin, Phone, Clock, Star, Navigation, MessageSquare, Earth, Facebook, Instagram, Bell, BellOff, Share2, Calendar, X } from "lucide-react-native";
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
+  Clock,
+  Star,
+  Navigation,
+  MessageSquare,
+  Earth,
+  Facebook,
+  Instagram,
+  Bell,
+  BellOff,
+  Share2,
+  Calendar,
+  X,
+} from "lucide-react-native";
 import Button from "../components/Button";
 import { trpc } from "../lib/trpc";
 import { useApp } from "@/providers/AppProvider";
@@ -37,8 +68,14 @@ export default function ClinicProfileScreen() {
   const [selectedPetId, setSelectedPetId] = useState<string>("");
 
   const handleBookAppointment = async () => {
-    if (!user) { showToast({ type: "error", message: "يجب تسجيل الدخول أولاً" }); return; }
-    if (!selectedPetId) { showToast({ type: "error", message: "يرجى اختيار الحيوان" }); return; }
+    if (!user) {
+      showToast({ type: "error", message: "يجب تسجيل الدخول أولاً" });
+      return;
+    }
+    if (!selectedPetId) {
+      showToast({ type: "error", message: "يرجى اختيار الحيوان" });
+      return;
+    }
     try {
       await requestAppointmentMutation.mutateAsync({
         clinicId,
@@ -189,7 +226,7 @@ export default function ClinicProfileScreen() {
 
   const handleShareClinic = async () => {
     try {
-      const appUrl = "https://bytari.app"; // TODO: replace with store link
+      const appUrl = "https://play.google.com/store/apps/details?id=com.petcare.bytari"; // TODO: replace with store link
       const message = `تحقق من تطبيق بيطاري ${appUrl}`;
       await Share.share({ message, url: appUrl, title: "بيطاري" });
     } catch {}
@@ -418,10 +455,7 @@ export default function ClinicProfileScreen() {
 
           {/* Book Appointment Button (pet owners only) */}
           {user && (
-            <TouchableOpacity
-              style={styles.bookButton}
-              onPress={() => setShowBookModal(true)}
-            >
+            <TouchableOpacity style={styles.bookButton} onPress={() => setShowBookModal(true)}>
               <Calendar size={20} color={COLORS.white} />
               <Text style={styles.bookButtonText}>حجز موعد</Text>
             </TouchableOpacity>
@@ -456,7 +490,9 @@ export default function ClinicProfileScreen() {
                   style={[styles.petOption, selectedPetId === p.id && styles.petOptionSelected]}
                   onPress={() => setSelectedPetId(p.id)}
                 >
-                  <Text style={[styles.petOptionText, selectedPetId === p.id && { color: COLORS.white }]}>{p.name} ({p.type})</Text>
+                  <Text style={[styles.petOptionText, selectedPetId === p.id && { color: COLORS.white }]}>
+                    {p.name} ({p.type})
+                  </Text>
                 </TouchableOpacity>
               ))
             ) : (
@@ -466,11 +502,7 @@ export default function ClinicProfileScreen() {
             <Text style={styles.modalLabel}>نوع الزيارة</Text>
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
               {["مراجعة", "تطعيم", "فحص", "جراحة"].map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  style={[styles.typeChip, bookType === t && styles.typeChipActive]}
-                  onPress={() => setBookType(t)}
-                >
+                <TouchableOpacity key={t} style={[styles.typeChip, bookType === t && styles.typeChipActive]} onPress={() => setBookType(t)}>
                   <Text style={[styles.typeChipText, bookType === t && styles.typeChipTextActive]}>{t}</Text>
                 </TouchableOpacity>
               ))}
@@ -480,15 +512,11 @@ export default function ClinicProfileScreen() {
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 4 }}>
               <TouchableOpacity style={[styles.datePickerBtn, { flex: 1 }]} onPress={() => setShowBookDatePicker(true)}>
                 <Calendar size={16} color={COLORS.primary} />
-                <Text style={styles.datePickerBtnText}>
-                  {bookDate.toLocaleDateString("ar-EG")}
-                </Text>
+                <Text style={styles.datePickerBtnText}>{bookDate.toLocaleDateString("ar-EG")}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.datePickerBtn, { flex: 1 }]} onPress={() => setShowBookTimePicker(true)}>
                 <Clock size={16} color={COLORS.primary} />
-                <Text style={styles.datePickerBtnText}>
-                  {bookDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
-                </Text>
+                <Text style={styles.datePickerBtnText}>{bookDate.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}</Text>
               </TouchableOpacity>
             </View>
             {showBookDatePicker && (
@@ -533,13 +561,7 @@ export default function ClinicProfileScreen() {
           </ScrollView>
           <View style={styles.modalFooter}>
             <Button title="إلغاء" onPress={() => setShowBookModal(false)} type="outline" size="medium" style={{ flex: 1 }} />
-            <Button
-              title="إرسال الطلب"
-              onPress={handleBookAppointment}
-              type="primary"
-              size="medium"
-              style={{ flex: 1 }}
-            />
+            <Button title="إرسال الطلب" onPress={handleBookAppointment} type="primary" size="medium" style={{ flex: 1 }} />
           </View>
         </View>
       </Modal>

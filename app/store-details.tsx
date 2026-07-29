@@ -165,7 +165,7 @@ export default function StoreDetailsScreen() {
 
   const handleShareApp = async () => {
     try {
-      const appUrl = "https://bytari.app"; // TODO: replace with store link
+      const appUrl = "https://play.google.com/store/apps/details?id=com.petcare.bytari"; // TODO: replace with store link
       const message = `تحقق من تطبيق بيطاري ${appUrl}`;
       await Share.share({ message, url: appUrl, title: "بيطاري" });
     } catch {}

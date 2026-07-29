@@ -1,16 +1,5 @@
 import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  FlatList,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, FlatList, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "@/lib/trpc";
@@ -100,14 +89,10 @@ export default function AdminDashboard() {
   });
 
   // Fetch data using tRPC
-  const { data: rawSystemStats, isLoading: statsLoading } = useQuery(
-    trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }),
-  );
+  const { data: rawSystemStats, isLoading: statsLoading } = useQuery(trpc.admin.stats.getSystemStats.queryOptions({ adminId: user?.id ? Number(user.id) : 0 }));
   const systemStats: any = useMemo(() => rawSystemStats, [rawSystemStats]);
 
-  const { data: rawUserPermissions, isLoading: permissionsLoading } = useQuery(
-    trpc.admin.permissions.getUserPermissions.queryOptions({ userId: user?.id }),
-  );
+  const { data: rawUserPermissions, isLoading: permissionsLoading } = useQuery(trpc.admin.permissions.getUserPermissions.queryOptions({ userId: user?.id }));
 
   const userPermissions: any = useMemo(() => rawUserPermissions, [rawUserPermissions]);
 
@@ -133,14 +118,11 @@ export default function AdminDashboard() {
 
   const detailedStats: any = useMemo(() => rawDetailedStats, [rawDetailedStats]);
 
-  const { data: supervisorsData, isLoading: supervisorsLoading } = useQuery(
-    trpc.admin.users.getSupervisors.queryOptions({ limit: 20 }),
-  );
+  const { data: supervisorsData, isLoading: supervisorsLoading } = useQuery(trpc.admin.users.getSupervisors.queryOptions({ limit: 20 }));
 
   const supervisors = useMemo(() => (supervisorsData as any)?.supervisors, [supervisorsData]);
 
   const sendMessageMutation = useMutation(trpc.admin.messages.sendSystemMessage.mutationOptions());
-
 
   const hasPermission = (permission: string): boolean => {
     return userPermissions?.permissions?.some((p: any) => p.permissionName === permission) ?? false;
@@ -199,9 +181,7 @@ export default function AdminDashboard() {
   const toggleCategory = (category: string) => {
     setNewMessage((prev) => ({
       ...prev,
-      targetCategories: prev.targetCategories.includes(category)
-        ? prev.targetCategories.filter((c) => c !== category)
-        : [...prev.targetCategories, category],
+      targetCategories: prev.targetCategories.includes(category) ? prev.targetCategories.filter((c) => c !== category) : [...prev.targetCategories, category],
     }));
   };
 
@@ -249,13 +229,7 @@ export default function AdminDashboard() {
     </TouchableOpacity>
   );
 
-  if (
-    statsLoading ||
-    permissionsLoading ||
-    approvalCountsLoading ||
-    allUsersLoading ||
-    supervisorsLoading
-  ) {
+  if (statsLoading || permissionsLoading || approvalCountsLoading || allUsersLoading || supervisorsLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#FF6B6B" />
@@ -355,16 +329,8 @@ export default function AdminDashboard() {
       {/* Secondary Statistics */}
       <View style={styles.statsContainer}>
         <StatCard icon={<Store size={24} color="#FF6B6B" />} value={systemStats?.totalStats?.stores} label="المتاجر" />
-        <StatCard
-          icon={<Database size={24} color="#A8E6CF" />}
-          value={systemStats?.totalStats?.products}
-          label="المنتجات"
-        />
-        <StatCard
-          icon={<Activity size={24} color="#FFD93D" />}
-          value={systemStats?.totalStats?.clinics}
-          label="العيادات"
-        />
+        <StatCard icon={<Database size={24} color="#A8E6CF" />} value={systemStats?.totalStats?.products} label="المنتجات" />
+        <StatCard icon={<Activity size={24} color="#FFD93D" />} value={systemStats?.totalStats?.clinics} label="العيادات" />
         <StatCard icon={<BookOpen size={24} color="#6BCF7F" />} value={systemStats?.totalStats?.books} label="الكتب" />
       </View>
 
@@ -408,37 +374,25 @@ export default function AdminDashboard() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>الموافقات المعلقة</Text>
         <View style={styles.statsContainer}>
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-approvals?type=clinics")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-approvals?type=clinics")}>
             <Building2 size={24} color="#FF6B6B" />
             <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingClinics || 0}</Text>
             <Text style={styles.statLabel}>عيادات معلقة</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-approvals?type=stores")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-approvals?type=stores")}>
             <Store size={24} color="#FFA500" />
             <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingStores || 0}</Text>
             <Text style={styles.statLabel}>متاجر معلقة</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-approvals?type=lost-pets")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-approvals?type=lost-pets")}>
             <AlertTriangle size={24} color="#E74C3C" />
             <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingLostPets || 0}</Text>
             <Text style={styles.statLabel}>حيوانات مفقودة</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-approvals?type=breeding-pets")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-approvals?type=breeding-pets")}>
             <Heart size={24} color="#9B59B6" />
             <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingBreedingPets || 0}</Text>
             <Text style={styles.statLabel}>حيوانات تزاوج</Text>
@@ -446,33 +400,26 @@ export default function AdminDashboard() {
         </View>
 
         <View style={styles.statsContainer}>
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-approvals?type=vet-registrations")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-approvals?type=vet-registrations")}>
             <UserCheck size={24} color="#3498DB" />
             <Text style={styles.statNumber}>{(systemStats?.totalStats as any)?.pendingVetRegistrations || 0}</Text>
             <Text style={styles.statLabel}>أطباء معلقين</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-poultry-traders-management")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-poultry-traders-management")}>
             <Briefcase size={24} color="#D97706" />
             <Text style={styles.statNumber}>
               {((approvalCounts as any)?.pendingPoultryTraders || 0) + ((approvalCounts as any)?.tradersNeedingRenewal || 0)}
             </Text>
             <Text style={styles.statLabel}>تجار معلقين</Text>
             {((approvalCounts as any)?.tradersNeedingRenewal || 0) > 0 && (
-              <Text style={styles.statSubLabel}>{(approvalCounts as any)?.pendingPoultryTraders || 0} معلق • {(approvalCounts as any)?.tradersNeedingRenewal || 0} تجديد</Text>
+              <Text style={styles.statSubLabel}>
+                {(approvalCounts as any)?.pendingPoultryTraders || 0} معلق • {(approvalCounts as any)?.tradersNeedingRenewal || 0} تجديد
+              </Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.statCard, styles.pendingCard]}
-            onPress={() => router.push("/admin-poultry-market-moderation")}
-          >
+          <TouchableOpacity style={[styles.statCard, styles.pendingCard]} onPress={() => router.push("/admin-poultry-market-moderation")}>
             <ShoppingCart size={24} color="#059669" />
             <Text style={styles.statNumber}>{(approvalCounts as any)?.pendingPoultryAds || 0}</Text>
             <Text style={styles.statLabel}>إعلانات دواجن معلقة</Text>
@@ -647,10 +594,7 @@ export default function AdminDashboard() {
           )}
 
           {hasPermission("manage_inquiries") && (
-            <TouchableOpacity
-              style={[styles.actionCard, styles.actionCardWithBadge]}
-              onPress={() => router.push("/admin-inquiries-list")}
-            >
+            <TouchableOpacity style={[styles.actionCard, styles.actionCardWithBadge]} onPress={() => router.push("/admin-inquiries-list")}>
               <View style={styles.actionCardContent}>
                 <HelpCircle size={24} color="#3B82F6" />
                 <Text style={styles.actionText}>الاستفسارات</Text>
@@ -664,10 +608,7 @@ export default function AdminDashboard() {
           )}
 
           {hasPermission("manage_consultations") && (
-            <TouchableOpacity
-              style={[styles.actionCard, styles.actionCardWithBadge]}
-              onPress={() => router.push("/admin-consultations-list")}
-            >
+            <TouchableOpacity style={[styles.actionCard, styles.actionCardWithBadge]} onPress={() => router.push("/admin-consultations-list")}>
               <View style={styles.actionCardContent}>
                 <MessageCircle size={24} color="#FF9500" />
                 <Text style={styles.actionText}>الاستشارات</Text>
@@ -803,7 +744,7 @@ export default function AdminDashboard() {
               style={styles.actionCard}
               onPress={() => {
                 // Show modal to choose between vet stores and pet owner stores
-                alert("اختر نوع المتجر:\n1. متاجر الأطباء\n2. متاجر أصحاب الحيوانات");
+                // alert("اختر نوع المتجر:\n1. متاجر الأطباء\n2. متاجر أصحاب الحيوانات");
                 // For now, navigate to stores management
                 router.push("/stores-admin-management");
               }}
@@ -821,20 +762,14 @@ export default function AdminDashboard() {
           )}
 
           {hasPermission("manage_content") && (
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => router.push("/admin-content-manager?type=books")}
-            >
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-content-manager?type=books")}>
               <Book size={24} color="#795548" />
               <Text style={styles.actionText}>إدارة الكتب</Text>
             </TouchableOpacity>
           )}
 
           {hasPermission("manage_content") && (
-            <TouchableOpacity
-              style={styles.actionCard}
-              onPress={() => router.push("/admin-content-manager?type=magazines")}
-            >
+            <TouchableOpacity style={styles.actionCard} onPress={() => router.push("/admin-content-manager?type=magazines")}>
               <FileText size={24} color="#607D8B" />
               <Text style={styles.actionText}>إدارة المجلات</Text>
             </TouchableOpacity>
@@ -887,10 +822,7 @@ export default function AdminDashboard() {
           )}
 
           {hasPermission("manage_field_assignments") && (
-            <TouchableOpacity
-              style={[styles.actionCard, styles.actionCardWithBadge]}
-              onPress={() => router.push("/field-assignments-management")}
-            >
+            <TouchableOpacity style={[styles.actionCard, styles.actionCardWithBadge]} onPress={() => router.push("/field-assignments-management")}>
               <View style={styles.actionCardContent}>
                 <UserCog size={24} color="#8B5A2B" />
                 <Text style={styles.actionText}>إدارة التعيين والإشراف</Text>
@@ -935,12 +867,7 @@ export default function AdminDashboard() {
                   <Text style={styles.permissionsTitle}>الصلاحيات:</Text>
                   {supervisor.permissions.map((permission: any, index: number) => (
                     <View key={index} style={styles.permissionItem}>
-                      <View
-                        style={[
-                          styles.permissionBadge,
-                          { backgroundColor: getPermissionColor(permission.permissionCategory) },
-                        ]}
-                      >
+                      <View style={[styles.permissionBadge, { backgroundColor: getPermissionColor(permission.permissionCategory) }]}>
                         <Text style={styles.permissionBadgeText}>{permission.permissionDisplayName}</Text>
                       </View>
                       <View style={styles.permissionDetails}>
@@ -1023,13 +950,10 @@ export default function AdminDashboard() {
                   <View style={styles.detailItem}>
                     <Text style={styles.detailItemTitle}>{item.name || item.email || "مستخدم"}</Text>
                     <Text style={styles.detailItemSubtitle}>
-                      النوع:{" "}
-                      {item.userType === "user" ? "مستخدم عادي" : item.userType === "vet" ? "طبيب بيطري" : "مشرف"}
+                      النوع: {item.userType === "user" ? "مستخدم عادي" : item.userType === "vet" ? "طبيب بيطري" : "مشرف"}
                     </Text>
                     <Text style={styles.detailItemSubtitle}>البريد: {item.email}</Text>
-                    <Text style={styles.detailItemDate}>
-                      تاريخ الإنشاء: {new Date(item.createdAt).toLocaleDateString("ar-SA")}
-                    </Text>
+                    <Text style={styles.detailItemDate}>تاريخ الإنشاء: {new Date(item.createdAt).toLocaleDateString("ar-SA")}</Text>
                   </View>
                 )}
                 scrollEnabled={false}
@@ -1043,8 +967,7 @@ export default function AdminDashboard() {
                     <Text style={styles.detailItemTitle}>{item.name || item.title || "عنصر"}</Text>
                     <Text style={styles.detailItemSubtitle}>الحالة: {item.status || "نشط"}</Text>
                     <Text style={styles.detailItemDate}>
-                      تاريخ الإنشاء:{" "}
-                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString("ar-SA") : "غير محدد"}
+                      تاريخ الإنشاء: {item.createdAt ? new Date(item.createdAt).toLocaleDateString("ar-SA") : "غير محدد"}
                     </Text>
                   </View>
                 )}
@@ -1119,9 +1042,7 @@ export default function AdminDashboard() {
                     style={[styles.optionButton, newMessage.type === type.key && styles.selectedOption]}
                     onPress={() => setNewMessage((prev) => ({ ...prev, type: type.key as any }))}
                   >
-                    <Text style={[styles.optionText, newMessage.type === type.key && styles.selectedOptionText]}>
-                      {type.label}
-                    </Text>
+                    <Text style={[styles.optionText, newMessage.type === type.key && styles.selectedOptionText]}>{type.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -1141,11 +1062,7 @@ export default function AdminDashboard() {
                     style={[styles.optionButton, newMessage.priority === priority.key && styles.selectedOption]}
                     onPress={() => setNewMessage((prev) => ({ ...prev, priority: priority.key as any }))}
                   >
-                    <Text
-                      style={[styles.optionText, newMessage.priority === priority.key && styles.selectedOptionText]}
-                    >
-                      {priority.label}
-                    </Text>
+                    <Text style={[styles.optionText, newMessage.priority === priority.key && styles.selectedOptionText]}>{priority.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -1173,14 +1090,7 @@ export default function AdminDashboard() {
                       }))
                     }
                   >
-                    <Text
-                      style={[
-                        styles.optionText,
-                        newMessage.targetAudience === audience.key && styles.selectedOptionText,
-                      ]}
-                    >
-                      {audience.label}
-                    </Text>
+                    <Text style={[styles.optionText, newMessage.targetAudience === audience.key && styles.selectedOptionText]}>{audience.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -1191,14 +1101,8 @@ export default function AdminDashboard() {
                 <Text style={styles.inputLabel}>اختر الفئات *</Text>
                 <View style={styles.categoriesContainer}>
                   {["users", "vets", "students", "clinics", "stores", "poultry"].map((category) => (
-                    <TouchableOpacity
-                      key={category}
-                      style={styles.categoryItem}
-                      onPress={() => toggleCategory(category)}
-                    >
-                      <View
-                        style={[styles.checkbox, newMessage.targetCategories.includes(category) && styles.checkedBox]}
-                      >
+                    <TouchableOpacity key={category} style={styles.categoryItem} onPress={() => toggleCategory(category)}>
+                      <View style={[styles.checkbox, newMessage.targetCategories.includes(category) && styles.checkedBox]}>
                         {newMessage.targetCategories.includes(category) && <CheckCircle size={16} color="#fff" />}
                       </View>
                       <Text style={styles.categoryLabel}>{getCategoryLabel(category)}</Text>
@@ -1258,23 +1162,15 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        {selectedTab === "dashboard" ? renderDashboard() : renderPermissions()}
-      </View>
+      <View style={styles.contentContainer}>{selectedTab === "dashboard" ? renderDashboard() : renderPermissions()}</View>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={[styles.navItem, selectedTab === "dashboard" && styles.activeNavItem]}
-          onPress={() => setSelectedTab("dashboard")}
-        >
+        <TouchableOpacity style={[styles.navItem, selectedTab === "dashboard" && styles.activeNavItem]} onPress={() => setSelectedTab("dashboard")}>
           <BarChart3 size={20} color={selectedTab === "dashboard" ? "#FF6B6B" : "#666"} />
           <Text style={[styles.navText, selectedTab === "dashboard" && styles.activeNavText]}>الرئيسية</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.navItem, selectedTab === "permissions" && styles.activeNavItem]}
-          onPress={() => setSelectedTab("permissions")}
-        >
+        <TouchableOpacity style={[styles.navItem, selectedTab === "permissions" && styles.activeNavItem]} onPress={() => setSelectedTab("permissions")}>
           <Shield size={20} color={selectedTab === "permissions" ? "#FF6B6B" : "#666"} />
           <Text style={[styles.navText, selectedTab === "permissions" && styles.activeNavText]}>الصلاحيات</Text>
         </TouchableOpacity>
@@ -1283,7 +1179,6 @@ export default function AdminDashboard() {
       {renderRoleModal()}
       {renderDetailModal()}
       {renderMessageModal()}
-
     </View>
   );
 }

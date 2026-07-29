@@ -101,24 +101,31 @@ export default function ClinicSystemScreen() {
   const router = useRouter();
   const { hasAdminAccess, isSuperAdmin } = useApp();
   const [activeTab, setActiveTab] = useState<"overview" | "register" | "subscription">("overview");
+  // Test/dummy data (do not use in production):
+  // name: "Healthy Life Clinic", description: "A modern healthcare clinic providing general
+  // medicine, pediatrics, and dental services.", address: "123 Main Street, Alexandria, Egypt",
+  // phone: "+20 10 1234 5678", email: "info@healthylifeclinic.com",
+  // workingHours: "Saturday - Thursday, 9:00 AM - 9:00 PM",
+  // services: "General Medicine, Pediatrics, Dentistry, Laboratory", licenseNumber: "CLN-2025-001",
+  // doctors: "15", facebook/instagram/whatsapp/website: healthylifeclinic links
   const [registrationData, setRegistrationData] = useState<ClinicRegistration>({
-    name: "Healthy Life Clinic",
-    description: "A modern healthcare clinic providing general medicine, pediatrics, and dental services.",
-    address: "123 Main Street, Alexandria, Egypt",
-    phone: "+20 10 1234 5678",
-    email: "info@healthylifeclinic.com",
+    name: "",
+    description: "",
+    address: "",
+    phone: "",
+    email: "",
     country: "",
     province: "",
-    workingHours: "Saturday - Thursday, 9:00 AM - 9:00 PM",
-    services: "General Medicine, Pediatrics, Dentistry, Laboratory",
-    licenseNumber: "CLN-2025-001",
-    licenseImages: [""],
-    images: [""],
-    doctors: "15",
-    facebook: "https://facebook.com/healthylifeclinic",
-    instagram: "https://instagram.com/healthylifeclinic",
-    whatsapp: "+201012345678",
-    website: "https://healthylifeclinic.com",
+    workingHours: "",
+    services: "",
+    licenseNumber: "",
+    licenseImages: [],
+    images: [],
+    doctors: "",
+    facebook: "",
+    instagram: "",
+    whatsapp: "",
+    website: "",
   });
   const [searchId, setSearchId] = useState("");
   const [searchResults, setSearchResults] = useState<Animal[]>([]);

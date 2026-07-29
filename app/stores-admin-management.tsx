@@ -32,6 +32,8 @@ import {
   Image as ImageIcon,
   Ban,
   CheckCircle,
+  Calendar,
+  AlertTriangle,
 } from "lucide-react-native";
 import { router, Stack } from "expo-router";
 import { mockVetStores, VetStore } from "../mocks/data";
@@ -59,7 +61,17 @@ interface StoreDetails extends VetStore {
   licenseImages?: string | string[];
   email?: string;
   createdAt?: string;
+  status?: "active" | "pending" | "banned" | "suspended" | "expired";
+  activationStartDate?: string | null;
+  activationEndDate?: string | null;
+  needsRenewal?: boolean;
+  reviewingRenewalRequest?: boolean;
 }
+
+const formatDate = (d: string | null | undefined) => {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("ar-SA");
+};
 
 const parseImageArray = (images: string | string[] | null | undefined): string[] => {
   if (!images) return [];
@@ -82,7 +94,7 @@ export default function StoresAdminManagementScreen() {
   const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [editingStore, setEditingStore] = useState<EditStoreData | null>(null);
   const [selectedStore, setSelectedStore] = useState<StoreDetails | null>(null);
-  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "inactive">("all");
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "active" | "inactive" | "expired">("all");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showImageViewer, setShowImageViewer] = useState(false);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
@@ -112,6 +124,8 @@ export default function StoresAdminManagementScreen() {
         return store.isActive;
       case "inactive":
         return !store.isActive;
+      case "expired":
+        return store.status === "expired";
       default:
         return true;
     }
@@ -396,6 +410,27 @@ export default function StoresAdminManagementScreen() {
                 <Text style={styles.detailLabel}>عدد المراجعات:</Text>
                 <Text style={styles.detailValue}>{selectedStore.reviewCount}</Text>
               </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>تاريخ بدء الاشتراك:</Text>
+                <Text style={styles.detailValue}>{formatDate(selectedStore.activationStartDate)}</Text>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>تاريخ انتهاء الاشتراك:</Text>
+                <Text style={[styles.detailValue, { color: selectedStore.status === "expired" ? "#E74C3C" : COLORS.black }]}>
+                  {formatDate(selectedStore.activationEndDate)}
+                </Text>
+              </View>
+
+              {selectedStore.needsRenewal && (
+                <View style={styles.renewalCard}>
+                  <AlertTriangle size={15} color="#E74C3C" />
+                  <Text style={styles.renewalCardText}>
+                    {selectedStore.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "الاشتراك منتهي ويحتاج للتجديد"}
+                  </Text>
+                </View>
+              )}
             </View>
           </ScrollView>
 
@@ -452,7 +487,25 @@ export default function StoresAdminManagementScreen() {
             <Clock size={14} color={COLORS.darkGray} />
             <Text style={styles.detailText}>{item.workingHours}</Text>
           </View>
+
+          {item.activationEndDate && (
+            <View style={styles.detailItem}>
+              <Calendar size={14} color={item.status === "expired" ? "#E67E22" : COLORS.darkGray} />
+              <Text style={[styles.detailText, item.status === "expired" && { color: "#E67E22" }]}>
+                الاشتراك: {formatDate(item.activationStartDate)} - {formatDate(item.activationEndDate)}
+              </Text>
+            </View>
+          )}
         </View>
+
+        {item.needsRenewal && (
+          <View style={styles.renewalCard}>
+            <AlertTriangle size={15} color="#E74C3C" />
+            <Text style={styles.renewalCardText}>
+              {item.reviewingRenewalRequest ? "طلب التجديد قيد المراجعة" : "الاشتراك منتهي ويحتاج للتجديد"}
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.storeActions}>
@@ -670,6 +723,15 @@ export default function StoresAdminManagementScreen() {
               غير نشط ({stores.filter((s: any) => !s.isActive).length})
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.filterChip, selectedFilter === "expired" && styles.filterChipActive]}
+            onPress={() => setSelectedFilter("expired")}
+          >
+            <Text style={[styles.filterChipText, selectedFilter === "expired" && styles.filterChipTextActive]}>
+              منتهي الاشتراك ({stores.filter((s: any) => s.status === "expired").length})
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <FlatList
@@ -853,6 +915,22 @@ const styles = StyleSheet.create({
     marginRight: 8,
     flex: 1,
     textAlign: "left",
+  },
+  renewalCard: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 10,
+  },
+  renewalCardText: {
+    color: "#E74C3C",
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
   },
   storeActions: {
     position: "absolute",

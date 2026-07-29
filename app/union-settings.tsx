@@ -41,20 +41,20 @@ export default function UnionSettingsScreen() {
       icon: Bell,
       color: "#10B981",
     },
-    {
-      id: "users",
-      title: "إدارة المستخدمين",
-      description: "صلاحيات المستخدمين والمشرفين",
-      icon: Users,
-      color: "#F59E0B",
-    },
-    {
-      id: "analytics",
-      title: "إعدادات التحليلات",
-      description: "تكوين التقارير والإحصائيات",
-      icon: BarChart3,
-      color: "#8B5CF6",
-    },
+    // {
+    //   id: "users",
+    //   title: "إدارة المستخدمين",
+    //   description: "صلاحيات المستخدمين والمشرفين",
+    //   icon: Users,
+    //   color: "#F59E0B",
+    // },
+    // {
+    //   id: "analytics",
+    //   title: "إعدادات التحليلات",
+    //   description: "تكوين التقارير والإحصائيات",
+    //   icon: BarChart3,
+    //   color: "#8B5CF6",
+    // },
   ];
 
   return (

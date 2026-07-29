@@ -27,9 +27,9 @@ export default function AuthScreen() {
   const { t, isRTL } = useI18n();
   const { login } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  // zuhairalrawi0@gmail.com, zuh000123000321zuh
-  const [usernameOrEmail, setUsernameOrEmail] = useState("zuhairalrawi0@gmail.com");
-  const [password, setPassword] = useState("zuh000123000321zuh");
+  // Test credentials (dummy data, do not use in production): zuhairalrawi0@gmail.com, zuh000123000321zuh
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
@@ -67,43 +67,43 @@ export default function AuthScreen() {
 
   const isLoading = loginMutation.isPending || registerMutation.isPending || vetApplicationMutation.isPending;
 
-  // Fake login helpers for seeded admin accounts
-  const SEED_ACCOUNTS = [
-    { label: "مدير عام", email: "zuhairalrawi0@gmail.com", password: "zuh000123000321zuh" },
-    { label: "مدير احتياطي", email: "superadmin@petapp.com", password: "zuh0012300zuh" },
-    { label: "مشرف اختبار", email: "admin@petapp.com", password: "admin123" },
-    { label: "مشرف أطباء", email: "vet.moderator@petapp.com", password: "admin123" },
-    { label: "مشرف مستخدمين", email: "user.moderator@petapp.com", password: "admin123" },
-    { label: "مدير محتوى", email: "content.manager@petapp.com", password: "admin123" },
-  ];
+  // Fake login helpers for seeded admin accounts (dummy/test data, disabled for production)
+  // const SEED_ACCOUNTS = [
+  //   { label: "مدير عام", email: "zuhairalrawi0@gmail.com", password: "zuh000123000321zuh" },
+  //   { label: "مدير احتياطي", email: "superadmin@petapp.com", password: "zuh0012300zuh" },
+  //   { label: "مشرف اختبار", email: "admin@petapp.com", password: "admin123" },
+  //   { label: "مشرف أطباء", email: "vet.moderator@petapp.com", password: "admin123" },
+  //   { label: "مشرف مستخدمين", email: "user.moderator@petapp.com", password: "admin123" },
+  //   { label: "مدير محتوى", email: "content.manager@petapp.com", password: "admin123" },
+  // ];
 
-  const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
-    if (isLoading) return;
-    setActiveTab("login");
-    setUsernameOrEmail(account.email);
-    setPassword(account.password);
-    setErrors({});
-    loginMutation.mutate(
-      { email: account.email, password: account.password },
-      {
-        onSuccess: async (data: any) => {
-          if (data?.requiresVerification) {
-            router.push({ pathname: "/verify-email-code", params: { userId: String(data.userId), email: data.email } });
-            return;
-          }
-          if (data?.success === false) {
-            setErrors({ general: data.message || t("auth.loginError") });
-            return;
-          }
-          await login(data.user, data.tokens.accessToken);
-          router.replace("/(tabs)");
-        },
-        onError: (error) => {
-          setErrors({ general: error.message || t("auth.loginError") });
-        },
-      },
-    );
-  };
+  // const handleFakeLogin = (account: (typeof SEED_ACCOUNTS)[number]) => {
+  //   if (isLoading) return;
+  //   setActiveTab("login");
+  //   setUsernameOrEmail(account.email);
+  //   setPassword(account.password);
+  //   setErrors({});
+  //   loginMutation.mutate(
+  //     { email: account.email, password: account.password },
+  //     {
+  //       onSuccess: async (data: any) => {
+  //         if (data?.requiresVerification) {
+  //           router.push({ pathname: "/verify-email-code", params: { userId: String(data.userId), email: data.email } });
+  //           return;
+  //         }
+  //         if (data?.success === false) {
+  //           setErrors({ general: data.message || t("auth.loginError") });
+  //           return;
+  //         }
+  //         await login(data.user, data.tokens.accessToken);
+  //         router.replace("/(tabs)");
+  //       },
+  //       onError: (error) => {
+  //         setErrors({ general: error.message || t("auth.loginError") });
+  //       },
+  //     },
+  //   );
+  // };
 
   const validateLogin = () => {
     const newErrors: { [key: string]: string } = {};
@@ -480,7 +480,7 @@ export default function AuthScreen() {
             )}
 
             <View style={styles.inputGroup}>
-              <View style={[styles.emailLabelRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+              <View style={[styles.emailLabelRow, { flexDirection: isRTL ? "row" : "row-reverse" }]}>
                 <Text style={[styles.inputLabel]}>{activeTab === "login" ? t("auth.emailUsername") : t("auth.email")}</Text>
                 {activeTab === "register" && accountType === "pet_owner" && <Text style={styles.emailHintText}>يجب تأكيد البريد الإلكتروني</Text>}
               </View>
@@ -755,8 +755,8 @@ export default function AuthScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Fake login buttons for seeded admin accounts */}
-            {activeTab === "login" && (
+            {/* Fake login buttons for seeded admin accounts (dummy/test data, disabled for production) */}
+            {/* {activeTab === "login" && (
               <View style={styles.fakeLoginContainer}>
                 <Text style={styles.fakeLoginTitle}>دخول سريع (حسابات تجريبية)</Text>
                 <View style={styles.fakeLoginButtons}>
@@ -768,7 +768,7 @@ export default function AuthScreen() {
                   ))}
                 </View>
               </View>
-            )}
+            )} */}
           </ScrollView>
         </View>
       </View>

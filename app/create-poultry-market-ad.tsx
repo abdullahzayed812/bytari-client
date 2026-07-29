@@ -46,20 +46,24 @@ export default function CreatePoultryMarketAdScreen() {
   const { user } = useApp();
   const { createAd, isCreating } = usePoultryMarket();
 
+  // Test/dummy data (do not use in production):
+  // breed: "روس 308", quantity: "5000", pricePerUnit: "4500", ageWeeks: "6", weightKg: "2.5",
+  // governorate: "بغداد", region: "الدورة", contactPhone/contactWhatsapp: "07801234567",
+  // notes: "دجاج صحي خالٍ من الأمراض، جاهز للبيع الفوري"
   const [formData, setFormData] = useState({
     poultryType: "broiler",
-    breed: "روس 308",
-    quantity: "5000",
+    breed: "",
+    quantity: "",
     pricingMethod: "per_weight" as "per_unit" | "per_weight",
-    pricePerUnit: "4500",
+    pricePerUnit: "",
     totalPrice: "",
-    ageWeeks: "6",
-    weightKg: "2.5",
-    governorate: "بغداد",
-    region: "الدورة",
-    contactPhone: user?.phone || "07801234567",
-    contactWhatsapp: user?.phone || "07801234567",
-    notes: "دجاج صحي خالٍ من الأمراض، جاهز للبيع الفوري",
+    ageWeeks: "",
+    weightKg: "",
+    governorate: "",
+    region: "",
+    contactPhone: user?.phone || "",
+    contactWhatsapp: user?.phone || "",
+    notes: "",
     images: [] as string[],
   });
 

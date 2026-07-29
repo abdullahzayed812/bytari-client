@@ -52,16 +52,19 @@ export default function CreateEggMarketAdScreen() {
   const { user } = useApp();
   const { createAd, isCreating } = useEggMarket();
 
+  // Test/dummy data (do not use in production):
+  // quantity: "200", pricePerUnit: "7500", governorate: "بغداد", region: "الكرخ",
+  // contactPhone/contactWhatsapp: "07901234567", notes: "بيض طازج يومي، إنتاج محلي عالي الجودة"
   const [formData, setFormData] = useState({
     eggType: "white",
-    quantity: "200",
+    quantity: "",
     unit: "tray",
-    pricePerUnit: "7500",
-    governorate: "بغداد",
-    region: "الكرخ",
-    contactPhone: user?.phone || "07901234567",
-    contactWhatsapp: user?.phone || "07901234567",
-    notes: "بيض طازج يومي، إنتاج محلي عالي الجودة",
+    pricePerUnit: "",
+    governorate: "",
+    region: "",
+    contactPhone: user?.phone || "",
+    contactWhatsapp: user?.phone || "",
+    notes: "",
     images: [] as string[],
   });
 

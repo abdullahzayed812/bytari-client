@@ -944,7 +944,7 @@ export default function PetsScreen() {
 
             <TouchableOpacity style={styles.transferRequestsButton} onPress={() => router.push("/pet-transfer-requests")} activeOpacity={0.8}>
               <ArrowRightLeft size={16} color={COLORS.primary} />
-              <Text style={styles.transferRequestsText}>طلبات نقل الملكية</Text>
+              <Text style={styles.transferRequestsText}>طلبات نقل ملكية حيوان أليف</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.poultrySectionButton} onPress={handlePoultrySection} activeOpacity={0.8}>

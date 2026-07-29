@@ -66,14 +66,18 @@ export default function RegisterPoultryTraderScreen() {
     }),
   );
 
+  // Test/dummy data (do not use in production):
+  // businessName: "شركة النور لتجارة الدواجن", governorate: "بغداد", region: "الشعب",
+  // phone/whatsapp: "07701234567",
+  // description: "شركة متخصصة في تجارة الدواجن بالجملة والمفرد منذ أكثر من 10 سنوات في السوق العراقية",
   const [formData, setFormData] = useState({
-    businessName: "شركة النور لتجارة الدواجن",
+    businessName: "",
     traderType: "wholesaler",
-    governorate: "بغداد",
-    region: "الشعب",
-    phone: user?.phone || "07701234567",
-    whatsapp: user?.phone || "07701234567",
-    description: "شركة متخصصة في تجارة الدواجن بالجملة والمفرد منذ أكثر من 10 سنوات في السوق العراقية",
+    governorate: "",
+    region: "",
+    phone: user?.phone || "",
+    whatsapp: user?.phone || "",
+    description: "",
     // licenseNumber: "TRD-2024-0456",
   });
 

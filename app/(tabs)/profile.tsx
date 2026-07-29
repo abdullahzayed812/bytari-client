@@ -136,7 +136,7 @@ export default function ProfileScreen() {
 
   const handleShareApp = async () => {
     try {
-      const appUrl = "https://petcare.app"; // Replace with your actual app URL
+      const appUrl = "https://play.google.com/store/apps/details?id=com.petcare.bytari"; // Replace with your actual app URL
       const message = `${t("profile.shareAppMessage")} ${appUrl}`;
 
       if (Platform.OS === "web") {
