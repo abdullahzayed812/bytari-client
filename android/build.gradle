@@ -34,5 +34,11 @@ allprojects {
   }
 }
 
+ext {
+  // Android 16 (API level 36)
+  compileSdkVersion = 36
+  targetSdkVersion = 36
+}
+
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
