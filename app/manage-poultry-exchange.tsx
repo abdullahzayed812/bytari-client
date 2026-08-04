@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 import { COLORS } from "../constants/colors";
 import { useSavePoultryExchange, usePoultryExchange } from "../hooks/usePoultryExchange";
 import { useApp } from "../providers/AppProvider";
@@ -28,8 +30,13 @@ function todayStr() {
 
 export default function ManagePoultryExchangeScreen() {
   const router = useRouter();
-  const { isSuperAdmin, moderatorPermissions } = useApp();
-  const canEdit = isSuperAdmin || moderatorPermissions?.some((p: any) => p.permissionName === "manage_poultry_exchange");
+  const { user, isSuperAdmin } = useApp();
+  const { data: userPermissions } = useQuery(
+    trpc.admin.permissions.getUserPermissions.queryOptions({ userId: Number(user?.id) })
+  );
+  const canEdit =
+    isSuperAdmin ||
+    (userPermissions as any)?.permissions?.some((p: any) => p.permissionName === "manage_poultry_exchange");
   const today = todayStr();
   const { data, isLoading } = usePoultryExchange(today);
   const { mutate: savePrices, isPending } = useSavePoultryExchange();

@@ -56,7 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const hasAdminAccess = user?.hasAdminAccess || false;
   const isSuperAdmin = user?.isSuperAdmin || false;
   const isModerator = user?.isModerator || false;
-  const moderatorPermissions = user?.moderatorPermissions || {};
+  const moderatorPermissions = user?.moderatorPermissions || [];
   const supervisedBranchIds = user?.supervisedBranchIds || [];
 
   // Mock data for now - will be replaced with real backend data

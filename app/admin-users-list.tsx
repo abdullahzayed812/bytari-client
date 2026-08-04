@@ -75,6 +75,7 @@ const permissionTranslations: Record<string, string> = {
   consultations: "الاستشارات",
   content: "المحتوى",
   education: "التعليم",
+  farms: "الدواجن والمزارع",
   hospitals: "المستشفيات",
   inquiries: "الاستفسارات",
   jobs: "الوظائف",

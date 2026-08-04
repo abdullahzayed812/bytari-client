@@ -6,6 +6,8 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, ActivityIndicator } from "react-native";
 import { Stack, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/lib/trpc";
 import { COLORS } from "../constants/colors";
 import { useSaveEggExchange, useEggExchange } from "../hooks/usePoultryExchange";
 import { useApp } from "../providers/AppProvider";
@@ -35,8 +37,13 @@ function todayStr() {
 
 export default function ManageEggExchangeScreen() {
   const router = useRouter();
-  const { isSuperAdmin, moderatorPermissions } = useApp();
-  const canEdit = isSuperAdmin || moderatorPermissions?.some((p: any) => p.permissionName === "manage_egg_exchange");
+  const { user, isSuperAdmin } = useApp();
+  const { data: userPermissions } = useQuery(
+    trpc.admin.permissions.getUserPermissions.queryOptions({ userId: Number(user?.id) })
+  );
+  const canEdit =
+    isSuperAdmin ||
+    (userPermissions as any)?.permissions?.some((p: any) => p.permissionName === "manage_egg_exchange");
   const today = todayStr();
   const { data, isLoading } = useEggExchange(today);
   const { mutate: savePrices, isPending } = useSaveEggExchange();

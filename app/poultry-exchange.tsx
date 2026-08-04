@@ -30,6 +30,8 @@ export default function PoultryExchangeScreen() {
 
   const canManage = hasAdminAccess || isModerator;
 
+  // console.log({ hasAdminAccess, isModerator });
+
   const rows = (data?.rows || []).map((r: any) => ({
     governorate: r.governorate,
     broilerPricePerKg: r.broilerPricePerKg != null ? Number(r.broilerPricePerKg) : null,
