@@ -40,10 +40,16 @@ export default function PetsScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   // Fetch user's own pets
-  const userPetsQuery = useQuery(trpc.pets.getUserPets.queryOptions({ userId: Number(user?.id) }));
+  const userPetsQuery = useQuery({
+    ...trpc.pets.getUserPets.queryOptions({ userId: Number(user?.id) }),
+    enabled: !!user?.id,
+  });
 
   // Fetch user's own farms
-  const userFarmsQuery = useQuery(trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) }));
+  const userFarmsQuery = useQuery({
+    ...trpc.poultryFarms.list.queryOptions({ ownerId: Number(user?.id) }),
+    enabled: !!user?.id,
+  });
 
   // Check if user has a trader account
   const traderQuery = useQuery({

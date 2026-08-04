@@ -1,15 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Modal,
-  Alert,
-  Image,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Modal, Alert, Image, ActivityIndicator } from "react-native";
 import React, { useState, useMemo } from "react";
 import { COLORS } from "../constants/colors";
 import { Stack, router, useLocalSearchParams } from "expo-router";
@@ -31,7 +20,7 @@ interface Product {
   price: number;
   stockQuantity: number;
   category: string;
-  image: string;
+  images: string[];
   inStock: boolean;
   warehouseId: number;
   createdAt: string;
@@ -104,8 +93,7 @@ export default function WarehouseManagementScreen() {
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.description?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesFilter =
         selectedFilter === "all" ||
         (selectedFilter === "medicine" && product.category === "أدوية") ||
@@ -239,16 +227,14 @@ export default function WarehouseManagementScreen() {
           queryClient.invalidateQueries(trpc.stores.getUserStores.queryKey);
 
           // تحديد الرسالة حسب الحالة الجديدة
-          const message = newInStock
-            ? `تم عرض المنتج ${data?.product?.name} للبيع`
-            : `تم إخفاء المنتج ${data?.product?.name} من العرض`;
+          const message = newInStock ? `تم عرض المنتج ${data?.product?.name} للبيع` : `تم إخفاء المنتج ${data?.product?.name} من العرض`;
 
           showToast({ type: "success", message });
         },
         onError: (error) => {
           Alert.alert("خطأ", error.message || "حدث خطأ أثناء تحديث حالة المنتج");
         },
-      }
+      },
     );
   };
 
@@ -305,10 +291,7 @@ export default function WarehouseManagementScreen() {
 
           {isOwner === "true" || canEdit === "true" ? (
             <>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.editButton]}
-                onPress={() => handleEditProduct(product)}
-              >
+              <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => handleEditProduct(product)}>
                 <Edit size={16} color={COLORS.white} />
                 <Text style={styles.actionButtonText}>تعديل</Text>
               </TouchableOpacity>
@@ -321,10 +304,7 @@ export default function WarehouseManagementScreen() {
                 <Text style={styles.actionButtonText}>{product.inStock ? "إخفاء" : "إظهار"}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => handleDeleteProduct(product)}
-              >
+              <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDeleteProduct(product)}>
                 <Trash2 size={16} color={COLORS.white} />
                 <Text style={styles.actionButtonText}>حذف</Text>
               </TouchableOpacity>
@@ -341,12 +321,7 @@ export default function WarehouseManagementScreen() {
     const stockStatus = getStockStatus(selectedProduct.stockQuantity);
 
     return (
-      <Modal
-        visible={showProductModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowProductModal(false)}
-      >
+      <Modal visible={showProductModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowProductModal(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setShowProductModal(false)}>
@@ -357,7 +332,9 @@ export default function WarehouseManagementScreen() {
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            <Image source={{ uri: selectedProduct.image }} style={styles.modalProductImage} />
+            {selectedProduct.images && selectedProduct.images.length > 0 && (
+              <Image source={{ uri: selectedProduct.images[0] }} style={styles.modalProductImage} />
+            )}
 
             <View style={styles.productDetailsContainer}>
               <Text style={styles.modalProductName}>{selectedProduct.name}</Text>
@@ -384,16 +361,12 @@ export default function WarehouseManagementScreen() {
 
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>تاريخ الإضافة:</Text>
-                <Text style={styles.detailValue}>
-                  {new Date(selectedProduct.createdAt).toLocaleDateString("ar-SA")}
-                </Text>
+                <Text style={styles.detailValue}>{new Date(selectedProduct.createdAt).toLocaleDateString("ar-SA")}</Text>
               </View>
 
               <View style={styles.descriptionContainer}>
                 <Text style={styles.descriptionTitle}>الوصف:</Text>
-                <Text style={styles.modalProductDescription}>
-                  {selectedProduct.description || "لا يوجد وصف متاح لهذا المنتج."}
-                </Text>
+                <Text style={styles.modalProductDescription}>{selectedProduct.description || "لا يوجد وصف متاح لهذا المنتج."}</Text>
               </View>
             </View>
           </ScrollView>
@@ -411,12 +384,7 @@ export default function WarehouseManagementScreen() {
     if (!selectedWarehouse) return null;
 
     return (
-      <Modal
-        visible={showWarehouseModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowWarehouseModal(false)}
-      >
+      <Modal visible={showWarehouseModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowWarehouseModal(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setShowWarehouseModal(false)}>
@@ -451,9 +419,7 @@ export default function WarehouseManagementScreen() {
 
               <View style={styles.descriptionContainer}>
                 <Text style={styles.descriptionTitle}>الوصف:</Text>
-                <Text style={styles.modalProductDescription}>
-                  {selectedWarehouse.description || "لا يوجد وصف متاح لهذا المذخر."}
-                </Text>
+                <Text style={styles.modalProductDescription}>{selectedWarehouse.description || "لا يوجد وصف متاح لهذا المذخر."}</Text>
               </View>
             </View>
           </ScrollView>
@@ -464,12 +430,7 @@ export default function WarehouseManagementScreen() {
 
   const renderDeleteModal = () => {
     return (
-      <Modal
-        visible={showDeleteModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
+      <Modal visible={showDeleteModal} transparent animationType="fade" onRequestClose={() => setShowDeleteModal(false)}>
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContainer}>
             <AlertCircle size={48} color={COLORS.red} style={styles.deleteIcon} />
@@ -478,10 +439,7 @@ export default function WarehouseManagementScreen() {
             <Text style={styles.deleteWarning}>لا يمكن التراجع عن هذا الإجراء</Text>
 
             <View style={styles.deleteActions}>
-              <TouchableOpacity
-                style={[styles.deleteActionButton, styles.cancelButton]}
-                onPress={() => setShowDeleteModal(false)}
-              >
+              <TouchableOpacity style={[styles.deleteActionButton, styles.cancelButton]} onPress={() => setShowDeleteModal(false)}>
                 <Text style={styles.cancelButtonText}>إلغاء</Text>
               </TouchableOpacity>
 
@@ -544,13 +502,7 @@ export default function WarehouseManagementScreen() {
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Search size={20} color={COLORS.darkGray} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="البحث في المنتجات..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            textAlign="right"
-          />
+          <TextInput style={styles.searchInput} placeholder="البحث في المنتجات..." value={searchQuery} onChangeText={setSearchQuery} textAlign="right" />
         </View>
       </View>
 
@@ -579,12 +531,7 @@ export default function WarehouseManagementScreen() {
       )}
 
       {/* Filters */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filtersScroll}
-        contentContainerStyle={styles.filtersContainer}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll} contentContainerStyle={styles.filtersContainer}>
         {filters.map(renderFilterChip)}
       </ScrollView>
 
@@ -597,9 +544,7 @@ export default function WarehouseManagementScreen() {
             <View style={styles.emptyState}>
               <Package size={64} color={COLORS.lightGray} />
               <Text style={styles.emptyStateText}>لا توجد منتجات</Text>
-              <Text style={styles.emptyStateSubtext}>
-                {searchQuery ? "جرب البحث بكلمات أخرى" : "ابدأ بإضافة منتجات جديدة"}
-              </Text>
+              <Text style={styles.emptyStateSubtext}>{searchQuery ? "جرب البحث بكلمات أخرى" : "ابدأ بإضافة منتجات جديدة"}</Text>
               {!searchQuery && canEdit === "true" && (
                 <Button
                   title="إضافة منتج جديد"
@@ -622,13 +567,7 @@ export default function WarehouseManagementScreen() {
         <View style={styles.messageModalOverlay}>
           <View style={styles.messageModalContent}>
             <Text style={styles.messageModalTitle}>إرسال رسالة للمتابعين</Text>
-            <TextInput
-              style={styles.messageModalInput}
-              placeholder="عنوان الرسالة"
-              value={messageTitle}
-              onChangeText={setMessageTitle}
-              textAlign="right"
-            />
+            <TextInput style={styles.messageModalInput} placeholder="عنوان الرسالة" value={messageTitle} onChangeText={setMessageTitle} textAlign="right" />
             <TextInput
               style={[styles.messageModalInput, { height: 100, textAlignVertical: "top" }]}
               placeholder="نص الرسالة"
@@ -637,12 +576,7 @@ export default function WarehouseManagementScreen() {
               multiline
               textAlign="right"
             />
-            <ImageUploader
-              imageUri={messageImage}
-              onUploadComplete={setMessageImage}
-              label="صورة (اختياري)"
-              aspect={[16, 9]}
-            />
+            <ImageUploader imageUri={messageImage} onUploadComplete={setMessageImage} label="صورة (اختياري)" aspect={[16, 9]} />
             <TextInput
               style={styles.messageModalInput}
               placeholder="رابط (اختياري) https://..."
@@ -658,16 +592,9 @@ export default function WarehouseManagementScreen() {
                 onPress={handleSendMessage}
                 disabled={sendMessageMutation.isPending}
               >
-                {sendMessageMutation.isPending ? (
-                  <ActivityIndicator color={COLORS.white} />
-                ) : (
-                  <Text style={styles.messageModalButtonText}>إرسال</Text>
-                )}
+                {sendMessageMutation.isPending ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.messageModalButtonText}>إرسال</Text>}
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.messageModalButton, { backgroundColor: COLORS.darkGray }]}
-                onPress={() => setShowMessageModal(false)}
-              >
+              <TouchableOpacity style={[styles.messageModalButton, { backgroundColor: COLORS.darkGray }]} onPress={() => setShowMessageModal(false)}>
                 <Text style={styles.messageModalButtonText}>إلغاء</Text>
               </TouchableOpacity>
             </View>
@@ -994,7 +921,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     backgroundColor: COLORS.lightGray,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   productDetailsContainer: {
     padding: 16,

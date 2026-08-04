@@ -33,8 +33,9 @@ interface UserData {
   name: string;
   email: string;
   phone?: string | null;
-  userType: "user" | "vet" | "admin";
+  userType: "user" | "vet" | "admin" | "pet_owner" | "veterinarian";
   isActive: boolean;
+  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
   approval?: {
@@ -130,10 +131,15 @@ const permissionTranslations: Record<string, string> = {
   view_users: "عرض المستخدمين",
 };
 
+// Registration stores "pet_owner"/"veterinarian"; older admin tooling used "user"/"vet" — treat as synonyms.
+const isPetOwnerType = (userType: string) => userType === "user" || userType === "pet_owner";
+const isVetType = (userType: string) => userType === "vet" || userType === "veterinarian";
+
 export default function AdminUsersList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserType, setSelectedUserType] = useState<"all" | "user" | "vet" | "admin">("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
   const [currentAdminId] = useState(1); // Should come from auth context
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
@@ -242,6 +248,17 @@ export default function AdminUsersList() {
 
     return [];
   }, [usersResponse, searchResponse, searchQuery]);
+
+  // Pet owner accounts that haven't confirmed the email verification code yet
+  const filteredDisplayUsers = useMemo(() => {
+    if (!showUnverifiedOnly) return displayUsers;
+    return displayUsers.filter((u) => isPetOwnerType(u.userType) && !u.emailVerified);
+  }, [displayUsers, showUnverifiedOnly]);
+
+  const unverifiedPetOwnersCount = useMemo(
+    () => displayUsers.filter((u) => isPetOwnerType(u.userType) && !u.emailVerified).length,
+    [displayUsers],
+  );
 
   const isLoadingData = usersLoading || searchLoading;
 
@@ -528,29 +545,17 @@ export default function AdminUsersList() {
   };
 
   const getUserTypeLabel = (userType: string) => {
-    switch (userType) {
-      case "user":
-        return "مستخدم عادي";
-      case "vet":
-        return "طبيب بيطري";
-      case "admin":
-        return "مشرف";
-      default:
-        return "غير محدد";
-    }
+    if (isPetOwnerType(userType)) return "مستخدم عادي";
+    if (isVetType(userType)) return "طبيب بيطري";
+    if (userType === "admin") return "مشرف";
+    return "غير محدد";
   };
 
   const getUserTypeColor = (userType: string) => {
-    switch (userType) {
-      case "user":
-        return "#4ECDC4";
-      case "vet":
-        return "#45B7D1";
-      case "admin":
-        return "#FF6B6B";
-      default:
-        return "#999";
-    }
+    if (isPetOwnerType(userType)) return "#4ECDC4";
+    if (isVetType(userType)) return "#45B7D1";
+    if (userType === "admin") return "#FF6B6B";
+    return "#999";
   };
 
   const hasIdImages = (user: UserData) => {
@@ -576,6 +581,12 @@ export default function AdminUsersList() {
             {hasIdImages(user) && (
               <View style={styles.idBadge}>
                 <CreditCard size={12} color="#4CAF50" />
+              </View>
+            )}
+            {isPetOwnerType(user.userType) && !user.emailVerified && (
+              <View style={styles.unverifiedBadge}>
+                <Mail size={12} color="#f59e0b" />
+                <Text style={styles.unverifiedBadgeText}>غير مفعل</Text>
               </View>
             )}
           </View>
@@ -682,6 +693,19 @@ export default function AdminUsersList() {
           </TouchableOpacity>
         ))}
       </View>
+
+      <TouchableOpacity
+        style={[styles.unverifiedFilterButton, showUnverifiedOnly && styles.unverifiedFilterButtonActive]}
+        onPress={() => setShowUnverifiedOnly((prev) => !prev)}
+      >
+        <Mail size={16} color={showUnverifiedOnly ? "#fff" : "#f59e0b"} />
+        <Text style={[styles.unverifiedFilterText, showUnverifiedOnly && styles.unverifiedFilterTextActive]}>
+          الحسابات غير المفعلة (لم يؤكدوا رمز البريد الإلكتروني) - مستخدمين عاديين فقط
+        </Text>
+        <View style={styles.unverifiedCountBadge}>
+          <Text style={styles.unverifiedCountBadgeText}>{unverifiedPetOwnersCount}</Text>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -800,6 +824,11 @@ export default function AdminUsersList() {
             <Text style={styles.statNumber}>{displayUsers.filter((u) => !u.isActive).length}</Text>
             <Text style={styles.statLabel}>معطل</Text>
           </View>
+          <View style={styles.statItem}>
+            <Mail size={20} color="#f59e0b" />
+            <Text style={styles.statNumber}>{unverifiedPetOwnersCount}</Text>
+            <Text style={styles.statLabel}>بريد غير مؤكد</Text>
+          </View>
         </View>
 
         {/* Error Warning */}
@@ -815,17 +844,21 @@ export default function AdminUsersList() {
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>جاري التحميل...</Text>
           </View>
-        ) : displayUsers.length === 0 ? (
+        ) : filteredDisplayUsers.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Users size={48} color="#ccc" />
             <Text style={styles.emptyText}>لا توجد مستخدمين</Text>
             <Text style={styles.emptySubtext}>
-              {searchQuery ? "لم يتم العثور على نتائج للبحث" : "لم يتم العثور على مستخدمين"}
+              {showUnverifiedOnly
+                ? "لا يوجد حسابات مستخدمين عاديين لم يفعّلوا بريدهم الإلكتروني"
+                : searchQuery
+                  ? "لم يتم العثور على نتائج للبحث"
+                  : "لم يتم العثور على مستخدمين"}
             </Text>
           </View>
         ) : (
           <FlatList
-            data={displayUsers}
+            data={filteredDisplayUsers}
             keyExtractor={(item) => `user-${item.id}`}
             renderItem={renderUserCard}
             contentContainerStyle={styles.listContainer}
@@ -1110,6 +1143,46 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
+  unverifiedFilterButton: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#f59e0b",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 12,
+    gap: 8,
+  },
+  unverifiedFilterButtonActive: {
+    backgroundColor: "#f59e0b",
+  },
+  unverifiedFilterText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#92400e",
+    fontWeight: "600",
+    textAlign: "left",
+    fontFamily: "System",
+  },
+  unverifiedFilterTextActive: {
+    color: "#fff",
+  },
+  unverifiedCountBadge: {
+    backgroundColor: "#fff3cd",
+    borderRadius: 10,
+    minWidth: 24,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    alignItems: "center",
+  },
+  unverifiedCountBadgeText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#92400e",
+    fontFamily: "System",
+  },
   statsContainer: {
     flexDirection: "row-reverse",
     backgroundColor: "#fff",
@@ -1249,6 +1322,21 @@ const styles = StyleSheet.create({
     padding: 4,
     justifyContent: "center",
     alignItems: "center",
+  },
+  unverifiedBadge: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  unverifiedBadgeText: {
+    fontSize: 10,
+    color: "#92400e",
+    fontWeight: "600",
+    fontFamily: "System",
   },
   userStatusContainer: {
     flexDirection: "row-reverse",

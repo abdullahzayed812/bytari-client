@@ -14,11 +14,7 @@ export default function StoreProductsScreen() {
   const [selectedProduct, setSelectedProduct] = useState<VetStoreProduct | null>(null);
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
 
-  const {
-    data: rawStoreData,
-    isLoading: isLoadingStore,
-    error: storeError,
-  } = useQuery(trpc.stores.getById.queryOptions({ storeId: Number(storeId) }));
+  const { data: rawStoreData, isLoading: isLoadingStore, error: storeError } = useQuery(trpc.stores.getById.queryOptions({ storeId: Number(storeId) }));
   const { data, isLoading, error } = useQuery(trpc.stores.products.list.queryOptions({ storeId: Number(storeId) }));
 
   const storeData = useMemo(() => (rawStoreData as any)?.store, [rawStoreData]);
@@ -35,8 +31,7 @@ export default function StoreProductsScreen() {
   const filteredProducts = useMemo(() => {
     return allProducts.filter((product) => {
       const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) || product.description?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -89,12 +84,7 @@ export default function StoreProductsScreen() {
     if (!selectedProduct) return null;
 
     return (
-      <Modal
-        visible={showProductModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowProductModal(false)}
-      >
+      <Modal visible={showProductModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowProductModal(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setShowProductModal(false)}>
@@ -114,12 +104,7 @@ export default function StoreProductsScreen() {
               <View style={styles.ratingContainer}>
                 <View style={styles.starsContainer}>
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      size={16}
-                      color={star <= 4 ? COLORS.primary : COLORS.lightGray}
-                      fill={star <= 4 ? COLORS.primary : "transparent"}
-                    />
+                    <Star key={star} size={16} color={star <= 4 ? COLORS.primary : COLORS.lightGray} fill={star <= 4 ? COLORS.primary : "transparent"} />
                   ))}
                 </View>
                 <Text style={styles.ratingText}>(4.0)</Text>
@@ -132,9 +117,7 @@ export default function StoreProductsScreen() {
 
               <View style={styles.descriptionContainer}>
                 <Text style={styles.descriptionTitle}>الوصف</Text>
-                <Text style={styles.modalProductDescription}>
-                  {selectedProduct.description || "لا يوجد وصف متاح لهذا المنتج."}
-                </Text>
+                <Text style={styles.modalProductDescription}>{selectedProduct.description || "لا يوجد وصف متاح لهذا المنتج."}</Text>
               </View>
 
               <View style={styles.featuresContainer}>
@@ -150,13 +133,16 @@ export default function StoreProductsScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.contactOwnerButton}   onPress={() => {
-                                      if (phone) {
-                                        Linking.openURL(`tel:${phone}`);
-                                      } else {
-                                        Alert.alert(t("common.error"), t("errors.no_phone_number"));
-                                      }
-                                    }}>
+            <TouchableOpacity
+              style={styles.contactOwnerButton}
+              onPress={() => {
+                if (phone) {
+                  Linking.openURL(`tel:${phone}`);
+                } else {
+                  Alert.alert(t("common.error"), t("errors.no_phone_number"));
+                }
+              }}
+            >
               <Phone size={20} color={COLORS.white} />
               <Text style={styles.contactOwnerText}>اتصال بصاحب المتجر</Text>
             </TouchableOpacity>
@@ -177,35 +163,18 @@ export default function StoreProductsScreen() {
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Search size={20} color={COLORS.darkGray} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="البحث في المنتجات..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            textAlign="right"
-          />
+          <TextInput style={styles.searchInput} placeholder="البحث في المنتجات..." value={searchQuery} onChangeText={setSearchQuery} textAlign="right" />
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesScroll}
-        contentContainerStyle={styles.categoriesContainer}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll} contentContainerStyle={styles.categoriesContainer}>
         {categories.map((category, index) => (
           <TouchableOpacity
             key={category}
-            style={[
-              styles.categoryChip,
-              selectedCategory === category && styles.selectedCategoryChip,
-              { marginLeft: index < categories.length - 1 ? 8 : 0 },
-            ]}
+            style={[styles.categoryChip, selectedCategory === category && styles.selectedCategoryChip, { marginLeft: index < categories.length - 1 ? 8 : 0 }]}
             onPress={() => setSelectedCategory(category)}
           >
-            <Text style={[styles.categoryText, selectedCategory === category && styles.selectedCategoryText]}>
-              {category === "all" ? "الكل" : category}
-            </Text>
+            <Text style={[styles.categoryText, selectedCategory === category && styles.selectedCategoryText]}>{category === "all" ? "الكل" : category}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -213,15 +182,11 @@ export default function StoreProductsScreen() {
       <ScrollView style={styles.productsScrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.productsContainer}>
           {filteredProducts.length > 0 ? (
-            <View style={styles.productsGrid}>
-              {filteredProducts.map((product, index) => renderProductCard(product, index))}
-            </View>
+            <View style={styles.productsGrid}>{filteredProducts.map((product, index) => renderProductCard(product, index))}</View>
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>لا توجد منتجات متاحة</Text>
-              <Text style={styles.emptyStateSubtext}>
-                {searchQuery ? "جرب البحث بكلمات أخرى" : "لم يتم إضافة منتجات بعد"}
-              </Text>
+              <Text style={styles.emptyStateSubtext}>{searchQuery ? "جرب البحث بكلمات أخرى" : "لم يتم إضافة منتجات بعد"}</Text>
             </View>
           )}
         </View>
@@ -412,7 +377,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 250,
     backgroundColor: COLORS.lightGray,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   productDetailsContainer: {
     padding: 16,
